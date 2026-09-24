@@ -1,0 +1,40 @@
+name: daily-predictions
+
+on:
+  schedule:
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-predictions
+  cancel-in-progress: false
+
+jobs:
+  predict:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --frozen --no-dev
+      - name: Ingest schedules (no game details in CI)
+        run: uv run --no-dev eurohoops ingest
+      - name: Predict upcoming games
+        run: uv run --no-dev eurohoops predict
+      - name: Score the live log
+        run: uv run --no-dev eurohoops score
+      - name: Commit predictions and reports if changed
+        run: |
+          git add predictions/ reports/
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Daily predictions $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push
