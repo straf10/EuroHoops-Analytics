@@ -1,0 +1,21 @@
+# Personal session log (not part of the repo)
+memory.md
+
+# Python / uv
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+build/
+dist/
+
+# Tool caches
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Local data (raw cache + staging); never committed
+data/

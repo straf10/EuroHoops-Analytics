@@ -1,0 +1,61 @@
+[project]
+name = "eurohoops"
+version = "0.1.0"
+description = "EuroLeague + Greek Basket League analytics and live, pre-registered game predictions."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "httpx>=0.28.1",
+    "numpy>=2.5.3",
+    "pandas>=3.0.6",
+    "pandera>=0.33.1",
+    "pyarrow>=25.0.1",
+    "tenacity>=9.1.4",
+    "typer>=0.27.2",
+]
+
+[project.scripts]
+eurohoops = "eurohoops.cli:app"
+
+[build-system]
+requires = ["uv_build>=0.8,<0.13"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "mypy>=2.3.1",
+    "pandas-stubs>=3.0.5.260914",
+    "pre-commit>=4.6.2",
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.16.8",
+    "vulture>=2.16",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF", "PTH", "T20", "ERA", "PL", "NPY", "PD"]
+ignore = ["PLR0913", "PLR2004"]
+
+[tool.mypy]
+strict = true
+python_version = "3.12"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-markers"
+
+[tool.coverage.run]
+source = ["eurohoops"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+
+[tool.vulture]
+paths = ["src"]
+ignore_decorators = ["@app.command", "@app.callback"]
