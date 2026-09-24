@@ -1,0 +1,3 @@
+# LF everywhere: the append-only prediction log must stay byte-identical across platforms.
+* text=auto eol=lf
+*.gz binary

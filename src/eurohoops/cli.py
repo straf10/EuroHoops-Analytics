@@ -40,6 +40,7 @@ def _write_json(path: Path, payload: dict[str, Any]) -> None:
 @app.callback()
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
+    logging.getLogger("httpx").setLevel(logging.WARNING)
 
 
 @app.command(context_settings={"allow_extra_args": True, "ignore_unknown_options": True})
