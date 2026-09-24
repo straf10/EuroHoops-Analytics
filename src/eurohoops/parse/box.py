@@ -49,7 +49,11 @@ def _player_row(game_id: str, team: str, line: BoxLine) -> dict[str, object]:
 
 
 def build_box_tables(root: Path, games: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Parse every cached box score of a played, non-forfeit game in ``games``."""
+    """Parse every cached box score of a played, non-forfeit game in ``games``.
+
+    Games without a cached or published box score get no rows; the invariant report flags
+    them as ``missing_box``.
+    """
     players: list[dict[str, object]] = []
     teams: list[dict[str, object]] = []
     rated = games[games["played"] & ~games["forfeit"]]
@@ -65,6 +69,8 @@ def build_box_tables(root: Path, games: pd.DataFrame) -> tuple[pd.DataFrame, pd.
         if not path.exists():
             continue
         boxes = parse_box_score(read_cached(path).decode())
+        if boxes is None:
+            continue
         for team, box in zip((home, away), boxes, strict=True):
             teams.append({"game_id": game_id, "team": team, "total_points": box.total_points})
             players.extend(_player_row(game_id, team, line) for line in box.players)
