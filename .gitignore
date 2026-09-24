@@ -18,7 +18,7 @@ coverage.xml
 htmlcov/
 
 # Local data (raw cache + staging); never committed
-data/
+/data/
 
 # Generated static page (deployed by the daily workflow, not committed)
-site/
+/site/
