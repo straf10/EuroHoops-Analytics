@@ -200,8 +200,11 @@ def _box_line(row: LexborNode) -> BoxLine:
     )
 
 
-def parse_box_score(html: str) -> tuple[TeamBox, TeamBox]:
-    """Home and away box scores, in page order (home first)."""
+def parse_box_score(html: str) -> tuple[TeamBox, TeamBox] | None:
+    """Home and away box scores in page order (home first); None when ESAKE has none.
+
+    Some 2018-19 and 2019-20 game pages carry only the game header and no stat tables.
+    """
     teams: list[TeamBox] = []
     for table in LexborHTMLParser(html).css("table"):
         rows = table.css("tr")
@@ -212,6 +215,8 @@ def parse_box_score(html: str) -> tuple[TeamBox, TeamBox]:
         if len(totals) != 1:
             raise EsakeParseError("box score table without a single totals row")
         teams.append(TeamBox(players, _number(_text(totals[0].css("td, th")[1]))))
+    if not teams:
+        return None
     if len(teams) != 2:
         raise EsakeParseError(f"expected 2 team box scores, found {len(teams)}")
     return teams[0], teams[1]

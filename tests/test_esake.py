@@ -148,7 +148,9 @@ def test_gbl_tables_from_real_pages() -> None:
 
 
 def test_box_score_reconciles_with_totals() -> None:
-    home, away = parse_box_score(esake_fixture("box_F26689D1.html"))
+    boxes = parse_box_score(esake_fixture("box_F26689D1.html"))
+    assert boxes is not None
+    home, away = boxes
     assert (home.total_points, away.total_points) == (81, 64)
     assert sum(p.points for p in home.players) == 81
     assert sum(p.seconds for p in home.players) == 200 * 60
@@ -161,3 +163,7 @@ def test_box_score_needs_two_teams() -> None:
         parse_box_score(
             "<table><tr><th>ΠΑΙΚΤΗΣ</th></tr><tr><td>ΣΥΝΟΛΟ</td><td>80</td></tr></table>"
         )
+
+
+def test_game_page_without_stat_tables_has_no_box_score() -> None:
+    assert parse_box_score('<div class="mvp-player">header only</div>') is None
