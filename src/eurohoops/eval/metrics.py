@@ -1,6 +1,6 @@
 """Proper scoring rules and a paired bootstrap for per-game loss differences."""
 
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 
 import numpy as np
 
@@ -17,7 +17,17 @@ class Metrics:
 
     def as_dict(self) -> dict[str, float | int | None]:
         """JSON-ready, rounded to 6 decimals so reports diff cleanly."""
-        return {k: v if v is None or k == "n" else round(v, 6) for k, v in asdict(self).items()}
+        return {
+            "n": self.n,
+            "log_loss": _round(self.log_loss),
+            "brier": _round(self.brier),
+            "accuracy": _round(self.accuracy),
+            "margin_mae": _round(self.margin_mae),
+        }
+
+
+def _round(value: float | None) -> float | None:
+    return None if value is None else round(value, 6)
 
 
 def per_game_log_loss(p_home: FloatArray, home_won: FloatArray) -> FloatArray:

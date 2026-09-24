@@ -1,0 +1,54 @@
+{
+ "data": [
+  {
+   "identifier": "E2026_3",
+   "gameCode": 3,
+   "phaseType": {
+    "code": "RS"
+   },
+   "round": 1,
+   "played": false,
+   "date": "2026-09-24T18:00:00",
+   "utcDate": "2026-09-24T16:00:00Z",
+   "confirmedDate": true,
+   "isNeutralVenue": false,
+   "local": {
+    "club": {
+     "code": "HTA"
+    },
+    "score": 0
+   },
+   "road": {
+    "club": {
+     "code": "MUN"
+    },
+    "score": 0
+   }
+  },
+  {
+   "identifier": "E2026_2",
+   "gameCode": 2,
+   "phaseType": {
+    "code": "RS"
+   },
+   "round": 1,
+   "played": false,
+   "date": "2026-09-24T18:00:00",
+   "utcDate": "2026-09-24T16:00:00Z",
+   "confirmedDate": true,
+   "isNeutralVenue": false,
+   "local": {
+    "club": {
+     "code": "DUB"
+    },
+    "score": 0
+   },
+   "road": {
+    "club": {
+     "code": "MAD"
+    },
+    "score": 0
+   }
+  }
+ ]
+}
