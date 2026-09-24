@@ -11,7 +11,9 @@ You must **iterate** — implement → run the full verification checklist (§7)
 
 ---
 
-## 0. Decisions for the user (review before running; defaults in **bold**)
+## 0. Decisions (confirmed by the user 2026-09-24: all defaults in **bold** accepted)
+Note on D-e: forcing FF games neutral changes replayed ratings (not the tuned parameters). To keep every row traceable, ship it with a package version bump (0.1.0 → 0.2.0), so the EL `model_version` changes exactly once. That is the only allowed EL version change this phase. Report the rating/prediction shift it causes.
+
 | # | Question | Default |
 |---|---|---|
 | D-a | GBL seasons in scope | **2018-19 → 2025-26 (8) + live 2026-27** |
@@ -25,7 +27,7 @@ You must **iterate** — implement → run the full verification checklist (§7)
 ## 1. Hard constraints (carried over from weeks 0–1, all still apply)
 - **Scope = weeks 2–3 only.** No xPTS, RAPM, stints/possessions tables, entity resolution, MLflow, FastAPI or odds. Build nothing "for later".
 - **No dead code**, same definition as weeks 0–1 (used by the CLI or production paths; tests alone don't count; no speculative abstractions). The weeks 0–1 checks 12–14 apply to the whole `src/`.
-- **Do not break the live EuroLeague log.** Existing rows in `predictions/euroleague_2026-27.csv` must stay byte-identical; the EL `model_version` must not change unless D-c says so.
+- **Do not break the live EuroLeague log.** Existing rows in `predictions/euroleague_2026-27.csv` must stay byte-identical; the EL `model_version` changes only through the D-e version bump.
 - **Politeness toward ESAKE (PLAN §1.2):** ≥ 2 s between requests, identifying User-Agent, gzip raw HTML cache, never re-scrape what is cached. A round page is final (immutable) once every game on it has a score; only incomplete rounds of the live season are re-fetched.
 - **Efficiency:** GBL Elo backtest incl. grid ≤ 10 s; daily CI job stays stateless and cheap (EL schedules + only the *current* GBL season's round pages; no box scores, PBP or backfill in CI).
 - **Data rights (PLAN §9):** never commit raw HTML/JSON; only small trimmed fixtures.
