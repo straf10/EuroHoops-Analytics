@@ -23,8 +23,9 @@ STYLE = (
     "h2{margin-top:1.6em}h3{font-size:1rem;color:var(--muted);margin:1.2em 0 .4em}"
     "p.note{color:var(--muted);font-size:.9rem}.scroll{overflow-x:auto}"
     "table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}"
-    "th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}"
-    "th{color:var(--muted);font-weight:600;font-size:.85rem}td.num,th.num{text-align:right}"
+    "th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}"
+    "th{color:var(--muted);font-weight:600;font-size:.85rem}"
+    "td.num,th.num{text-align:right;white-space:nowrap}.away{color:var(--muted)}"
     ".good{color:var(--good)}.bad{color:var(--bad)}a{color:var(--accent)}"
 )
 
@@ -39,7 +40,9 @@ class Section:
 
 
 def _athens(tipoff: pd.Timestamp) -> str:
-    return tipoff.tz_convert(ATHENS).strftime("%a %d %b %H:%M")
+    """Day on the first line, time on the second, so the column stays narrow on phones."""
+    local = tipoff.tz_convert(ATHENS)
+    return f"{local:%a %d %b}<br>{local:%H:%M}"
 
 
 def _table(headers: list[str], rows: list[list[str]], numeric: set[int]) -> str:
@@ -69,11 +72,9 @@ def _section_html(section: Section, now: datetime) -> str:
     records = logged.sort_values("tipoff_utc").to_dict("records") if len(logged) else []
 
     def teams(g: dict[Hashable, Any]) -> list[str]:
-        return [
-            escape(_athens(g["tipoff_utc"])),
-            escape(section.names.get(g["home"], g["home"])),
-            escape(section.names.get(g["away"], g["away"])),
-        ]
+        home = escape(section.names.get(g["home"], g["home"]))
+        away = escape(section.names.get(g["away"], g["away"]))
+        return [_athens(g["tipoff_utc"]), f'{home}<br><span class="away">vs {away}</span>']
 
     parts = [f"<h2>{escape(section.title)}</h2>", "<h3>Upcoming</h3>"]
     upcoming = [
@@ -82,8 +83,8 @@ def _section_html(section: Section, now: datetime) -> str:
         if not g["played"] and g["tipoff_utc"] > now
     ]
     if upcoming:
-        headers = ["Tip-off (Athens)", "Home", "Away", "P(home)", "Margin"]
-        parts.append(_table(headers, upcoming, {3, 4}))
+        headers = ["Athens time", "Home / away", "P(home)", "Margin"]
+        parts.append(_table(headers, upcoming, {2, 3}))
     else:
         parts.append('<p class="note">No logged games in the next window.</p>')
     parts.append("<h3>Recent results</h3>")
@@ -95,8 +96,8 @@ def _section_html(section: Section, now: datetime) -> str:
         score = f"{g['home_score']}-{g['away_score']}"
         results.append([*teams(g), score, f"{g['p_home']:.0%}", mark])
     if results:
-        headers = ["Tip-off (Athens)", "Home", "Away", "Score", "P(home)", "Pick"]
-        parts.append(_table(headers, results, {3, 4}))
+        headers = ["Athens time", "Home / away", "Score", "P(home)", "Pick"]
+        parts.append(_table(headers, results, {2, 3}))
     else:
         parts.append('<p class="note">No logged game has finished yet.</p>')
     card = section.scorecard
@@ -108,14 +109,14 @@ def _section_html(section: Section, now: datetime) -> str:
     rows = [
         [label, metric(elo, key, fmt), metric(b0, key, fmt)]
         for label, key, fmt in (
-            ("Log loss (lower is better)", "log_loss", ".4f"),
+            ("Log loss (lower = better)", "log_loss", ".4f"),
             ("Brier score", "brier", ".4f"),
             ("Accuracy", "accuracy", ".1%"),
             ("Margin MAE (points)", "margin_mae", ".2f"),
         )
     ]
     parts.append(f"<h3>Scorecard: {elo['n']} finished games</h3>")
-    parts.append(_table(["Metric", "Elo", "Home-win baseline"], rows, {1, 2}))
+    parts.append(_table(["Metric", "Elo", "Baseline"], rows, {1, 2}))
     return "".join(parts)
 
 

@@ -1,0 +1,622 @@
+{
+  "tolerance_minutes": 1.0,
+  "seasons": {
+    "2018": {
+      "games": 203,
+      "passed": 129,
+      "pass_rate": 0.6355,
+      "failures_by_reason": {
+        "missing_box": 52,
+        "points_mismatch": 15,
+        "minutes_off": 74,
+        "bad_shot_lines": 0,
+        "bad_point_lines": 0
+      },
+      "failed_games": {
+        "GBL2018_02154D01": [
+          "points_mismatch",
+          "minutes_off"
+        ],
+        "GBL2018_06C28DF5": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_08D8F463": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_118A73C9": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_13703A1D": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_13D47C1C": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_1996318F": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_1A5C8201": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_2471D07D": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_2A4A355E": [
+          "points_mismatch",
+          "minutes_off"
+        ],
+        "GBL2018_2ACB1554": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_2F2AE8EA": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_2FA59D9B": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_3600DE17": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_3FE2A4DC": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_449B3034": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_46028659": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_5397C787": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_54B7D905": [
+          "points_mismatch",
+          "minutes_off"
+        ],
+        "GBL2018_5775706F": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_59AB6901": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_614B3CD1": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_619670C0": [
+          "points_mismatch",
+          "minutes_off"
+        ],
+        "GBL2018_62F10AEB": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_6A2193DB": [
+          "points_mismatch",
+          "minutes_off"
+        ],
+        "GBL2018_75A1CAEF": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_7A9A972D": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_7AE92F2D": [
+          "points_mismatch",
+          "minutes_off"
+        ],
+        "GBL2018_7CA8B679": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_7DD1DD2C": [
+          "points_mismatch",
+          "minutes_off"
+        ],
+        "GBL2018_80D1284E": [
+          "points_mismatch",
+          "minutes_off"
+        ],
+        "GBL2018_860E64E4": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_87D0F114": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_881B09EE": [
+          "minutes_off"
+        ],
+        "GBL2018_8BBF8FB3": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_92CE5807": [
+          "points_mismatch",
+          "minutes_off"
+        ],
+        "GBL2018_94AC15E5": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_96464B1E": [
+          "points_mismatch",
+          "minutes_off"
+        ],
+        "GBL2018_9CB40FF6": [
+          "minutes_off"
+        ],
+        "GBL2018_A4DBBE72": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_AEE3D731": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_B6CBB4DF": [
+          "points_mismatch",
+          "minutes_off"
+        ],
+        "GBL2018_B6DDB342": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_B97C280F": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_BADB74A3": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_BAF64EAB": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_BB493BCA": [
+          "minutes_off"
+        ],
+        "GBL2018_BFB9D0EC": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_C0A403CA": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_C1268C29": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_C2F9AB7B": [
+          "points_mismatch",
+          "minutes_off"
+        ],
+        "GBL2018_CA5B06C4": [
+          "points_mismatch",
+          "minutes_off"
+        ],
+        "GBL2018_CAC235DC": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_D0C44D98": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_D242EF3F": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_D4FB4904": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_D7983959": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_D8B18581": [
+          "minutes_off"
+        ],
+        "GBL2018_D989D3EB": [
+          "minutes_off"
+        ],
+        "GBL2018_D9C9CDF1": [
+          "points_mismatch",
+          "minutes_off"
+        ],
+        "GBL2018_DB3A5B87": [
+          "points_mismatch",
+          "minutes_off"
+        ],
+        "GBL2018_DFED5460": [
+          "minutes_off"
+        ],
+        "GBL2018_E09338C5": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_E0ABEE8A": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_E54761A9": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_E9B5F1E3": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_EB01959C": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_EB3A0FCA": [
+          "minutes_off"
+        ],
+        "GBL2018_F0449519": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_F18D3AF2": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_F3421A45": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_F50F4232": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_F63F9C07": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2018_FE7174EA": [
+          "missing_box",
+          "minutes_off"
+        ]
+      }
+    },
+    "2019": {
+      "games": 139,
+      "passed": 102,
+      "pass_rate": 0.7338,
+      "failures_by_reason": {
+        "missing_box": 26,
+        "points_mismatch": 8,
+        "minutes_off": 37,
+        "bad_shot_lines": 0,
+        "bad_point_lines": 0
+      },
+      "failed_games": {
+        "GBL2019_064750F9": [
+          "points_mismatch",
+          "minutes_off"
+        ],
+        "GBL2019_0FD87B56": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2019_127A61C9": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2019_148BE29C": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2019_15DA74CC": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2019_39B98AC4": [
+          "points_mismatch",
+          "minutes_off"
+        ],
+        "GBL2019_3BB2E041": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2019_47B308E8": [
+          "points_mismatch",
+          "minutes_off"
+        ],
+        "GBL2019_49CD1B2B": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2019_526A6D29": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2019_593A840B": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2019_59539289": [
+          "minutes_off"
+        ],
+        "GBL2019_5F7C188A": [
+          "points_mismatch",
+          "minutes_off"
+        ],
+        "GBL2019_5FDDF96C": [
+          "minutes_off"
+        ],
+        "GBL2019_62FDAE8D": [
+          "minutes_off"
+        ],
+        "GBL2019_6D83BAEC": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2019_7145B79D": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2019_7D616AF6": [
+          "points_mismatch",
+          "minutes_off"
+        ],
+        "GBL2019_8371C3DA": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2019_868CF1FC": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2019_91A54DCA": [
+          "points_mismatch",
+          "minutes_off"
+        ],
+        "GBL2019_9DF760D6": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2019_A4F7DBAE": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2019_AEE59199": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2019_B68834D5": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2019_B8710DAA": [
+          "points_mismatch",
+          "minutes_off"
+        ],
+        "GBL2019_B9226861": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2019_C1599556": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2019_C6661501": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2019_CDCEF61A": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2019_D62464A8": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2019_DA3059D4": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2019_DC4F122C": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2019_E4B7B54E": [
+          "points_mismatch",
+          "minutes_off"
+        ],
+        "GBL2019_F2125565": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2019_F933BD90": [
+          "missing_box",
+          "minutes_off"
+        ],
+        "GBL2019_FA2329C0": [
+          "missing_box",
+          "minutes_off"
+        ]
+      }
+    },
+    "2020": {
+      "games": 159,
+      "passed": 153,
+      "pass_rate": 0.9623,
+      "failures_by_reason": {
+        "missing_box": 0,
+        "points_mismatch": 0,
+        "minutes_off": 6,
+        "bad_shot_lines": 0,
+        "bad_point_lines": 0
+      },
+      "failed_games": {
+        "GBL2020_09A6513F": [
+          "minutes_off"
+        ],
+        "GBL2020_37F256BF": [
+          "minutes_off"
+        ],
+        "GBL2020_8AE78FDA": [
+          "minutes_off"
+        ],
+        "GBL2020_9A7A8D19": [
+          "minutes_off"
+        ],
+        "GBL2020_CC8B9056": [
+          "minutes_off"
+        ],
+        "GBL2020_E1F49E20": [
+          "minutes_off"
+        ]
+      }
+    },
+    "2021": {
+      "games": 180,
+      "passed": 178,
+      "pass_rate": 0.9889,
+      "failures_by_reason": {
+        "missing_box": 0,
+        "points_mismatch": 0,
+        "minutes_off": 2,
+        "bad_shot_lines": 0,
+        "bad_point_lines": 0
+      },
+      "failed_games": {
+        "GBL2021_23457553": [
+          "minutes_off"
+        ],
+        "GBL2021_7ADFEAA1": [
+          "minutes_off"
+        ]
+      }
+    },
+    "2022": {
+      "games": 156,
+      "passed": 151,
+      "pass_rate": 0.9679,
+      "failures_by_reason": {
+        "missing_box": 0,
+        "points_mismatch": 2,
+        "minutes_off": 5,
+        "bad_shot_lines": 0,
+        "bad_point_lines": 0
+      },
+      "failed_games": {
+        "GBL2022_33D4C49C": [
+          "minutes_off"
+        ],
+        "GBL2022_4180233B": [
+          "points_mismatch",
+          "minutes_off"
+        ],
+        "GBL2022_81FAF4FA": [
+          "minutes_off"
+        ],
+        "GBL2022_AF0B05AA": [
+          "points_mismatch",
+          "minutes_off"
+        ],
+        "GBL2022_F0479644": [
+          "minutes_off"
+        ]
+      }
+    },
+    "2023": {
+      "games": 163,
+      "passed": 160,
+      "pass_rate": 0.9816,
+      "failures_by_reason": {
+        "missing_box": 0,
+        "points_mismatch": 0,
+        "minutes_off": 3,
+        "bad_shot_lines": 0,
+        "bad_point_lines": 0
+      },
+      "failed_games": {
+        "GBL2023_867CD972": [
+          "minutes_off"
+        ],
+        "GBL2023_F09AC9CC": [
+          "minutes_off"
+        ],
+        "GBL2023_FF09D8C9": [
+          "minutes_off"
+        ]
+      }
+    },
+    "2024": {
+      "games": 166,
+      "passed": 164,
+      "pass_rate": 0.988,
+      "failures_by_reason": {
+        "missing_box": 0,
+        "points_mismatch": 0,
+        "minutes_off": 2,
+        "bad_shot_lines": 0,
+        "bad_point_lines": 0
+      },
+      "failed_games": {
+        "GBL2024_5EF2E48D": [
+          "minutes_off"
+        ],
+        "GBL2024_C5E33795": [
+          "minutes_off"
+        ]
+      }
+    },
+    "2025": {
+      "games": 174,
+      "passed": 169,
+      "pass_rate": 0.9713,
+      "failures_by_reason": {
+        "missing_box": 0,
+        "points_mismatch": 0,
+        "minutes_off": 5,
+        "bad_shot_lines": 0,
+        "bad_point_lines": 0
+      },
+      "failed_games": {
+        "GBL2025_064626C4": [
+          "minutes_off"
+        ],
+        "GBL2025_4ED36E3B": [
+          "minutes_off"
+        ],
+        "GBL2025_AE00F69F": [
+          "minutes_off"
+        ],
+        "GBL2025_B33C93F6": [
+          "minutes_off"
+        ],
+        "GBL2025_F2EB952B": [
+          "minutes_off"
+        ]
+      }
+    }
+  }
+}

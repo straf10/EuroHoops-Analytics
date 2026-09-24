@@ -37,7 +37,7 @@ def test_page_lists_upcoming_and_recent_games_with_escaped_names(tmp_path: Path)
     assert "miss" in recent  # p_home 0.4 but the home team won
     assert "Ολυμπιακός &amp; &lt;Co&gt;" in page
     assert "<Co>" not in page
-    assert "Tip-off (Athens)" in page
+    assert "Athens time" in page
     assert "not betting advice" in page
     assert "66.7%" in page
 
