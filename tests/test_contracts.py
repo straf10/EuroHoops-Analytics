@@ -57,3 +57,14 @@ def test_rejects_self_play_unknown_phase_and_draws(
     broken.loc[0, column] = value
     with pytest.raises(pandera.errors.SchemaError):
         GAMES_SCHEMA.validate(broken)
+
+
+def test_rejects_forfeit_that_was_not_played() -> None:
+    games = parse_schedule(2026, load_fixture("schedule_E2026.json"))
+    games.loc[0, "forfeit"] = True
+    with pytest.raises(pandera.errors.SchemaError):
+        GAMES_SCHEMA.validate(games)
+
+
+def test_accepts_top_16_phase(valid: pd.DataFrame) -> None:
+    GAMES_SCHEMA.validate(valid.assign(phase="TS"))

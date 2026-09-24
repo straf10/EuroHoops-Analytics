@@ -19,3 +19,6 @@ htmlcov/
 
 # Local data (raw cache + staging); never committed
 data/
+
+# Generated static page (deployed by the daily workflow, not committed)
+site/

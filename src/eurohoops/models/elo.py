@@ -31,7 +31,7 @@ class GameArrays:
     home: list[str]
     away: list[str]
     neutral: list[bool]
-    played: list[bool]
+    played: list[bool]  # played and rated: forfeits (20-0 by decision) do not update ratings
     margin: list[int]  # home - away; 0 for unplayed games (never read for them)
 
 
@@ -45,7 +45,7 @@ def prepare(games: pd.DataFrame) -> GameArrays:
         home=games["home"].tolist(),
         away=games["away"].tolist(),
         neutral=games["neutral"].tolist(),
-        played=games["played"].tolist(),
+        played=(games["played"] & ~games["forfeit"]).tolist(),
         margin=margin.tolist(),
     )
 

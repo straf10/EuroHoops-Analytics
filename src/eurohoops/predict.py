@@ -47,16 +47,19 @@ def predict_upcoming(
     *,
     log_path: Path,
     season: int,
+    replay_from: int,
     window: timedelta,
     clock: Callable[[], datetime],
 ) -> int:
     """Log confirmed, unplayed ``season`` games tipping off within ``window``; return rows added.
 
-    Ratings come from replaying Elo over every completed game. The selection time and the
-    ``predicted_at_utc`` stamp are separate clock reads; if the stamp is not strictly before a
-    game's tip-off, nothing is written and LatePredictionError is raised.
+    Ratings come from replaying Elo over every completed game from season ``replay_from`` on
+    (the tuned model's first warm-up season, so extra history cannot shift live ratings).
+    The selection time and the ``predicted_at_utc`` stamp are separate clock reads; if the stamp
+    is not strictly before a game's tip-off, nothing is written and LatePredictionError is raised.
     """
     now = clock()
+    games = games[games["season"] >= replay_from]
     diffs = replay(prepare(games), model.params)
     upcoming = (
         (games["season"] == season)

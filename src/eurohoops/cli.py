@@ -1,31 +1,53 @@
-"""``eurohoops`` command line: ingest -> backtest -> predict -> score."""
+"""``eurohoops`` command line: ingest -> build -> backtest -> predict -> score -> publish."""
 
 import json
 import logging
 from datetime import UTC, datetime, timedelta
+from enum import StrEnum
 from pathlib import Path
 from typing import Annotated, Any
 
 import typer
 
 from eurohoops.config import (
-    BACKTEST_REPORT,
-    DEFAULT_SEASONS,
-    GAMES_PATH,
+    BOX_INVARIANTS_REPORT,
+    COMPETITIONS,
+    EUROLEAGUE,
+    GBL,
+    GBL_PLAYER_BOX,
+    GBL_TEAM_BOX,
     LIVE_SEASON,
-    PREDICTION_LOG,
-    RAW_DIR,
-    SCORECARD_REPORT,
+    MART_PATH,
+    SITE_DIR,
+    SQL_DIR,
 )
 from eurohoops.eval.backtest import format_table, load_tuned_model, run_backtest
 from eurohoops.eval.scorecard import build_scorecard
-from eurohoops.ingest.euroleague import ingest_seasons
+from eurohoops.ingest import euroleague, gbl
 from eurohoops.ingest.http import Fetcher, make_client
-from eurohoops.parse.games import build_games_table, read_games, write_games
+from eurohoops.marts import box_invariants, build_marts, read_games, read_teams
+from eurohoops.parse.box import build_box_tables
+from eurohoops.parse.games import (
+    build_games_table,
+    build_gbl_tables,
+    build_teams_table,
+    write_table,
+)
 from eurohoops.predict import LatePredictionError, predict_upcoming
+from eurohoops.publish import Section, render_page
 
 app = typer.Typer(no_args_is_help=True, add_completion=False)
 log = logging.getLogger("eurohoops")
+
+
+class CompetitionName(StrEnum):
+    euroleague = "euroleague"
+    gbl = "gbl"
+
+
+CompetitionOption = Annotated[
+    CompetitionName, typer.Option("--competition", help="Which competition")
+]
 
 
 def utc_now() -> datetime:
@@ -46,60 +68,117 @@ def main() -> None:
 @app.command(context_settings={"allow_extra_args": True, "ignore_unknown_options": True})
 def ingest(
     ctx: typer.Context,
+    competition: CompetitionOption = CompetitionName.euroleague,
     seasons: Annotated[
         list[int] | None,
         typer.Option(help="Season start years, space-separated: --seasons 2023 2024 2025 2026"),
     ] = None,
     details: Annotated[
-        bool, typer.Option(help="Also cache box score, PBP and shots of completed games")
+        bool,
+        typer.Option(help="Also cache game details (EuroLeague: box/PBP/shots; GBL: box scores)"),
     ] = False,
 ) -> None:
-    """Fetch schedules (and optionally game details) into the raw cache; rebuild the games table."""
+    """Fetch results into the raw cache and rebuild the competition's staging tables."""
     try:
         extra = [int(arg) for arg in ctx.args]
     except ValueError as exc:
         raise typer.BadParameter(f"unexpected arguments {ctx.args}") from exc
-    chosen = sorted({*(seasons or []), *extra}) or list(DEFAULT_SEASONS)
+    comp = COMPETITIONS[competition]
+    chosen = sorted({*(seasons or []), *extra}) or list(comp.default_seasons)
     with make_client() as client:
-        schedules = ingest_seasons(Fetcher(client), RAW_DIR, chosen, details)
-    games = build_games_table(schedules)
-    write_games(games, GAMES_PATH)
-    log.info("wrote %d games (%d played) to %s", len(games), games["played"].sum(), GAMES_PATH)
+        if comp is GBL:
+            fetcher = Fetcher(client, gbl.MIN_INTERVAL_S)
+            rounds = gbl.ingest_gbl(fetcher, comp.raw_dir, chosen, details, LIVE_SEASON)
+            games, teams = build_gbl_tables(rounds)
+            if details:
+                player_box, team_box = build_box_tables(comp.raw_dir, games)
+                write_table(player_box, GBL_PLAYER_BOX)
+                write_table(team_box, GBL_TEAM_BOX)
+        else:
+            fetcher = Fetcher(client, euroleague.MIN_INTERVAL_S)
+            schedules = euroleague.ingest_seasons(
+                fetcher, comp.raw_dir, chosen, details, LIVE_SEASON
+            )
+            games, teams = build_games_table(schedules), build_teams_table(schedules)
+    write_table(games, comp.staging_games)
+    write_table(teams, comp.staging_teams)
+    log.info(
+        "wrote %d games (%d played) to %s", len(games), games["played"].sum(), comp.staging_games
+    )
 
 
 @app.command()
-def backtest() -> None:
-    """Tune Elo on the tuning season, score tuning + test, write reports/backtest_elo.json."""
-    report = run_backtest(read_games(GAMES_PATH))
-    _write_json(BACKTEST_REPORT, report)
-    typer.echo(format_table(report))
+def build() -> None:
+    """Build the DuckDB marts from staging; with GBL box scores, write the invariant report."""
+    if build_marts(MART_PATH, SQL_DIR):
+        report = box_invariants(MART_PATH)
+        _write_json(BOX_INVARIANTS_REPORT, report)
+        for season, stats in report["seasons"].items():
+            typer.echo(f"gbl box scores {season}: {stats['passed']}/{stats['games']} pass")
+    typer.echo(f"marts written to {MART_PATH}")
+
+
+@app.command()
+def backtest(competition: CompetitionOption = CompetitionName.euroleague) -> None:
+    """Tune Elo and score it vs B0; the live backtest report holds the live parameters."""
+    comp = COMPETITIONS[competition]
+    games = read_games(MART_PATH, comp.name)
+    for spec in (comp.live_backtest, *comp.history_backtests):
+        report = run_backtest(games, spec)
+        _write_json(spec.report, report)
+        typer.echo(f"{spec.report}\n{format_table(report)}")
 
 
 @app.command()
 def predict(
+    competition: CompetitionOption = CompetitionName.euroleague,
     window_hours: Annotated[float, typer.Option(help="Predict games tipping off within")] = 36.0,
 ) -> None:
     """Append pre-tip-off predictions for upcoming live-season games to the public log."""
+    comp = COMPETITIONS[competition]
     try:
         added = predict_upcoming(
-            read_games(GAMES_PATH),
-            load_tuned_model(BACKTEST_REPORT),
-            log_path=PREDICTION_LOG,
+            read_games(MART_PATH, comp.name),
+            load_tuned_model(comp.live_backtest.report),
+            log_path=comp.prediction_log,
             season=LIVE_SEASON,
+            replay_from=comp.live_backtest.warmup[0],
             window=timedelta(hours=window_hours),
             clock=utc_now,
         )
     except LatePredictionError as exc:
         log.error("refusing to log: %s", exc)
         raise typer.Exit(code=1) from exc
-    typer.echo(f"{added} predictions appended to {PREDICTION_LOG}")
+    typer.echo(f"{added} predictions appended to {comp.prediction_log}")
 
 
 @app.command()
-def score() -> None:
-    """Score the prediction log against results, write reports/live_scorecard.json."""
+def score(competition: CompetitionOption = CompetitionName.euroleague) -> None:
+    """Score the prediction log against results and write the competition's scorecard."""
+    comp = COMPETITIONS[competition]
     card = build_scorecard(
-        PREDICTION_LOG, read_games(GAMES_PATH), load_tuned_model(BACKTEST_REPORT)
+        comp.prediction_log,
+        read_games(MART_PATH, comp.name),
+        load_tuned_model(comp.live_backtest.report),
     )
-    _write_json(SCORECARD_REPORT, card)
+    _write_json(comp.scorecard, card)
     typer.echo(json.dumps(card, indent=2))
+
+
+@app.command()
+def publish() -> None:
+    """Render site/index.html from both logs, scorecards and current results."""
+    sections = [
+        Section(
+            title=title,
+            log_path=comp.prediction_log,
+            scorecard=json.loads(comp.scorecard.read_text(encoding="utf-8")),
+            games=read_games(MART_PATH, comp.name),
+            names=dict(read_teams(MART_PATH, comp.name).itertuples(index=False)),
+        )
+        for title, comp in (("EuroLeague", EUROLEAGUE), ("Greek Basket League", GBL))
+    ]
+    SITE_DIR.mkdir(parents=True, exist_ok=True)
+    page = SITE_DIR / "index.html"
+    page.write_text(render_page(sections, utc_now()), encoding="utf-8", newline="\n")
+    typer.echo(f"wrote {page}")

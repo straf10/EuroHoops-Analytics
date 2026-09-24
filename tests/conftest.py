@@ -7,17 +7,24 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from eurohoops.config import EUROLEAGUE, GBL, MART_PATH, SQL_DIR
 from eurohoops.eval.backtest import TunedModel
+from eurohoops.marts import build_marts
 from eurohoops.models.elo import EloParams
-from eurohoops.parse.games import GAMES_SCHEMA
+from eurohoops.parse.games import conform, write_table
 
 FIXTURES = Path(__file__).parent / "fixtures"
+REPO = Path(__file__).parent.parent
 TEAMS = ("AAA", "BBB", "CCC", "DDD", "EEE", "FFF")
 
 
 def load_fixture(name: str) -> list[dict[str, Any]]:
-    games: list[dict[str, Any]] = json.loads((FIXTURES / name).read_text())["data"]
+    games: list[dict[str, Any]] = json.loads((FIXTURES / name).read_text(encoding="utf-8"))["data"]
     return games
+
+
+def esake_fixture(name: str) -> str:
+    return (FIXTURES / "esake" / name).read_text(encoding="utf-8")
 
 
 @pytest.fixture
@@ -28,47 +35,57 @@ def no_sleep(monkeypatch: pytest.MonkeyPatch) -> list[float]:
     return slept
 
 
-def make_games(seasons: dict[int, bool], seed: int = 7) -> pd.DataFrame:
-    """Synthetic double round-robin per season; ``seasons`` maps season -> played."""
+def make_games(seasons: dict[int, bool], seed: int = 7, gbl_like: bool = False) -> pd.DataFrame:
+    """Synthetic double round-robin per season; ``seasons`` maps season -> played.
+
+    ``gbl_like`` adds what GBL data has and EuroLeague data lacks: every 7th game is a 20-0
+    forfeit and the last round of each season is a playoff round.
+    """
     rng = np.random.default_rng(seed)
     strength = dict(zip(TEAMS, rng.normal(0, 6, len(TEAMS)), strict=True))
+    prefix = "GBL" if gbl_like else "E"
+    pairs = [(h, a) for h in TEAMS for a in TEAMS if h != a]
     rows = []
     for season, played in seasons.items():
         start = pd.Timestamp(f"{season}-10-01T18:00:00Z")
-        pairs = [(h, a) for h in TEAMS for a in TEAMS if h != a]
         for rnd, (home, away) in enumerate(pairs):
             code = rnd + 1
             margin = round(float(strength[home] - strength[away] + 3 + rng.normal(0, 11)))
             margin = margin if margin != 0 else 1
+            forfeit = gbl_like and played and code % 7 == 0
             rows.append(
                 {
-                    "game_id": f"E{season}_{code}",
+                    "game_id": f"{prefix}{season}_{code}",
                     "season": season,
                     "game_code": code,
-                    "phase": "RS",
+                    "phase": "PO" if gbl_like and rnd >= len(pairs) - 3 else "RS",
                     "round": rnd // 3 + 1,
+                    "round_label": f"Round {rnd // 3 + 1}",
                     "tipoff_utc": start + pd.Timedelta(days=rnd // 3 * 7, minutes=15 * (rnd % 3)),
                     "home": home,
                     "away": away,
-                    "home_score": 80 + max(margin, 0) if played else None,
-                    "away_score": 80 + max(-margin, 0) if played else None,
+                    "home_score": (20 if forfeit else 80 + max(margin, 0)) if played else None,
+                    "away_score": (0 if forfeit else 80 + max(-margin, 0)) if played else None,
                     "played": played,
+                    "forfeit": forfeit,
                     "neutral": False,
                     "confirmed_date": True,
                 }
             )
-    df = pd.DataFrame(rows).astype(
-        {
-            "home_score": "Int64",
-            "away_score": "Int64",
-            "tipoff_utc": "datetime64[ns, UTC]",
-            "phase": str,
-            "home": str,
-            "away": str,
-            "game_id": str,
-        }
-    )
-    return GAMES_SCHEMA.validate(df.sort_values(["tipoff_utc", "game_code"], ignore_index=True))
+    return conform(pd.DataFrame(rows))
+
+
+def teams_table(games: pd.DataFrame) -> pd.DataFrame:
+    codes = sorted({*games["home"], *games["away"]})
+    return pd.DataFrame({"team": codes, "name": [f"Team {c} & Co" for c in codes]}, dtype=str)
+
+
+def write_pipeline(euroleague: pd.DataFrame, gbl: pd.DataFrame) -> None:
+    """Stage both competitions and build the mart, as `ingest` + `build` would (CWD-relative)."""
+    for comp, games in ((EUROLEAGUE, euroleague), (GBL, gbl)):
+        write_table(games, comp.staging_games)
+        write_table(teams_table(games), comp.staging_teams)
+    build_marts(MART_PATH, REPO / SQL_DIR)
 
 
 @pytest.fixture

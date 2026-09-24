@@ -5,9 +5,6 @@ on:
     - cron: "0 8 * * *"
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 concurrency:
   group: daily-predictions
   cancel-in-progress: false
@@ -15,18 +12,41 @@ concurrency:
 jobs:
   predict:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
       - run: uv sync --frozen --no-dev
-      - name: Ingest schedules (no game details in CI)
-        run: uv run --no-dev eurohoops ingest
+      # GBL history lives only in ESAKE HTML; keep the raw page cache between runs so a
+      # run fetches just the live season's unfinished rounds (a cold cache refetches ~350 pages).
+      - name: Restore GBL raw cache
+        uses: actions/cache@v4
+        with:
+          path: data/raw/gbl
+          key: gbl-raw-${{ github.run_id }}
+          restore-keys: gbl-raw-
+      - name: Ingest schedules and results (no game details in CI)
+        run: |
+          uv run --no-dev eurohoops ingest
+          uv run --no-dev eurohoops ingest --competition gbl
+      - name: Build marts
+        run: uv run --no-dev eurohoops build
       - name: Predict upcoming games
-        run: uv run --no-dev eurohoops predict
-      - name: Score the live log
-        run: uv run --no-dev eurohoops score
+        run: |
+          uv run --no-dev eurohoops predict
+          uv run --no-dev eurohoops predict --competition gbl
+      - name: Score the live logs
+        run: |
+          uv run --no-dev eurohoops score
+          uv run --no-dev eurohoops score --competition gbl
+      - name: Render the page
+        run: uv run --no-dev eurohoops publish
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
       - name: Commit predictions and reports if changed
         run: |
           git add predictions/ reports/
@@ -38,3 +58,16 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "Daily predictions $(date -u +%Y-%m-%dT%H:%MZ)"
           git push
+
+  deploy-page:
+    needs: predict
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

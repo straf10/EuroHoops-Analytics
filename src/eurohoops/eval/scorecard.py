@@ -26,7 +26,9 @@ def build_scorecard(log_path: Path, games: pd.DataFrame, model: TunedModel) -> d
     valid = predictions[predicted_at < pd.to_datetime(predictions["tipoff_utc"], utc=True)]
     first = valid.sort_values("predicted_at_utc").drop_duplicates("game_id", keep="first")
     scored = first[["game_id", "p_home", "exp_margin"]].merge(
-        games.loc[games["played"], ["game_id", "home_score", "away_score", "neutral"]],
+        games.loc[
+            games["played"] & ~games["forfeit"], ["game_id", "home_score", "away_score", "neutral"]
+        ],
         on="game_id",
     )
 
