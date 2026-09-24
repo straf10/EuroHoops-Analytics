@@ -47,6 +47,7 @@ python_version = "3.12"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "--strict-markers"
+pythonpath = ["."]
 
 [tool.coverage.run]
 source = ["eurohoops"]

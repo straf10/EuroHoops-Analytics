@@ -1,0 +1,79 @@
+{
+ "data": [
+  {
+   "identifier": "E2024_1",
+   "gameCode": 1,
+   "phaseType": {
+    "code": "RS"
+   },
+   "round": 1,
+   "played": true,
+   "date": "2024-10-03T18:45:00",
+   "utcDate": "2024-10-03T16:45:00Z",
+   "confirmedDate": true,
+   "isNeutralVenue": false,
+   "local": {
+    "club": {
+     "code": "BER"
+    },
+    "score": 77
+   },
+   "road": {
+    "club": {
+     "code": "PAN"
+    },
+    "score": 87
+   }
+  },
+  {
+   "identifier": "E2024_326",
+   "gameCode": 326,
+   "phaseType": {
+    "code": "PO"
+   },
+   "round": 41,
+   "played": true,
+   "date": "2025-05-06T20:45:00",
+   "utcDate": "2025-05-06T18:45:00Z",
+   "confirmedDate": true,
+   "isNeutralVenue": false,
+   "local": {
+    "club": {
+     "code": "PAN"
+    },
+    "score": 75
+   },
+   "road": {
+    "club": {
+     "code": "IST"
+    },
+    "score": 67
+   }
+  },
+  {
+   "identifier": "E2024_327",
+   "gameCode": 327,
+   "phaseType": {
+    "code": "FF"
+   },
+   "round": 42,
+   "played": true,
+   "date": "2025-05-23T20:00:00",
+   "utcDate": "2025-05-23T18:00:00Z",
+   "confirmedDate": true,
+   "isNeutralVenue": true,
+   "local": {
+    "club": {
+     "code": "OLY"
+    },
+    "score": 68
+   },
+   "road": {
+    "club": {
+     "code": "MCO"
+    },
+    "score": 78
+   }
+  }
+ ]
+}
