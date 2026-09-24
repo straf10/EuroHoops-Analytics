@@ -4,14 +4,23 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import httpx
+import pandas as pd
 import pytest
 from typer.testing import CliRunner
 
 from eurohoops import cli
-from eurohoops.config import BACKTEST_REPORT, GAMES_PATH, PREDICTION_LOG, SCORECARD_REPORT
+from eurohoops.config import (
+    BOX_INVARIANTS_REPORT,
+    EUROLEAGUE,
+    GBL,
+    MART_PATH,
+    SITE_DIR,
+    SQL_DIR,
+)
 from eurohoops.eval.backtest import GRID_HCA, GRID_K, GRID_REVERSION, load_tuned_model
-from eurohoops.parse.games import read_games, write_games
-from tests.conftest import make_games
+from eurohoops.marts import read_games
+from tests.conftest import REPO, make_games, write_pipeline
+from tests.test_gbl_ingest import FakeEsake
 from tests.test_ingest import FakeApi
 
 runner = CliRunner()
@@ -21,27 +30,44 @@ NOW = datetime(2026, 10, 1, 8, 0, tzinfo=UTC)
 @pytest.fixture
 def workdir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     monkeypatch.chdir(tmp_path)
+    (tmp_path / SQL_DIR).mkdir()
+    for sql in (REPO / SQL_DIR).glob("*.sql"):
+        (tmp_path / SQL_DIR / sql.name).write_text(sql.read_text(encoding="utf-8"))
     return tmp_path
 
 
 @pytest.fixture
 def pipeline(workdir: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    """Synthetic staging table: three played seasons plus an unplayed live season."""
-    write_games(make_games({2023: True, 2024: True, 2025: True, 2026: False}), GAMES_PATH)
+    """Staged + built synthetic data covering every backtest split of both competitions."""
+    write_pipeline(
+        make_games({s: True for s in range(2007, 2026)} | {2026: False}),
+        make_games({s: True for s in range(2018, 2026)} | {2026: False}, gbl_like=True),
+    )
     monkeypatch.setattr(cli, "utc_now", lambda: NOW)
     return workdir
 
 
-@pytest.mark.usefixtures("workdir", "no_sleep")
-def test_ingest_accepts_space_separated_seasons(monkeypatch: pytest.MonkeyPatch) -> None:
-    api = FakeApi()
-    monkeypatch.setattr(
-        cli, "make_client", lambda: httpx.Client(transport=httpx.MockTransport(api))
-    )
-    result = runner.invoke(cli.app, ["ingest", "--seasons", "2024", "2026", "--details"])
+def invoke(*args: str) -> str:
+    result = runner.invoke(cli.app, list(args))
     assert result.exit_code == 0, result.output
-    assert len(api.calls) == 2 + 3 * 3
-    assert list(read_games(GAMES_PATH)["season"].unique()) == [2024, 2026]
+    return result.output
+
+
+@pytest.mark.usefixtures("workdir", "no_sleep")
+def test_ingest_both_competitions_then_build(monkeypatch: pytest.MonkeyPatch) -> None:
+    el_api, esake = FakeApi(), FakeEsake()
+    transports = iter([httpx.MockTransport(el_api), httpx.MockTransport(esake)])
+    monkeypatch.setattr(cli, "make_client", lambda: httpx.Client(transport=next(transports)))
+    invoke("ingest", "--seasons", "2024", "2026", "--details")
+    assert len(el_api.calls) == 2 + 3 * 3
+    invoke("ingest", "--competition", "gbl", "--seasons", "2018", "--details")
+    assert len(esake.calls) == 4 + 4
+    output = invoke("build")
+    assert "gbl box scores 2018: 0/4 pass" in output  # one recorded box served for every game
+    report = json.loads(BOX_INVARIANTS_REPORT.read_text())
+    assert report["seasons"]["2018"]["games"] == 4
+    assert list(read_games(MART_PATH, "euroleague")["season"].unique()) == [2024, 2026]
+    assert read_games(MART_PATH, "gbl")["forfeit"].sum() == 1
 
 
 @pytest.mark.usefixtures("workdir")
@@ -51,39 +77,45 @@ def test_ingest_rejects_junk_arguments() -> None:
 
 
 @pytest.mark.usefixtures("pipeline")
-def test_backtest_predict_score_end_to_end() -> None:
-    result = runner.invoke(cli.app, ["backtest"])
-    assert result.exit_code == 0, result.output
-    assert "tuned: K=" in result.output
-    report = json.loads(BACKTEST_REPORT.read_text())
-    tuned = report["tuned"]
-    assert (tuned["k"], tuned["hca"], tuned["reversion"]) in {
-        (k, h, r) for k in GRID_K for h in GRID_HCA for r in GRID_REVERSION
-    }
-    assert report["grid"]["size"] == 60
-    assert report["model_version"] == load_tuned_model(BACKTEST_REPORT).version()
-    ci = report["test_log_loss_diff_elo_minus_b0"]
+def test_backtest_predict_score_publish_end_to_end() -> None:
+    output = invoke("backtest")
+    assert "backtest_elo_history.json" in output
+    grid = {(k, h, r) for k in GRID_K for h in GRID_HCA for r in GRID_REVERSION}
+    for spec in (EUROLEAGUE.live_backtest, *EUROLEAGUE.history_backtests):
+        report = json.loads(spec.report.read_text())
+        assert (report["tuned"]["k"], report["tuned"]["hca"], report["tuned"]["reversion"]) in grid
+        assert report["seasons"]["test"] == list(spec.test)
+        assert report["model_version"] == load_tuned_model(spec.report).version()
+    invoke("backtest", "--competition", "gbl")
+    gbl_report = json.loads(GBL.live_backtest.report.read_text())
+    assert gbl_report["seasons"]["tuning"] == [2022, 2023]
+    ci = gbl_report["test_margin_abs_error_diff_elo_minus_b0"]
     assert ci["ci95"][0] <= ci["mean"] <= ci["ci95"][1]
 
-    assert runner.invoke(cli.app, ["predict"]).exit_code == 0
-    first = PREDICTION_LOG.read_bytes()
-    assert runner.invoke(cli.app, ["predict"]).exit_code == 0
-    assert PREDICTION_LOG.read_bytes() == first
+    invoke("predict")
+    el_log = EUROLEAGUE.prediction_log.read_bytes()
+    invoke("predict", "--competition", "gbl")
+    invoke("predict", "--competition", "gbl")
+    assert EUROLEAGUE.prediction_log.read_bytes() == el_log  # a GBL run never touches it
+    gbl_log = pd.read_csv(GBL.prediction_log)
+    assert len(gbl_log) == 3
+    assert gbl_log["game_id"].str.startswith("GBL2026_").all()
 
-    result = runner.invoke(cli.app, ["score"])
-    assert result.exit_code == 0, result.output
-    card = json.loads(SCORECARD_REPORT.read_text())
-    assert card["rows_in_log"] == 3
-    assert card["elo"]["n"] == 0
+    invoke("score")
+    invoke("score", "--competition", "gbl")
+    assert json.loads(GBL.scorecard.read_text())["rows_in_log"] == 3
+    invoke("publish")
+    page = (SITE_DIR / "index.html").read_text(encoding="utf-8")
+    assert page.count("Team AAA &amp; Co") >= 2  # names escaped, both sections
 
 
 @pytest.mark.usefixtures("pipeline")
 def test_predict_exits_non_zero_when_stamp_is_not_before_tipoff(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    assert runner.invoke(cli.app, ["backtest"]).exit_code == 0
+    invoke("backtest")
     ticks: Iterator[datetime] = iter([NOW, datetime(2026, 10, 1, 18, 0, tzinfo=UTC)])
     monkeypatch.setattr(cli, "utc_now", lambda: next(ticks))
     result = runner.invoke(cli.app, ["predict"])
     assert result.exit_code == 1
-    assert not PREDICTION_LOG.exists()
+    assert not EUROLEAGUE.prediction_log.exists()

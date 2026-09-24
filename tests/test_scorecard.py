@@ -25,6 +25,7 @@ def results(played: bool) -> pd.DataFrame:
             "home_score": pd.array([90, 82, 70, None] if played else [None] * 4, dtype="Int64"),
             "away_score": pd.array([80, 80, 60, None] if played else [None] * 4, dtype="Int64"),
             "played": [played, played, played, False],
+            "forfeit": [False] * 4,
             "neutral": [False] * 4,
         }
     )
@@ -69,3 +70,13 @@ def test_missing_log_is_an_empty_scorecard(tmp_path: Path, tuned: TunedModel) ->
     card = build_scorecard(tmp_path / "missing.csv", results(played=True), tuned)
     assert card["rows_in_log"] == 0
     assert card["b0"]["n"] == 0
+
+
+def test_forfeits_are_not_scored(tmp_path: Path, tuned: TunedModel) -> None:
+    log = tmp_path / "log.csv"
+    log.write_text(LOG)
+    games = results(played=True)
+    games.loc[games["game_id"] == "G2", ["home_score", "away_score", "forfeit"]] = [20, 0, True]
+    card = build_scorecard(log, games, tuned)
+    assert card["elo"]["n"] == 1
+    assert card["elo"]["log_loss"] == pytest.approx(-math.log(0.8), abs=1e-6)

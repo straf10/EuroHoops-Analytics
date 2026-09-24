@@ -1,7 +1,8 @@
-"""Walk-forward Elo backtest: warm-up, tune on one season, score the test season once.
+"""Walk-forward Elo backtest: warm-up, tune on the tuning seasons, score the test seasons once.
 
 Elo is replayed chronologically from the first warm-up game, so every prediction uses only
 games that tipped off before it. The grid search is |grid| independent O(N) passes.
+Forfeits carry no rating information and are left out entirely.
 """
 
 import hashlib
@@ -15,7 +16,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from eurohoops.config import TEST_SEASON, TUNING_SEASON, WARMUP_SEASON
+from eurohoops.config import Backtest
 from eurohoops.eval.metrics import paired_bootstrap_ci, per_game_log_loss, score
 from eurohoops.models.elo import (
     EloParams,
@@ -70,21 +71,33 @@ def _log_loss(diffs: FloatArray, home_won: FloatArray) -> float:
     return float(per_game_log_loss(win_probabilities(diffs), home_won).mean())
 
 
-def run_backtest(games: pd.DataFrame) -> dict[str, Any]:
-    history = games[games["played"] & games["season"].between(WARMUP_SEASON, TEST_SEASON)]
+def _ci(diff: FloatArray) -> dict[str, Any]:
+    mean, low, high = paired_bootstrap_ci(diff, BOOTSTRAP_RESAMPLES, BOOTSTRAP_SEED)
+    return {
+        "mean": round(mean, 6),
+        "ci95": [round(low, 6), round(high, 6)],
+        "resamples": BOOTSTRAP_RESAMPLES,
+        "seed": BOOTSTRAP_SEED,
+    }
+
+
+def run_backtest(games: pd.DataFrame, spec: Backtest) -> dict[str, Any]:
+    first, last = spec.warmup[0], spec.test[-1]
+    rated = games["played"] & ~games["forfeit"]
+    history = games[rated & games["season"].between(first, last)]
     arrays = prepare(history)
     season = history["season"].to_numpy()
     margin = (history["home_score"] - history["away_score"]).to_numpy(dtype=np.float64)
     home_won = (margin > 0).astype(np.float64)
     neutral = history["neutral"].to_numpy(dtype=np.float64)
-    tuning, test = season == TUNING_SEASON, season == TEST_SEASON
+    tuning, test = np.isin(season, spec.tuning), np.isin(season, spec.test)
 
     grid = [EloParams(*combo) for combo in product(GRID_K, GRID_HCA, GRID_REVERSION)]
     losses = [_log_loss(replay(arrays, params)[tuning], home_won[tuning]) for params in grid]
     best = grid[int(np.argmin(losses))]
     diffs = replay(arrays, best)
 
-    fit_b0 = (season <= TUNING_SEASON) & (neutral == 0.0)
+    fit_b0 = (season <= spec.tuning[-1]) & (neutral == 0.0)
     model = TunedModel(
         params=best,
         margin_scale=round(fit_margin_scale(diffs[tuning], margin[tuning]), 6),
@@ -105,11 +118,15 @@ def run_backtest(games: pd.DataFrame) -> dict[str, Any]:
     loss_diff = per_game_log_loss(p_elo[test], home_won[test]) - per_game_log_loss(
         p_b0[test], home_won[test]
     )
-    mean, low, high = paired_bootstrap_ci(loss_diff, BOOTSTRAP_RESAMPLES, BOOTSTRAP_SEED)
+    abs_error_diff = np.abs(exp_elo[test] - margin[test]) - np.abs(exp_b0[test] - margin[test])
     return {
         "model": "elo",
         "model_version": model.version(),
-        "seasons": {"warmup": WARMUP_SEASON, "tuning": TUNING_SEASON, "test": TEST_SEASON},
+        "seasons": {
+            "warmup": list(spec.warmup),
+            "tuning": list(spec.tuning),
+            "test": list(spec.test),
+        },
         "games_per_season": {
             str(s): int(n) for s, n in history["season"].value_counts().sort_index().items()
         },
@@ -127,12 +144,8 @@ def run_backtest(games: pd.DataFrame) -> dict[str, Any]:
         },
         "b0": {"home_win_rate": model.b0_home_win_rate, "home_margin": model.b0_home_margin},
         "metrics": metrics,
-        "test_log_loss_diff_elo_minus_b0": {
-            "mean": round(mean, 6),
-            "ci95": [round(low, 6), round(high, 6)],
-            "resamples": BOOTSTRAP_RESAMPLES,
-            "seed": BOOTSTRAP_SEED,
-        },
+        "test_log_loss_diff_elo_minus_b0": _ci(loss_diff),
+        "test_margin_abs_error_diff_elo_minus_b0": _ci(abs_error_diff),
     }
 
 
@@ -145,14 +158,19 @@ def format_table(report: dict[str, Any]) -> str:
                 f"{split:<8}{name:<6}{m['n']:>5}{m['log_loss']:>9.4f}{m['brier']:>8.4f}"
                 f"{m['accuracy']:>7.3f}{m['margin_mae']:>7.2f}"
             )
-    tuned, ci = report["tuned"], report["test_log_loss_diff_elo_minus_b0"]
+    tuned = report["tuned"]
     lines.append(
         f"tuned: K={tuned['k']:g} HCA={tuned['hca']:g} reversion={tuned['reversion']:g} "
         f"s={tuned['margin_scale']:.2f} (home win at equal ratings "
         f"{tuned['home_win_prob_equal_ratings']:.3f})"
     )
-    lines.append(
-        f"test logloss Elo-B0: {ci['mean']:+.4f} "
-        f"95% CI [{ci['ci95'][0]:+.4f}, {ci['ci95'][1]:+.4f}]"
-    )
+    for key, label in (
+        ("test_log_loss_diff_elo_minus_b0", "logloss"),
+        ("test_margin_abs_error_diff_elo_minus_b0", "margin abs error"),
+    ):
+        ci = report[key]
+        lines.append(
+            f"test {label} Elo-B0: {ci['mean']:+.4f} "
+            f"95% CI [{ci['ci95'][0]:+.4f}, {ci['ci95'][1]:+.4f}]"
+        )
     return "\n".join(lines)

@@ -1,15 +1,17 @@
 [project]
 name = "eurohoops"
-version = "0.1.0"
+version = "0.2.0"
 description = "EuroLeague + Greek Basket League analytics and live, pre-registered game predictions."
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [
+    "duckdb>=1.5.5",
     "httpx>=0.28.1",
     "numpy>=2.5.3",
     "pandas>=3.0.6",
     "pandera>=0.33.1",
     "pyarrow>=25.0.1",
+    "selectolax>=0.4.12",
     "tenacity>=9.1.4",
     "typer>=0.27.2",
 ]
@@ -39,6 +41,11 @@ target-version = "py312"
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF", "PTH", "T20", "ERA", "PL", "NPY", "PD"]
 ignore = ["PLR0913", "PLR2004"]
+
+[tool.ruff.lint.per-file-ignores]
+# Greek text is data here (month names, table labels), not a confusable typo.
+"src/eurohoops/parse/esake.py" = ["RUF001", "RUF002", "RUF003"]
+"tests/**" = ["RUF001", "RUF002", "RUF003"]
 
 [tool.mypy]
 strict = true

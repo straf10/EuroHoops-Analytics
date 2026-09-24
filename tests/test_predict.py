@@ -24,7 +24,9 @@ def fixed(t: datetime) -> Callable[[], datetime]:
 
 
 def run(games: pd.DataFrame, model: TunedModel, log: Path, clock: Callable[[], datetime]) -> int:
-    return predict_upcoming(games, model, log_path=log, season=2026, window=WINDOW, clock=clock)
+    return predict_upcoming(
+        games, model, log_path=log, season=2026, replay_from=2024, window=WINDOW, clock=clock
+    )
 
 
 def read_rows(log: Path) -> list[dict[str, str]]:
@@ -93,3 +95,13 @@ def test_skips_played_unconfirmed_and_out_of_window_games(
     log = tmp_path / "log.csv"
     assert run(unconfirmed, tuned, log, fixed(NOW)) == 2
     assert run(games, tuned, tmp_path / "late.csv", fixed(NOW + timedelta(hours=11))) == 0
+
+
+def test_history_before_replay_start_cannot_shift_live_predictions(
+    games: pd.DataFrame, tuned: TunedModel, tmp_path: Path
+) -> None:
+    older = make_games({2021: True, 2022: True}, seed=99)
+    with_history = pd.concat([older, games], ignore_index=True)
+    run(games, tuned, tmp_path / "a.csv", fixed(NOW))
+    run(with_history, tuned, tmp_path / "b.csv", fixed(NOW))
+    assert (tmp_path / "a.csv").read_bytes() == (tmp_path / "b.csv").read_bytes()

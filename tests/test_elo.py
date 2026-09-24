@@ -6,9 +6,11 @@ from eurohoops.models.elo import (
     GameArrays,
     fit_margin_scale,
     mov_multiplier,
+    prepare,
     replay,
     win_probability,
 )
+from tests.conftest import make_games
 
 PARAMS = EloParams(k=20.0, hca=100.0, reversion=0.5)
 
@@ -90,3 +92,11 @@ def test_unplayed_games_do_not_update_ratings() -> None:
 def test_margin_scale_least_squares_through_origin() -> None:
     diffs = np.array([50.0, -100.0, 200.0])
     assert fit_margin_scale(diffs, diffs / 25.0) == pytest.approx(25.0)
+
+
+def test_forfeits_do_not_update_ratings() -> None:
+    games = make_games({2024: True}, gbl_like=True)
+    assert games["forfeit"].any()
+    without = games[~games["forfeit"]].reset_index(drop=True)
+    diffs_all = replay(prepare(games), PARAMS)[~games["forfeit"].to_numpy()]
+    assert np.array_equal(diffs_all, replay(prepare(without), PARAMS))

@@ -1,11 +1,10 @@
-"""Polite HTTP GET: at most one request per MIN_INTERVAL_S, exponential-backoff retries."""
+"""Polite HTTP GET: a minimum interval between requests, exponential-backoff retries."""
 
 import time
 
 import httpx
 from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
 
-MIN_INTERVAL_S = 0.5
 MAX_ATTEMPTS = 5
 USER_AGENT = "EuroHoops-Analytics/0.1 (+https://github.com/straf10/EuroHoops-Analytics)"
 
@@ -24,8 +23,9 @@ def _is_retryable(exc: BaseException) -> bool:
 class Fetcher:
     """Wraps an httpx client; every request (including retries) respects the throttle."""
 
-    def __init__(self, client: httpx.Client) -> None:
+    def __init__(self, client: httpx.Client, min_interval_s: float) -> None:
         self._client = client
+        self._min_interval_s = min_interval_s
         self._last_request = float("-inf")
 
     @retry(
@@ -35,7 +35,7 @@ class Fetcher:
         reraise=True,
     )
     def get(self, url: str) -> bytes:
-        wait = self._last_request + MIN_INTERVAL_S - time.monotonic()
+        wait = self._last_request + self._min_interval_s - time.monotonic()
         if wait > 0:
             time.sleep(wait)
         self._last_request = time.monotonic()

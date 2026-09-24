@@ -11,9 +11,9 @@ from tests.conftest import make_games
 PARAMS = EloParams(k=30.0, hca=80.0, reversion=0.5)
 
 
-@pytest.fixture
-def history() -> pd.DataFrame:
-    return make_games({2023: True, 2024: True})
+@pytest.fixture(params=[False, True], ids=["euroleague-like", "gbl-like"])
+def history(request: pytest.FixtureRequest) -> pd.DataFrame:
+    return make_games({2023: True, 2024: True}, gbl_like=request.param)
 
 
 def cutoff(games: pd.DataFrame) -> pd.Timestamp:

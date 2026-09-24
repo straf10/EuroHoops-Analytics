@@ -1,6 +1,6 @@
 import pandas as pd
 
-from eurohoops.parse.games import build_games_table, parse_schedule
+from eurohoops.parse.games import build_games_table, build_teams_table, parse_schedule
 from tests.conftest import load_fixture
 
 
@@ -46,3 +46,26 @@ def test_games_table_is_validated_and_sorted_by_tipoff() -> None:
     assert table["tipoff_utc"].is_monotonic_increasing
     # Same tip-off time: ties broken by game code.
     assert list(table.loc[table["season"] == 2026, "game_code"]) == [2, 3]
+
+
+def test_final_four_is_neutral_even_when_the_api_flag_says_otherwise() -> None:
+    games = load_fixture("schedule_E2024.json")
+    final_four = next(g for g in games if g["phaseType"]["code"] == "FF")
+    final_four["isNeutralVenue"] = False  # as in all 2023-24 Final Four games
+    parsed = parse_schedule(2024, games).set_index("phase")
+    assert parsed.loc["FF", "neutral"]
+    assert not parsed.loc["PO", "neutral"]
+
+
+def test_round_label_and_no_forfeits_in_euroleague() -> None:
+    games = parse_schedule(2024, load_fixture("schedule_E2024.json"))
+    assert games.loc[0, "round_label"] == "Round 1"
+    assert not games["forfeit"].any()
+
+
+def test_teams_table_keeps_the_latest_name() -> None:
+    older = load_fixture("schedule_E2024.json")
+    newer = [{**older[0], "local": {**older[0]["local"], "club": {"code": "BER", "name": "New"}}}]
+    teams = build_teams_table({2025: newer, 2024: older}).set_index("team")["name"]
+    assert teams["BER"] == "New"
+    assert teams["PAN"] == "Panathinaikos AKTOR Athens"

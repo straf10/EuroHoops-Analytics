@@ -7,6 +7,7 @@
     "code": "RS"
    },
    "round": 1,
+   "roundAlias": "Round 1",
    "played": true,
    "date": "2024-10-03T18:45:00",
    "utcDate": "2024-10-03T16:45:00Z",
@@ -14,13 +15,15 @@
    "isNeutralVenue": false,
    "local": {
     "club": {
-     "code": "BER"
+     "code": "BER",
+     "name": "ALBA Berlin"
     },
     "score": 77
    },
    "road": {
     "club": {
-     "code": "PAN"
+     "code": "PAN",
+     "name": "Panathinaikos AKTOR Athens"
     },
     "score": 87
    }
@@ -32,6 +35,7 @@
     "code": "PO"
    },
    "round": 41,
+   "roundAlias": "Round 41",
    "played": true,
    "date": "2025-05-06T20:45:00",
    "utcDate": "2025-05-06T18:45:00Z",
@@ -39,13 +43,15 @@
    "isNeutralVenue": false,
    "local": {
     "club": {
-     "code": "PAN"
+     "code": "PAN",
+     "name": "Panathinaikos AKTOR Athens"
     },
     "score": 75
    },
    "road": {
     "club": {
-     "code": "IST"
+     "code": "IST",
+     "name": "Anadolu Efes Istanbul"
     },
     "score": 67
    }
@@ -57,6 +63,7 @@
     "code": "FF"
    },
    "round": 42,
+   "roundAlias": "Round 42",
    "played": true,
    "date": "2025-05-23T20:00:00",
    "utcDate": "2025-05-23T18:00:00Z",
@@ -64,13 +71,15 @@
    "isNeutralVenue": true,
    "local": {
     "club": {
-     "code": "OLY"
+     "code": "OLY",
+     "name": "Olympiacos Piraeus"
     },
     "score": 68
    },
    "road": {
     "club": {
-     "code": "MCO"
+     "code": "MCO",
+     "name": "AS Monaco"
     },
     "score": 78
    }
