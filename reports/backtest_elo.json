@@ -1,10 +1,16 @@
 {
   "model": "elo",
-  "model_version": "0.1.0+4356d891",
+  "model_version": "0.2.0+425e6393",
   "seasons": {
-    "warmup": 2023,
-    "tuning": 2024,
-    "test": 2025
+    "warmup": [
+      2023
+    ],
+    "tuning": [
+      2024
+    ],
+    "test": [
+      2025
+    ]
   },
   "games_per_season": {
     "2023": 331,
@@ -36,53 +42,62 @@
     "k": 20.0,
     "hca": 90.0,
     "reversion": 0.25,
-    "margin_scale": 24.620356,
-    "tuning_log_loss": 0.618098,
+    "margin_scale": 24.53358,
+    "tuning_log_loss": 0.618331,
     "home_win_prob_equal_ratings": 0.626699
   },
   "b0": {
-    "home_win_rate": 0.632777,
-    "home_margin": 3.699545
+    "home_win_rate": 0.632466,
+    "home_margin": 3.721286
   },
   "metrics": {
     "tuning": {
       "elo": {
         "n": 330,
-        "log_loss": 0.618098,
-        "brier": 0.215716,
+        "log_loss": 0.618331,
+        "brier": 0.215831,
         "accuracy": 0.633333,
-        "margin_mae": 9.071303
+        "margin_mae": 9.075768
       },
       "b0": {
         "n": 330,
-        "log_loss": 0.665182,
-        "brier": 0.236139,
+        "log_loss": 0.664943,
+        "brier": 0.236024,
         "accuracy": 0.618182,
-        "margin_mae": 9.795774
+        "margin_mae": 9.794984
       }
     },
     "test": {
       "elo": {
         "n": 402,
-        "log_loss": 0.629201,
-        "brier": 0.219977,
-        "accuracy": 0.639303,
-        "margin_mae": 9.115766
+        "log_loss": 0.629327,
+        "brier": 0.219998,
+        "accuracy": 0.641791,
+        "margin_mae": 9.123502
       },
       "b0": {
         "n": 402,
-        "log_loss": 0.655263,
-        "brier": 0.231298,
+        "log_loss": 0.655673,
+        "brier": 0.231499,
         "accuracy": 0.636816,
-        "margin_mae": 9.58412
+        "margin_mae": 9.59143
       }
     }
   },
   "test_log_loss_diff_elo_minus_b0": {
-    "mean": -0.026063,
+    "mean": -0.026346,
     "ci95": [
-      -0.04815,
-      -0.004416
+      -0.04878,
+      -0.004545
+    ],
+    "resamples": 1000,
+    "seed": 20260924
+  },
+  "test_margin_abs_error_diff_elo_minus_b0": {
+    "mean": -0.467929,
+    "ci95": [
+      -0.807082,
+      -0.13469
     ],
     "resamples": 1000,
     "seed": 20260924

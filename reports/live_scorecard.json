@@ -1,18 +1,18 @@
 {
-  "rows_in_log": 10,
+  "rows_in_log": 13,
   "rows_excluded_late": 0,
   "elo": {
-    "n": 0,
-    "log_loss": null,
-    "brier": null,
-    "accuracy": null,
-    "margin_mae": null
+    "n": 2,
+    "log_loss": 0.900397,
+    "brier": 0.348928,
+    "accuracy": 0.5,
+    "margin_mae": 3.975
   },
   "b0": {
-    "n": 0,
-    "log_loss": null,
-    "brier": null,
-    "accuracy": null,
-    "margin_mae": null
+    "n": 2,
+    "log_loss": 0.729534,
+    "brier": 0.267547,
+    "accuracy": 0.5,
+    "margin_mae": 4.221286
   }
 }
