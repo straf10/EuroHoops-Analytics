@@ -35,6 +35,7 @@ from eurohoops.eval.backtest import (
     win_probabilities,
 )
 from eurohoops.eval.metrics import crps_normal, paired_bootstrap_ci, per_game_log_loss, score
+from eurohoops.eval.tracking import data_hash
 from eurohoops.models.elo import EloParams, FloatArray, prepare, replay
 from eurohoops.models.team_eff import (
     MINUTES_PER_GAME,
@@ -120,6 +121,7 @@ class Data:
     home_won: FloatArray
     poss40: FloatArray  # NaN without rows
     split: dict[str, BoolArray]
+    snapshot: str  # sha256 of the game and team-game rows read
 
 
 def prepare_data(games: pd.DataFrame, team_games: pd.DataFrame, spec: M1Backtest) -> Data:
@@ -142,6 +144,7 @@ def prepare_data(games: pd.DataFrame, team_games: pd.DataFrame, spec: M1Backtest
         total=home + away,
         home_won=(home > away).astype(np.float64),
         poss40=per40.to_numpy(dtype=np.float64),
+        snapshot=data_hash(frame, rows),
         split={
             name: rated & np.isin(season, seasons)
             for name, seasons in (
@@ -471,6 +474,7 @@ def run_m1_backtest(
             "test": list(spec.test),
         },
         "test_scored": score_test,
+        "data_sha256": data.snapshot,
         "games_per_season": {
             str(s): int(n) for s, n in seasons[data.rated].value_counts().sort_index().items()
         },

@@ -100,3 +100,12 @@ log-loss gain is distinguishable from zero. Per E-g, M1 goes live for both.
 iteration 4 | E4 (part 1) backtest + validation gate + verdict | §6 1-12, 13, 18, 19 (run before the commit, same tree) | green; verdict EL PASS, GBL PASS | 37cf85f
 TEST RUN (once, after verdict commit 37cf85f): 2026-09-25T15:09Z
 iteration 5 | E4 (part 2) test seasons scored once | check 15 (order declaration f921181 < verdict 37cf85f < test fc7de59; two runs byte-identical, both comps), tests | green; test EL -0.0025 [-0.0077,+0.0027], GBL +0.0076 [-0.0232,+0.0360] | fc7de59
+- (iteration 6) **MLflow store = SQLite under `mlruns/`** (`mlruns/mlflow.db`, artifacts in
+  `mlruns/artifacts`), not the plain file store: MLflow 3.16.1 raises on `./mlruns` file stores
+  ("maintenance mode") unless `MLFLOW_ALLOW_FILE_STORE=true`. Still local, gitignored, no
+  server, no registry, dev dependency only (E-f intent kept).
+- (iteration 6) **Re-running `backtest --model m1 --score-test`** (for the two-run
+  reproducibility check and MLflow logging) recomputes the same deterministic test numbers from
+  tuning-only parameters; it is not a new look at the test seasons for any decision.
+- (iteration 6) M1 reports gained `data_sha256` (sha256 of the sorted game and team-game rows
+  read); an addition only.

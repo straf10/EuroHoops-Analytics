@@ -281,6 +281,8 @@ def test_backtest_m1_writes_reproducible_reports_for_both_competitions(small_m1:
     write_tables(MART_PATH, {"team_games": rows})
     output = invoke("backtest", "--model", "m1")
     assert "gate (" in output
+    assert "MLflow parent run" in output
+    assert (small_m1 / "mlruns" / "mlflow.db").exists()  # the working directory, not the repo
     assert EUROLEAGUE.m1 is not None and GBL.m1 is not None
     first = EUROLEAGUE.m1.report.read_bytes()
     invoke("backtest", "--model", "m1")
