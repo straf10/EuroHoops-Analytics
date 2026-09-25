@@ -107,3 +107,8 @@ def test_display_codes_rename_only_what_the_site_shows(monkeypatch: MonkeyPatch)
     assert "AAA" not in rated
     teams = {t["code"] for g in data["upcoming"] + data["results"] for t in (g["home"], g["away"])}
     assert "AAA" not in teams
+
+
+def test_display_codes_are_unique_per_competition() -> None:
+    for codes in DISPLAY_CODES.values():
+        assert len(set(codes.values())) == len(codes)
