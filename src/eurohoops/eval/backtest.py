@@ -16,7 +16,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from eurohoops.config import Backtest
+from eurohoops.config import Backtest, Grid
 from eurohoops.eval.metrics import paired_bootstrap_ci, per_game_log_loss, score
 from eurohoops.models.elo import (
     EloParams,
@@ -27,9 +27,6 @@ from eurohoops.models.elo import (
     win_probability,
 )
 
-GRID_K = (15.0, 20.0, 30.0, 40.0)
-GRID_HCA = (50.0, 70.0, 90.0, 110.0, 130.0)
-GRID_REVERSION = (0.25, 0.5, 0.75)
 BOOTSTRAP_RESAMPLES = 1000
 BOOTSTRAP_SEED = 20260924
 
@@ -81,6 +78,15 @@ def _ci(diff: FloatArray) -> dict[str, Any]:
     }
 
 
+def grid_edges(grid: Grid, best: EloParams) -> list[str]:
+    """Axes whose best value sits on the grid edge; a lower bound of 0 is natural, not an edge."""
+    return [
+        axis
+        for axis, values in asdict(grid).items()
+        if getattr(best, axis) == max(values) or getattr(best, axis) == min(values) > 0.0
+    ]
+
+
 def run_backtest(games: pd.DataFrame, spec: Backtest) -> dict[str, Any]:
     first, last = spec.warmup[0], spec.test[-1]
     rated = games["played"] & ~games["forfeit"]
@@ -92,9 +98,10 @@ def run_backtest(games: pd.DataFrame, spec: Backtest) -> dict[str, Any]:
     neutral = history["neutral"].to_numpy(dtype=np.float64)
     tuning, test = np.isin(season, spec.tuning), np.isin(season, spec.test)
 
-    grid = [EloParams(*combo) for combo in product(GRID_K, GRID_HCA, GRID_REVERSION)]
+    grid = [EloParams(*combo) for combo in product(spec.grid.k, spec.grid.hca, spec.grid.reversion)]
     losses = [_log_loss(replay(arrays, params)[tuning], home_won[tuning]) for params in grid]
-    best = grid[int(np.argmin(losses))]
+    grid_best = grid[int(np.argmin(losses))]
+    best = spec.frozen or grid_best
     diffs = replay(arrays, best)
 
     fit_b0 = (season <= spec.tuning[-1]) & (neutral == 0.0)
@@ -119,6 +126,14 @@ def run_backtest(games: pd.DataFrame, spec: Backtest) -> dict[str, Any]:
         p_b0[test], home_won[test]
     )
     abs_error_diff = np.abs(exp_elo[test] - margin[test]) - np.abs(exp_b0[test] - margin[test])
+    p_grid_best = win_probabilities(replay(arrays, grid_best))
+    grid_best_vs_tuned = {
+        name: _ci(
+            per_game_log_loss(p_grid_best[mask], home_won[mask])
+            - per_game_log_loss(p_elo[mask], home_won[mask])
+        )
+        for name, mask in (("tuning", tuning), ("test", test))
+    }
     return {
         "model": "elo",
         "model_version": model.version(),
@@ -131,15 +146,17 @@ def run_backtest(games: pd.DataFrame, spec: Backtest) -> dict[str, Any]:
             str(s): int(n) for s, n in history["season"].value_counts().sort_index().items()
         },
         "grid": {
-            "k": list(GRID_K),
-            "hca": list(GRID_HCA),
-            "reversion": list(GRID_REVERSION),
+            **{axis: list(values) for axis, values in asdict(spec.grid).items()},
             "size": len(grid),
+            "best": {**asdict(grid_best), "tuning_log_loss": round(min(losses), 6)},
+            "best_on_edge": grid_edges(spec.grid, grid_best),
+            "best_minus_tuned_log_loss": grid_best_vs_tuned,
         },
         "tuned": {
             **asdict(best),
+            "frozen": spec.frozen is not None,
             "margin_scale": model.margin_scale,
-            "tuning_log_loss": round(min(losses), 6),
+            "tuning_log_loss": round(_log_loss(diffs[tuning], home_won[tuning]), 6),
             "home_win_prob_equal_ratings": round(win_probability(best.hca), 6),
         },
         "b0": {"home_win_rate": model.b0_home_win_rate, "home_margin": model.b0_home_margin},
@@ -162,7 +179,13 @@ def format_table(report: dict[str, Any]) -> str:
     lines.append(
         f"tuned: K={tuned['k']:g} HCA={tuned['hca']:g} reversion={tuned['reversion']:g} "
         f"s={tuned['margin_scale']:.2f} (home win at equal ratings "
-        f"{tuned['home_win_prob_equal_ratings']:.3f})"
+        f"{tuned['home_win_prob_equal_ratings']:.3f})" + (" [frozen]" if tuned["frozen"] else "")
+    )
+    grid, gap = report["grid"]["best"], report["grid"]["best_minus_tuned_log_loss"]["test"]
+    lines.append(
+        f"grid best: K={grid['k']:g} HCA={grid['hca']:g} reversion={grid['reversion']:g} "
+        f"on edge: {', '.join(report['grid']['best_on_edge']) or 'none'}; test logloss vs tuned "
+        f"{gap['mean']:+.4f} 95% CI [{gap['ci95'][0]:+.4f}, {gap['ci95'][1]:+.4f}]"
     )
     for key, label in (
         ("test_log_loss_diff_elo_minus_b0", "logloss"),

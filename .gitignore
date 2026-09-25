@@ -1,6 +1,9 @@
 # Personal session log (not part of the repo)
 memory.md
 
+# Secrets (API keys)
+.env
+
 # Python / uv
 __pycache__/
 *.py[cod]

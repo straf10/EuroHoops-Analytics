@@ -1,6 +1,7 @@
 import json
 from collections.abc import Iterator
 from datetime import UTC, datetime
+from itertools import product
 from pathlib import Path
 
 import httpx
@@ -17,7 +18,7 @@ from eurohoops.config import (
     SITE_DIR,
     SQL_DIR,
 )
-from eurohoops.eval.backtest import GRID_HCA, GRID_K, GRID_REVERSION, load_tuned_model
+from eurohoops.eval.backtest import load_tuned_model
 from eurohoops.marts import read_games
 from tests.conftest import REPO, make_games, write_pipeline
 from tests.test_gbl_ingest import FakeEsake
@@ -80,14 +81,25 @@ def test_ingest_rejects_junk_arguments() -> None:
 def test_backtest_predict_score_publish_end_to_end() -> None:
     output = invoke("backtest")
     assert "backtest_elo_history.json" in output
-    grid = {(k, h, r) for k in GRID_K for h in GRID_HCA for r in GRID_REVERSION}
     for spec in (EUROLEAGUE.live_backtest, *EUROLEAGUE.history_backtests):
+        grid = set(product(spec.grid.k, spec.grid.hca, spec.grid.reversion))
         report = json.loads(spec.report.read_text())
-        assert (report["tuned"]["k"], report["tuned"]["hca"], report["tuned"]["reversion"]) in grid
+        tuned = report["tuned"]
+        assert (tuned["k"], tuned["hca"], tuned["reversion"]) in grid
+        assert not tuned["frozen"]
+        assert {k: report["grid"]["best"][k] for k in ("k", "hca", "reversion")} == {
+            k: tuned[k] for k in ("k", "hca", "reversion")
+        }
+        assert report["grid"]["best_minus_tuned_log_loss"]["test"]["mean"] == 0.0
         assert report["seasons"]["test"] == list(spec.test)
         assert report["model_version"] == load_tuned_model(spec.report).version()
-    invoke("backtest", "--competition", "gbl")
+    output = invoke("backtest", "--competition", "gbl")
+    assert "[frozen]" in output
     gbl_report = json.loads(GBL.live_backtest.report.read_text())
+    assert GBL.live_backtest.frozen is not None
+    assert load_tuned_model(GBL.live_backtest.report).params == GBL.live_backtest.frozen
+    assert gbl_report["tuned"]["frozen"]
+    assert gbl_report["grid"]["size"] == 9 * 10 * 5
     assert gbl_report["seasons"]["tuning"] == [2022, 2023]
     ci = gbl_report["test_margin_abs_error_diff_elo_minus_b0"]
     assert ci["ci95"][0] <= ci["mean"] <= ci["ci95"][1]
