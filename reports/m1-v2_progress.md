@@ -53,3 +53,14 @@ Run 2026-09-25 21:52-21:57 UTC on the rebuilt marts (FT weight 0.42), declared g
 
 The edges are not widened again: the tuning log loss is flat there (EuroLeague v1 0.606840 →
 v2 0.606491), and another post-hoc widening would be tuning on noise.
+
+## Test (2024-25 + 2025-26), scored once after the verdict commit 38819d1
+| M1 - Elo, paired bootstrap 95% CI | EuroLeague v2 (v1) | GBL v2 (v1) |
+|---|---|---|
+| log loss | -0.0013 [-0.0072, +0.0052] (-0.0025) | +0.0037 [-0.0262, +0.0330] (+0.0076) |
+| margin CRPS | -0.013 [-0.066, +0.042] (-0.021) | -0.181 [-0.406, +0.063] (-0.182) |
+| totals CRPS | -0.859 [-1.156, -0.587] (-0.839) | -0.479 [-0.862, -0.097] (-0.502) |
+
+v2 is a little worse than v1 on the EuroLeague test and a little better on the GBL test; every
+difference is far inside the noise. v2 goes live as declared (the choice is not re-made on
+test numbers, which would be test-set selection).
