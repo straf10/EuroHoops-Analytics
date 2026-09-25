@@ -36,3 +36,20 @@ comparison-Elo validation log loss). If v2 fails the gate, live M1 stops per E-g
 `FT_WEIGHT = 0.42` in `parse/possessions.py`; it changes `poss_raw`/`poss_game` in `team_games`
 for both competitions (the GBL has no play-by-play from 2021 on to estimate its own weight, so
 it takes the EuroLeague value). Estimation is documented in `docs/data/possessions.md`.
+
+## GATE VERDICT (v2, validation 2023-24; test not run yet)
+Run 2026-09-25 21:52-21:57 UTC on the rebuilt marts (FT weight 0.42), declared grids above.
+
+| | EuroLeague | GBL |
+|---|---|---|
+| model_version | 0.2.0+m1.cbd9aaa3 | 0.2.0+m1.51ab8739 |
+| gate variant | student_t_const | student_t_pace |
+| validation log loss M1 / Elo | 0.5877 / 0.5885 | 0.4298 / 0.4362 |
+| M1 - Elo (95% CI) | -0.0008 [-0.0077, +0.0071] | -0.0065 [-0.0370, +0.0208] |
+| verdict | PASS (not significant) | PASS (not significant) |
+| rating (half-life, carry, ridge) | 1920, 0.25, 250 | 240, 0.75, 62.5 |
+| pace (half-life, carry, ridge) | 60, 1.0, 2 | 120, 1.0, 5 |
+| still on a grid edge | rating half-life (max), carry (min) | rating ridge (min) |
+
+The edges are not widened again: the tuning log loss is flat there (EuroLeague v1 0.606840 →
+v2 0.606491), and another post-hoc widening would be tuning on noise.

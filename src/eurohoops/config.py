@@ -55,16 +55,17 @@ class DecayGrid:
     ridge: tuple[float, ...]
 
 
-# Pre-declared in reports/week5-7_progress.md before any M1 run on real data.
+# v1 pre-declared in reports/week5-7_progress.md; v2 widened post-hoc (reports/m1-v2_progress.md)
+# after v1 tuned values sat on the grid edges.
 M1_RATING_GRID = DecayGrid(
-    half_life_days=(60.0, 120.0, 240.0, 480.0),
+    half_life_days=(60.0, 120.0, 240.0, 480.0, 960.0, 1920.0),
     carry=(0.25, 0.5, 0.75, 1.0),
-    ridge=(250.0, 500.0, 1000.0, 2000.0, 4000.0),  # possessions of evidence
+    ridge=(62.5, 125.0, 250.0, 500.0, 1000.0, 2000.0, 4000.0),  # possessions of evidence
 )
 M1_PACE_GRID = DecayGrid(
-    half_life_days=(60.0, 120.0, 240.0, 480.0),
+    half_life_days=(30.0, 60.0, 120.0, 240.0, 480.0, 960.0),
     carry=(0.25, 0.5, 0.75, 1.0),
-    ridge=(2.0, 5.0, 10.0, 20.0),  # games of evidence
+    ridge=(0.5, 1.0, 2.0, 5.0, 10.0, 20.0),  # games of evidence
 )
 
 

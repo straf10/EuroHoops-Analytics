@@ -1,7 +1,9 @@
 """Possessions (PLAN R1): the box-score estimate for both competitions and a EuroLeague PBP count.
 
-Box estimate per team: ``FGA - OREB + TOV + 0.44 * FTA``; the game's possession count is the
-mean of both teams' estimates. The play-by-play count ends a possession at a made field goal,
+Box estimate per team: ``FGA - OREB + TOV + 0.42 * FTA``; the game's possession count is the
+mean of both teams' estimates. R1's 0.44 is an NBA value; 0.42 is the weight that makes the
+mean box estimate equal the mean play-by-play count on EuroLeague games (M1 v2, see
+docs/data/possessions.md). The play-by-play count ends a possession at a made field goal,
 a defensive rebound after a miss, a turnover, or the last free throw of a trip (made; a missed
 last free throw waits for its rebound). Free throws after an and-one field goal, a technical,
 unsportsmanlike or disqualifying foul, or a bench/coach foul end nothing. A miss that no
@@ -13,7 +15,7 @@ from dataclasses import dataclass
 
 from eurohoops.parse.stints import Event
 
-FT_WEIGHT = 0.44
+FT_WEIGHT = 0.42
 MADE_FG = frozenset({"2FGM", "3FGM", "LAYUPMD", "DUNK"})
 MISSED_FG = frozenset({"2FGA", "3FGA", "2FGAB", "3FGAB", "LAYUPATT"})
 FREE_THROWS = frozenset({"FTM", "FTA"})

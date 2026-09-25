@@ -19,9 +19,10 @@ Columns: competition, season, game_id, team, opponent, home, points, fga, fta, o
 minutes (40 + 5 per overtime in which someone scored), `poss_raw`, `poss_game`, source.
 Contract: `TEAM_GAMES_SCHEMA` (two rows per game, `poss_game` = mean of `poss_raw`).
 
-## Possession definition (PLAN R1)
-`poss_raw = FGA − OREB + TOV + 0.44 · FTA` per team; `poss_game` = the mean of both teams.
-Team rebounds and team turnovers are included wherever the source records them.
+## Possession definition (PLAN R1, EuroLeague free-throw weight since M1 v2)
+`poss_raw = FGA − OREB + TOV + 0.42 · FTA` per team; `poss_game` = the mean of both teams.
+Team rebounds and team turnovers are included wherever the source records them. Until M1 v1
+the weight was R1's 0.44; see "How the free-throw weight is estimated" below.
 
 ## Coverage (2026-09-25 cache)
 Every rated game has two rows except 9 (all listed in `team_games_missing`):
@@ -63,25 +64,50 @@ On all 1,318 team-games of 2022-23 and 2023-24 the PBP event counts (FGA, FTA, O
 TOV) equal the box totals exactly, so the two counts differ only in how free-throw trips
 and unrebounded misses are counted.
 
-| Measure (seed 20260925, 50 games, 100 team-games) | Value |
-|---|---|
-| Teams within ±2 possessions | **89.0%** (target 90%) |
-| Games with both teams within ±2 | 80.0% |
-| Mean gap, PBP − box | −0.34 (sd 1.07, max 3.36) |
-| FT weight that zeroes the mean gap (in-sample) | 0.421 |
-| Teams within ±2 at that weight | 94.0% |
+| Measure (seed 20260925, 50 games, 100 team-games) | 0.44 (v1) | 0.42 (v2) |
+|---|---|---|
+| Teams within ±2 possessions (target 90%) | 89.0% | **94.0%** |
+| Games with both teams within ±2 | 80.0% | 88.0% |
+| Mean gap, PBP − box | −0.34 | +0.02 |
+| FT weight that zeroes the mean gap (in-sample) | 0.421 | 0.421 |
 
-**Why the target is missed by one team-game:** the 0.44 free-throw weight is an NBA estimate of
-possession-ending trips per FTA. EuroLeague trips end fewer possessions per FTA (more and-ones
-and technical free throws per attempt, FIBA's team-foul rules), so the box formula runs ~0.3-0.5
-possessions per team above the count. With the weight the data imply (0.42) agreement is 94%.
 The remaining spread (sd ≈ 1.1) comes from logging-order cases the counter cannot resolve (a
-technical during a live trip, rebounds logged after the next event). The task fixes the R1
-formula with 0.44, so `team_games` keeps it; the bias is a constant ~0.5% level shift that the
-model's league mean absorbs and it cancels in efficiency *differences* between teams.
+technical during a live trip, rebounds logged after the next event).
+
+## How the free-throw weight is estimated
+The weight is the share of free-throw attempts that end a possession. Every other term of the
+formula is a count, so the only unknown is `w` in
+
+    PBP possessions ≈ (FGA − OREB + TOV) + w · FTA
+
+The play-by-play counter above gives the actual possession count of each team-game. Choosing `w`
+so that the formula is right *on average* (method of moments) gives a closed form:
+
+    w = Σ (PBP − (FGA − OREB + TOV)) / Σ FTA          (sums over team-games)
+
+equivalently `w = w_old + Σ gap / Σ FTA`, where gap = PBP − box formula at the old weight. This
+is what `ft_weight_matching_pbp` reports: in `reports/possessions.json` on the 50-game sample,
+and in `reports/stints_mart.json` (`pbp_vs_box_possessions`) on every cached game from 2011-12.
+
+| Games (EuroLeague, all cached PBP) | Team-games | Weight matching PBP | Within ±2 at 0.44 | at 0.42 |
+|---|---|---|---|---|
+| 2011-12 → 2014-15 | 1,890 | 0.437 | 87.3% | 86.0% |
+| 2015-16 → today | 6,598 | 0.409 | 89.3% | 91.4% |
+| All | 8,488 | 0.416 | 88.9% | **90.2%** |
+
+On the passing stints-mart games (4,172), a game-level bootstrap (2,000 resamples) puts the
+all-season weight at 0.415, 95% CI [0.414, 0.417]; by season it drifts from ≈0.44 (2011-15) to
+≈0.41 (2016-22) and ≈0.40 (2023-25). **0.42 is the rounded EuroLeague value, a deliberate round
+number between the 50-game sample (0.421) and the population (0.416).** It is fixed, not
+re-estimated per season, so a possession means the same thing in every season of the backtest.
+
+Why it is below the NBA's 0.44: EuroLeague trips end fewer possessions per FTA (more and-ones
+and technical free throws per attempt, FIBA team-foul rules). The weight only moves the level of
+possessions (≈0.4 per team per game, ≈0.5%); team efficiency *differences* barely change.
+
+**GBL:** the GBL uses the same weight. It is not estimated on GBL data: the possession counter
+exists only for the EuroLeague play-by-play, and BasketHotel play-by-play covers only 2018-20.
 
 ## The full population (from the stints mart, `reports/stints_mart.json`)
-The same counter over every cached game from 2011-12: PBP within ±2 of the box formula for
-87.3% of team-games in 2011-14 (mean gap −0.05) and 89.3% from 2015-16 (mean gap −0.55), so the
-sample is representative. The possession check of the stints mart uses ±5 per team (a logging
-gap, not the formula bias) and passes in 99.6% of games.
+The possession check of the stints mart uses ±5 per team (a logging gap, not the formula bias)
+and passes in 99.7% of games (99.6% at 0.44).

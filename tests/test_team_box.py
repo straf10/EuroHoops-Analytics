@@ -89,11 +89,11 @@ def test_team_games_rows_and_missing_reasons(raw: tuple[Path, Path]) -> None:
     table = built.table.set_index(["game_id", "team"])
     red = table.loc[("E2023_1", "RED")]
     assert (red["opponent"], bool(red["home"]), red["source"]) == ("ASV", True, "euroleague_box")
-    assert red["poss_raw"] == pytest.approx(69.72)
-    assert red["poss_game"] == pytest.approx((69.72 + 70.24) / 2)
+    assert red["poss_raw"] == pytest.approx(69.46)
+    assert red["poss_game"] == pytest.approx((69.46 + 69.82) / 2)
     assert not table.loc[("E2023_1", "ASV"), "home"]
     esake = table.loc[("GBL2024_8FC479F6", "HOM")]
-    assert (esake["minutes"], esake["source"], esake["poss_raw"]) == (45.0, "esake_box", 85.88)
+    assert (esake["minutes"], esake["source"], esake["poss_raw"]) == (45.0, "esake_box", 85.34)
     pbp = table.loc[("GBL2018_0000000A", "HOM")]
     assert (pbp["source"], pbp["points"], pbp["fga"], pbp["fta"]) == ("gbl_pbp", 6, 2, 2)
     assert table.loc[("GBL2018_0000000A", "AWY"), "fga"] == 3
@@ -175,12 +175,12 @@ def test_euroleague_sample_compares_box_and_pbp(tmp_path: Path) -> None:
     assert report["games"] == 1
     assert report["excluded"] == {"E2024_7": "box score has no players (API placeholder)"}
     assert [(r["team"], r["box"], r["pbp"]) for r in report["per_team"]] == [
-        ("RED", 69.72, 70),
-        ("ASV", 70.24, 66),
+        ("RED", 69.46, 70),
+        ("ASV", 69.82, 66),
     ]
     assert report["within_tolerance_share_of_teams"] == 0.5
     assert report["within_tolerance_share_of_games"] == 0.0
-    assert report["mean_gap_pbp_minus_box"] == pytest.approx((0.28 - 4.24) / 2, abs=1e-4)
+    assert report["mean_gap_pbp_minus_box"] == pytest.approx((0.54 - 3.82) / 2, abs=1e-4)
 
 
 def test_gbl_comparison_and_full_report(raw: tuple[Path, Path]) -> None:

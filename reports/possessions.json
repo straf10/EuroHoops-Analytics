@@ -208,612 +208,612 @@
     "excluded": {},
     "team_games": 100,
     "tolerance": 2.0,
-    "within_tolerance_share_of_teams": 0.89,
-    "within_tolerance_share_of_games": 0.8,
-    "mean_gap_pbp_minus_box": -0.342,
-    "sd_gap": 1.0651,
-    "max_abs_gap": 3.36,
+    "within_tolerance_share_of_teams": 0.94,
+    "within_tolerance_share_of_games": 0.88,
+    "mean_gap_pbp_minus_box": 0.024,
+    "sd_gap": 1.0862,
+    "max_abs_gap": 2.98,
     "ft_weight_matching_pbp": 0.4213,
     "within_tolerance_share_of_teams_at_that_weight": 0.94,
     "per_team": [
       {
         "game_id": "E2015_120",
         "team": "BAM",
-        "box": 66.48,
+        "box": 66.14,
         "pbp": 65
       },
       {
         "game_id": "E2015_120",
         "team": "SAS",
-        "box": 62.4,
+        "box": 62.2,
         "pbp": 63
       },
       {
         "game_id": "E2016_14",
         "team": "BAR",
-        "box": 64.48,
+        "box": 64.14,
         "pbp": 64
       },
       {
         "game_id": "E2016_14",
         "team": "ULK",
-        "box": 65.72,
+        "box": 65.46,
         "pbp": 65
       },
       {
         "game_id": "E2017_75",
         "team": "KHI",
-        "box": 70.72,
+        "box": 70.46,
         "pbp": 69
       },
       {
         "game_id": "E2017_75",
         "team": "BAM",
-        "box": 69.16,
+        "box": 68.88,
         "pbp": 69
       },
       {
         "game_id": "E2018_18",
         "team": "CSK",
-        "box": 71.92,
+        "box": 71.56,
         "pbp": 72
       },
       {
         "game_id": "E2018_18",
         "team": "DAR",
-        "box": 71.36,
+        "box": 70.98,
         "pbp": 71
       },
       {
         "game_id": "E2019_157",
         "team": "BAS",
-        "box": 67.6,
+        "box": 67.3,
         "pbp": 67
       },
       {
         "game_id": "E2019_157",
         "team": "ULK",
-        "box": 65.4,
+        "box": 65.2,
         "pbp": 66
       },
       {
         "game_id": "E2020_42",
         "team": "KHI",
-        "box": 86.16,
+        "box": 85.88,
         "pbp": 85
       },
       {
         "game_id": "E2020_42",
         "team": "TEL",
-        "box": 81.92,
+        "box": 81.56,
         "pbp": 83
       },
       {
         "game_id": "E2021_15",
         "team": "IST",
-        "box": 76.0,
+        "box": 75.5,
         "pbp": 76
       },
       {
         "game_id": "E2021_15",
         "team": "CSK",
-        "box": 74.28,
+        "box": 73.54,
         "pbp": 74
       },
       {
         "game_id": "E2022_27",
         "team": "MAD",
-        "box": 73.48,
+        "box": 73.14,
         "pbp": 72
       },
       {
         "game_id": "E2022_27",
         "team": "OLY",
-        "box": 72.92,
+        "box": 72.56,
         "pbp": 72
       },
       {
         "game_id": "E2023_172",
         "team": "ULK",
-        "box": 68.6,
+        "box": 68.3,
         "pbp": 68
       },
       {
         "game_id": "E2023_172",
         "team": "PAR",
-        "box": 72.12,
+        "box": 71.66,
         "pbp": 69
       },
       {
         "game_id": "E2024_220",
         "team": "PAN",
-        "box": 74.56,
+        "box": 74.08,
         "pbp": 75
       },
       {
         "game_id": "E2024_220",
         "team": "ULK",
-        "box": 76.92,
+        "box": 76.56,
         "pbp": 76
       },
       {
         "game_id": "E2025_126",
         "team": "ULK",
-        "box": 68.72,
+        "box": 68.46,
         "pbp": 69
       },
       {
         "game_id": "E2025_126",
         "team": "VIR",
-        "box": 69.04,
+        "box": 68.72,
         "pbp": 69
       },
       {
         "game_id": "E2026_3",
         "team": "HTA",
-        "box": 74.72,
+        "box": 74.46,
         "pbp": 74
       },
       {
         "game_id": "E2026_3",
         "team": "MUN",
-        "box": 74.36,
+        "box": 73.98,
         "pbp": 74
       },
       {
         "game_id": "E2015_195",
         "team": "TIV",
-        "box": 67.16,
+        "box": 66.88,
         "pbp": 66
       },
       {
         "game_id": "E2015_195",
         "team": "ULK",
-        "box": 63.52,
+        "box": 63.36,
         "pbp": 64
       },
       {
         "game_id": "E2016_154",
         "team": "BAR",
-        "box": 71.96,
+        "box": 71.28,
         "pbp": 73
       },
       {
         "game_id": "E2016_154",
         "team": "BAS",
-        "box": 73.68,
+        "box": 73.24,
         "pbp": 73
       },
       {
         "game_id": "E2017_73",
         "team": "IST",
-        "box": 70.44,
+        "box": 69.92,
         "pbp": 69
       },
       {
         "game_id": "E2017_73",
         "team": "MIL",
-        "box": 69.6,
+        "box": 69.3,
         "pbp": 70
       },
       {
         "game_id": "E2018_44",
         "team": "CAN",
-        "box": 81.12,
+        "box": 80.66,
         "pbp": 79
       },
       {
         "game_id": "E2018_44",
         "team": "IST",
-        "box": 80.68,
+        "box": 80.24,
         "pbp": 83
       },
       {
         "game_id": "E2019_187",
         "team": "ZAL",
-        "box": 71.6,
+        "box": 71.3,
         "pbp": 70
       },
       {
         "game_id": "E2019_187",
         "team": "BER",
-        "box": 70.44,
+        "box": 69.92,
         "pbp": 71
       },
       {
         "game_id": "E2020_294",
         "team": "ULK",
-        "box": 65.04,
+        "box": 64.72,
         "pbp": 63
       },
       {
         "game_id": "E2020_294",
         "team": "BAR",
-        "box": 65.4,
+        "box": 65.2,
         "pbp": 64
       },
       {
         "game_id": "E2021_44",
         "team": "BAS",
-        "box": 68.16,
+        "box": 67.88,
         "pbp": 66
       },
       {
         "game_id": "E2021_44",
         "team": "MCO",
-        "box": 68.36,
+        "box": 67.98,
         "pbp": 67
       },
       {
         "game_id": "E2022_180",
         "team": "MIL",
-        "box": 65.24,
+        "box": 64.82,
         "pbp": 65
       },
       {
         "game_id": "E2022_180",
         "team": "ASV",
-        "box": 66.92,
+        "box": 66.56,
         "pbp": 66
       },
       {
         "game_id": "E2023_40",
         "team": "MAD",
-        "box": 72.56,
+        "box": 72.08,
         "pbp": 73
       },
       {
         "game_id": "E2023_40",
         "team": "BAR",
-        "box": 72.04,
+        "box": 71.72,
         "pbp": 72
       },
       {
         "game_id": "E2024_133",
         "team": "RED",
-        "box": 66.28,
+        "box": 66.04,
         "pbp": 66
       },
       {
         "game_id": "E2024_133",
         "team": "OLY",
-        "box": 67.48,
+        "box": 67.14,
         "pbp": 68
       },
       {
         "game_id": "E2025_120",
         "team": "VIR",
-        "box": 71.24,
+        "box": 70.82,
         "pbp": 72
       },
       {
         "game_id": "E2025_120",
         "team": "TEL",
-        "box": 70.88,
+        "box": 70.34,
         "pbp": 72
       },
       {
         "game_id": "E2026_2",
         "team": "DUB",
-        "box": 72.92,
+        "box": 72.56,
         "pbp": 72
       },
       {
         "game_id": "E2026_2",
         "team": "MAD",
-        "box": 71.84,
+        "box": 71.62,
         "pbp": 72
       },
       {
         "game_id": "E2015_117",
         "team": "ZAL",
-        "box": 70.36,
+        "box": 69.98,
         "pbp": 71
       },
       {
         "game_id": "E2015_117",
         "team": "PAN",
-        "box": 69.88,
+        "box": 69.34,
         "pbp": 70
       },
       {
         "game_id": "E2016_85",
         "team": "MAD",
-        "box": 74.6,
+        "box": 73.8,
         "pbp": 75
       },
       {
         "game_id": "E2016_85",
         "team": "ZAL",
-        "box": 77.8,
+        "box": 77.4,
         "pbp": 77
       },
       {
         "game_id": "E2017_128",
         "team": "MAD",
-        "box": 71.92,
+        "box": 71.56,
         "pbp": 73
       },
       {
         "game_id": "E2017_128",
         "team": "TEL",
-        "box": 76.04,
+        "box": 75.72,
         "pbp": 75
       },
       {
         "game_id": "E2018_157",
         "team": "KHI",
-        "box": 72.16,
+        "box": 71.88,
         "pbp": 70
       },
       {
         "game_id": "E2018_157",
         "team": "MUN",
-        "box": 68.76,
+        "box": 68.18,
         "pbp": 70
       },
       {
         "game_id": "E2019_202",
         "team": "ASV",
-        "box": 68.12,
+        "box": 67.66,
         "pbp": 69
       },
       {
         "game_id": "E2019_202",
         "team": "MUN",
-        "box": 70.04,
+        "box": 69.72,
         "pbp": 68
       },
       {
         "game_id": "E2020_89",
         "team": "MAD",
-        "box": 70.04,
+        "box": 69.72,
         "pbp": 70
       },
       {
         "game_id": "E2020_89",
         "team": "ULK",
-        "box": 69.08,
+        "box": 68.94,
         "pbp": 68
       },
       {
         "game_id": "E2021_159",
         "team": "RED",
-        "box": 74.68,
+        "box": 74.24,
         "pbp": 72
       },
       {
         "game_id": "E2021_159",
         "team": "DYR",
-        "box": 71.28,
+        "box": 71.04,
         "pbp": 71
       },
       {
         "game_id": "E2022_50",
         "team": "ZAL",
-        "box": 72.4,
+        "box": 72.2,
         "pbp": 72
       },
       {
         "game_id": "E2022_50",
         "team": "BER",
-        "box": 68.04,
+        "box": 67.72,
         "pbp": 69
       },
       {
         "game_id": "E2023_131",
         "team": "VIR",
-        "box": 67.04,
+        "box": 66.72,
         "pbp": 68
       },
       {
         "game_id": "E2023_131",
         "team": "OLY",
-        "box": 67.04,
+        "box": 66.72,
         "pbp": 66
       },
       {
         "game_id": "E2024_328",
         "team": "ULK",
-        "box": 67.6,
+        "box": 67.3,
         "pbp": 67
       },
       {
         "game_id": "E2024_328",
         "team": "PAN",
-        "box": 68.68,
+        "box": 68.24,
         "pbp": 67
       },
       {
         "game_id": "E2025_79",
         "team": "OLY",
-        "box": 71.4,
+        "box": 71.2,
         "pbp": 70
       },
       {
         "game_id": "E2025_79",
         "team": "HTA",
-        "box": 70.96,
+        "box": 70.78,
         "pbp": 71
       },
       {
         "game_id": "E2015_248",
         "team": "CSK",
-        "box": 65.6,
+        "box": 65.3,
         "pbp": 66
       },
       {
         "game_id": "E2015_248",
         "team": "TIV",
-        "box": 67.68,
+        "box": 67.24,
         "pbp": 67
       },
       {
         "game_id": "E2016_108",
         "team": "ZAL",
-        "box": 70.04,
+        "box": 69.72,
         "pbp": 70
       },
       {
         "game_id": "E2016_108",
         "team": "UNK",
-        "box": 69.68,
+        "box": 69.24,
         "pbp": 70
       },
       {
         "game_id": "E2017_162",
         "team": "CSK",
-        "box": 76.12,
+        "box": 75.66,
         "pbp": 76
       },
       {
         "game_id": "E2017_162",
         "team": "MAD",
-        "box": 75.68,
+        "box": 75.24,
         "pbp": 76
       },
       {
         "game_id": "E2018_255",
         "team": "BAS",
-        "box": 70.88,
+        "box": 70.34,
         "pbp": 71
       },
       {
         "game_id": "E2018_255",
         "team": "CSK",
-        "box": 70.24,
+        "box": 69.82,
         "pbp": 71
       },
       {
         "game_id": "E2019_48",
         "team": "MIL",
-        "box": 74.52,
+        "box": 74.36,
         "pbp": 75
       },
       {
         "game_id": "E2019_48",
         "team": "BAR",
-        "box": 72.68,
+        "box": 72.24,
         "pbp": 75
       },
       {
         "game_id": "E2020_312",
         "team": "MIL",
-        "box": 75.88,
+        "box": 75.34,
         "pbp": 73
       },
       {
         "game_id": "E2020_312",
         "team": "MUN",
-        "box": 73.68,
+        "box": 73.24,
         "pbp": 73
       },
       {
         "game_id": "E2021_37",
         "team": "IST",
-        "box": 67.72,
+        "box": 67.46,
         "pbp": 68
       },
       {
         "game_id": "E2021_37",
         "team": "UNK",
-        "box": 69.6,
+        "box": 69.3,
         "pbp": 70
       },
       {
         "game_id": "E2022_246",
         "team": "MIL",
-        "box": 66.6,
+        "box": 66.3,
         "pbp": 67
       },
       {
         "game_id": "E2022_246",
         "team": "PAR",
-        "box": 68.68,
+        "box": 68.24,
         "pbp": 67
       },
       {
         "game_id": "E2023_243",
         "team": "ASV",
-        "box": 69.04,
+        "box": 68.72,
         "pbp": 69
       },
       {
         "game_id": "E2023_243",
         "team": "MIL",
-        "box": 71.04,
+        "box": 70.72,
         "pbp": 70
       },
       {
         "game_id": "E2024_19",
         "team": "BER",
-        "box": 75.24,
+        "box": 74.82,
         "pbp": 75
       },
       {
         "game_id": "E2024_19",
         "team": "ASV",
-        "box": 72.2,
+        "box": 71.6,
         "pbp": 73
       },
       {
         "game_id": "E2025_224",
         "team": "OLY",
-        "box": 74.04,
+        "box": 73.72,
         "pbp": 74
       },
       {
         "game_id": "E2025_224",
         "team": "TEL",
-        "box": 72.04,
+        "box": 71.72,
         "pbp": 72
       },
       {
         "game_id": "E2015_146",
         "team": "TIV",
-        "box": 66.04,
+        "box": 65.72,
         "pbp": 66
       },
       {
         "game_id": "E2015_146",
         "team": "PAN",
-        "box": 64.04,
+        "box": 63.72,
         "pbp": 65
       },
       {
         "game_id": "E2016_7",
         "team": "PAN",
-        "box": 71.2,
+        "box": 70.6,
         "pbp": 71
       },
       {
         "game_id": "E2016_7",
         "team": "ZAL",
-        "box": 71.04,
+        "box": 70.72,
         "pbp": 70
       },
       {
         "game_id": "E2017_252",
         "team": "BAS",
-        "box": 64.72,
+        "box": 64.46,
         "pbp": 65
       },
       {
         "game_id": "E2017_252",
         "team": "ULK",
-        "box": 67.36,
+        "box": 66.98,
         "pbp": 67
       },
       {
         "game_id": "E2018_219",
         "team": "MUN",
-        "box": 73.36,
+        "box": 72.98,
         "pbp": 70
       },
       {
         "game_id": "E2018_219",
         "team": "BAR",
-        "box": 71.04,
+        "box": 70.72,
         "pbp": 71
       }
     ]

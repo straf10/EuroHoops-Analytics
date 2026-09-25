@@ -14,7 +14,7 @@ from tests.conftest import FIXTURES, esake_fixture
 
 def test_box_formula_on_a_real_euroleague_box_score() -> None:
     """E2023_1, RED 94-73 ASV. RED: FGA 37 + 34 = 71, OREB 17, TOV 10, FTA 13
-    -> 71 - 17 + 10 + 0.44 * 13 = 69.72. ASV: 29 + 25 - 9 + 16 + 0.44 * 21 = 70.24."""
+    -> 71 - 17 + 10 + 0.42 * 13 = 69.46. ASV: 29 + 25 - 9 + 16 + 0.42 * 21 = 69.82."""
     box = json.loads((FIXTURES / "box_E2023_1.json").read_text(encoding="utf-8"))
     parsed = euroleague_lines(box)
     assert not isinstance(parsed, str)
@@ -23,10 +23,10 @@ def test_box_formula_on_a_real_euroleague_box_score() -> None:
     red, asv = lines["RED"], lines["ASV"]
     assert (red["points"], red["fga"], red["oreb"], red["tov"], red["fta"]) == (94, 71, 17, 10, 13)
     assert box_possessions(red["fga"], red["oreb"], red["tov"], red["fta"]) == pytest.approx(
-        69.72, abs=1e-12
+        69.46, abs=1e-12
     )
     assert box_possessions(asv["fga"], asv["oreb"], asv["tov"], asv["fta"]) == pytest.approx(
-        70.24, abs=1e-12
+        69.82, abs=1e-12
     )
 
 
@@ -40,7 +40,7 @@ def test_team_rebounds_and_turnovers_are_in_the_euroleague_totals() -> None:
 
 def test_box_formula_on_a_real_esake_box_score_with_overtime() -> None:
     """GBL2024_8FC479F6 (93-101, one overtime). Home: FGA 51 + 23 = 74, OREB 18, TOV 18,
-    FTA 27 -> 74 - 18 + 18 + 11.88 = 85.88. Away: 42 + 29 - 11 + 15 + 12.32 = 87.32."""
+    FTA 27 -> 74 - 18 + 18 + 11.34 = 85.34. Away: 42 + 29 - 11 + 15 + 11.76 = 86.76."""
     html = esake_fixture("box_8FC479F6.html")
     boxes = parse_box_score(html)
     assert boxes is not None
@@ -53,10 +53,10 @@ def test_box_formula_on_a_real_esake_box_score_with_overtime() -> None:
         27,
     )
     assert box_possessions(home.fg2a + home.fg3a, home.oreb, home.tov, home.fta) == pytest.approx(
-        85.88, abs=1e-12
+        85.34, abs=1e-12
     )
     assert box_possessions(away.fg2a + away.fg3a, away.oreb, away.tov, away.fta) == pytest.approx(
-        87.32, abs=1e-12
+        86.76, abs=1e-12
     )
     assert parse_overtimes(html) == 1
     # The totals row includes the team row (team rebounds and team turnovers).

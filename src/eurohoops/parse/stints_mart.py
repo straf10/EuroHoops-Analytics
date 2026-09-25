@@ -23,7 +23,7 @@ from typing import Any
 import pandas as pd
 
 from eurohoops.ingest.cache import read_cached
-from eurohoops.parse.possessions import PossessionEnd, box_possessions, possession_ends
+from eurohoops.parse.possessions import FT_WEIGHT, PossessionEnd, box_possessions, possession_ends
 from eurohoops.parse.stints import (
     CHECKS,
     POINTS,
@@ -269,16 +269,24 @@ def _possession_agreement(
             ),
         ]
     )
-    joined = sides.merge(team_games[["game_id", "team", "poss_raw"]], on=["game_id", "team"])
+    joined = sides.merge(team_games[["game_id", "team", "poss_raw", "fta"]], on=["game_id", "team"])
     gap = joined["pbp"] - joined["poss_raw"]
     out = {}
-    for label, first, last in (("2011_2014", 2011, 2014), ("2015_on", 2015, 9999)):
+    for label, first, last in (
+        ("2011_2014", 2011, 2014),
+        ("2015_on", 2015, 9999),
+        ("all", 0, 9999),
+    ):
         span = joined["season"].between(first, last)
         out[label] = (
             {
                 "team_games": int(span.sum()),
                 "within_2_share": round(float((gap[span].abs() <= 2.0).mean()), 4),
                 "mean_gap_pbp_minus_box": round(float(gap[span].mean()), 4),
+                # The weight that zeroes the mean gap: FT_WEIGHT + sum(gap) / sum(FTA).
+                "ft_weight_matching_pbp": round(
+                    FT_WEIGHT + float(gap[span].sum()) / float(joined["fta"][span].sum()), 4
+                ),
             }
             if span.any()
             else None
