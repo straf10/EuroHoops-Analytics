@@ -8,6 +8,22 @@
 - [x] 7a. EuroLeague shot coordinate system
 - [x] 7b. 2026-27 formats and tiebreak rules (GBL format partly UNVERIFIED)
 
+Final gate, run from a clean state: `uv sync`, ruff, `ruff format --check`, `mypy --strict`
+and vulture are clean, and there are **123 tests at 98% coverage**. `eurohoops build`,
+`score` and `publish` run end to end and leave the tree unchanged.
+
+## Decisions for the user
+1. **GBL box-score fill policy (item 3):** fill 2018-20 from PBP when the PBP ingester lands
+   (recommended), or leave 2018-20 out of box-score models permanently.
+2. **GBL 2026-27 format (7b):** confirm the playoff places, series lengths and relegation
+   once ESAKE publishes the 2026-27 competition notice.
+3. **Olympiacos and Panathinaikos start at −2 points** on ESAKE's live table (7b). Confirm
+   the reason, and note that standings simulations must include it.
+4. **Push `week-3-closeout`** and merge before Fri 2 Oct, so the frozen GBL model and the
+   scorecard split are live before GBL round 1.
+5. The **EL grid best has reversion on the edge** (0.25). This is for information only,
+   because EL parameters are frozen for the season (D-a).
+
 ## 2. GBL Elo tuning grid
 The old grid's best value (K=40, HCA=130, reversion=0.25) sat on the edge of all three axes.
 The GBL backtest now searches K ∈ {10…80} × HCA ∈ {0…260} × reversion ∈ {0…0.75}
