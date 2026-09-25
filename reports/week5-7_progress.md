@@ -97,3 +97,5 @@ bootstrap 95% CI (1000 resamples, seed 20260924).
 
 Both competitions pass the pre-registered rule (point estimate below Elo), but neither
 log-loss gain is distinguishable from zero. Per E-g, M1 goes live for both.
+iteration 4 | E4 (part 1) backtest + validation gate + verdict | §6 1-12, 13, 18, 19 (run before the commit, same tree) | green; verdict EL PASS, GBL PASS | 37cf85f
+TEST RUN (once, after verdict commit 37cf85f): 2026-09-25T15:09Z
