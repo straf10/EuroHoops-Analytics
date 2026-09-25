@@ -17,6 +17,24 @@ from eurohoops.models.elo import prepare, season_ratings
 RECENT_RESULTS = 12
 TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
+# Display-only team codes. The pipeline (marts, prediction logs, odds) keeps the source's codes;
+# only the site shows these real-life abbreviations in their place.
+DISPLAY_CODES: dict[str, dict[str, str]] = {
+    "euroleague": {
+        "BAS": "KBA",  # Baskonia
+        "TEL": "MTA",  # Maccabi Tel Aviv
+        "PAN": "PAO",  # Panathinaikos
+        "ULK": "FBT",  # Fenerbahce
+        "RED": "CZV",  # Crvena Zvezda
+        "IST": "EFS",  # Anadolu Efes
+        "PAM": "VBC",  # Valencia Basket
+        "MUN": "BAY",  # Bayern Munich
+        "PRS": "PBB",  # Paris Basketball
+        "BES": "BJK",  # Besiktas
+        "MAD": "RMB",  # Real Madrid
+    },
+}
+
 
 @dataclass(frozen=True)
 class Section:
@@ -47,7 +65,8 @@ def _logged(section: Section) -> list[dict[Hashable, Any]]:
 
 
 def _team(section: Section, code: str) -> dict[str, str]:
-    return {"code": code, "name": section.names.get(code, code)}
+    shown = DISPLAY_CODES.get(section.key, {}).get(code, code)
+    return {"code": shown, "name": section.names.get(code, code)}
 
 
 def _game(section: Section, g: dict[Hashable, Any]) -> dict[str, Any]:
