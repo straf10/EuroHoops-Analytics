@@ -23,3 +23,7 @@ looks truncated. Needs the user to re-copy the key. D5 is built and tested on a 
 iteration 4 | D5 odds recorder + market column + daily step | gate 1-6, actionlint 1.7.12 (both workflows), score x2 | green (1-6, 16); check 12 live call BLOCKED (401); step 7 not run | 59aaec8
 iteration 5 | D6 OddsPortal spike | 2 requests (robots.txt 307 -> greece.html notice); doc ends in NO-GO | done (no code; gate unchanged since iteration 4) | 07a7d7f
 iteration 6 | D7 stint validation | gate 1-6, eurohoops stints x2 byte-identical (13) | green (1-6, 13); sample 50/50 pass | a177086
+iteration 7 | D4 site sections + D8 CI web job | full gate 1-7 (web built from fixture), actionlint, 8 screenshots (1440/390 x light/dark x EL/GBL), 0 px horizontal overflow | green | 37b7618
+
+Note (iteration 7): the user authorised stopping the stale astro preview (PIDs 8200/10892); done.
+Screenshots via Playwright + installed Edge against a local copy served under the /EuroHoops-Analytics base.
