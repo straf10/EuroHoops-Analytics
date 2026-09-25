@@ -12,3 +12,4 @@ Note (iteration 1): step 7 `npm ci` fails with EPERM unlinking
 `astro preview --port 4321` server (PIDs 8200/10892, started 14:17 local, before this session)
 holds it. Stopping it was denied by the auto-mode classifier, so the user has to stop it.
 Web steps (7, 17, D4) wait for that.
+iteration 2 | D2 CRPS + sigma + totals baseline | gate 1-6, backtest x2 reproduce, score x2, leakage | green (1-6); step 7 not run (preview server) | eba3e11
