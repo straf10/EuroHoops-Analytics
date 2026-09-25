@@ -41,3 +41,4 @@ Local gate 1-6 green on the branch start (224 tests, coverage 98.75%).
   workflow, which has no EuroLeague box cache, never rewrites the report).
 
 ## Loop log
+iteration 1 | E1 team_games possession mart | §6 1-11, 18, 19 (12-17 not built yet; 7 in a clean web/ copy) | green; 6378/6387 games with rows, 9 listed missing, 0 points mismatches, EL sample 89.0% within 2 (explained) | be1c18e
