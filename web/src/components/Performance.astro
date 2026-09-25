@@ -95,7 +95,9 @@ const end = series[series.length - 1];
       A calibrated model sits on the diagonal; the number beside each dot is its games.
       {test.ece !== null && <> Expected calibration error {test.ece.toFixed(3)}.</>}
     </figcaption>
-    <table class="sr-only">
+    <!-- A table sizes to its content, so the visually hidden box is a div around it. -->
+    <div class="sr-only">
+    <table>
       <caption>Reliability bins</caption>
       <thead>
         <tr><th scope="col">Forecast bin</th><th scope="col">Games</th><th scope="col">Mean forecast</th><th scope="col">Home win rate</th></tr>
@@ -106,6 +108,7 @@ const end = series[series.length - 1];
         ))}
       </tbody>
     </table>
+    </div>
   </figure>
 
   <figure class="panel">
