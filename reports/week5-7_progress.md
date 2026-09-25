@@ -143,3 +143,4 @@ iteration 7 | E6 leakage tests | full §6 1-19 (17 not built yet); 15 red only f
   - Site: one row in the live scorecard block, "Team model (M1) log loss" with Elo's log loss
     on the same games beside it (no new page). Screenshots `reports/screenshots/scorecard_m1_*`
     (fixture data: the real M1 log is empty until the first daily run).
+iteration 8 | E7 live M1 | full §6 1-20 (first run with all items built) | ALL PASS (not yet the final no-edit run: E8 pending) | 66f0ad7
