@@ -10,6 +10,7 @@ LIVE_SEASON = 2026
 MART_PATH = Path("data/marts/eurohoops.duckdb")
 SQL_DIR = Path("sql")
 BOX_INVARIANTS_REPORT = Path("reports/gbl_box_invariants.json")
+STINT_REPORT = Path("reports/stint_validation.json")
 SITE_DATA = Path("web/src/data/site.json")  # read by the Astro build in web/
 
 

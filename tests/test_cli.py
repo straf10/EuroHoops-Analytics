@@ -18,12 +18,14 @@ from eurohoops.config import (
     ODDS_TEAMS,
     SITE_DATA,
     SQL_DIR,
+    STINT_REPORT,
 )
 from eurohoops.eval.backtest import load_tuned_model
 from eurohoops.marts import read_games
 from tests.conftest import REPO, make_games, write_pipeline
 from tests.test_gbl_ingest import FakeEsake
 from tests.test_ingest import FakeApi
+from tests.test_stints import game, write_game
 
 runner = CliRunner()
 NOW = datetime(2026, 10, 1, 8, 0, tzinfo=UTC)
@@ -194,3 +196,15 @@ def test_odds_fails_cleanly(monkeypatch: pytest.MonkeyPatch) -> None:
     result = runner.invoke(cli.app, ["odds"])
     assert result.exit_code == 1
     assert "fake-key" not in result.output
+
+
+@pytest.mark.usefixtures("workdir")
+def test_stints_writes_a_reproducible_report() -> None:
+    write_game(EUROLEAGUE.raw_dir, 2024, 5, *game())
+    write_game(EUROLEAGUE.raw_dir, 2025, 9, *game(drop_in=True))
+    output = invoke("stints")
+    assert "2 games: all checks 50%" in output
+    first = STINT_REPORT.read_bytes()
+    invoke("stints")
+    assert STINT_REPORT.read_bytes() == first
+    assert json.loads(first)["failing_games"].keys() == {"E2025_9"}

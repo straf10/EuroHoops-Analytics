@@ -25,6 +25,7 @@ from eurohoops.config import (
     ODDS_TEAMS,
     SITE_DATA,
     SQL_DIR,
+    STINT_REPORT,
 )
 from eurohoops.eval.backtest import format_table, load_tuned_model, run_backtest
 from eurohoops.eval.scorecard import build_scorecard
@@ -39,6 +40,7 @@ from eurohoops.parse.games import (
     build_teams_table,
     write_table,
 )
+from eurohoops.parse.stints import validate_sample
 from eurohoops.predict import LatePredictionError, predict_upcoming
 from eurohoops.publish import Section, site_data
 
@@ -122,6 +124,18 @@ def build() -> None:
         for season, stats in report["seasons"].items():
             typer.echo(f"gbl box scores {season}: {stats['passed']}/{stats['games']} pass")
     typer.echo(f"marts written to {MART_PATH}")
+
+
+@app.command()
+def stints() -> None:
+    """Validate EuroLeague stints on the seeded 50-game sample (reads the local raw cache)."""
+    report = validate_sample(EUROLEAGUE.raw_dir)
+    _write_json(STINT_REPORT, report)
+    rates = ", ".join(f"{check} {rate:.0%}" for check, rate in report["pass_rate"].items())
+    typer.echo(
+        f"{report['games']} games: all checks {report['all_checks_pass_rate']:.0%} ({rates}); "
+        f"wrote {STINT_REPORT}"
+    )
 
 
 @app.command()
