@@ -1,0 +1,490 @@
+---
+import "@fontsource-variable/sofia-sans";
+import "@fontsource-variable/sofia-sans-extra-condensed";
+import "@fontsource/caveat-brush";
+import "../styles/global.css";
+import arrow from "@phosphor-icons/core/assets/bold/arrow-up-right-bold.svg?raw";
+import github from "@phosphor-icons/core/assets/bold/github-logo-bold.svg?raw";
+import Court from "../components/Court.astro";
+import Ratings from "../components/Ratings.astro";
+import Results from "../components/Results.astro";
+import Scorecard from "../components/Scorecard.astro";
+import raw from "../data/site.json";
+import type { SiteData } from "../lib/format";
+import { athensDay, athensTime, seasonSpan } from "../lib/format";
+
+const data = raw as SiteData;
+const comps = data.competitions;
+const REPO = "https://github.com/straf10/EuroHoops-Analytics";
+const updated = `${athensDay(data.generated_at_utc)}, ${athensTime(data.generated_at_utc)} Athens`;
+const description =
+  "Pre-registered EuroLeague and Greek Basket League forecasts, committed before tip-off and scored in the open.";
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>EuroHoops Analytics</title>
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#b7bec3" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#33393e" media="(prefers-color-scheme: dark)" />
+    <meta property="og:title" content="EuroHoops Analytics: called before tip-off" />
+    <meta property="og:description" content={description} />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%231f4fb8'/%3E%3C/svg%3E"
+    />
+    <script is:inline>
+      try {
+        const asked = new URLSearchParams(location.search).get("comp") ?? location.hash.slice(1);
+        const saved = localStorage.getItem("eh-comp");
+        if (asked === "gbl" || (asked !== "euroleague" && saved === "gbl")) {
+          document.addEventListener("DOMContentLoaded", () => {
+            document.getElementById("comp-gbl").checked = true;
+          });
+        }
+      } catch {}
+    </script>
+  </head>
+  <body>
+    <div class="board">
+      <header class="rail">
+        <a class="wordmark" href="#top" aria-label="EuroHoops Analytics, top of page">
+          <span class="dot" aria-hidden="true"></span>
+          EuroHoops<span class="light">Analytics</span>
+        </a>
+        <fieldset class="switch">
+          <legend class="sr-only">Competition</legend>
+          <input type="radio" name="comp" id="comp-euroleague" value="euroleague" checked />
+          <label for="comp-euroleague">EuroLeague</label>
+          <input type="radio" name="comp" id="comp-gbl" value="gbl" />
+          <label for="comp-gbl"><span class="long">Greek League</span><span class="short">GBL</span></label>
+        </fieldset>
+        <nav class="links" aria-label="Sections">
+          <a href="#results">Results</a>
+          <a href="#scorecard">Scorecard</a>
+          <a href="#ratings">Ratings</a>
+          <a class="gh" href={REPO} aria-label="Source code on GitHub">
+            <Fragment set:html={github} />
+          </a>
+        </nav>
+      </header>
+
+      <main id="top">
+        <section class="hero" aria-labelledby="hero-title">
+          <div class="hero-board">
+            {comps.map((c) => <Court comp={c} />)}
+          </div>
+          <div class="hero-copy">
+            <h1 id="hero-title">Called before tip-off.</h1>
+            <p class="lede">
+              Every EuroLeague and Greek League forecast is committed to a public log before the
+              game, then scored in the open.
+            </p>
+            <a class="cta" href={`${REPO}/tree/main/predictions`}>
+              Read the log <Fragment set:html={arrow} />
+            </a>
+          </div>
+        </section>
+
+        <div class="tray">
+          {
+            comps.map((c) => (
+              <p data-comp={c.key}>
+                <span class="hand">Live {c.season}</span>
+                <span>
+                  <b>{c.logged}</b> forecasts logged
+                </span>
+                <span>
+                  <b>{c.scorecard.elo.n}</b> scored
+                </span>
+                {c.scorecard.elo.log_loss !== null && c.scorecard.b0.log_loss !== null && (
+                  <span>
+                    log loss <b>{c.scorecard.elo.log_loss.toFixed(3)}</b> Elo vs{" "}
+                    <b>{c.scorecard.b0.log_loss.toFixed(3)}</b> baseline
+                  </span>
+                )}
+              </p>
+            ))
+          }
+        </div>
+
+        <section class="band" id="results" aria-labelledby="results-title">
+          <h2 id="results-title">Marked up after the whistle</h2>
+          <p class="intro">
+            The latest finished games against the call that was logged before them. Red ring: the
+            favourite won. Red line: it lost.
+          </p>
+          {comps.map((c) => <Results comp={c} />)}
+        </section>
+
+        <section class="band sunk" id="scorecard" aria-labelledby="scorecard-title">
+          <h2 id="scorecard-title">How the calls score</h2>
+          <p class="intro">
+            Elo against a baseline that always gives the home side its historical win rate. The
+            better number in each pair is underlined.
+          </p>
+          {comps.map((c) => <Scorecard comp={c} />)}
+        </section>
+
+        <section class="band" id="ratings" aria-labelledby="ratings-title">
+          <h2 id="ratings-title">Power ratings</h2>
+          <p class="intro">
+            Current Elo for every team in the {comps[0].season} season, with the change since the
+            season started.
+          </p>
+          {comps.map((c) => <Ratings comp={c} />)}
+        </section>
+
+        <section class="band method" id="method" aria-labelledby="method-title">
+          <h2 id="method-title">How the board is drawn</h2>
+          {
+            comps.map((c) => (
+              <dl data-comp={c.key}>
+                <div>
+                  <dt>Model</dt>
+                  <dd>
+                    Elo with a margin-of-victory multiplier, a home-court edge and reversion to the
+                    mean between seasons.
+                  </dd>
+                </div>
+                <div>
+                  <dt>Parameters</dt>
+                  <dd>
+                    K {c.backtest.params.k}, home edge {c.backtest.params.hca} rating points,{" "}
+                    {Math.round(c.backtest.params.reversion * 100)}% reversion.
+                  </dd>
+                </div>
+                <div>
+                  <dt>Tuned, then tested</dt>
+                  <dd>
+                    Grid-searched on {seasonSpan(c.backtest.tuning_seasons)}, scored once on the
+                    held-out {seasonSpan(c.backtest.test_seasons)}.
+                  </dd>
+                </div>
+                <div>
+                  <dt>Logged</dt>
+                  <dd>
+                    A scheduled job runs daily at 08:00 UTC and appends forecasts for games within
+                    36 hours. Rows are never edited.
+                  </dd>
+                </div>
+                <div>
+                  <dt>Proof</dt>
+                  <dd>
+                    Commit times show when each row went public. A row published after tip-off is
+                    shown but never scored.
+                  </dd>
+                </div>
+              </dl>
+            ))
+          }
+        </section>
+      </main>
+
+      <footer class="foot">
+        <p>A model benchmark, not betting advice.</p>
+        <p>Updated {updated}.</p>
+        <a href={REPO}>Code, data and logs on GitHub</a>
+      </footer>
+    </div>
+
+    <script>
+      const radios = document.querySelectorAll<HTMLInputElement>('input[name="comp"]');
+      radios.forEach((r) =>
+        r.addEventListener("change", () => {
+          try {
+            localStorage.setItem("eh-comp", r.value);
+          } catch {
+            /* storage unavailable: the switch still works for this visit */
+          }
+        }),
+      );
+    </script>
+  </body>
+</html>
+
+<style>
+  .board {
+    max-width: 1360px;
+    margin: 0 auto;
+    background: var(--board);
+    border-radius: var(--radius);
+    box-shadow:
+      inset 0 0 0 1px rgb(255 255 255 / 0.4),
+      inset 0 2px 10px var(--shadow),
+      0 1px 0 var(--frame-hi);
+    overflow: clip;
+  }
+
+  /* Header rail */
+  .rail {
+    display: flex;
+    align-items: center;
+    gap: 16px 28px;
+    padding: 14px var(--gutter);
+    border-bottom: 2px solid var(--ink);
+  }
+  .wordmark {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font: 900 1.55rem/1 var(--display);
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .wordmark .light {
+    font-weight: 400;
+    color: var(--ink-2);
+    margin-left: 6px;
+  }
+  .dot {
+    width: 14px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--blue);
+  }
+
+  .switch {
+    display: inline-flex;
+    margin: 0 0 0 auto;
+    padding: 3px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--board-sunk);
+    box-shadow: inset 0 1px 3px var(--shadow);
+  }
+  .switch input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .switch label {
+    padding: 7px 16px;
+    border-radius: 999px;
+    font-weight: 650;
+    font-size: 0.92rem;
+    color: var(--ink-2);
+    cursor: pointer;
+    transition:
+      background-color 180ms ease,
+      color 180ms ease,
+      transform 140ms ease-out;
+  }
+  .switch label:active {
+    transform: scale(0.97);
+  }
+  .switch input:checked + label {
+    background: var(--blue);
+    color: var(--on-blue);
+    box-shadow: 0 1px 3px var(--shadow);
+  }
+  .switch input:focus-visible + label {
+    outline: 2.5px solid var(--blue);
+    outline-offset: 2px;
+  }
+  .switch .short {
+    display: none;
+  }
+
+  .links {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+  }
+  .links a {
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-decoration: none;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .links a:hover {
+      text-decoration: underline;
+      text-decoration-color: var(--blue);
+    }
+  }
+  .gh {
+    display: inline-grid;
+  }
+  .gh :global(svg) {
+    width: 22px;
+    height: 22px;
+    fill: currentColor;
+  }
+
+  /* Hero */
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+    gap: clamp(28px, 4vw, 64px);
+    align-items: center;
+    padding: clamp(24px, 4vw, 52px) var(--gutter) clamp(28px, 4vw, 48px);
+  }
+  .hero-copy {
+    display: grid;
+    gap: 20px;
+    justify-items: start;
+  }
+  h1 {
+    font-size: clamp(3.2rem, 6.4vw, 5.6rem);
+    line-height: 0.9;
+    letter-spacing: -0.015em;
+    text-transform: uppercase;
+  }
+  .lede {
+    font-size: 1.12rem;
+    color: var(--ink-2);
+    max-width: 34ch;
+  }
+  .cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 22px;
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--board);
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+    transition:
+      transform 160ms ease-out,
+      background-color 180ms ease;
+  }
+  .cta :global(svg) {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+    transition: transform 200ms var(--ease-out);
+  }
+  .cta:active {
+    transform: scale(0.97);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .cta:hover {
+      background: var(--blue);
+      color: var(--on-blue);
+    }
+    .cta:hover :global(svg) {
+      transform: translate(2px, -2px);
+    }
+  }
+
+  /* The marker tray: an aluminium lip carrying the live tally. */
+  .tray {
+    background: var(--frame);
+    color: #1c2126;
+    padding: 12px var(--gutter);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.5),
+      0 6px 12px -8px var(--shadow);
+  }
+  .tray p {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 24px;
+    font-size: 0.95rem;
+  }
+  .tray .hand {
+    color: #1c2126;
+    font-size: 1.25rem;
+  }
+  @media (prefers-color-scheme: dark) {
+    .tray,
+    .tray .hand {
+      color: var(--ink);
+    }
+  }
+
+  /* Bands */
+  .band {
+    padding: clamp(44px, 6vw, 84px) var(--gutter);
+  }
+  .band + .band {
+    border-top: 1px solid var(--line);
+  }
+  .sunk {
+    background: var(--board-sunk);
+  }
+  h2 {
+    font-size: clamp(2.2rem, 4.4vw, 3.4rem);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .intro {
+    color: var(--ink-2);
+    max-width: 62ch;
+    margin-bottom: clamp(24px, 3vw, 36px);
+  }
+
+  .method dl {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 28px clamp(24px, 4vw, 56px);
+    margin: 28px 0 0;
+  }
+  .method dt {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 1.3rem;
+    text-transform: uppercase;
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .method dd {
+    margin: 0;
+    color: var(--ink-2);
+    max-width: 40ch;
+  }
+
+  .foot {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 28px;
+    padding: 22px var(--gutter) 28px;
+    border-top: 2px solid var(--ink);
+    color: var(--ink-2);
+    font-size: 0.9rem;
+  }
+  .foot a {
+    margin-left: auto;
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  @media (max-width: 980px) {
+    .hero {
+      grid-template-columns: 1fr;
+    }
+    .hero-copy {
+      order: -1;
+    }
+    .links a:not(.gh) {
+      display: none;
+    }
+  }
+  @media (max-width: 560px) {
+    .rail {
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .wordmark .light {
+      display: none;
+    }
+    .switch .long {
+      display: none;
+    }
+    .switch .short {
+      display: inline;
+    }
+    .foot a {
+      margin-left: 0;
+    }
+  }
+</style>

@@ -1,5 +1,6 @@
-# Personal session log (not part of the repo)
+# Personal session log and agent notes (not part of the repo)
 memory.md
+CLAUDE.md
 
 # Secrets (API keys)
 .env
@@ -25,3 +26,13 @@ htmlcov/
 
 # Generated static page (deployed by the daily workflow, not committed)
 /site/
+
+# Astro front-end: dependencies, build cache and the data file `eurohoops publish` writes
+web/node_modules/
+web/.astro/
+web/src/data/site.json
+
+# Impeccable scratch (screenshots, decision-page state); DESIGN.md, design.json and briefs are kept
+.impeccable/review/
+.impeccable/questions/
+.impeccable/mocks/

@@ -7,6 +7,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Annotated, Any
 
+import pandas as pd
 import typer
 
 from eurohoops.config import (
@@ -18,7 +19,7 @@ from eurohoops.config import (
     GBL_TEAM_BOX,
     LIVE_SEASON,
     MART_PATH,
-    SITE_DIR,
+    SITE_DATA,
     SQL_DIR,
 )
 from eurohoops.eval.backtest import format_table, load_tuned_model, run_backtest
@@ -34,7 +35,7 @@ from eurohoops.parse.games import (
     write_table,
 )
 from eurohoops.predict import LatePredictionError, predict_upcoming
-from eurohoops.publish import Section, render_page
+from eurohoops.publish import Section, site_data
 
 app = typer.Typer(no_args_is_help=True, add_completion=False)
 log = logging.getLogger("eurohoops")
@@ -168,18 +169,25 @@ def score(competition: CompetitionOption = CompetitionName.euroleague) -> None:
 
 @app.command()
 def publish() -> None:
-    """Render site/index.html from both logs, scorecards and current results."""
+    """Write the site data (web/src/data/site.json) the Astro front-end renders."""
     sections = [
         Section(
+            key=comp.name,
             title=title,
-            log_path=comp.prediction_log,
+            log=(
+                pd.read_csv(comp.prediction_log, dtype={"game_id": str})
+                if comp.prediction_log.exists()
+                else pd.DataFrame()
+            ),
             scorecard=json.loads(comp.scorecard.read_text(encoding="utf-8")),
+            backtest=json.loads(comp.live_backtest.report.read_text(encoding="utf-8")),
             games=read_games(MART_PATH, comp.name),
             names=dict(read_teams(MART_PATH, comp.name).itertuples(index=False)),
+            model=load_tuned_model(comp.live_backtest.report),
+            season=LIVE_SEASON,
+            replay_from=comp.live_backtest.warmup[0],
         )
         for title, comp in (("EuroLeague", EUROLEAGUE), ("Greek Basket League", GBL))
     ]
-    SITE_DIR.mkdir(parents=True, exist_ok=True)
-    page = SITE_DIR / "index.html"
-    page.write_text(render_page(sections, utc_now()), encoding="utf-8", newline="\n")
-    typer.echo(f"wrote {page}")
+    _write_json(SITE_DATA, site_data(sections, utc_now()))
+    typer.echo(f"wrote {SITE_DATA}")

@@ -15,7 +15,7 @@ from eurohoops.config import (
     EUROLEAGUE,
     GBL,
     MART_PATH,
-    SITE_DIR,
+    SITE_DATA,
     SQL_DIR,
 )
 from eurohoops.eval.backtest import load_tuned_model
@@ -117,8 +117,11 @@ def test_backtest_predict_score_publish_end_to_end() -> None:
     invoke("score", "--competition", "gbl")
     assert json.loads(GBL.scorecard.read_text())["rows_in_log"] == 3
     invoke("publish")
-    page = (SITE_DIR / "index.html").read_text(encoding="utf-8")
-    assert page.count("Team AAA &amp; Co") >= 2  # names escaped, both sections
+    data = json.loads(SITE_DATA.read_text(encoding="utf-8"))
+    el, gbl_data = data["competitions"]
+    assert (el["key"], gbl_data["key"]) == ("euroleague", "gbl")
+    assert len(gbl_data["upcoming"]) == 3
+    assert any(r["name"] == "Team AAA & Co" for r in el["ratings"])
 
 
 @pytest.mark.usefixtures("pipeline")

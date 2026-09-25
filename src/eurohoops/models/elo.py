@@ -62,7 +62,30 @@ def mov_multiplier(mov: int, winner_diff: float) -> float:
 
 def replay(games: GameArrays, params: EloParams) -> FloatArray:
     """Return the pre-game rating difference (home - away + HCA) for every game."""
+    return _run(games, params)[0]
+
+
+def season_ratings(
+    games: GameArrays, params: EloParams, season: int
+) -> dict[str, tuple[float, float]]:
+    """Each ``season`` team's (current rating, rating at that season's start after reversion)."""
+    _, ratings, starts = _run(games, params)
+    teams = {
+        t
+        for s, h, a in zip(games.season, games.home, games.away, strict=True)
+        if s == season
+        for t in (h, a)
+    }
+    start = starts.get(season, {})
+    return {t: (ratings[t], start.get(t, INITIAL_RATING)) for t in sorted(teams)}
+
+
+def _run(
+    games: GameArrays, params: EloParams
+) -> tuple[FloatArray, dict[str, float], dict[int, dict[str, float]]]:
+    """One chronological pass: pre-game diffs, final ratings and a snapshot at each season start."""
     ratings: dict[str, float] = {}
+    starts: dict[int, dict[str, float]] = {}
     diffs = np.empty(len(games.home), dtype=np.float64)
     current_season: int | None = None
     keep = 1.0 - params.reversion
@@ -81,6 +104,7 @@ def replay(games: GameArrays, params: EloParams) -> FloatArray:
             current_season = season
             for team, rating in ratings.items():
                 ratings[team] = keep * rating + params.reversion * INITIAL_RATING
+            starts[season] = dict(ratings)
         home_rating = ratings.setdefault(home, INITIAL_RATING)
         away_rating = ratings.setdefault(away, INITIAL_RATING)
         diff = home_rating - away_rating + (0.0 if neutral else params.hca)
@@ -96,7 +120,7 @@ def replay(games: GameArrays, params: EloParams) -> FloatArray:
         )
         ratings[home] = home_rating + shift
         ratings[away] = away_rating - shift
-    return diffs
+    return diffs, ratings, starts
 
 
 def fit_margin_scale(diffs: FloatArray, margins: FloatArray) -> float:

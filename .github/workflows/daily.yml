@@ -42,8 +42,18 @@ jobs:
         run: |
           uv run --no-dev eurohoops score
           uv run --no-dev eurohoops score --competition gbl
-      - name: Render the page
+      - name: Export the site data
         run: uv run --no-dev eurohoops publish
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Build the site (Astro, into site/)
+        working-directory: web
+        run: |
+          npm ci
+          npm run build
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site

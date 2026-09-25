@@ -1,0 +1,129 @@
+/* The coach's clipboard: a melamine board in an aluminium frame, three marker inks. */
+
+:root {
+  color-scheme: light dark;
+
+  --frame: #b7bec3;
+  --frame-hi: #d9dee1;
+  --frame-lo: #979fa5;
+  --board: #f4f6f5;
+  --board-sunk: #eaeeed;
+  --line: #d3dad9; /* printed court lines */
+  --ink: #1c2126; /* black marker: structure and numbers */
+  --ink-2: #4a535b;
+  --blue: #1f4fb8; /* blue marker: the model's call */
+  --blue-wash: rgb(31 79 184 / 0.08);
+  --on-blue: #f4f6f5;
+  --red: #c4362a; /* red marker: the result mark-up */
+  --shadow: rgb(38 48 56 / 0.18);
+
+  --display: "Sofia Sans Extra Condensed Variable", "Arial Narrow", sans-serif;
+  --text: "Sofia Sans Variable", system-ui, sans-serif;
+  --hand: "Caveat Brush", "Segoe Print", cursive;
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --gutter: clamp(16px, 3.2vw, 44px);
+  --radius: 14px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* A black glass board under arena light. */
+    --frame: #33393e;
+    --frame-hi: #4a5157;
+    --frame-lo: #22272b;
+    --board: #121518;
+    --board-sunk: #181c20;
+    --line: #283036;
+    --ink: #e8ecea;
+    --ink-2: #a2abb1;
+    --blue: #7aa2ff;
+    --blue-wash: rgb(122 162 255 / 0.1);
+    --on-blue: #0d1014;
+    --red: #ff6f61;
+    --shadow: rgb(0 0 0 / 0.5);
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  scroll-padding-top: 16px;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  padding: clamp(6px, 1.4vw, 18px);
+  background: var(--frame);
+  color: var(--ink);
+  font: 400 1rem/1.5 var(--text);
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--blue);
+  color: var(--on-blue);
+}
+
+:focus-visible {
+  outline: 2.5px solid var(--blue);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+a {
+  color: inherit;
+  text-decoration-color: var(--blue);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.22em;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--display);
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+  margin: 0;
+}
+
+p {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+.hand {
+  font-family: var(--hand);
+  font-weight: 400;
+  color: var(--blue);
+  letter-spacing: 0.01em;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* The competition switch drives every panel without JavaScript. */
+body:has(#comp-gbl:checked) [data-comp="euroleague"],
+body:not(:has(#comp-gbl:checked)) [data-comp="gbl"] {
+  display: none;
+}
+
+html {
+  scrollbar-color: var(--frame-lo) var(--board);
+}
