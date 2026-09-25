@@ -61,6 +61,17 @@ PBP_SCHEMA = pa.DataFrameSchema(
 )
 log = logging.getLogger(__name__)
 LINE_COUNTS = ("points", "fg2m", "fg2a", "fg3m", "fg3a", "ftm", "fta", "seconds")
+TEAM_COUNTS = ("points", "fga", "fta", "oreb", "dreb", "tov")
+# Rebound and turnover sentences, by a player ("(7) X made a offensive rebound") or by the team
+# ("Offensive rebound", "24 seconds violation"); checked against ESAKE totals in
+# docs/data/possessions.md. Personal fouls ("commited a personal foul on ...") never match.
+OREB = re.compile(r"\boffensive rebound$", re.IGNORECASE)
+DREB = re.compile(r"\bdefensive rebound$", re.IGNORECASE)
+TURNOVER = re.compile(
+    r"(?:\bbad pass|\bturnover\b|seconds violation|backcourt violation|offensive foul"
+    r"|passed the ball out of bounds)",
+    re.IGNORECASE,
+)
 
 
 class PbpFormatError(ValueError):
@@ -228,6 +239,25 @@ def player_lines(events: pd.DataFrame) -> pd.DataFrame:
         if number
     ]
     return pd.DataFrame(rows, columns=["side", "number", "player", *LINE_COUNTS])
+
+
+def team_counts(events: pd.DataFrame) -> pd.DataFrame:
+    """Per game and side: points, FGA, FTA, offensive and defensive rebounds and turnovers."""
+    sided = events[events["side"] != ""]
+    other = sided["text"].where(sided["action"] == "other", "")
+    counts = pd.DataFrame(
+        {
+            "game_id": sided["game_id"],
+            "side": sided["side"],
+            "points": sided["value"].where(sided["action"].isin(["fg_made", "ft_made"]), 0),
+            "fga": sided["action"].isin(["fg_made", "fg_missed"]).astype("int64"),
+            "fta": sided["action"].isin(["ft_made", "ft_missed"]).astype("int64"),
+            "oreb": other.str.contains(OREB).astype("int64"),
+            "dreb": other.str.contains(DREB).astype("int64"),
+            "tov": other.str.contains(TURNOVER).astype("int64"),
+        }
+    )
+    return counts.groupby(["game_id", "side"], as_index=False)[list(TEAM_COUNTS)].sum()
 
 
 def build_pbp_table(root: Path, games: pd.DataFrame) -> pd.DataFrame:

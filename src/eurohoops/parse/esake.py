@@ -28,6 +28,7 @@ MONTHS = (
     "ΔΕΚΕΜΒΡΙΟΣ",
 )
 FORFEIT_POINTS = 20
+OVERTIME_LABELS = ("ΟΤ", "OT")  # "ΟΤ1" is written with Greek letters
 ROUND_OPTION = re.compile(r"new Option\('([^']*)', '([^']*)'\)")
 GAME_DATE = re.compile(r"(\d{1,2})\s+(\S+?)(?:\s*-\s*(\d{1,2}):(\d{2}))?$")
 TEAM_LOGO = re.compile(r"/esaketeam/([0-9A-F]{8})/")
@@ -76,9 +77,27 @@ class BoxLine:
 
 
 @dataclass(frozen=True)
+class TeamLine:
+    """The team-level counts of the totals row or of the team/bench row (``ΟΜΑΔΙΚΑ - ΠΑΓΚΟΣ``).
+
+    The totals row includes the team row: team rebounds and team turnovers are in both.
+    """
+
+    points: int
+    fg2a: int
+    fg3a: int
+    fta: int
+    oreb: int
+    dreb: int
+    tov: int
+
+
+@dataclass(frozen=True)
 class TeamBox:
     players: tuple[BoxLine, ...]
     total_points: int
+    totals: TeamLine
+    team_row: TeamLine
 
 
 def _plain(text: str) -> str:
@@ -200,23 +219,58 @@ def _box_line(row: LexborNode) -> BoxLine:
     )
 
 
+def _team_line(cells: list[str]) -> TeamLine:
+    """Totals or team row cells: ``P, 2PM-A, 3PM-A, FTM-A, REBS, D.REBS, O.REBS, ... TO``."""
+    if len(cells) != 17:
+        raise EsakeParseError(f"unexpected team row {cells}")
+    attempted = [0 if cell in {"", "-"} else _made_attempted(cell)[1] for cell in cells[2:5]]
+    return TeamLine(
+        points=_number(cells[1]),
+        fg2a=attempted[0],
+        fg3a=attempted[1],
+        fta=attempted[2],
+        oreb=_number(cells[7]),
+        dreb=_number(cells[6]),
+        tov=_number(cells[14]),
+    )
+
+
+def _single_row(rows: list[LexborNode], label: str) -> list[str]:
+    found = [row for row in rows if _text(row).startswith(label)]
+    if len(found) != 1:
+        raise EsakeParseError(f"box score table without a single {label} row")
+    return [_text(cell) for cell in found[0].css("td, th")]
+
+
+def _team_box(rows: list[LexborNode]) -> TeamBox:
+    players = tuple(_box_line(row) for row in rows if row.css_first('a[href*="idplayer="]'))
+    totals = _single_row(rows, "ΣΥΝΟΛΟ")
+    team_row = _single_row(rows, "ΟΜΑΔΙΚΑ")
+    return TeamBox(players, _number(totals[1]), _team_line(totals), _team_line(team_row))
+
+
 def parse_box_score(html: str) -> tuple[TeamBox, TeamBox] | None:
     """Home and away box scores in page order (home first); None when ESAKE has none.
 
     Some 2018-19 and 2019-20 game pages carry only the game header and no stat tables.
     """
-    teams: list[TeamBox] = []
-    for table in LexborHTMLParser(html).css("table"):
-        rows = table.css("tr")
-        if not any(_text(row).startswith("ΠΑΙΚΤΗΣ") for row in rows):
-            continue
-        players = tuple(_box_line(row) for row in rows if row.css_first('a[href*="idplayer="]'))
-        totals = [row for row in rows if _text(row).startswith("ΣΥΝΟΛΟ")]
-        if len(totals) != 1:
-            raise EsakeParseError("box score table without a single totals row")
-        teams.append(TeamBox(players, _number(_text(totals[0].css("td, th")[1]))))
-    if not teams:
+    tables = [
+        rows
+        for rows in (table.css("tr") for table in LexborHTMLParser(html).css("table"))
+        if any(_text(row).startswith("ΠΑΙΚΤΗΣ") for row in rows)
+    ]
+    if not tables:
         return None
-    if len(teams) != 2:
-        raise EsakeParseError(f"expected 2 team box scores, found {len(teams)}")
-    return teams[0], teams[1]
+    if len(tables) != 2:
+        raise EsakeParseError(f"expected 2 team box scores, found {len(tables)}")
+    return _team_box(tables[0]), _team_box(tables[1])
+
+
+def parse_overtimes(html: str) -> int:
+    """Overtimes in which someone scored, from the score-by-period table (``ΟΤ1``, ``ΟΤ2``)."""
+    overtimes = 0
+    for row in LexborHTMLParser(html).css("tr"):
+        cells = [_text(cell) for cell in row.css("td, th")]
+        if len(cells) == 3 and _plain(cells[1]).startswith(OVERTIME_LABELS):
+            overtimes += any(_number(cells[i]) for i in (0, 2))
+    return overtimes

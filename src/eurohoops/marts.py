@@ -51,6 +51,30 @@ def build_marts(mart_path: Path, sql_dir: Path) -> bool:
     return has_box
 
 
+def write_tables(mart_path: Path, tables: dict[str, pd.DataFrame]) -> None:
+    """Create or replace mart tables from frames (names come from code, never from users)."""
+    with duckdb.connect(str(mart_path)) as con:
+        for name, frame in tables.items():
+            con.register("frame", frame)
+            con.execute(f"CREATE OR REPLACE TABLE {name} AS SELECT * FROM frame")
+            con.unregister("frame")
+
+
+def read_table(mart_path: Path, name: str, competition: str | None = None) -> pd.DataFrame | None:
+    """A mart table (optionally one competition's rows) in its stored row order.
+
+    None when the table does not exist (e.g. the stints mart was never built).
+    """
+    with duckdb.connect(str(mart_path), read_only=True) as con:
+        tables = {row[0] for row in con.execute("SHOW TABLES").fetchall()}
+        if name not in tables:
+            return None
+        con.execute("SET TimeZone = 'UTC'")
+        if competition is None:
+            return con.execute(f"SELECT * FROM {name}").df()
+        return con.execute(f"SELECT * FROM {name} WHERE competition = ?", [competition]).df()
+
+
 def _query(mart_path: Path, sql: str, competition: str) -> pd.DataFrame:
     with duckdb.connect(str(mart_path), read_only=True) as con:
         con.execute("SET TimeZone = 'UTC'")
