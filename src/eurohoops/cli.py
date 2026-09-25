@@ -26,6 +26,7 @@ from eurohoops.config import (
     ODDS_CALLS,
     ODDS_RAW_DIR,
     ODDS_TEAMS,
+    POSSESSION_REPORT,
     SITE_DATA,
     SQL_DIR,
     STINT_REPORT,
@@ -38,8 +39,10 @@ from eurohoops.marts import (
     box_invariants,
     build_marts,
     read_games,
+    read_table,
     read_teams,
     refresh_box_gaps,
+    write_tables,
 )
 from eurohoops.odds import OddsApiError, OddsPaths, api_key, record_odds
 from eurohoops.parse.box import build_box_tables
@@ -50,7 +53,9 @@ from eurohoops.parse.games import (
     write_table,
 )
 from eurohoops.parse.gbl_pbp import build_pbp_table
+from eurohoops.parse.possession_report import possession_report
 from eurohoops.parse.stints import validate_sample
+from eurohoops.parse.team_box import build_team_games
 from eurohoops.predict import LatePredictionError, predict_upcoming
 from eurohoops.publish import Section, site_data
 
@@ -70,6 +75,17 @@ CompetitionOption = Annotated[
 
 def utc_now() -> datetime:
     return datetime.now(UTC)
+
+
+def _gbl_pbp() -> pd.DataFrame | None:
+    return pd.read_parquet(GBL_PBP) if GBL_PBP.exists() else None
+
+
+def _both_games() -> pd.DataFrame:
+    return pd.concat(
+        [read_games(MART_PATH, c.name).assign(competition=c.name) for c in (EUROLEAGUE, GBL)],
+        ignore_index=True,
+    )
 
 
 def _write_json(path: Path, payload: dict[str, Any]) -> None:
@@ -148,8 +164,25 @@ def ingest(
 
 @app.command()
 def build() -> None:
-    """Build the DuckDB marts from staging; with GBL box scores, write the invariant report."""
-    if build_marts(MART_PATH, SQL_DIR):
+    """Build the DuckDB marts from staging (and ``team_games`` from the raw box-score cache).
+
+    With GBL box scores staged, also write the invariant report.
+    """
+    has_box = build_marts(MART_PATH, SQL_DIR)
+    team_games = build_team_games(
+        read_games(MART_PATH, EUROLEAGUE.name),
+        read_games(MART_PATH, GBL.name),
+        (EUROLEAGUE.raw_dir, GBL.raw_dir),
+        _gbl_pbp(),
+    )
+    write_tables(
+        MART_PATH, {"team_games": team_games.table, "team_games_missing": team_games.missing}
+    )
+    typer.echo(
+        f"team_games: {team_games.table['game_id'].nunique()} games, "
+        f"{len(team_games.missing)} played games without box lines"
+    )
+    if has_box:
         report = box_invariants(MART_PATH)
         _write_json(BOX_INVARIANTS_REPORT, report)
         refresh_box_gaps(MART_PATH, GBL_BOX_GAPS)
@@ -167,6 +200,36 @@ def stints() -> None:
     typer.echo(
         f"{report['games']} games: all checks {report['all_checks_pass_rate']:.0%} ({rates}); "
         f"wrote {STINT_REPORT}"
+    )
+
+
+@app.command()
+def possessions() -> None:
+    """Validate ``team_games``: coverage, points, box vs play-by-play possessions."""
+    table = read_table(MART_PATH, "team_games")
+    missing = read_table(MART_PATH, "team_games_missing")
+    if table is None or missing is None:
+        log.error("no team_games in the marts; run: eurohoops build")
+        raise typer.Exit(code=1)
+    report = possession_report(
+        table,
+        missing=missing,
+        games=_both_games(),
+        euroleague_raw=EUROLEAGUE.raw_dir,
+        gbl_raw=GBL.raw_dir,
+        gbl_pbp=_gbl_pbp(),
+    )
+    _write_json(POSSESSION_REPORT, report)
+    sample = report["euroleague_pbp_sample"]
+    agreement = (
+        "no EuroLeague play-by-play cached"
+        if sample is None
+        else f"EuroLeague sample within 2: {sample['within_tolerance_share_of_teams']:.1%} of teams"
+    )
+    typer.echo(
+        f"{len(report['missing_games'])} games missing, "
+        f"{len(report['points_mismatches'])} points mismatches; {agreement}; "
+        f"wrote {POSSESSION_REPORT}"
     )
 
 

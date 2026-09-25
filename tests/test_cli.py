@@ -18,6 +18,7 @@ from eurohoops.config import (
     GBL_PBP,
     MART_PATH,
     ODDS_TEAMS,
+    POSSESSION_REPORT,
     SITE_DATA,
     SQL_DIR,
     STINT_REPORT,
@@ -199,6 +200,21 @@ def test_odds_fails_cleanly(monkeypatch: pytest.MonkeyPatch) -> None:
     result = runner.invoke(cli.app, ["odds"])
     assert result.exit_code == 1
     assert "fake-key" not in result.output
+
+
+@pytest.mark.usefixtures("pipeline")
+def test_build_writes_team_games_and_possessions_validates_them() -> None:
+    failed = runner.invoke(cli.app, ["possessions"])
+    assert failed.exit_code == 1  # the marts have no team_games before `build`
+    assert "team_games: 0 games" in invoke("build")  # synthetic games have no box scores
+    output = invoke("possessions")
+    assert "0 points mismatches; no EuroLeague play-by-play cached" in output
+    report = json.loads(POSSESSION_REPORT.read_text(encoding="utf-8"))
+    assert (
+        report["coverage"]["gbl"]["2025"]["missing"]
+        == report["coverage"]["gbl"]["2025"]["rated_games"]
+    )
+    assert report["missing_games"][0]["reason"] == "no cached box score (ingest --details)"
 
 
 @pytest.mark.usefixtures("workdir")
