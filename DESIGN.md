@@ -148,6 +148,25 @@ A red hand-drawn ring around a correct call, a red strike through a wrong one, a
 ### Rating ladder
 Ranked rows with code, name, a rail with a black magnet at the team's rating, the rating, and the season change (blue up, red down, with a caret icon).
 
+### Reliability diagram
+A square court: court-line gridlines at 0, 50% and 100% on both axes, and the diagonal as a
+dashed soft-black line ("called 70%, won 70%"). Each non-empty forecast bin is a blue marker
+dot at (mean forecast, home win rate), with its area growing with the bin's games. The game
+count is written beside every dot, so a big miss on a tiny bin reads as small. The dots are
+joined by a thin blue stroke. It shows the held-out test seasons only; the live season is too
+small to bin. A screen-reader table carries the bins.
+
+### Rolling window
+Log loss over the latest 50 scored games: Elo is a solid blue stroke, the baseline a dashed
+soft-black one, and each line ends in a label with its last value. There is no fill under the
+lines and no legend box. Below 50 scored games the chart isn't drawn: a plain sentence says
+when it starts and how many games are scored so far.
+
+### Named Rule
+**The Diagonal Rule.** In a calibration chart the diagonal is the only reference line that
+matters. It's drawn in soft black, never blue or red, because it's neither the model nor the
+result.
+
 ## Do's and Don'ts
 
 ### Do:

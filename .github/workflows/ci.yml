@@ -26,3 +26,23 @@ jobs:
         run: uv run pytest -q --cov=eurohoops --cov-fail-under=85
       - name: Dead code
         run: uv run vulture src vulture_whitelist.py --min-confidence 60
+
+  # Builds the Astro site from the committed fixture (tests/fixtures/site.json, kept in step
+  # with the real schema by tests/test_site_fixture.py), so a broken page fails here and not
+  # in the daily run.
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Use the site data fixture
+        run: cp tests/fixtures/site.json web/src/data/site.json
+      - name: Build the site
+        working-directory: web
+        run: |
+          npm ci
+          npm run build

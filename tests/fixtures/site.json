@@ -1,0 +1,1499 @@
+{
+  "generated_at_utc": "2027-09-30T08:00:00Z",
+  "competitions": [
+    {
+      "key": "euroleague",
+      "title": "EuroLeague",
+      "season": "2027-28",
+      "logged": 64,
+      "next_tipoff_utc": "2027-10-01T18:00:00Z",
+      "upcoming": [
+        {
+          "game_id": "E2027_1",
+          "round": 1,
+          "tipoff_utc": "2027-10-01T18:00:00Z",
+          "predicted_at_utc": "2027-10-01T08:00:00Z",
+          "home": {
+            "code": "AAA",
+            "name": "Team AAA & Co"
+          },
+          "away": {
+            "code": "BBB",
+            "name": "Team BBB & Co"
+          },
+          "p_home": 0.4657,
+          "exp_margin": -0.86
+        },
+        {
+          "game_id": "E2027_2",
+          "round": 1,
+          "tipoff_utc": "2027-10-01T18:15:00Z",
+          "predicted_at_utc": "2027-10-01T08:15:00Z",
+          "home": {
+            "code": "AAA",
+            "name": "Team AAA & Co"
+          },
+          "away": {
+            "code": "CCC",
+            "name": "Team CCC & Co"
+          },
+          "p_home": 0.6152,
+          "exp_margin": 2.94
+        },
+        {
+          "game_id": "E2027_3",
+          "round": 1,
+          "tipoff_utc": "2027-10-01T18:30:00Z",
+          "predicted_at_utc": "2027-10-01T08:30:00Z",
+          "home": {
+            "code": "AAA",
+            "name": "Team AAA & Co"
+          },
+          "away": {
+            "code": "DDD",
+            "name": "Team DDD & Co"
+          },
+          "p_home": 0.7095,
+          "exp_margin": 5.6
+        },
+        {
+          "game_id": "E2027_4",
+          "round": 2,
+          "tipoff_utc": "2027-10-08T18:00:00Z",
+          "predicted_at_utc": "2027-10-08T08:00:00Z",
+          "home": {
+            "code": "AAA",
+            "name": "Team AAA & Co"
+          },
+          "away": {
+            "code": "EEE",
+            "name": "Team EEE & Co"
+          },
+          "p_home": 0.5848,
+          "exp_margin": 2.15
+        }
+      ],
+      "results": [
+        {
+          "game_id": "E2026_30",
+          "round": 10,
+          "tipoff_utc": "2026-12-03T18:30:00Z",
+          "predicted_at_utc": "2026-12-03T08:30:00Z",
+          "home": {
+            "code": "FFF",
+            "name": "Team FFF & Co"
+          },
+          "away": {
+            "code": "EEE",
+            "name": "Team EEE & Co"
+          },
+          "p_home": 0.4229,
+          "exp_margin": -1.95,
+          "home_score": 80,
+          "away_score": 84,
+          "hit": true,
+          "provable": true
+        },
+        {
+          "game_id": "E2026_29",
+          "round": 10,
+          "tipoff_utc": "2026-12-03T18:15:00Z",
+          "predicted_at_utc": "2026-12-03T08:15:00Z",
+          "home": {
+            "code": "FFF",
+            "name": "Team FFF & Co"
+          },
+          "away": {
+            "code": "DDD",
+            "name": "Team DDD & Co"
+          },
+          "p_home": 0.6201,
+          "exp_margin": 3.07,
+          "home_score": 80,
+          "away_score": 82,
+          "hit": false,
+          "provable": true
+        },
+        {
+          "game_id": "E2026_28",
+          "round": 10,
+          "tipoff_utc": "2026-12-03T18:00:00Z",
+          "predicted_at_utc": "2026-12-03T08:00:00Z",
+          "home": {
+            "code": "FFF",
+            "name": "Team FFF & Co"
+          },
+          "away": {
+            "code": "CCC",
+            "name": "Team CCC & Co"
+          },
+          "p_home": 0.484,
+          "exp_margin": -0.4,
+          "home_score": 80,
+          "away_score": 81,
+          "hit": true,
+          "provable": true
+        },
+        {
+          "game_id": "E2026_27",
+          "round": 9,
+          "tipoff_utc": "2026-11-26T18:30:00Z",
+          "predicted_at_utc": "2026-11-26T08:30:00Z",
+          "home": {
+            "code": "FFF",
+            "name": "Team FFF & Co"
+          },
+          "away": {
+            "code": "BBB",
+            "name": "Team BBB & Co"
+          },
+          "p_home": 0.31,
+          "exp_margin": -5.01,
+          "home_score": 80,
+          "away_score": 91,
+          "hit": true,
+          "provable": true
+        },
+        {
+          "game_id": "E2026_26",
+          "round": 9,
+          "tipoff_utc": "2026-11-26T18:15:00Z",
+          "predicted_at_utc": "2026-11-26T08:15:00Z",
+          "home": {
+            "code": "FFF",
+            "name": "Team FFF & Co"
+          },
+          "away": {
+            "code": "AAA",
+            "name": "Team AAA & Co"
+          },
+          "p_home": 0.5458,
+          "exp_margin": 1.15,
+          "home_score": 80,
+          "away_score": 87,
+          "hit": false,
+          "provable": true
+        },
+        {
+          "game_id": "E2026_25",
+          "round": 9,
+          "tipoff_utc": "2026-11-26T18:00:00Z",
+          "predicted_at_utc": "2026-11-26T08:00:00Z",
+          "home": {
+            "code": "EEE",
+            "name": "Team EEE & Co"
+          },
+          "away": {
+            "code": "FFF",
+            "name": "Team FFF & Co"
+          },
+          "p_home": 0.7782,
+          "exp_margin": 7.87,
+          "home_score": 80,
+          "away_score": 81,
+          "hit": false,
+          "provable": true
+        },
+        {
+          "game_id": "E2026_24",
+          "round": 8,
+          "tipoff_utc": "2026-11-19T18:30:00Z",
+          "predicted_at_utc": "2026-11-19T08:30:00Z",
+          "home": {
+            "code": "EEE",
+            "name": "Team EEE & Co"
+          },
+          "away": {
+            "code": "DDD",
+            "name": "Team DDD & Co"
+          },
+          "p_home": 0.7824,
+          "exp_margin": 8.02,
+          "home_score": 86,
+          "away_score": 80,
+          "hit": true,
+          "provable": true
+        },
+        {
+          "game_id": "E2026_23",
+          "round": 8,
+          "tipoff_utc": "2026-11-19T18:15:00Z",
+          "predicted_at_utc": "2026-11-19T08:15:00Z",
+          "home": {
+            "code": "EEE",
+            "name": "Team EEE & Co"
+          },
+          "away": {
+            "code": "CCC",
+            "name": "Team CCC & Co"
+          },
+          "p_home": 0.6402,
+          "exp_margin": 3.61,
+          "home_score": 93,
+          "away_score": 80,
+          "hit": true,
+          "provable": true
+        },
+        {
+          "game_id": "E2026_22",
+          "round": 8,
+          "tipoff_utc": "2026-11-19T18:00:00Z",
+          "predicted_at_utc": "2026-11-19T08:00:00Z",
+          "home": {
+            "code": "EEE",
+            "name": "Team EEE & Co"
+          },
+          "away": {
+            "code": "BBB",
+            "name": "Team BBB & Co"
+          },
+          "p_home": 0.4878,
+          "exp_margin": -0.31,
+          "home_score": 80,
+          "away_score": 83,
+          "hit": true,
+          "provable": true
+        },
+        {
+          "game_id": "E2026_21",
+          "round": 7,
+          "tipoff_utc": "2026-11-12T18:30:00Z",
+          "predicted_at_utc": "2026-11-12T08:30:00Z",
+          "home": {
+            "code": "EEE",
+            "name": "Team EEE & Co"
+          },
+          "away": {
+            "code": "AAA",
+            "name": "Team AAA & Co"
+          },
+          "p_home": 0.6613,
+          "exp_margin": 4.19,
+          "home_score": 94,
+          "away_score": 80,
+          "hit": true,
+          "provable": true
+        },
+        {
+          "game_id": "E2026_20",
+          "round": 7,
+          "tipoff_utc": "2026-11-12T18:15:00Z",
+          "predicted_at_utc": "2026-11-12T08:15:00Z",
+          "home": {
+            "code": "DDD",
+            "name": "Team DDD & Co"
+          },
+          "away": {
+            "code": "FFF",
+            "name": "Team FFF & Co"
+          },
+          "p_home": 0.6768,
+          "exp_margin": 4.63,
+          "home_score": 80,
+          "away_score": 90,
+          "hit": false,
+          "provable": true
+        },
+        {
+          "game_id": "E2026_19",
+          "round": 7,
+          "tipoff_utc": "2026-11-12T18:00:00Z",
+          "predicted_at_utc": "2026-11-12T08:00:00Z",
+          "home": {
+            "code": "DDD",
+            "name": "Team DDD & Co"
+          },
+          "away": {
+            "code": "EEE",
+            "name": "Team EEE & Co"
+          },
+          "p_home": 0.5356,
+          "exp_margin": 0.9,
+          "home_score": 80,
+          "away_score": 87,
+          "hit": false,
+          "provable": true
+        }
+      ],
+      "scorecard": {
+        "elo": {
+          "n": 60,
+          "log_loss": 0.665396,
+          "brier": 0.236293,
+          "accuracy": 0.583333,
+          "margin_mae": 8.283167,
+          "ece": 0.135377,
+          "reliability": [
+            {
+              "low": 0.0,
+              "high": 0.1,
+              "n": 0,
+              "mean_p": null,
+              "observed": null
+            },
+            {
+              "low": 0.1,
+              "high": 0.2,
+              "n": 0,
+              "mean_p": null,
+              "observed": null
+            },
+            {
+              "low": 0.2,
+              "high": 0.3,
+              "n": 0,
+              "mean_p": null,
+              "observed": null
+            },
+            {
+              "low": 0.3,
+              "high": 0.4,
+              "n": 3,
+              "mean_p": 0.361933,
+              "observed": 0.333333
+            },
+            {
+              "low": 0.4,
+              "high": 0.5,
+              "n": 8,
+              "mean_p": 0.462025,
+              "observed": 0.25
+            },
+            {
+              "low": 0.5,
+              "high": 0.6,
+              "n": 13,
+              "mean_p": 0.547,
+              "observed": 0.384615
+            },
+            {
+              "low": 0.6,
+              "high": 0.7,
+              "n": 20,
+              "mean_p": 0.655645,
+              "observed": 0.5
+            },
+            {
+              "low": 0.7,
+              "high": 0.8,
+              "n": 14,
+              "mean_p": 0.751821,
+              "observed": 0.785714
+            },
+            {
+              "low": 0.8,
+              "high": 0.9,
+              "n": 2,
+              "mean_p": 0.8211,
+              "observed": 0.5
+            },
+            {
+              "low": 0.9,
+              "high": 1.0,
+              "n": 0,
+              "mean_p": null,
+              "observed": null
+            }
+          ],
+          "margin_crps": 6.006118
+        },
+        "b0": {
+          "n": 60,
+          "log_loss": 0.702116,
+          "brier": 0.254444,
+          "accuracy": 0.5,
+          "margin_mae": 8.95,
+          "ece": 0.066667,
+          "reliability": [
+            {
+              "low": 0.0,
+              "high": 0.1,
+              "n": 0,
+              "mean_p": null,
+              "observed": null
+            },
+            {
+              "low": 0.1,
+              "high": 0.2,
+              "n": 0,
+              "mean_p": null,
+              "observed": null
+            },
+            {
+              "low": 0.2,
+              "high": 0.3,
+              "n": 0,
+              "mean_p": null,
+              "observed": null
+            },
+            {
+              "low": 0.3,
+              "high": 0.4,
+              "n": 0,
+              "mean_p": null,
+              "observed": null
+            },
+            {
+              "low": 0.4,
+              "high": 0.5,
+              "n": 0,
+              "mean_p": null,
+              "observed": null
+            },
+            {
+              "low": 0.5,
+              "high": 0.6,
+              "n": 60,
+              "mean_p": 0.566667,
+              "observed": 0.5
+            },
+            {
+              "low": 0.6,
+              "high": 0.7,
+              "n": 0,
+              "mean_p": null,
+              "observed": null
+            },
+            {
+              "low": 0.7,
+              "high": 0.8,
+              "n": 0,
+              "mean_p": null,
+              "observed": null
+            },
+            {
+              "low": 0.8,
+              "high": 0.9,
+              "n": 0,
+              "mean_p": null,
+              "observed": null
+            },
+            {
+              "low": 0.9,
+              "high": 1.0,
+              "n": 0,
+              "mean_p": null,
+              "observed": null
+            }
+          ],
+          "margin_crps": 6.328029
+        },
+        "not_provable": 0,
+        "rolling": {
+          "window": 50,
+          "series": [
+            {
+              "game_id": "E2026_20",
+              "tipoff_utc": "2026-11-12T18:15:00Z",
+              "n": 50,
+              "elo": 0.666086,
+              "b0": 0.691386
+            },
+            {
+              "game_id": "E2026_21",
+              "tipoff_utc": "2026-11-12T18:30:00Z",
+              "n": 51,
+              "elo": 0.65379,
+              "b0": 0.68602
+            },
+            {
+              "game_id": "E2026_22",
+              "tipoff_utc": "2026-11-19T18:00:00Z",
+              "n": 52,
+              "elo": 0.660032,
+              "b0": 0.691386
+            },
+            {
+              "game_id": "E2026_23",
+              "tipoff_utc": "2026-11-19T18:15:00Z",
+              "n": 53,
+              "elo": 0.640517,
+              "b0": 0.68602
+            },
+            {
+              "game_id": "E2026_24",
+              "tipoff_utc": "2026-11-19T18:30:00Z",
+              "n": 54,
+              "elo": 0.624135,
+              "b0": 0.680655
+            },
+            {
+              "game_id": "E2026_25",
+              "tipoff_utc": "2026-11-26T18:00:00Z",
+              "n": 55,
+              "elo": 0.646164,
+              "b0": 0.68602
+            },
+            {
+              "game_id": "E2026_26",
+              "tipoff_utc": "2026-11-26T18:15:00Z",
+              "n": 56,
+              "elo": 0.635576,
+              "b0": 0.68602
+            },
+            {
+              "game_id": "E2026_27",
+              "tipoff_utc": "2026-11-26T18:30:00Z",
+              "n": 57,
+              "elo": 0.636801,
+              "b0": 0.691386
+            },
+            {
+              "game_id": "E2026_28",
+              "tipoff_utc": "2026-12-03T18:00:00Z",
+              "n": 58,
+              "elo": 0.644302,
+              "b0": 0.696751
+            },
+            {
+              "game_id": "E2026_29",
+              "tipoff_utc": "2026-12-03T18:15:00Z",
+              "n": 59,
+              "elo": 0.639798,
+              "b0": 0.696751
+            },
+            {
+              "game_id": "E2026_30",
+              "tipoff_utc": "2026-12-03T18:30:00Z",
+              "n": 60,
+              "elo": 0.645641,
+              "b0": 0.702116
+            }
+          ]
+        }
+      },
+      "backtest": {
+        "tuning_seasons": [
+          2023
+        ],
+        "test_seasons": [
+          2024
+        ],
+        "params": {
+          "k": 30.0,
+          "hca": 90.0,
+          "reversion": 0.25
+        },
+        "test": {
+          "elo": {
+            "n": 30,
+            "log_loss": 0.64684,
+            "brier": 0.22755,
+            "accuracy": 0.666667,
+            "margin_mae": 7.419703,
+            "ece": 0.149681,
+            "reliability": [
+              {
+                "low": 0.0,
+                "high": 0.1,
+                "n": 0,
+                "mean_p": null,
+                "observed": null
+              },
+              {
+                "low": 0.1,
+                "high": 0.2,
+                "n": 0,
+                "mean_p": null,
+                "observed": null
+              },
+              {
+                "low": 0.2,
+                "high": 0.3,
+                "n": 0,
+                "mean_p": null,
+                "observed": null
+              },
+              {
+                "low": 0.3,
+                "high": 0.4,
+                "n": 1,
+                "mean_p": 0.357818,
+                "observed": 1.0
+              },
+              {
+                "low": 0.4,
+                "high": 0.5,
+                "n": 4,
+                "mean_p": 0.455531,
+                "observed": 0.25
+              },
+              {
+                "low": 0.5,
+                "high": 0.6,
+                "n": 8,
+                "mean_p": 0.547772,
+                "observed": 0.5
+              },
+              {
+                "low": 0.6,
+                "high": 0.7,
+                "n": 8,
+                "mean_p": 0.630872,
+                "observed": 0.875
+              },
+              {
+                "low": 0.7,
+                "high": 0.8,
+                "n": 9,
+                "mean_p": 0.743435,
+                "observed": 0.666667
+              },
+              {
+                "low": 0.8,
+                "high": 0.9,
+                "n": 0,
+                "mean_p": null,
+                "observed": null
+              },
+              {
+                "low": 0.9,
+                "high": 1.0,
+                "n": 0,
+                "mean_p": null,
+                "observed": null
+              }
+            ],
+            "margin_crps": 5.151392
+          },
+          "b0": {
+            "n": 30,
+            "log_loss": 0.666347,
+            "brier": 0.236667,
+            "accuracy": 0.633333,
+            "margin_mae": 7.911111,
+            "ece": 0.066666,
+            "reliability": [
+              {
+                "low": 0.0,
+                "high": 0.1,
+                "n": 0,
+                "mean_p": null,
+                "observed": null
+              },
+              {
+                "low": 0.1,
+                "high": 0.2,
+                "n": 0,
+                "mean_p": null,
+                "observed": null
+              },
+              {
+                "low": 0.2,
+                "high": 0.3,
+                "n": 0,
+                "mean_p": null,
+                "observed": null
+              },
+              {
+                "low": 0.3,
+                "high": 0.4,
+                "n": 0,
+                "mean_p": null,
+                "observed": null
+              },
+              {
+                "low": 0.4,
+                "high": 0.5,
+                "n": 0,
+                "mean_p": null,
+                "observed": null
+              },
+              {
+                "low": 0.5,
+                "high": 0.6,
+                "n": 30,
+                "mean_p": 0.566667,
+                "observed": 0.633333
+              },
+              {
+                "low": 0.6,
+                "high": 0.7,
+                "n": 0,
+                "mean_p": null,
+                "observed": null
+              },
+              {
+                "low": 0.7,
+                "high": 0.8,
+                "n": 0,
+                "mean_p": null,
+                "observed": null
+              },
+              {
+                "low": 0.8,
+                "high": 0.9,
+                "n": 0,
+                "mean_p": null,
+                "observed": null
+              },
+              {
+                "low": 0.9,
+                "high": 1.0,
+                "n": 0,
+                "mean_p": null,
+                "observed": null
+              }
+            ],
+            "margin_crps": 5.67392
+          }
+        },
+        "log_loss_diff": {
+          "mean": -0.019507,
+          "ci95": [
+            -0.098443,
+            0.067109
+          ],
+          "resamples": 1000,
+          "seed": 20260924
+        }
+      },
+      "ratings": [
+        {
+          "code": "BBB",
+          "name": "Team BBB & Co",
+          "rating": 1614.1,
+          "change": 0.0
+        },
+        {
+          "code": "EEE",
+          "name": "Team EEE & Co",
+          "rating": 1530.7,
+          "change": 0.0
+        },
+        {
+          "code": "CCC",
+          "name": "Team CCC & Co",
+          "rating": 1508.7,
+          "change": 0.0
+        },
+        {
+          "code": "AAA",
+          "name": "Team AAA & Co",
+          "rating": 1500.2,
+          "change": 0.0
+        },
+        {
+          "code": "DDD",
+          "name": "Team DDD & Co",
+          "rating": 1435.1,
+          "change": 0.0
+        },
+        {
+          "code": "FFF",
+          "name": "Team FFF & Co",
+          "rating": 1411.2,
+          "change": 0.0
+        }
+      ]
+    },
+    {
+      "key": "gbl",
+      "title": "Greek Basket League",
+      "season": "2027-28",
+      "logged": 34,
+      "next_tipoff_utc": "2027-10-01T18:00:00Z",
+      "upcoming": [
+        {
+          "game_id": "GBL2027_1",
+          "round": 1,
+          "tipoff_utc": "2027-10-01T18:00:00Z",
+          "predicted_at_utc": "2027-10-01T08:00:00Z",
+          "home": {
+            "code": "AAA",
+            "name": "Team AAA & Co"
+          },
+          "away": {
+            "code": "BBB",
+            "name": "Team BBB & Co"
+          },
+          "p_home": 0.4842,
+          "exp_margin": -0.47
+        },
+        {
+          "game_id": "GBL2027_2",
+          "round": 1,
+          "tipoff_utc": "2027-10-01T18:15:00Z",
+          "predicted_at_utc": "2027-10-01T08:15:00Z",
+          "home": {
+            "code": "AAA",
+            "name": "Team AAA & Co"
+          },
+          "away": {
+            "code": "CCC",
+            "name": "Team CCC & Co"
+          },
+          "p_home": 0.6403,
+          "exp_margin": 4.3
+        },
+        {
+          "game_id": "GBL2027_3",
+          "round": 1,
+          "tipoff_utc": "2027-10-01T18:30:00Z",
+          "predicted_at_utc": "2027-10-01T08:30:00Z",
+          "home": {
+            "code": "AAA",
+            "name": "Team AAA & Co"
+          },
+          "away": {
+            "code": "DDD",
+            "name": "Team DDD & Co"
+          },
+          "p_home": 0.721,
+          "exp_margin": 7.09
+        },
+        {
+          "game_id": "GBL2027_4",
+          "round": 2,
+          "tipoff_utc": "2027-10-08T18:00:00Z",
+          "predicted_at_utc": "2027-10-08T08:00:00Z",
+          "home": {
+            "code": "AAA",
+            "name": "Team AAA & Co"
+          },
+          "away": {
+            "code": "EEE",
+            "name": "Team EEE & Co"
+          },
+          "p_home": 0.6183,
+          "exp_margin": 3.6
+        }
+      ],
+      "results": [
+        {
+          "game_id": "GBL2026_30",
+          "round": 10,
+          "tipoff_utc": "2026-12-03T18:30:00Z",
+          "predicted_at_utc": "2026-12-03T08:30:00Z",
+          "home": {
+            "code": "FFF",
+            "name": "Team FFF & Co"
+          },
+          "away": {
+            "code": "EEE",
+            "name": "Team EEE & Co"
+          },
+          "p_home": 0.4789,
+          "exp_margin": -0.63,
+          "home_score": 80,
+          "away_score": 84,
+          "hit": true,
+          "provable": true
+        },
+        {
+          "game_id": "GBL2026_29",
+          "round": 10,
+          "tipoff_utc": "2026-12-03T18:15:00Z",
+          "predicted_at_utc": "2026-12-03T08:15:00Z",
+          "home": {
+            "code": "FFF",
+            "name": "Team FFF & Co"
+          },
+          "away": {
+            "code": "DDD",
+            "name": "Team DDD & Co"
+          },
+          "p_home": 0.6466,
+          "exp_margin": 4.51,
+          "home_score": 80,
+          "away_score": 82,
+          "hit": false,
+          "provable": true
+        },
+        {
+          "game_id": "GBL2026_27",
+          "round": 9,
+          "tipoff_utc": "2026-11-26T18:30:00Z",
+          "predicted_at_utc": "2026-11-26T08:30:00Z",
+          "home": {
+            "code": "FFF",
+            "name": "Team FFF & Co"
+          },
+          "away": {
+            "code": "BBB",
+            "name": "Team BBB & Co"
+          },
+          "p_home": 0.3342,
+          "exp_margin": -5.15,
+          "home_score": 80,
+          "away_score": 91,
+          "hit": true,
+          "provable": true
+        },
+        {
+          "game_id": "GBL2026_26",
+          "round": 9,
+          "tipoff_utc": "2026-11-26T18:15:00Z",
+          "predicted_at_utc": "2026-11-26T08:15:00Z",
+          "home": {
+            "code": "FFF",
+            "name": "Team FFF & Co"
+          },
+          "away": {
+            "code": "AAA",
+            "name": "Team AAA & Co"
+          },
+          "p_home": 0.5477,
+          "exp_margin": 1.43,
+          "home_score": 80,
+          "away_score": 87,
+          "hit": false,
+          "provable": true
+        },
+        {
+          "game_id": "GBL2026_25",
+          "round": 9,
+          "tipoff_utc": "2026-11-26T18:00:00Z",
+          "predicted_at_utc": "2026-11-26T08:00:00Z",
+          "home": {
+            "code": "EEE",
+            "name": "Team EEE & Co"
+          },
+          "away": {
+            "code": "FFF",
+            "name": "Team FFF & Co"
+          },
+          "p_home": 0.7394,
+          "exp_margin": 7.79,
+          "home_score": 80,
+          "away_score": 81,
+          "hit": false,
+          "provable": true
+        },
+        {
+          "game_id": "GBL2026_24",
+          "round": 8,
+          "tipoff_utc": "2026-11-19T18:30:00Z",
+          "predicted_at_utc": "2026-11-19T08:30:00Z",
+          "home": {
+            "code": "EEE",
+            "name": "Team EEE & Co"
+          },
+          "away": {
+            "code": "DDD",
+            "name": "Team DDD & Co"
+          },
+          "p_home": 0.76,
+          "exp_margin": 8.61,
+          "home_score": 86,
+          "away_score": 80,
+          "hit": true,
+          "provable": true
+        },
+        {
+          "game_id": "GBL2026_23",
+          "round": 8,
+          "tipoff_utc": "2026-11-19T18:15:00Z",
+          "predicted_at_utc": "2026-11-19T08:15:00Z",
+          "home": {
+            "code": "EEE",
+            "name": "Team EEE & Co"
+          },
+          "away": {
+            "code": "CCC",
+            "name": "Team CCC & Co"
+          },
+          "p_home": 0.6158,
+          "exp_margin": 3.52,
+          "home_score": 93,
+          "away_score": 80,
+          "hit": true,
+          "provable": true
+        },
+        {
+          "game_id": "GBL2026_22",
+          "round": 8,
+          "tipoff_utc": "2026-11-19T18:00:00Z",
+          "predicted_at_utc": "2026-11-19T08:00:00Z",
+          "home": {
+            "code": "EEE",
+            "name": "Team EEE & Co"
+          },
+          "away": {
+            "code": "BBB",
+            "name": "Team BBB & Co"
+          },
+          "p_home": 0.4601,
+          "exp_margin": -1.2,
+          "home_score": 80,
+          "away_score": 83,
+          "hit": true,
+          "provable": true
+        },
+        {
+          "game_id": "GBL2026_20",
+          "round": 7,
+          "tipoff_utc": "2026-11-12T18:15:00Z",
+          "predicted_at_utc": "2026-11-12T08:15:00Z",
+          "home": {
+            "code": "DDD",
+            "name": "Team DDD & Co"
+          },
+          "away": {
+            "code": "FFF",
+            "name": "Team FFF & Co"
+          },
+          "p_home": 0.6542,
+          "exp_margin": 4.76,
+          "home_score": 80,
+          "away_score": 90,
+          "hit": false,
+          "provable": true
+        },
+        {
+          "game_id": "GBL2026_19",
+          "round": 7,
+          "tipoff_utc": "2026-11-12T18:00:00Z",
+          "predicted_at_utc": "2026-11-12T08:00:00Z",
+          "home": {
+            "code": "DDD",
+            "name": "Team DDD & Co"
+          },
+          "away": {
+            "code": "EEE",
+            "name": "Team EEE & Co"
+          },
+          "p_home": 0.5523,
+          "exp_margin": 1.57,
+          "home_score": 80,
+          "away_score": 87,
+          "hit": false,
+          "provable": true
+        },
+        {
+          "game_id": "GBL2026_18",
+          "round": 6,
+          "tipoff_utc": "2026-11-05T18:30:00Z",
+          "predicted_at_utc": "2026-11-05T08:30:00Z",
+          "home": {
+            "code": "DDD",
+            "name": "Team DDD & Co"
+          },
+          "away": {
+            "code": "CCC",
+            "name": "Team CCC & Co"
+          },
+          "p_home": 0.5817,
+          "exp_margin": 2.46,
+          "home_score": 80,
+          "away_score": 89,
+          "hit": false,
+          "provable": true
+        },
+        {
+          "game_id": "GBL2026_17",
+          "round": 6,
+          "tipoff_utc": "2026-11-05T18:15:00Z",
+          "predicted_at_utc": "2026-11-05T08:15:00Z",
+          "home": {
+            "code": "DDD",
+            "name": "Team DDD & Co"
+          },
+          "away": {
+            "code": "BBB",
+            "name": "Team BBB & Co"
+          },
+          "p_home": 0.4127,
+          "exp_margin": -2.63,
+          "home_score": 80,
+          "away_score": 85,
+          "hit": true,
+          "provable": true
+        }
+      ],
+      "scorecard": {
+        "elo": {
+          "n": 26,
+          "log_loss": 0.675189,
+          "brier": 0.24038,
+          "accuracy": 0.615385,
+          "margin_mae": 8.956154,
+          "ece": 0.205023,
+          "reliability": [
+            {
+              "low": 0.0,
+              "high": 0.1,
+              "n": 0,
+              "mean_p": null,
+              "observed": null
+            },
+            {
+              "low": 0.1,
+              "high": 0.2,
+              "n": 0,
+              "mean_p": null,
+              "observed": null
+            },
+            {
+              "low": 0.2,
+              "high": 0.3,
+              "n": 0,
+              "mean_p": null,
+              "observed": null
+            },
+            {
+              "low": 0.3,
+              "high": 0.4,
+              "n": 1,
+              "mean_p": 0.3342,
+              "observed": 0.0
+            },
+            {
+              "low": 0.4,
+              "high": 0.5,
+              "n": 4,
+              "mean_p": 0.44745,
+              "observed": 0.0
+            },
+            {
+              "low": 0.5,
+              "high": 0.6,
+              "n": 6,
+              "mean_p": 0.558633,
+              "observed": 0.333333
+            },
+            {
+              "low": 0.6,
+              "high": 0.7,
+              "n": 8,
+              "mean_p": 0.64705,
+              "observed": 0.5
+            },
+            {
+              "low": 0.7,
+              "high": 0.8,
+              "n": 6,
+              "mean_p": 0.74995,
+              "observed": 0.666667
+            },
+            {
+              "low": 0.8,
+              "high": 0.9,
+              "n": 1,
+              "mean_p": 0.8213,
+              "observed": 1.0
+            },
+            {
+              "low": 0.9,
+              "high": 1.0,
+              "n": 0,
+              "mean_p": null,
+              "observed": null
+            }
+          ],
+          "margin_crps": 6.300515
+        },
+        "b0": {
+          "n": 26,
+          "log_loss": 0.741948,
+          "brier": 0.274039,
+          "accuracy": 0.423077,
+          "margin_mae": 9.721894,
+          "ece": 0.173077,
+          "reliability": [
+            {
+              "low": 0.0,
+              "high": 0.1,
+              "n": 0,
+              "mean_p": null,
+              "observed": null
+            },
+            {
+              "low": 0.1,
+              "high": 0.2,
+              "n": 0,
+              "mean_p": null,
+              "observed": null
+            },
+            {
+              "low": 0.2,
+              "high": 0.3,
+              "n": 0,
+              "mean_p": null,
+              "observed": null
+            },
+            {
+              "low": 0.3,
+              "high": 0.4,
+              "n": 0,
+              "mean_p": null,
+              "observed": null
+            },
+            {
+              "low": 0.4,
+              "high": 0.5,
+              "n": 0,
+              "mean_p": null,
+              "observed": null
+            },
+            {
+              "low": 0.5,
+              "high": 0.6,
+              "n": 26,
+              "mean_p": 0.596154,
+              "observed": 0.423077
+            },
+            {
+              "low": 0.6,
+              "high": 0.7,
+              "n": 0,
+              "mean_p": null,
+              "observed": null
+            },
+            {
+              "low": 0.7,
+              "high": 0.8,
+              "n": 0,
+              "mean_p": null,
+              "observed": null
+            },
+            {
+              "low": 0.8,
+              "high": 0.9,
+              "n": 0,
+              "mean_p": null,
+              "observed": null
+            },
+            {
+              "low": 0.9,
+              "high": 1.0,
+              "n": 0,
+              "mean_p": null,
+              "observed": null
+            }
+          ],
+          "margin_crps": 6.903273
+        },
+        "not_provable": 0,
+        "rolling": {
+          "window": 50,
+          "series": []
+        }
+      },
+      "backtest": {
+        "tuning_seasons": [
+          2023
+        ],
+        "test_seasons": [
+          2024
+        ],
+        "params": {
+          "k": 30.0,
+          "hca": 90.0,
+          "reversion": 0.25
+        },
+        "test": {
+          "elo": {
+            "n": 26,
+            "log_loss": 0.649148,
+            "brier": 0.228977,
+            "accuracy": 0.615385,
+            "margin_mae": 7.045869,
+            "ece": 0.121396,
+            "reliability": [
+              {
+                "low": 0.0,
+                "high": 0.1,
+                "n": 0,
+                "mean_p": null,
+                "observed": null
+              },
+              {
+                "low": 0.1,
+                "high": 0.2,
+                "n": 0,
+                "mean_p": null,
+                "observed": null
+              },
+              {
+                "low": 0.2,
+                "high": 0.3,
+                "n": 0,
+                "mean_p": null,
+                "observed": null
+              },
+              {
+                "low": 0.3,
+                "high": 0.4,
+                "n": 1,
+                "mean_p": 0.381324,
+                "observed": 1.0
+              },
+              {
+                "low": 0.4,
+                "high": 0.5,
+                "n": 6,
+                "mean_p": 0.469446,
+                "observed": 0.333333
+              },
+              {
+                "low": 0.5,
+                "high": 0.6,
+                "n": 3,
+                "mean_p": 0.564435,
+                "observed": 0.333333
+              },
+              {
+                "low": 0.6,
+                "high": 0.7,
+                "n": 10,
+                "mean_p": 0.654041,
+                "observed": 0.6
+              },
+              {
+                "low": 0.7,
+                "high": 0.8,
+                "n": 6,
+                "mean_p": 0.75213,
+                "observed": 0.833333
+              },
+              {
+                "low": 0.8,
+                "high": 0.9,
+                "n": 0,
+                "mean_p": null,
+                "observed": null
+              },
+              {
+                "low": 0.9,
+                "high": 1.0,
+                "n": 0,
+                "mean_p": null,
+                "observed": null
+              }
+            ],
+            "margin_crps": 4.885045
+          },
+          "b0": {
+            "n": 26,
+            "log_loss": 0.68203,
+            "brier": 0.244453,
+            "accuracy": 0.576923,
+            "margin_mae": 7.91568,
+            "ece": 0.019231,
+            "reliability": [
+              {
+                "low": 0.0,
+                "high": 0.1,
+                "n": 0,
+                "mean_p": null,
+                "observed": null
+              },
+              {
+                "low": 0.1,
+                "high": 0.2,
+                "n": 0,
+                "mean_p": null,
+                "observed": null
+              },
+              {
+                "low": 0.2,
+                "high": 0.3,
+                "n": 0,
+                "mean_p": null,
+                "observed": null
+              },
+              {
+                "low": 0.3,
+                "high": 0.4,
+                "n": 0,
+                "mean_p": null,
+                "observed": null
+              },
+              {
+                "low": 0.4,
+                "high": 0.5,
+                "n": 0,
+                "mean_p": null,
+                "observed": null
+              },
+              {
+                "low": 0.5,
+                "high": 0.6,
+                "n": 26,
+                "mean_p": 0.596154,
+                "observed": 0.576923
+              },
+              {
+                "low": 0.6,
+                "high": 0.7,
+                "n": 0,
+                "mean_p": null,
+                "observed": null
+              },
+              {
+                "low": 0.7,
+                "high": 0.8,
+                "n": 0,
+                "mean_p": null,
+                "observed": null
+              },
+              {
+                "low": 0.8,
+                "high": 0.9,
+                "n": 0,
+                "mean_p": null,
+                "observed": null
+              },
+              {
+                "low": 0.9,
+                "high": 1.0,
+                "n": 0,
+                "mean_p": null,
+                "observed": null
+              }
+            ],
+            "margin_crps": 5.581715
+          }
+        },
+        "log_loss_diff": {
+          "mean": -0.032882,
+          "ci95": [
+            -0.118063,
+            0.057544
+          ],
+          "resamples": 1000,
+          "seed": 20260924
+        }
+      },
+      "ratings": [
+        {
+          "code": "BBB",
+          "name": "Team BBB & Co",
+          "rating": 1611.6,
+          "change": 0.0
+        },
+        {
+          "code": "EEE",
+          "name": "Team EEE & Co",
+          "rating": 1516.8,
+          "change": 0.0
+        },
+        {
+          "code": "AAA",
+          "name": "Team AAA & Co",
+          "rating": 1510.6,
+          "change": 0.0
+        },
+        {
+          "code": "CCC",
+          "name": "Team CCC & Co",
+          "rating": 1500.5,
+          "change": 0.0
+        },
+        {
+          "code": "DDD",
+          "name": "Team DDD & Co",
+          "rating": 1435.7,
+          "change": 0.0
+        },
+        {
+          "code": "FFF",
+          "name": "Team FFF & Co",
+          "rating": 1424.8,
+          "change": 0.0
+        }
+      ]
+    }
+  ]
+}

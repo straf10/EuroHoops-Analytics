@@ -61,3 +61,15 @@ def test_odds_step_is_skipped_with_a_warning_without_the_secret() -> None:
     ran = run_step("x")
     assert ran.returncode == 0
     assert "uv run --no-dev eurohoops odds" in ran.stdout
+
+
+CI = (REPO / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+
+
+def test_ci_builds_the_site_from_the_committed_fixture() -> None:
+    web = CI[CI.index("\n  web:") :]
+    assert "node-version: 24" in web
+    assert "cp tests/fixtures/site.json web/src/data/site.json" in web
+    assert web.index("site.json web/src/data") < web.index("npm ci") < web.index("npm run build")
+    assert "working-directory: web" in web
+    assert (REPO / "tests/fixtures/site.json").exists()
