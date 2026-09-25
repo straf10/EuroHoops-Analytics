@@ -5,7 +5,7 @@
 - [x] 1. GBL live logging ready for Sat 3 Oct
 - [x] 5. EL round-1 rows flagged as not provable
 - [x] 3. GBL box-score gaps classified (fill policy: DECISION NEEDED)
-- [ ] 7a. EuroLeague shot coordinate system
+- [x] 7a. EuroLeague shot coordinate system
 - [ ] 7b. 2026-27 formats and tiebreak rules
 
 ## 2. GBL Elo tuning grid
@@ -119,3 +119,41 @@ Every affected game is listed with its category in `reports/gbl_box_gaps.csv` (1
     games, plus the missing player's line for the 25).
   - Until then, box-score models start at 2020-21, and 2018-20 is used for Elo/results only.
   - The alternative is to drop 2018-20 from box-score models permanently.
+
+## 7a. EuroLeague shot coordinate system
+Source: the `Points` endpoint (`COORD_X`, `COORD_Y`, cached in `data/raw/euroleague/points`).
+
+- **System:**
+  - Units are centimetres, measured from the basket centre.
+  - Every shot is mirrored onto one basket.
+  - x runs across the court: observed range −740…+746, sidelines at ±750.
+  - y runs from the baseline toward half court: minimum −156, where the baseline is at −157.5
+    because the basket sits 1.575 m in; maximum about 1,304, i.e. heaves just past half court.
+  - Free throws carry the sentinel (−1, −1).
+  - About 0.1% of shots sit exactly at (0, 0), which looks like missing coordinates.
+  - Which side of the court x > 0 means (the shooter's left or right) is **UNVERIFIED**.
+    It doesn't matter for distance-based models.
+- **Conversion:** `src/eurohoops/parse/shots.py`. `to_court_coords()` returns metres and turns
+  the sentinel into NaN. `beyond_three_line()` tests the FIBA line: the 6.75 m arc plus
+  straight corners at |x| = 6.60 m up to y = 1.415 m.
+- **Check, 2024-25 (41,533 field-goal attempts, ±0.15 m tolerance):** **99.87%** of labelled
+  3s lie beyond the line and **99.90%** of 2s inside it (target ≥ 99%).
+  Plot: `reports/el_shots_2024.png`.
+
+  | Seasons | 3s beyond 6.75/6.60 | 2s inside |
+  |---|---|---|
+  | 2011-12 → 2025-26 | 99.63–99.94% | 99.65–99.96% |
+  | 2007-08 → 2010-11 | 91.4–98.0% | 99.7–99.97% |
+
+- **Pre-2011 geometry doesn't fit.**
+  - In 2007-08 → 2010-11, 3s fit neither the 6.75 m line nor the old 6.25 m line. Only
+    0.5–2.5% of 3s lie at 6.25–6.50 m, where the old line would put many of them.
+    In 2007-08, 30% lie at 6.50–6.75 m.
+  - The scale or drawing reference probably changed.
+  - The module sets `FIRST_VALIDATED_SEASON = 2011`. The xPTS model should start at 2011-12,
+    or treat earlier seasons separately.
+- **Tests:** `tests/test_shots.py` covers the geometry, the tolerance, the sentinel, and one
+  real game as a fixture (`tests/fixtures/points_E2024_1.json`): every labelled shot is on
+  the correct side of the line.
+- The plot comes from a scratch script run with `uv run --with matplotlib`. It isn't
+  committed, and matplotlib isn't a project dependency.
