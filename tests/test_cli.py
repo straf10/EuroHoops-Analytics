@@ -293,6 +293,29 @@ def test_backtest_m1_writes_reproducible_reports_for_both_competitions(small_m1:
     assert gbl["test_scored"] and gbl["metrics"]["test"]["m1"]["n"] > 0
     assert gbl["seasons"]["validation"] == [2023]
 
+    # E7: predict appends M1 rows to its own log (for a passed gate) and never touches Elo's.
+    invoke("backtest", "--competition", "gbl")
+    invoke("backtest")
+    for comp in (EUROLEAGUE, GBL):
+        assert comp.m1 is not None and comp.m1_prediction_log is not None
+        passed = json.loads(comp.m1.report.read_text(encoding="utf-8"))["gate"]["passed"]
+        name = [] if comp is EUROLEAGUE else ["--competition", "gbl"]
+        output = invoke("predict", *name)
+        elo_log = comp.prediction_log.read_bytes()
+        assert comp.m1_prediction_log.exists() == passed
+        if passed:
+            assert "3 M1 predictions appended" in output
+            m1_log = comp.m1_prediction_log.read_bytes()
+            assert "0 M1 predictions appended" in invoke("predict", *name)
+            assert comp.m1_prediction_log.read_bytes() == m1_log
+        assert comp.prediction_log.read_bytes() == elo_log
+        invoke("score", *name)
+        card = json.loads(comp.scorecard.read_text(encoding="utf-8"))
+        assert card["m1"]["rows_in_log"] == (3 if passed else 0)
+    invoke("publish")
+    site = json.loads(SITE_DATA.read_text(encoding="utf-8"))
+    assert all(c["scorecard"]["m1"]["n"] == 0 for c in site["competitions"])
+
 
 class AnyGameHotel(FakeBasketHotel):
     """Serves the recorded export for any game id."""

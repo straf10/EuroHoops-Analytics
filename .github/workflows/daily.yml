@@ -28,10 +28,23 @@ jobs:
           path: data/raw/gbl
           key: gbl-raw-${{ github.run_id }}
           restore-keys: gbl-raw-
-      - name: Ingest schedules and results (no game details in CI)
+      # The team model (M1) needs box scores: keep the EuroLeague raw cache between runs too, so
+      # only games finished since the last run are fetched (the first run fills 2023-24 on).
+      - name: Restore EuroLeague raw cache
+        uses: actions/cache@v4
+        with:
+          path: data/raw/euroleague
+          key: euroleague-raw-${{ github.run_id }}
+          restore-keys: euroleague-raw-
+      - name: Ingest schedules and results
         run: |
           uv run --no-dev eurohoops ingest
-          uv run --no-dev eurohoops ingest --competition gbl
+      # Box scores of every default season (cached ones are never refetched); GBL also caches
+      # the 2018-20 play-by-play the box-score fill uses, as the local build does.
+      - name: Cache box scores for the team model
+        run: |
+          uv run --no-dev eurohoops ingest --details
+          uv run --no-dev eurohoops ingest --competition gbl --details --pbp --seasons 2018 2019
       - name: Build marts
         run: uv run --no-dev eurohoops build
       # Market benchmark (EuroLeague only): one The Odds API call. The repository secret is

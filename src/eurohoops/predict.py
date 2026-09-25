@@ -34,7 +34,7 @@ class LatePredictionError(RuntimeError):
     """A prediction would be stamped at or after its game's tip-off."""
 
 
-def _logged_keys(log_path: Path) -> set[tuple[str, str]]:
+def logged_keys(log_path: Path) -> set[tuple[str, str]]:
     if not log_path.exists():
         return set()
     with log_path.open(newline="", encoding="utf-8") as fh:
@@ -69,7 +69,7 @@ def predict_upcoming(
         & (games["tipoff_utc"] <= now + window)
     ).to_numpy()
     model_version = model.version()
-    logged = _logged_keys(log_path)
+    logged = logged_keys(log_path)
     targets = [
         (game, float(diff))
         for game, diff in zip(games[upcoming].to_dict("records"), diffs[upcoming], strict=True)

@@ -9,6 +9,8 @@ const { comp } = Astro.props;
 const live = comp.scorecard;
 const test = comp.backtest.test;
 const diff = comp.backtest.log_loss_diff;
+// The team model (M1) runs live beside Elo: one row, scored on the games both logged.
+const m1 = live.m1;
 
 type Key = "log_loss" | "brier" | "ece" | "accuracy" | "margin_mae" | "margin_crps";
 const rows: { key: Key; label: string; lower: boolean; fmt: (x: number) => string }[] = [
@@ -91,6 +93,22 @@ const blocks = [
                 </tr>
               );
             })}
+            {b.id === "live" && m1 && (
+              <tr class="m1">
+                <th scope="row">
+                  Team model (M1) log loss
+                  <small>
+                    same {m1.n} game{m1.n === 1 ? "" : "s"} as Elo, lower is better
+                  </small>
+                </th>
+                <td colspan="2" class="num">
+                  {m1.log_loss === null ? "n/a" : m1.log_loss.toFixed(3)}
+                  {m1.elo_log_loss !== null && (
+                    <small class="versus">Elo {m1.elo_log_loss.toFixed(3)}</small>
+                  )}
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
         <p class="note">
@@ -145,6 +163,13 @@ const blocks = [
   }
   .num {
     text-align: right;
+  }
+  .versus {
+    display: block;
+    color: var(--ink-2);
+    font-family: var(--text);
+    font-weight: 600;
+    font-size: 0.8rem;
   }
   /* The better number of each pair is underlined in blue marker. */
   td.win {

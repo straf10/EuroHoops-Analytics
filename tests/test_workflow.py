@@ -15,6 +15,19 @@ def test_daily_workflow_runs_every_step_for_both_competitions() -> None:
         assert f"eurohoops {command} --competition gbl" in DAILY, command
 
 
+def test_daily_caches_box_scores_before_build() -> None:
+    """E7: the team model's box scores are cached (only new games fetched) before the build."""
+    build = DAILY.index("eurohoops build")
+    el_cache = DAILY.index("path: data/raw/euroleague")
+    el_details = DAILY.index("eurohoops ingest --details")
+    gbl_details = DAILY.index(
+        "eurohoops ingest --competition gbl --details --pbp --seasons 2018 2019"
+    )
+    assert el_cache < el_details < build
+    assert DAILY.index("path: data/raw/gbl") < gbl_details < build
+    assert DAILY.index("eurohoops predict") > build
+
+
 def test_daily_runs_are_closer_together_than_the_prediction_window() -> None:
     """With one run a day and a 36 h window, every game is inside at least one run's window."""
     (cron,) = re.findall(r'cron: "([^"]+)"', DAILY)

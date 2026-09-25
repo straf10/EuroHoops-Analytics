@@ -68,6 +68,7 @@ export interface Competition {
     b0: Metrics;
     not_provable: number;
     rolling: { window: number; series: RollingPoint[] };
+    m1: { n: number; log_loss: number | null; elo_log_loss: number | null } | null;
   };
   backtest: {
     tuning_seasons: number[];
