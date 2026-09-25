@@ -21,3 +21,4 @@ BLOCKED (check 12, 2026-09-25 ~12:50 UTC): The Odds API rejects the key in `.env
 The `.env` value is 30 hex chars, no quotes/whitespace/CR; Odds API keys are normally 32, so it
 looks truncated. Needs the user to re-copy the key. D5 is built and tested on a fake transport.
 iteration 4 | D5 odds recorder + market column + daily step | gate 1-6, actionlint 1.7.12 (both workflows), score x2 | green (1-6, 16); check 12 live call BLOCKED (401); step 7 not run | 59aaec8
+iteration 5 | D6 OddsPortal spike | 2 requests (robots.txt 307 -> greece.html notice); doc ends in NO-GO | done (no code; gate unchanged since iteration 4) | 07a7d7f
