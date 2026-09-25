@@ -46,6 +46,7 @@ def test_hand_computed_metrics_and_late_rows_excluded(tmp_path: Path, tuned: Tun
     assert elo["brier"] == pytest.approx((0.2**2 + 0.6**2) / 2, abs=1e-6)
     assert elo["accuracy"] == 0.5
     assert elo["margin_mae"] == pytest.approx(5.0)
+    assert elo["ece"] == pytest.approx((0.2 + 0.6) / 2)  # bins 8 and 4, both home wins
     # B0: p=.6, margin 3 for both home wins.
     b0 = card["b0"]
     assert b0["log_loss"] == pytest.approx(-math.log(0.6), abs=1e-6)
@@ -58,13 +59,16 @@ def test_zero_completed_games(tmp_path: Path, tuned: TunedModel) -> None:
     log = tmp_path / "log.csv"
     log.write_text(LOG)
     card = build_scorecard(log, results(played=False), tuned)
+    reliability = card["elo"].pop("reliability")
     assert card["elo"] == {
         "n": 0,
         "log_loss": None,
         "brier": None,
         "accuracy": None,
         "margin_mae": None,
+        "ece": None,
     }
+    assert [b["n"] for b in reliability] == [0] * 10
 
 
 def test_missing_log_is_an_empty_scorecard(tmp_path: Path, tuned: TunedModel) -> None:

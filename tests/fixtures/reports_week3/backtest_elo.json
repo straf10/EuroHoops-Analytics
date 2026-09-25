@@ -1,0 +1,135 @@
+{
+  "model": "elo",
+  "model_version": "0.2.0+425e6393",
+  "seasons": {
+    "warmup": [
+      2023
+    ],
+    "tuning": [
+      2024
+    ],
+    "test": [
+      2025
+    ]
+  },
+  "games_per_season": {
+    "2023": 331,
+    "2024": 330,
+    "2025": 402
+  },
+  "grid": {
+    "k": [
+      15.0,
+      20.0,
+      30.0,
+      40.0
+    ],
+    "hca": [
+      50.0,
+      70.0,
+      90.0,
+      110.0,
+      130.0
+    ],
+    "reversion": [
+      0.25,
+      0.5,
+      0.75
+    ],
+    "size": 60,
+    "best": {
+      "k": 20.0,
+      "hca": 90.0,
+      "reversion": 0.25,
+      "tuning_log_loss": 0.618331
+    },
+    "best_on_edge": [
+      "reversion"
+    ],
+    "best_minus_tuned_log_loss": {
+      "tuning": {
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "resamples": 1000,
+        "seed": 20260924
+      },
+      "test": {
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "resamples": 1000,
+        "seed": 20260924
+      }
+    }
+  },
+  "tuned": {
+    "k": 20.0,
+    "hca": 90.0,
+    "reversion": 0.25,
+    "frozen": false,
+    "margin_scale": 24.53358,
+    "tuning_log_loss": 0.618331,
+    "home_win_prob_equal_ratings": 0.626699
+  },
+  "b0": {
+    "home_win_rate": 0.632466,
+    "home_margin": 3.721286
+  },
+  "metrics": {
+    "tuning": {
+      "elo": {
+        "n": 330,
+        "log_loss": 0.618331,
+        "brier": 0.215831,
+        "accuracy": 0.633333,
+        "margin_mae": 9.075768
+      },
+      "b0": {
+        "n": 330,
+        "log_loss": 0.664943,
+        "brier": 0.236024,
+        "accuracy": 0.618182,
+        "margin_mae": 9.794984
+      }
+    },
+    "test": {
+      "elo": {
+        "n": 402,
+        "log_loss": 0.629327,
+        "brier": 0.219998,
+        "accuracy": 0.641791,
+        "margin_mae": 9.123502
+      },
+      "b0": {
+        "n": 402,
+        "log_loss": 0.655673,
+        "brier": 0.231499,
+        "accuracy": 0.636816,
+        "margin_mae": 9.59143
+      }
+    }
+  },
+  "test_log_loss_diff_elo_minus_b0": {
+    "mean": -0.026346,
+    "ci95": [
+      -0.04878,
+      -0.004545
+    ],
+    "resamples": 1000,
+    "seed": 20260924
+  },
+  "test_margin_abs_error_diff_elo_minus_b0": {
+    "mean": -0.467929,
+    "ci95": [
+      -0.807082,
+      -0.13469
+    ],
+    "resamples": 1000,
+    "seed": 20260924
+  }
+}

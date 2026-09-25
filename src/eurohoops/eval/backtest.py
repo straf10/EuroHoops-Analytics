@@ -167,13 +167,15 @@ def run_backtest(games: pd.DataFrame, spec: Backtest) -> dict[str, Any]:
 
 
 def format_table(report: dict[str, Any]) -> str:
-    header = f"{'split':<8}{'model':<6}{'n':>5}{'logloss':>9}{'brier':>8}{'acc':>7}{'mae':>7}"
+    header = (
+        f"{'split':<8}{'model':<6}{'n':>5}{'logloss':>9}{'brier':>8}{'acc':>7}{'mae':>7}{'ece':>7}"
+    )
     lines = [header, "-" * len(header)]
     for split, models in report["metrics"].items():
         for name, m in models.items():
             lines.append(
                 f"{split:<8}{name:<6}{m['n']:>5}{m['log_loss']:>9.4f}{m['brier']:>8.4f}"
-                f"{m['accuracy']:>7.3f}{m['margin_mae']:>7.2f}"
+                f"{m['accuracy']:>7.3f}{m['margin_mae']:>7.2f}{m['ece']:>7.3f}"
             )
     tuned = report["tuned"]
     lines.append(
