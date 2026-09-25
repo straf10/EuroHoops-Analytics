@@ -145,3 +145,4 @@ iteration 7 | E6 leakage tests | full §6 1-19 (17 not built yet); 15 red only f
     (fixture data: the real M1 log is empty until the first daily run).
 iteration 8 | E7 live M1 | full §6 1-20 (first run with all items built) | ALL PASS (not yet the final no-edit run: E8 pending) | 66f0ad7
 iteration 9 | E8 model card | gate 1-6 (ruff, format, mypy, pytest+cov, vulture) | green; card test catches an edited table value | fd0e3e6
+iteration 10 | final §6 run (af1ca1c, clean tree, no edits between) | items 1-20 top to bottom | ALL PASS, nothing BLOCKED/SKIPPED - stop condition met | see closeout commit
