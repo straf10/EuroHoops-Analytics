@@ -35,6 +35,7 @@ from eurohoops.config import (
 from eurohoops.eval.backtest import format_table, load_tuned_model, run_backtest
 from eurohoops.eval.m1_backtest import format_m1_table, run_m1_backtest
 from eurohoops.eval.scorecard import build_scorecard
+from eurohoops.eval.tracking import default_tracking_uri, log_backtest
 from eurohoops.ingest import euroleague, gbl
 from eurohoops.ingest.http import Fetcher, make_client
 from eurohoops.marts import (
@@ -280,6 +281,10 @@ def backtest(
         bool,
         typer.Option(help="M1: also score the test seasons (only after the gate verdict)"),
     ] = False,
+    tracking_uri: Annotated[
+        str | None,
+        typer.Option(help="M1: MLflow tracking URI (default: SQLite store under ./mlruns)"),
+    ] = None,
 ) -> None:
     """Tune and score a model vs its baselines; the Elo live report holds the live parameters."""
     comp = COMPETITIONS[competition]
@@ -294,6 +299,11 @@ def backtest(
         )
         _write_json(comp.m1.report, report)
         typer.echo(f"{comp.m1.report}\n{format_m1_table(report)}")
+        run_id = log_backtest(
+            report, comp.name, report["data_sha256"], tracking_uri or default_tracking_uri()
+        )
+        if run_id is not None:
+            typer.echo(f"MLflow parent run {run_id}")
         return
     for spec in (comp.live_backtest, *comp.history_backtests):
         report = run_backtest(games, spec)
