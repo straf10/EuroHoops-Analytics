@@ -2,7 +2,7 @@
 
 ## Checklist
 - [x] 2. GBL Elo tuning grid widened; live parameters frozen for 2026-27
-- [ ] 1. GBL live logging ready for Sat 3 Oct
+- [x] 1. GBL live logging ready for Sat 3 Oct
 - [ ] 5. EL round-1 rows flagged as not provable
 - [ ] 3. GBL box-score gaps classified
 - [ ] 7a. EuroLeague shot coordinate system
@@ -38,3 +38,19 @@ Top tuning-set results (log loss):
   Each report now records `grid.best`, `grid.best_on_edge` and `grid.best_minus_tuned_log_loss`.
 - Note: the EL live grid best also has reversion on the edge (0.25). EL parameters were
   frozen by an earlier decision (D-a), so this is only for information.
+
+## 1. GBL live logging for Sat 3 Oct
+- The daily workflow already ingests, predicts and scores both competitions. actionlint
+  (1.7.12) passes on `daily.yml` and `ci.yml`. The new `tests/test_workflow.py` fails if a
+  GBL step is removed or the daily cron stops being daily.
+- Timing: round 1 has 7 games, all with confirmed dates, tipping off from Sat 3 Oct 12:00 to
+  Sun 4 Oct 14:30 UTC. The earliest GBL tip-off in the whole 2026-27 schedule is 09:00 UTC.
+  The daily run at 08:00 UTC has a 36 h window, so every game is covered by one or two runs
+  before tip-off, including Sunday morning games (logged by Saturday's run).
+- Dry run on the real mart with a fixed clock and a temporary log (scratch script, not
+  committed): the Fri 2 Oct run logs 5 games and the Sat 3 Oct run logs 2. Rerunning both
+  adds 0 rows. All 7 round-1 games are logged once, before tip-off, with the frozen model
+  `0.2.0+df05260c` (K40/HCA130/rev0.25).
+- `tests/test_cli.py` covers the GBL predict path end to end (twice → no duplicates).
+- Watch: GitHub can delay scheduled runs. A delay of up to 12 h still leaves every game
+  covered by at least one run. Check the Actions tab on Fri 2 Oct.
