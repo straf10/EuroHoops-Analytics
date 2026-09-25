@@ -4,7 +4,7 @@
 - [x] 2. GBL Elo tuning grid widened; live parameters frozen for 2026-27
 - [x] 1. GBL live logging ready for Sat 3 Oct
 - [x] 5. EL round-1 rows flagged as not provable
-- [x] 3. GBL box-score gaps classified (fill policy: DECISION NEEDED)
+- [x] 3. GBL box-score gaps classified (fill from PBP when the ingester lands: decided)
 - [x] 7a. EuroLeague shot coordinate system
 - [x] 7b. 2026-27 formats and tiebreak rules (GBL format partly UNVERIFIED)
 
@@ -12,17 +12,17 @@ Final gate, run from a clean state: `uv sync`, ruff, `ruff format --check`, `myp
 and vulture are clean, and there are **123 tests at 98% coverage**. `eurohoops build`,
 `score` and `publish` run end to end and leave the tree unchanged.
 
-## Decisions for the user
-1. **GBL box-score fill policy (item 3):** fill 2018-20 from PBP when the PBP ingester lands
-   (recommended), or leave 2018-20 out of box-score models permanently.
-2. **GBL 2026-27 format (7b):** confirm the playoff places, series lengths and relegation
-   once ESAKE publishes the 2026-27 competition notice.
-3. **Olympiacos and Panathinaikos start at −2 points** on ESAKE's live table (7b). Confirm
-   the reason, and note that standings simulations must include it.
-4. **Push `week-3-closeout`** and merge before Fri 2 Oct, so the frozen GBL model and the
-   scorecard split are live before GBL round 1.
-5. The **EL grid best has reversion on the edge** (0.25). This is for information only,
-   because EL parameters are frozen for the season (D-a).
+## Decisions (answered by the user, 2026-09-25)
+1. **GBL box-score fill policy (item 3):** fill 2018-20 from PBP when the GBL PBP ingester
+   is built. Until then, box-score models start at 2020-21.
+2. **GBL 2026-27 format (7b):** still open. The user will confirm the playoff places, series
+   lengths and relegation once ESAKE publishes the 2026-27 competition notice.
+3. **Olympiacos and Panathinaikos start at −2 points.** This is a sanction for the
+   altercation between players in the 2025-26 finals, among other things. It is recorded
+   in `GBL_2026.points_deducted`.
+4. **Pushed and merged** `week-3-closeout` into `origin/main` (fast-forward).
+5. For information only: the **EL grid best has reversion on the edge** (0.25). EL parameters
+   are frozen for the season (D-a).
 
 ## 2. GBL Elo tuning grid
 The old grid's best value (K=40, HCA=130, reversion=0.25) sat on the edge of all three axes.
@@ -130,11 +130,9 @@ Every affected game is listed with its category in `reports/gbl_box_gaps.csv` (1
     request to reveal the internal id (spike doc updated).
   - The last score in the sheet matches the result in 103/103.
   - A full points-from-events reconstruction is part of the weeks 5–7 PBP work.
-- **DECISION NEEDED (fill policy):**
-  - **Recommended:** fill from PBP when the GBL PBP ingester lands (team totals for the 78
-    games, plus the missing player's line for the 25).
-  - Until then, box-score models start at 2020-21, and 2018-20 is used for Elo/results only.
-  - The alternative is to drop 2018-20 from box-score models permanently.
+- **Decided (user, 2026-09-25):** fill from PBP when the GBL PBP ingester lands (team totals
+  for the 78 games, plus the missing player's line for the 25). Until then, box-score models
+  start at 2020-21, and 2018-20 is used for Elo/results only.
 
 ## 7a. EuroLeague shot coordinate system
 Source: the `Points` endpoint (`COORD_X`, `COORD_Y`, cached in `data/raw/euroleague/points`).
@@ -224,9 +222,10 @@ Source: [EuroLeague Bylaws 2026-27](https://ftpserver.euroleague.net/general/202
   Promitheas). Source: Wikipedia's season pages, a secondary source. ESAKE's own ranking
   archive returns all-zero tables for past seasons.
 - **The GBL ranks by points, not wins.** A win is worth 2 and a loss 1. The live 2026-27
-  ESAKE table already shows **Olympiacos and Panathinaikos at −2 points before round 1**,
-  which looks like a sanction. Standings simulations must start them at −2 (one win's worth
-  of deduction in `rank(deducted_wins=…)`). The reason for the deduction is **UNVERIFIED**.
+  ESAKE table already shows **Olympiacos and Panathinaikos at −2 points before round 1**.
+  The user confirmed this is a sanction for the altercation in the 2025-26 finals. It is
+  recorded in `GBL_2026.points_deducted`, and `GBL_2026.deducted_wins()` passes it to
+  `rank()` as one win's worth each.
 - The 2026-27 ESAKE table also lists a 15th placeholder team "Χ" (`B93197B3`), probably the
   wild-card slot. Watch it.
 - GBL overtime scores: regulation scores aren't parsed yet. The quarter scores exist on the

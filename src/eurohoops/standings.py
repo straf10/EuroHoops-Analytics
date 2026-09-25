@@ -51,6 +51,12 @@ class Format:
     series: tuple[Series, ...]
     sources: tuple[str, ...]
     unverified: tuple[str, ...] = ()  # rules not confirmed by an official source
+    # Standings points deducted before the season (team id, points). The GBL awards 2 points
+    # per win and 1 per loss, so 2 points weigh one win in rank(deducted_wins=...).
+    points_deducted: tuple[tuple[str, int], ...] = ()
+
+    def deducted_wins(self) -> dict[str, int]:
+        return {team: points // 2 for team, points in self.points_deducted}
 
 
 EUROLEAGUE_2026 = Format(
@@ -93,9 +99,12 @@ GBL_2026 = Format(
         "playoff positions (1-8 assumed) and series lengths: official 2025-26 decision, no"
         " 2026-27 competition notice found",
         "relegation of the 14th team",
-        "tie-breaks: EuroLeague-style head-to-head procedure assumed; checked against ESAKE's"
-        " own final standings instead",
+        "tie-breaks: EuroLeague-style head-to-head procedure assumed; it reproduces the"
+        " 2024-25 and 2025-26 final tables (Wikipedia)",
     ),
+    # Olympiacos and Panathinaikos start on -2: sanction for the altercation between players
+    # in the 2025-26 finals (confirmed by the user 2026-09-25; shown on ESAKE's live table).
+    points_deducted=(("00000002", 2), ("00000001", 2)),
 )
 
 

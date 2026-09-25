@@ -75,8 +75,15 @@ Every affected game is listed in `reports/gbl_box_gaps.csv`.
 - **Parser misses: 0.**
 - **Play-by-play coverage:** the BasketHotel PBP export exists for all 103 games, and its
   final score matches the results page in 103/103.
-- **Decision needed:** fill these games from PBP (team totals and the missing players' points
-  and shots) when the GBL PBP ingester lands, or leave 2018-20 out of box-score models.
+- **Decided (2026-09-25):** fill these games from PBP (team totals and the missing players'
+  points and shots) when the GBL PBP ingester lands. Until then, box-score models start at
+  2020-21.
+
+### 2026-27 standings
+- Olympiacos (`00000002`) and Panathinaikos (`00000001`) start on **−2 points**. This is a
+  sanction for the altercation between players in the 2025-26 finals, and it is shown on
+  ESAKE's live table. It is recorded in `eurohoops.standings.GBL_2026.points_deducted`.
+- The 2026-27 playoff format is still unconfirmed (see `GBL_2026.unverified`).
 
 ## Live operation
 
