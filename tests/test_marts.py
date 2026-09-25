@@ -3,9 +3,22 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from eurohoops.config import GBL, GBL_PLAYER_BOX, GBL_TEAM_BOX, MART_PATH, SQL_DIR
+from eurohoops.config import (
+    GBL,
+    GBL_BOX_FILL,
+    GBL_PLAYER_BOX,
+    GBL_TEAM_BOX,
+    MART_PATH,
+    SQL_DIR,
+)
 from eurohoops.ingest.gbl import ingest_gbl
-from eurohoops.marts import box_invariants, build_marts, read_games, read_teams
+from eurohoops.marts import (
+    box_invariants,
+    build_marts,
+    read_games,
+    read_teams,
+    refresh_box_gaps,
+)
 from eurohoops.parse.box import build_box_tables
 from eurohoops.parse.games import build_gbl_tables, write_table
 from tests.conftest import REPO, make_games, teams_table, write_pipeline
@@ -32,7 +45,8 @@ def test_marts_round_trip_both_competitions() -> None:
 def test_failing_box_scores_are_flagged_not_dropped(tmp_path: Path) -> None:
     rounds = ingest_gbl(fetcher_for(FakeEsake()), tmp_path / "raw", [2018], True, 2026)
     games, teams = build_gbl_tables(rounds)
-    player_box, team_box = build_box_tables(tmp_path / "raw", games)
+    tables = build_box_tables(tmp_path / "raw", games)
+    player_box, team_box = tables.player_box, tables.team_box
     # The fake serves one recorded box score (a PAOK 81-64 game) for every game, so points
     # never reconcile; also doctor one player line to trip the shot and points checks.
     doctored = player_box.index[(player_box["game_id"] == "GBL2018_B90F050D")][0]
@@ -41,6 +55,7 @@ def test_failing_box_scores_are_flagged_not_dropped(tmp_path: Path) -> None:
     write_table(teams, GBL.staging_teams)
     write_table(player_box, GBL_PLAYER_BOX)
     write_table(team_box, GBL_TEAM_BOX)
+    write_table(tables.fill, GBL_BOX_FILL)
     write_pipeline(make_games({2024: True}), games)
     assert build_marts(MART_PATH, REPO / SQL_DIR)
 
@@ -53,3 +68,36 @@ def test_failing_box_scores_are_flagged_not_dropped(tmp_path: Path) -> None:
         "bad_point_lines",
     ]
     assert "points_mismatch" in season["failed_games"]["GBL2018_E0ABEE8A"]
+    # Short teams are logged for the PBP fill; without cached PBP nothing is filled.
+    fill = box_invariants(MART_PATH)["pbp_fill"]["2018"]
+    assert fill["by_fill"] == {"not_filled": fill["teams"]}
+    assert fill["filled_points_match_result"] == 0
+
+
+@pytest.mark.usefixtures("workdir", "no_sleep")
+def test_refresh_box_gaps_adds_the_fill_outcome(tmp_path: Path) -> None:
+    rounds = ingest_gbl(fetcher_for(FakeEsake()), tmp_path / "raw", [2018], True, 2026)
+    games, teams = build_gbl_tables(rounds)
+    tables = build_box_tables(tmp_path / "raw", games)
+    for table, path in (
+        (games, GBL.staging_games),
+        (teams, GBL.staging_teams),
+        (tables.player_box, GBL_PLAYER_BOX),
+        (tables.team_box, GBL_TEAM_BOX),
+        (tables.fill, GBL_BOX_FILL),
+    ):
+        write_table(table, path)
+    write_pipeline(make_games({2024: True}), games)
+    assert build_marts(MART_PATH, REPO / SQL_DIR)
+    gaps = tmp_path / "gaps.csv"
+    refresh_box_gaps(MART_PATH, gaps)  # no curated list: nothing to do
+    assert not gaps.exists()
+    gaps.write_text("game_id,issue\nGBL2018_B90F050D,missing_box\nGBL2099_X,missing_box\n")
+    refresh_box_gaps(MART_PATH, gaps)
+    refreshed = pd.read_csv(gaps, keep_default_na=False).set_index("game_id")
+    assert refreshed.loc["GBL2018_B90F050D", "issue"] == "missing_box"  # kept as it was
+    assert refreshed.loc["GBL2018_B90F050D", "pbp_fill"] == "not_filled"
+    assert "no cached PBP export" in refreshed.loc["GBL2018_B90F050D", "pbp_fill_detail"]
+    assert refreshed.loc["GBL2099_X", "pbp_fill_detail"].startswith("not short")
+    refresh_box_gaps(MART_PATH, gaps)  # idempotent
+    assert pd.read_csv(gaps, keep_default_na=False).equals(refreshed.reset_index())

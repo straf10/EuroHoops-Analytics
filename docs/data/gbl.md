@@ -76,8 +76,48 @@ Every affected game is listed in `reports/gbl_box_gaps.csv`.
 - **Play-by-play coverage:** the BasketHotel PBP export exists for all 103 games, and its
   final score matches the results page in 103/103.
 - **Decided (2026-09-25):** fill these games from PBP (team totals and the missing players'
-  points and shots) when the GBL PBP ingester lands. Until then, box-score models start at
-  2020-21.
+  points and shots). **Done in weeks 3–5**, see below.
+
+### Play-by-play ingester and the 2018-20 fill (weeks 3–5)
+- `eurohoops ingest --competition gbl --pbp --seasons 2018 2019` makes two requests per game:
+  the BasketHotel widget (`show_export_link=1`, for the export id), then the xlsx export.
+  - Both requests use the ≥2 s throttle and a gzip cache (`data/raw/gbl/pbp_widget/`,
+    `data/raw/gbl/pbp/`), and nothing is ever re-fetched.
+  - It's a local backfill and never runs in CI.
+  - `--pbp` only chooses which seasons get PBP. The staging tables still cover every default
+    season.
+- The 2018-19 and 2019-20 backfill covered 342 played games in 682 requests, 2026-09-25.
+- **Parse:** `parse/gbl_pbp.py` produces a typed event table (`data/staging/gbl_pbp.parquet`,
+  pandera `PBP_SCHEMA`).
+  - Every row has an elapsed-game clock `MM:SS`. Periods come from the "Start of …" rows.
+  - Substitutions are `(n) Name entered/left the court`.
+  - Scoring sentences are `made a free throw`, `performed a 2|3 points …`; misses are
+    `missed a …` or `blocked while attempting a …`.
+  - Other sentences (rebounds, fouls, the `perfomed a steal` typo, …) are kept as `other`
+    with their text.
+  - The two team columns are mapped to home/away by the sheet's final score. The first
+    column isn't always the home team.
+- **Validation against ESAKE, all 342 games:**
+  - PBP points equal the results page in **342/342**.
+  - On the 505 teams with a complete official box, **5,454/5,457** shooting lines (points,
+    2P, 3P and FT made/attempted) match exactly.
+  - Every player's seconds match exactly for **486/505** teams.
+  - One bug found on the way: minutes have to run to the "End of game" row, not the last
+    player event.
+- **Fill** (`parse/box.py`, `source = "pbp"`; official rows are `source = "esake"`):
+  - **78 games without a box get PBP team totals:** 156 teams, all equal to the result.
+  - **23 short boxes get the missing player's line** (2–23 points, median 10), added only
+    when exactly one PBP line with stats has no exact match among the ESAKE lines and it
+    closes the gap. All 23 now add up to the result.
+  - **The 2 short 2022-23 boxes aren't filled:** they're outside the decided 2018-20 scope,
+    and the reason is recorded.
+  - `reports/gbl_box_gaps.csv` gives each listed game its fill and a reason. The per-season
+    `pbp_fill` block in `reports/gbl_box_invariants.json` counts them.
+  - The official pass rates above are **computed on ESAKE rows only and unchanged**. A filled
+    game is never an "official box".
+- PBP player lines are keyed `pbp:<jersey>:<name>`, not by ESAKE player id: entity
+  resolution is PLAN §4.3 work. Box-score models that need player identities should still
+  start at 2020-21. Team-level work can use 2018-20 through the `pbp` team totals.
 
 ### 2026-27 standings
 - Olympiacos (`00000002`) and Panathinaikos (`00000001`) start on **−2 points**. This is a

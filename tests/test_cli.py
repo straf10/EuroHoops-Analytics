@@ -14,6 +14,8 @@ from eurohoops.config import (
     BOX_INVARIANTS_REPORT,
     EUROLEAGUE,
     GBL,
+    GBL_BOX_FILL,
+    GBL_PBP,
     MART_PATH,
     ODDS_TEAMS,
     SITE_DATA,
@@ -24,6 +26,7 @@ from eurohoops.eval.backtest import load_tuned_model
 from eurohoops.marts import read_games
 from tests.conftest import REPO, make_games, write_pipeline
 from tests.test_gbl_ingest import FakeEsake
+from tests.test_gbl_pbp import GAME, FakeBasketHotel, export
 from tests.test_ingest import FakeApi
 from tests.test_stints import game, write_game
 
@@ -208,3 +211,42 @@ def test_stints_writes_a_reproducible_report() -> None:
     invoke("stints")
     assert STINT_REPORT.read_bytes() == first
     assert json.loads(first)["failing_games"].keys() == {"E2025_9"}
+
+
+class AnyGameHotel(FakeBasketHotel):
+    """Serves the recorded export for any game id."""
+
+    def __call__(self, request: httpx.Request) -> httpx.Response:
+        self.calls.append(request.url)
+        if request.url.path.endswith("/show"):
+            return httpx.Response(200, text='url += "&game_id=" + 4453393;')
+        return httpx.Response(200, content=export(GAME))
+
+
+@pytest.mark.usefixtures("workdir", "no_sleep")
+def test_ingest_gbl_pbp_caches_exports_and_keeps_every_season(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    esake, hotel = FakeEsake(), AnyGameHotel()
+
+    def route(request: httpx.Request) -> httpx.Response:
+        return (hotel if request.url.host == "widgets.baskethotel.com" else esake)(request)
+
+    monkeypatch.setattr(
+        cli, "make_client", lambda: httpx.Client(transport=httpx.MockTransport(route))
+    )
+    invoke("ingest", "--competition", "gbl", "--seasons", "2018", "--pbp")
+    assert len(hotel.calls) == 2 * 4  # widget + export for each played, non-forfeit game
+    staged = pd.read_parquet(GBL.staging_games)
+    assert set(staged["season"]) > {2018}  # --pbp never narrows the staging tables
+    assert GBL_PBP.exists()
+    fill = pd.read_parquet(GBL_BOX_FILL)
+    assert not fill.empty  # the fake's one box never matches the fake results
+    invoke("ingest", "--competition", "gbl", "--seasons", "2018", "--pbp")
+    assert len(hotel.calls) == 2 * 4  # all cached
+
+
+@pytest.mark.usefixtures("workdir")
+def test_pbp_flag_is_gbl_only() -> None:
+    result = runner.invoke(cli.app, ["ingest", "--pbp"])
+    assert result.exit_code != 0

@@ -16,6 +16,9 @@ from eurohoops.config import (
     COMPETITIONS,
     EUROLEAGUE,
     GBL,
+    GBL_BOX_FILL,
+    GBL_BOX_GAPS,
+    GBL_PBP,
     GBL_PLAYER_BOX,
     GBL_TEAM_BOX,
     LIVE_SEASON,
@@ -31,7 +34,13 @@ from eurohoops.eval.backtest import format_table, load_tuned_model, run_backtest
 from eurohoops.eval.scorecard import build_scorecard
 from eurohoops.ingest import euroleague, gbl
 from eurohoops.ingest.http import Fetcher, make_client
-from eurohoops.marts import box_invariants, build_marts, read_games, read_teams
+from eurohoops.marts import (
+    box_invariants,
+    build_marts,
+    read_games,
+    read_teams,
+    refresh_box_gaps,
+)
 from eurohoops.odds import OddsApiError, OddsPaths, api_key, record_odds
 from eurohoops.parse.box import build_box_tables
 from eurohoops.parse.games import (
@@ -40,6 +49,7 @@ from eurohoops.parse.games import (
     build_teams_table,
     write_table,
 )
+from eurohoops.parse.gbl_pbp import build_pbp_table
 from eurohoops.parse.stints import validate_sample
 from eurohoops.predict import LatePredictionError, predict_upcoming
 from eurohoops.publish import Section, site_data
@@ -85,23 +95,44 @@ def ingest(
         bool,
         typer.Option(help="Also cache game details (EuroLeague: box/PBP/shots; GBL: box scores)"),
     ] = False,
+    pbp: Annotated[
+        bool,
+        typer.Option(help="GBL: also cache the chosen seasons' play-by-play (local backfill)"),
+    ] = False,
 ) -> None:
-    """Fetch results into the raw cache and rebuild the competition's staging tables."""
+    """Fetch results into the raw cache and rebuild the competition's staging tables.
+
+    With ``--pbp`` the chosen seasons only select which games get play-by-play; the staging
+    tables still cover every default season.
+    """
     try:
         extra = [int(arg) for arg in ctx.args]
     except ValueError as exc:
         raise typer.BadParameter(f"unexpected arguments {ctx.args}") from exc
     comp = COMPETITIONS[competition]
     chosen = sorted({*(seasons or []), *extra}) or list(comp.default_seasons)
+    if pbp and comp is not GBL:
+        raise typer.BadParameter("--pbp is for --competition gbl (EuroLeague PBP: --details)")
     with make_client() as client:
         if comp is GBL:
             fetcher = Fetcher(client, gbl.MIN_INTERVAL_S)
-            rounds = gbl.ingest_gbl(fetcher, comp.raw_dir, chosen, details, LIVE_SEASON)
+            staged = sorted({*chosen, *comp.default_seasons}) if pbp else chosen
+            rounds = gbl.ingest_gbl(
+                fetcher,
+                comp.raw_dir,
+                staged,
+                details,
+                LIVE_SEASON,
+                pbp_seasons=chosen if pbp else (),
+            )
             games, teams = build_gbl_tables(rounds)
-            if details:
-                player_box, team_box = build_box_tables(comp.raw_dir, games)
-                write_table(player_box, GBL_PLAYER_BOX)
-                write_table(team_box, GBL_TEAM_BOX)
+            if details or pbp:
+                tables = build_box_tables(comp.raw_dir, games)
+                write_table(tables.player_box, GBL_PLAYER_BOX)
+                write_table(tables.team_box, GBL_TEAM_BOX)
+                write_table(tables.fill, GBL_BOX_FILL)
+            if pbp:
+                write_table(build_pbp_table(comp.raw_dir, games), GBL_PBP)
         else:
             fetcher = Fetcher(client, euroleague.MIN_INTERVAL_S)
             schedules = euroleague.ingest_seasons(
@@ -121,6 +152,7 @@ def build() -> None:
     if build_marts(MART_PATH, SQL_DIR):
         report = box_invariants(MART_PATH)
         _write_json(BOX_INVARIANTS_REPORT, report)
+        refresh_box_gaps(MART_PATH, GBL_BOX_GAPS)
         for season, stats in report["seasons"].items():
             typer.echo(f"gbl box scores {season}: {stats['passed']}/{stats['games']} pass")
     typer.echo(f"marts written to {MART_PATH}")
