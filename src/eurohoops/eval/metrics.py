@@ -6,6 +6,7 @@ from typing import Any
 
 import numpy as np
 import numpy.typing as npt
+from scipy import special
 
 from eurohoops.models.elo import FloatArray
 
@@ -81,7 +82,7 @@ def ece(p: FloatArray, y: FloatArray, bins: int = 10) -> float:
 _erf = np.vectorize(math.erf, otypes=[np.float64])
 
 
-def crps_normal(mu: FloatArray, sigma: float, y: FloatArray) -> FloatArray:
+def crps_normal(mu: FloatArray, sigma: float | FloatArray, y: FloatArray) -> FloatArray:
     """Per-game CRPS of a Normal(mu, sigma) forecast for outcome y, in closed form.
 
     CRPS = sigma * (z * (2 * Phi(z) - 1) + 2 * phi(z) - 1 / sqrt(pi)), z = (y - mu) / sigma
@@ -91,6 +92,37 @@ def crps_normal(mu: FloatArray, sigma: float, y: FloatArray) -> FloatArray:
     cdf = 0.5 * (1.0 + _erf(z / math.sqrt(2.0)))
     pdf = np.exp(-0.5 * z**2) / math.sqrt(2.0 * math.pi)
     crps: FloatArray = sigma * (z * (2.0 * cdf - 1.0) + 2.0 * pdf - 1.0 / math.sqrt(math.pi))
+    return crps
+
+
+def crps_student_t(
+    mu: FloatArray, scale: float | FloatArray, df: float, y: FloatArray
+) -> FloatArray:
+    """Per-game CRPS of a location-scale Student-t forecast (df > 1), in closed form.
+
+    With z = (y - mu) / scale, F and f the standard t CDF and density (Jordan, Kruger & Lerch
+    2019, scoringRules): CRPS = scale * [z (2F(z) - 1) + 2 f(z) (df + z^2) / (df - 1)
+    - 2 sqrt(df) B(1/2, df - 1/2) / ((df - 1) B(1/2, df/2)^2)].
+    """
+    if df <= 1.0:
+        raise ValueError("the Student-t CRPS needs df > 1")
+    z = (y - mu) / scale
+    cdf = special.stdtr(df, z)
+    log_pdf = (
+        special.gammaln((df + 1.0) / 2.0)
+        - special.gammaln(df / 2.0)
+        - 0.5 * math.log(df * math.pi)
+        - (df + 1.0) / 2.0 * np.log1p(z**2 / df)
+    )
+    constant = (
+        2.0
+        * math.sqrt(df)
+        * math.exp(special.betaln(0.5, df - 0.5) - 2.0 * special.betaln(0.5, df / 2.0))
+        / (df - 1.0)
+    )
+    crps: FloatArray = scale * (
+        z * (2.0 * cdf - 1.0) + 2.0 * np.exp(log_pdf) * (df + z**2) / (df - 1.0) - constant
+    )
     return crps
 
 
