@@ -94,3 +94,5 @@ def test_2026_formats_are_consistent() -> None:
         assert fmt.sources
     assert not EUROLEAGUE_2026.unverified
     assert GBL_2026.unverified
+    assert EUROLEAGUE_2026.deducted_wins() == {}
+    assert GBL_2026.deducted_wins() == {"00000002": 1, "00000001": 1}  # OLY, PAO: -2 points
