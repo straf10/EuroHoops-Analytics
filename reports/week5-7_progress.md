@@ -42,3 +42,4 @@ Local gate 1-6 green on the branch start (224 tests, coverage 98.75%).
 
 ## Loop log
 iteration 1 | E1 team_games possession mart | §6 1-11, 18, 19 (12-17 not built yet; 7 in a clean web/ copy) | green; 6378/6387 games with rows, 9 listed missing, 0 points mismatches, EL sample 89.0% within 2 (explained) | be1c18e
+iteration 2 | E2 stints mart | §6 1-12, 18, 19 (13-17 not built yet) | green; 2011-14 95.9%, 2015+ 98.9%, points=final for all passing games, two builds identical (tables + report) | 3dda083
