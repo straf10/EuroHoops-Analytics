@@ -61,6 +61,23 @@ Forfeits are not box-checked. Before 2020-21 the box scores are unreliable (miss
 minutes that do not add up); models that need player minutes should start at 2020-21 or
 treat 2018-20 with care. No line ever failed the shot-consistency checks.
 
+### The gaps are at the source, and play-by-play covers them (checked 2026-09-25)
+Every affected game is listed in `reports/gbl_box_gaps.csv`.
+
+- **78 missing box scores** (52 in 2018-19, 26 in 2019-20):
+  - The page carries only the game header, quarter scores and team leaders. There is no stat
+    table in `mode=3`, and `mode=2` holds only the PBP widget container.
+  - A live refetch of 10 of these pages on 2026-09-25 was identical, so the cache isn't stale.
+- **25 "points mismatch" games** (15 in 2018-19, 8 in 2019-20, 2 in 2022-23):
+  - In every case one team lists only 10–11 players, and its totals row adds up the listed
+    players. The result is 1–23 points higher (median 8) and minutes are below 200.
+  - ESAKE simply omits a player from these pages. The parser keeps every row.
+- **Parser misses: 0.**
+- **Play-by-play coverage:** the BasketHotel PBP export exists for all 103 games, and its
+  final score matches the results page in 103/103.
+- **Decision needed:** fill these games from PBP (team totals and the missing players' points
+  and shots) when the GBL PBP ingester lands, or leave 2018-20 out of box-score models.
+
 ## Live operation
 
 - The daily workflow fetches only the live season's unfinished rounds (~27 pages at 2 s);

@@ -22,6 +22,11 @@ contain substitutions, game clock, score and shot coordinates?*
    `use_external_game_ids=1` the game resolves even with the default (2026-27) `season_id`;
    the response reveals the real season (`season_id: 131203` for 2025-26) and BasketHotel's
    **internal game id (6084033)**.
+   *Update 2026-09-25:* the internal id appears only when the request also sets
+   `request[0][param][show_export_link]=1`. It then sits in the export handler as
+   `"&game_id=" + 6084033`. Without that parameter, the response carries no internal id.
+   With it, the export resolved for all 103 checked 2018-19, 2019-20 and 2022-23 games
+   (`reports/gbl_box_gaps.csv`).
 6. The PBP rows are not in that HTML (they load through a further partial), but the widget's
    **Export** button is a direct download:
    `widgets.baskethotel.com/widget-service/export/view/play_by_play?api=<ApiId>&game_id=6084033`

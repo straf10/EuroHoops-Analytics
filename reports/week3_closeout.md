@@ -4,7 +4,7 @@
 - [x] 2. GBL Elo tuning grid widened; live parameters frozen for 2026-27
 - [x] 1. GBL live logging ready for Sat 3 Oct
 - [x] 5. EL round-1 rows flagged as not provable
-- [ ] 3. GBL box-score gaps classified
+- [x] 3. GBL box-score gaps classified (fill policy: DECISION NEEDED)
 - [ ] 7a. EuroLeague shot coordinate system
 - [ ] 7b. 2026-27 formats and tiebreak rules
 
@@ -79,3 +79,43 @@ Top tuning-set results (log loss):
   the default seasons 2023-26 and drops the 2007+ history the history backtest needs.
   I rebuilt it from cache (`--seasons 2007 … 2026`, 5,502 games), and all backtest reports
   reproduce byte for byte. Worth knowing before running `ingest` locally.
+
+## 3. GBL box-score gaps
+Every affected game is listed with its category in `reports/gbl_box_gaps.csv` (103 rows).
+
+| Group | 2018-19 | 2019-20 | 2022-23 | Category | PBP export exists and final score matches |
+|---|---|---|---|---|---|
+| Missing box score | 52 | 26 | 0 | (a) page without stats | 78/78 |
+| One player missing from the box | 15 | 8 | 2 | (a) page without stats | 25/25 |
+| Parser miss | 0 | 0 | 0 | (b) | — |
+| Page missing | 0 | 0 | 0 | (c) | — |
+
+- **Missing box score:** all 78 cached pages have the same shape: game header, quarter scores
+  and team leaders (5–6 `idplayer` links, all in the `mvp-player-name` widget), and no stat
+  table.
+  - The `mode=2` view has only quarter scores and the empty PBP container.
+  - A live refetch of 10 of them (6 from 2018-19, 4 from 2019-20; 2 s apart) matched the cache,
+    so ESAKE hasn't added them since the crawl.
+- **Points mismatches:**
+  - These weren't in the original list, but they also make the "invariants pass for the games
+    that are present" check fail. They are also a source issue.
+  - In every one of the 25 games, one team lists 10–11 players, and ESAKE's own totals row
+    equals the sum of those players.
+  - That totals row is 1–23 points (median 8) below the result, and minutes total 168–219
+    against 200/225. Every row on the page has a player link and is parsed.
+- **Parser fixes: none needed**, so completeness is unchanged: 2018-19 at 63.6%, 2019-20 at
+  73.4% (`reports/gbl_box_invariants.json` unchanged by `eurohoops build`).
+- **Done-when check not met as written:** "invariants pass for all games that are present"
+  fails for the 25 games above. The cause is ESAKE's data, and the parser can't fix it. The
+  remaining `minutes_off` flags (2020-21 → 2025-26: 2–6 per season) are the known
+  abandoned/overtime cases in `docs/data/gbl.md`.
+- **Play-by-play:**
+  - The PBP export path works for all 103 games. It needs `show_export_link=1` on the widget
+    request to reveal the internal id (spike doc updated).
+  - The last score in the sheet matches the result in 103/103.
+  - A full points-from-events reconstruction is part of the weeks 5–7 PBP work.
+- **DECISION NEEDED (fill policy):**
+  - **Recommended:** fill from PBP when the GBL PBP ingester lands (team totals for the 78
+    games, plus the missing player's line for the 25).
+  - Until then, box-score models start at 2020-21, and 2018-20 is used for Elo/results only.
+  - The alternative is to drop 2018-20 from box-score models permanently.
