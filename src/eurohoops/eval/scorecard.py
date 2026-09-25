@@ -8,7 +8,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from eurohoops.eval.backtest import TunedModel
+from eurohoops.eval.backtest import TunedModel, totals_scores
 from eurohoops.eval.metrics import score
 from eurohoops.predict import LOG_COLUMNS
 
@@ -37,11 +37,12 @@ def not_provable(log: pd.DataFrame, manual_pushes: Sequence[datetime]) -> pd.Ser
 
 
 def _metrics(rows: pd.DataFrame, games: pd.DataFrame, model: TunedModel) -> dict[str, Any]:
-    """Score each game's earliest row against its result, Elo vs B0."""
+    """Score each game's earliest row against its result, Elo vs B0, plus the totals baseline."""
     first = rows.sort_values("predicted_at_utc").drop_duplicates("game_id", keep="first")
     scored = first[["game_id", "p_home", "exp_margin"]].merge(
         games.loc[
-            games["played"] & ~games["forfeit"], ["game_id", "home_score", "away_score", "neutral"]
+            games["played"] & ~games["forfeit"],
+            ["game_id", "season", "home_score", "away_score", "neutral"],
         ],
         on="game_id",
     )
@@ -51,8 +52,13 @@ def _metrics(rows: pd.DataFrame, games: pd.DataFrame, model: TunedModel) -> dict
         scored["p_home"].to_numpy(dtype=np.float64),
         scored["exp_margin"].to_numpy(dtype=np.float64),
         margin,
+        model.margin_sigma,
     )
-    return {"elo": elo.as_dict(), "b0": score(p_b0, exp_b0, margin).as_dict()}
+    return {
+        "elo": elo.as_dict(),
+        "b0": score(p_b0, exp_b0, margin, model.margin_sigma).as_dict(),
+        "totals": totals_scores(scored, model.totals_baseline),
+    }
 
 
 def build_scorecard(

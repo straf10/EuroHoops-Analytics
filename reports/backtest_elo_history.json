@@ -105,6 +105,7 @@
     "reversion": 0.25,
     "frozen": false,
     "margin_scale": 28.418924,
+    "margin_sigma": 11.854415,
     "tuning_log_loss": 0.606116,
     "home_win_prob_equal_ratings": 0.653217
   },
@@ -192,7 +193,8 @@
             "mean_p": 0.918004,
             "observed": 0.933333
           }
-        ]
+        ],
+        "margin_crps": 6.639045
       },
       "b0": {
         "n": 2567,
@@ -272,7 +274,8 @@
             "mean_p": null,
             "observed": null
           }
-        ]
+        ],
+        "margin_crps": 7.15936
       }
     },
     "test": {
@@ -354,7 +357,8 @@
             "mean_p": 0.920625,
             "observed": 1.0
           }
-        ]
+        ],
+        "margin_crps": 6.545152
       },
       "b0": {
         "n": 732,
@@ -434,8 +438,34 @@
             "mean_p": null,
             "observed": null
           }
-        ]
+        ],
+        "margin_crps": 6.891412
       }
+    }
+  },
+  "totals": {
+    "baseline": "mean total of the previous 2 seasons' rated games",
+    "baseline_by_season": {
+      "2015": 153.454365,
+      "2016": 155.141717,
+      "2017": 156.379175,
+      "2018": 159.942197,
+      "2019": 161.378846,
+      "2020": 161.068359,
+      "2021": 159.765517,
+      "2022": 156.511962,
+      "2023": 157.939394,
+      "2024": 162.335357,
+      "2025": 165.500756,
+      "2026": 170.113388
+    },
+    "tuning": {
+      "n": 2567,
+      "mae": 14.035147
+    },
+    "test": {
+      "n": 732,
+      "mae": 14.591236
     }
   },
   "test_log_loss_diff_elo_minus_b0": {
@@ -452,6 +482,15 @@
     "ci95": [
       -0.805113,
       -0.258421
+    ],
+    "resamples": 1000,
+    "seed": 20260924
+  },
+  "test_margin_crps_diff_elo_minus_b0": {
+    "mean": -0.34626,
+    "ci95": [
+      -0.515526,
+      -0.178574
     ],
     "resamples": 1000,
     "seed": 20260924

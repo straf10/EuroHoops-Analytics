@@ -1,7 +1,9 @@
+import math
+
 import numpy as np
 import pytest
 
-from eurohoops.eval.metrics import ece, reliability, score
+from eurohoops.eval.metrics import crps_normal, ece, reliability, score
 
 # Four games: bins 1 (two games), 7 and 9.
 P = np.array([0.15, 0.18, 0.72, 0.95])
@@ -45,3 +47,35 @@ def test_empty_score_keeps_the_bins() -> None:
     empty = score(np.empty(0), np.empty(0), np.empty(0)).as_dict()
     assert empty["ece"] is None
     assert [b["n"] for b in empty["reliability"]] == [0] * 10
+
+
+def normal_cdf(x: np.ndarray, mu: float, sigma: float) -> np.ndarray:
+    return np.array([0.5 * (1.0 + math.erf((v - mu) / (sigma * math.sqrt(2.0)))) for v in x])
+
+
+@pytest.mark.parametrize(
+    ("mu", "sigma", "y"), [(0.0, 1.0, 0.0), (4.5, 11.7, -12.0), (-3.0, 2.0, 7.5)]
+)
+def test_crps_matches_a_numerical_integral(mu: float, sigma: float, y: float) -> None:
+    # CRPS = integral of (F(x) - 1{x >= y})^2 dx, split at the step so both halves are smooth.
+    lo, hi = min(mu, y) - 12 * sigma, max(mu, y) + 12 * sigma
+    below, above = np.linspace(lo, y, 200_001), np.linspace(y, hi, 200_001)
+    integral = np.trapezoid(normal_cdf(below, mu, sigma) ** 2, below) + np.trapezoid(
+        (1.0 - normal_cdf(above, mu, sigma)) ** 2, above
+    )
+    closed = crps_normal(np.array([mu]), sigma, np.array([y]))[0]
+    assert closed == pytest.approx(integral, abs=1e-6)
+
+
+def test_crps_tends_to_the_absolute_error_as_sigma_shrinks() -> None:
+    crps = crps_normal(np.array([2.0, -1.0]), 1e-9, np.array([7.0, -1.0]))
+    assert crps == pytest.approx([5.0, 0.0], abs=1e-8)
+
+
+def test_score_reports_crps_only_with_a_sigma() -> None:
+    margin = np.array([10.0, -4.0])
+    exp = np.array([6.0, 2.0])
+    p = np.array([0.7, 0.6])
+    assert score(p, exp, margin).margin_crps is None
+    expected = crps_normal(exp, 12.0, margin).mean()
+    assert score(p, exp, margin, 12.0).margin_crps == pytest.approx(expected)

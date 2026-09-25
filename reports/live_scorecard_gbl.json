@@ -81,7 +81,8 @@
         "mean_p": null,
         "observed": null
       }
-    ]
+    ],
+    "margin_crps": null
   },
   "b0": {
     "n": 0,
@@ -161,7 +162,12 @@
         "mean_p": null,
         "observed": null
       }
-    ]
+    ],
+    "margin_crps": null
+  },
+  "totals": {
+    "n": 0,
+    "mae": null
   },
   "all_rows": {
     "elo": {
@@ -242,7 +248,8 @@
           "mean_p": null,
           "observed": null
         }
-      ]
+      ],
+      "margin_crps": null
     },
     "b0": {
       "n": 0,
@@ -322,7 +329,12 @@
           "mean_p": null,
           "observed": null
         }
-      ]
+      ],
+      "margin_crps": null
+    },
+    "totals": {
+      "n": 0,
+      "mae": null
     }
   }
 }

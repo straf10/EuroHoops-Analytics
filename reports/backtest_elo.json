@@ -73,6 +73,7 @@
     "reversion": 0.25,
     "frozen": false,
     "margin_scale": 24.53358,
+    "margin_sigma": 11.737523,
     "tuning_log_loss": 0.618331,
     "home_win_prob_equal_ratings": 0.626699
   },
@@ -160,7 +161,8 @@
             "mean_p": 0.913286,
             "observed": 1.0
           }
-        ]
+        ],
+        "margin_crps": 6.509978
       },
       "b0": {
         "n": 330,
@@ -240,7 +242,8 @@
             "mean_p": null,
             "observed": null
           }
-        ]
+        ],
+        "margin_crps": 6.970683
       }
     },
     "test": {
@@ -322,7 +325,8 @@
             "mean_p": null,
             "observed": null
           }
-        ]
+        ],
+        "margin_crps": 6.52081
       },
       "b0": {
         "n": 402,
@@ -402,8 +406,25 @@
             "mean_p": null,
             "observed": null
           }
-        ]
+        ],
+        "margin_crps": 6.822117
       }
+    }
+  },
+  "totals": {
+    "baseline": "mean total of the previous 2 seasons' rated games",
+    "baseline_by_season": {
+      "2024": 162.335357,
+      "2025": 165.500756,
+      "2026": 170.113388
+    },
+    "tuning": {
+      "n": 330,
+      "mae": 13.741983
+    },
+    "test": {
+      "n": 402,
+      "mae": 15.288384
     }
   },
   "test_log_loss_diff_elo_minus_b0": {
@@ -420,6 +441,15 @@
     "ci95": [
       -0.807082,
       -0.13469
+    ],
+    "resamples": 1000,
+    "seed": 20260924
+  },
+  "test_margin_crps_diff_elo_minus_b0": {
+    "mean": -0.301307,
+    "ci95": [
+      -0.495895,
+      -0.109859
     ],
     "resamples": 1000,
     "seed": 20260924
