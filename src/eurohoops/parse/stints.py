@@ -235,7 +235,8 @@ def validate(stints: list[Stint], facts: BoxFacts) -> dict[str, list[str]]:
         for stint in own:
             for player in stint.players:
                 on_court[player] = on_court.get(player, 0) + stint.seconds
-        players = set(facts.seconds[team]) | set(on_court)
+        # Sorted, so the reported worst player of a tie does not depend on set (hash) order.
+        players = sorted(set(facts.seconds[team]) | set(on_court))
         off = {
             p: on_court.get(p, 0) - facts.seconds[team].get(p, 0)
             for p in players
