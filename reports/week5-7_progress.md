@@ -109,3 +109,18 @@ iteration 5 | E4 (part 2) test seasons scored once | check 15 (order declaration
   tuning-only parameters; it is not a new look at the test seasons for any decision.
 - (iteration 6) M1 reports gained `data_sha256` (sha256 of the sorted game and team-game rows
   read); an addition only.
+iteration 6 | E5 MLflow tracking | full §6 1-19 (14, 17 not built yet); 15 red only because data_sha256 was uncommitted (committed now) | green otherwise; parent + 4 children per competition with params/metrics/hash/commit; no-dev env skips tracking | 477fa51
+- (iteration 7) **Deliberate cutoff break (E6, shown once, reverted):** `prepare_history`
+  cutoff changed to the round's first tip-off + 400 days (a fit on the future). Result:
+  `test_m1_forecasts_before_t_ignore_every_later_edit` [EL-like, GBL-like],
+  `test_a_games_own_box_line_never_feeds_its_forecast` [both] and
+  `test_nothing_tuned_sees_validation_or_test_games` [both] FAILED (6 failed, the guard tests
+  passed). With +3 days only the own-box-line test failed (a 3-day look-ahead stays inside the
+  round). Reverted; 26/26 leakage tests pass.
+- (iteration 7) **Solver on seen teams only:** a future game with a brand-new team changed
+  earlier M1 forecasts in the last bits (a bigger linear system). `DecayedRidge.solve` now
+  solves only the columns that rows have touched so far (unseen teams stay 0, exactly as
+  before in exact arithmetic). Effect on the committed reports: EuroLeague identical; GBL moved
+  in the 6th decimal (margin scale 10.650608 -> 10.650607, a few reliability means and CI ends),
+  so the GBL M1 model_version hash changed 49583fa7 -> 3f4861e2. Gate and test numbers are
+  unchanged at 4 decimals; the committed verdict stands.
