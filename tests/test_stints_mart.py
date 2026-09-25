@@ -59,7 +59,7 @@ def test_game_checks_add_possessions_to_the_four_spike_checks() -> None:
     assert set(good.reasons) == set(GAME_CHECKS)
     pbp, box = game()
     off = game_stints("E2024_2", 2024, pbp, full_box(box, home_fga=12), TEAMS)
-    assert off.reasons["possessions"] == ["AAA: 3 counted, 12.44 box formula"]
+    assert off.reasons["possessions"] == ["AAA: 3 counted, 12.42 box formula"]
     pbp, box = game()
     other = game_stints("E2024_3", 2024, pbp, full_box(box), ("AAA", "CCC"))
     assert other.reasons["possessions"] == ["CCC: not in the box score"]
@@ -115,6 +115,7 @@ def test_mart_lists_failures_and_is_reproducible(tmp_path: Path) -> None:
             "game_id": ["E2015_1", "E2015_1", "E2012_3", "E2012_3"],
             "team": ["AAA", "BBB", "AAA", "BBB"],
             "poss_raw": [2.44, 1.0, 2.44, 9.0],
+            "fta": [1, 1, 2, 2],
         }
     )
     report = mart_report(mart, games, team_games)
@@ -123,6 +124,9 @@ def test_mart_lists_failures_and_is_reproducible(tmp_path: Path) -> None:
     assert report["seasons"]["2015"]["failures_by_check"]["five_on_court"] == 1
     assert report["pbp_vs_box_possessions"]["2011_2014"]["within_2_share"] == 0.5
     assert report["pbp_vs_box_possessions"]["2015_on"]["mean_gap_pbp_minus_box"] == 0.28
+    # Two team-games, gaps summing to 0.56 over 2 FTA: the weight rises by 0.28.
+    assert report["pbp_vs_box_possessions"]["2015_on"]["ft_weight_matching_pbp"] == 0.70
+    assert report["pbp_vs_box_possessions"]["all"]["team_games"] == 4
     moved = games.assign(home_score=games["home_score"] + 1)
     missed = mart_report(mart, moved, team_games)["passing_games_where_stint_points_miss_the_final"]
     assert missed == ["E2015_1"]

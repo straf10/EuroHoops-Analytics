@@ -8,7 +8,7 @@ Sources, read from the raw cache only (nothing is fetched here):
   ESAKE totals do not reproduce the result (the 2018-19/2019-20 gaps) are counted from the
   BasketHotel play-by-play instead (``source = "gbl_pbp"``) when its points reproduce it.
 
-Possessions (PLAN R1) are ``FGA - OREB + TOV + 0.44 * FTA`` per team (``poss_raw``); the game's
+Possessions (PLAN R1) are ``FGA - OREB + TOV + 0.42 * FTA`` per team (``poss_raw``); the game's
 count (``poss_game``) is the mean of both teams'. Every played, non-forfeit game either has two
 rows or a row in the missing table with the reason; none is dropped silently.
 """

@@ -16,13 +16,21 @@
   "pbp_vs_box_possessions": {
     "2011_2014": {
       "team_games": 1890,
-      "within_2_share": 0.873,
-      "mean_gap_pbp_minus_box": -0.0521
+      "within_2_share": 0.8603,
+      "mean_gap_pbp_minus_box": 0.3099,
+      "ft_weight_matching_pbp": 0.4371
     },
     "2015_on": {
       "team_games": 6598,
-      "within_2_share": 0.8925,
-      "mean_gap_pbp_minus_box": -0.5525
+      "within_2_share": 0.9142,
+      "mean_gap_pbp_minus_box": -0.1925,
+      "ft_weight_matching_pbp": 0.4093
+    },
+    "all": {
+      "team_games": 8488,
+      "within_2_share": 0.9022,
+      "mean_gap_pbp_minus_box": -0.0806,
+      "ft_weight_matching_pbp": 0.4155
     }
   },
   "seasons": {
@@ -30,13 +38,13 @@
       "games": 188,
       "passed": 183,
       "pass_rate": 0.9734,
-      "possessions_pass_rate": 0.9787,
+      "possessions_pass_rate": 0.9734,
       "failures_by_check": {
         "five_on_court": 1,
         "seconds": 0,
         "minutes": 4,
         "points": 0,
-        "possessions": 4
+        "possessions": 5
       },
       "failed_games": {
         "E2011_33": "minutes: MAD: 2 players off by > 60 s (worst P001960 +100 s); minutes: TEL: 5 players off by > 60 s (worst P003423 -136 s)",
@@ -50,20 +58,20 @@
       "games": 253,
       "passed": 241,
       "pass_rate": 0.9526,
-      "possessions_pass_rate": 0.996,
+      "possessions_pass_rate": 0.9921,
       "failures_by_check": {
         "five_on_court": 7,
         "seconds": 0,
         "minutes": 8,
         "points": 0,
-        "possessions": 1
+        "possessions": 2
       },
       "failed_games": {
         "E2012_21": "minutes: BAS: 2 players off by > 60 s (worst P001413 -61 s); minutes: ZAL: 3 players off by > 60 s (worst PBJR -106 s)",
         "E2012_40": "five_on_court: BER: 1 stints (60 s) with [6] players",
         "E2012_64": "minutes: TEL: 1 players off by > 60 s (worst P004158 -2374 s)",
         "E2012_92": "five_on_court: MIL: 1 stints (8 s) with [6] players; minutes: MIL: 1 players off by > 60 s (worst P001887 -61 s)",
-        "E2012_113": "five_on_court: SIE: 2 stints (116 s) with [6] players",
+        "E2012_113": "five_on_court: SIE: 2 stints (116 s) with [6] players; possessions: SOP: 90 counted, 84.80 box formula",
         "E2012_117": "five_on_court: CED: 1 stints (3 s) with [8] players; minutes: BAS: 2 players off by > 60 s (worst P001413 -61 s); minutes: CED: 3 players off by > 60 s (worst PBDC -1261 s)",
         "E2012_123": "five_on_court: MAD: 1 stints (54 s) with [6] players",
         "E2012_141": "minutes: BAS: 2 players off by > 60 s (worst P003509 -119 s); minutes: BES: 1 players off by > 60 s (worst P000378 -61 s)",
@@ -176,7 +184,7 @@
         "possessions": 1
       },
       "failed_games": {
-        "E2017_14": "minutes: KHI: 1 players off by > 60 s (worst P008003 +1397 s); points: KHI: 85 from stints, 66 final; possessions: KHI: 80 counted, 63.36 box formula",
+        "E2017_14": "minutes: KHI: 1 players off by > 60 s (worst P008003 +1397 s); points: KHI: 85 from stints, 66 final; possessions: KHI: 80 counted, 62.98 box formula",
         "E2017_67": "minutes: TEL: 2 players off by > 60 s (worst P004974 +226 s)",
         "E2017_80": "five_on_court: RED: 1 stints (1 s) with [4] players",
         "E2017_84": "five_on_court: PAM: 1 stints (7 s) with [4] players",
@@ -261,13 +269,13 @@
       "games": 328,
       "passed": 325,
       "pass_rate": 0.9909,
-      "possessions_pass_rate": 0.997,
+      "possessions_pass_rate": 1.0,
       "failures_by_check": {
         "five_on_court": 1,
         "seconds": 0,
         "minutes": 2,
         "points": 0,
-        "possessions": 1
+        "possessions": 0
       },
       "failed_games": {
         "E2022_102": "five_on_court: TEL: 1 stints (2 s) with [6] players",
@@ -295,13 +303,13 @@
       "games": 330,
       "passed": 330,
       "pass_rate": 1.0,
-      "possessions_pass_rate": 0.997,
+      "possessions_pass_rate": 1.0,
       "failures_by_check": {
         "five_on_court": 0,
         "seconds": 0,
         "minutes": 0,
         "points": 0,
-        "possessions": 1
+        "possessions": 0
       },
       "failed_games": {}
     },
@@ -309,13 +317,13 @@
       "games": 402,
       "passed": 398,
       "pass_rate": 0.99,
-      "possessions_pass_rate": 0.9925,
+      "possessions_pass_rate": 1.0,
       "failures_by_check": {
         "five_on_court": 0,
         "seconds": 0,
         "minutes": 4,
         "points": 0,
-        "possessions": 3
+        "possessions": 0
       },
       "failed_games": {
         "E2025_87": "minutes: IST: 1 players off by > 60 s (worst P007109 -120 s)",
@@ -341,6 +349,6 @@
   },
   "table_sha256": {
     "stints": "b212efa4037cb64859c878341ccf1188a12ae72926c390814595afcdc71b3fa1",
-    "stint_game_checks": "fe35d5b347a9109eab2a5bae287a8daf0ff8adb397150c3f181afedd0240ac86"
+    "stint_game_checks": "061f7825cb225cba3a9dbe80c2005e8ca9d6558b950cafbb02cf64bc051fec6c"
   }
 }
