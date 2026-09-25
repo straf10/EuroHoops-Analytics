@@ -100,6 +100,7 @@ class Competition:
     manual_pushes: tuple[datetime, ...] = ()
     odds_log: Path | None = None  # forward-recorded market consensus (EuroLeague only)
     m1: M1Backtest | None = None
+    m1_prediction_log: Path | None = None  # live M1 log (E-g), separate from the Elo log
 
     @property
     def raw_dir(self) -> Path:
@@ -145,6 +146,7 @@ EUROLEAGUE = Competition(
         validation=(2023,),
         test=(2024, 2025),
     ),
+    m1_prediction_log=Path("predictions/euroleague_m1_2026-27.csv"),
 )
 
 GBL_ELO_GRID = Grid(
@@ -177,6 +179,7 @@ GBL = Competition(
         test=(2024, 2025),
         elo_grid=GBL_ELO_GRID,
     ),
+    m1_prediction_log=Path("predictions/gbl_m1_2026-27.csv"),
 )
 
 COMPETITIONS = {c.name: c for c in (EUROLEAGUE, GBL)}

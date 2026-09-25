@@ -124,3 +124,22 @@ iteration 6 | E5 MLflow tracking | full §6 1-19 (14, 17 not built yet); 15 red 
   in the 6th decimal (margin scale 10.650608 -> 10.650607, a few reliability means and CI ends),
   so the GBL M1 model_version hash changed 49583fa7 -> 3f4861e2. Gate and test numbers are
   unchanged at 4 decimals; the committed verdict stands.
+iteration 7 | E6 leakage tests | full §6 1-19 (17 not built yet); 15 red only for the uncommitted GBL report (6th-decimal change, committed now) | green otherwise; deliberate cutoff break fails all 3 M1 leakage tests (x2) | 870b9f7
+- (iteration 8) **E7 live M1 for both competitions** (both passed the gate). Decisions:
+  - The live M1 fits on every game with box lines from the live Elo's first warm-up season
+    (EL 2023-24, GBL 2018-19), the seasons the daily marts hold; the backtest trained from
+    2007 (EL). With the tuned decay (EL half-life 480 d, carry 0.5) seasons before 2023 carry
+    little weight, but live EL forecasts are not bit-identical to a 2007-start fit.
+  - Daily workflow: an `actions/cache` for `data/raw/euroleague` (like GBL's), then
+    `ingest --details` (EL, default seasons) and `ingest --competition gbl --details --pbp
+    --seasons 2018 2019` (GBL boxes + the 2018-20 PBP fill, so CI's box reports equal the
+    committed ones). The **first CI run is long** (~3,200 EuroLeague API requests at 0.5 s,
+    ~1,340 ESAKE pages and ~680 BasketHotel requests at ≥2 s: roughly 1.5 h), later runs only
+    fetch new games. The plain `eurohoops ingest` line stays (the existing workflow test).
+  - M1 log columns: P(home), expected margin, expected total, margin σ (per game, pace-scaled
+    for GBL), margin df (t variants), total σ, model_version, predicted_at, tipoff. Games with
+    no forecast (no box lines at all) are skipped with a warning, never logged as NaN.
+  - M1 goes live only if its report's `gate.passed` is true (checked at predict time).
+  - Site: one row in the live scorecard block, "Team model (M1) log loss" with Elo's log loss
+    on the same games beside it (no new page). Screenshots `reports/screenshots/scorecard_m1_*`
+    (fixture data: the real M1 log is empty until the first daily run).

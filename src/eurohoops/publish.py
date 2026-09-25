@@ -127,6 +127,15 @@ def _backtest(report: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _m1(card: dict[str, Any]) -> dict[str, Any] | None:
+    """The one scorecard row of the team model: live M1 vs Elo log loss on the same games."""
+    m1 = card.get("m1")
+    if m1 is None:
+        return None
+    same = m1["same_games_as_elo"]
+    return {"n": same["n"], "log_loss": same["m1_log_loss"], "elo_log_loss": same["elo_log_loss"]}
+
+
 def section_data(section: Section, now: datetime) -> dict[str, Any]:
     logged = _logged(section)
     hidden = set(section.scorecard.get("games_not_provable", []))
@@ -156,6 +165,7 @@ def section_data(section: Section, now: datetime) -> dict[str, Any]:
             "b0": card["b0"],
             "not_provable": len(hidden),
             "rolling": card["rolling"],
+            "m1": _m1(card),
         },
         "backtest": _backtest(section.backtest),
         "ratings": _ratings(section),

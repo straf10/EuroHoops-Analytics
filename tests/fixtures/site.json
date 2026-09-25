@@ -560,6 +560,11 @@
               "b0": 0.702116
             }
           ]
+        },
+        "m1": {
+          "n": 60,
+          "log_loss": 0.669997,
+          "elo_log_loss": 0.665396
         }
       },
       "backtest": {
@@ -1268,7 +1273,8 @@
         "rolling": {
           "window": 50,
           "series": []
-        }
+        },
+        "m1": null
       },
       "backtest": {
         "tuning_seasons": [

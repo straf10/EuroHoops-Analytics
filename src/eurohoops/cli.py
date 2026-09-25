@@ -38,6 +38,7 @@ from eurohoops.eval.scorecard import build_scorecard
 from eurohoops.eval.tracking import default_tracking_uri, log_backtest
 from eurohoops.ingest import euroleague, gbl
 from eurohoops.ingest.http import Fetcher, make_client
+from eurohoops.live_m1 import load_m1, predict_upcoming_m1
 from eurohoops.marts import (
     box_invariants,
     build_marts,
@@ -59,7 +60,7 @@ from eurohoops.parse.gbl_pbp import build_pbp_table
 from eurohoops.parse.possession_report import possession_report
 from eurohoops.parse.stints import validate_sample
 from eurohoops.parse.stints_mart import build_stints_mart, mart_report
-from eurohoops.parse.team_box import build_team_games
+from eurohoops.parse.team_box import TEAM_GAMES_SCHEMA, build_team_games
 from eurohoops.predict import LatePredictionError, predict_upcoming
 from eurohoops.publish import Section, site_data
 
@@ -95,6 +96,12 @@ def _both_games() -> pd.DataFrame:
         [read_games(MART_PATH, c.name).assign(competition=c.name) for c in (EUROLEAGUE, GBL)],
         ignore_index=True,
     )
+
+
+def _team_games(competition: str) -> pd.DataFrame:
+    """The competition's ``team_games`` rows (none before the first ``build``)."""
+    table = read_table(MART_PATH, "team_games", competition)
+    return pd.DataFrame(columns=list(TEAM_GAMES_SCHEMA.columns)) if table is None else table
 
 
 def _write_json(path: Path, payload: dict[str, Any]) -> None:
@@ -318,9 +325,10 @@ def predict(
 ) -> None:
     """Append pre-tip-off predictions for upcoming live-season games to the public log."""
     comp = COMPETITIONS[competition]
+    games = read_games(MART_PATH, comp.name)
     try:
         added = predict_upcoming(
-            read_games(MART_PATH, comp.name),
+            games,
             load_tuned_model(comp.live_backtest.report),
             log_path=comp.prediction_log,
             season=LIVE_SEASON,
@@ -328,10 +336,23 @@ def predict(
             window=timedelta(hours=window_hours),
             clock=utc_now,
         )
+        typer.echo(f"{added} predictions appended to {comp.prediction_log}")
+        m1 = None if comp.m1 is None else load_m1(comp.m1.report)
+        if m1 is not None and comp.m1_prediction_log is not None:
+            added = predict_upcoming_m1(
+                games,
+                _team_games(comp.name),
+                m1,
+                log_path=comp.m1_prediction_log,
+                season=LIVE_SEASON,
+                replay_from=comp.live_backtest.warmup[0],
+                window=timedelta(hours=window_hours),
+                clock=utc_now,
+            )
+            typer.echo(f"{added} M1 predictions appended to {comp.m1_prediction_log}")
     except LatePredictionError as exc:
         log.error("refusing to log: %s", exc)
         raise typer.Exit(code=1) from exc
-    typer.echo(f"{added} predictions appended to {comp.prediction_log}")
 
 
 @app.command()
@@ -369,6 +390,7 @@ def score(competition: CompetitionOption = CompetitionName.euroleague) -> None:
         utc_now(),
         manual_pushes=comp.manual_pushes,
         odds_path=comp.odds_log,
+        m1_log_path=comp.m1_prediction_log,
     )
     _write_json(comp.scorecard, card)
     typer.echo(json.dumps(card, indent=2))
