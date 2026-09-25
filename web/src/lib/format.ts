@@ -112,7 +112,7 @@ export function call(g: Game): { team: Team; p: number } {
 export const signed = (x: number, digits = 1) =>
   `${x > 0 ? "+" : x < 0 ? "−" : ""}${Math.abs(x).toFixed(digits)}`;
 
-export const seasonLabel = (s: number) => `${s}-${String((s + 1) % 100).padStart(2, "0")}`;
+const seasonLabel = (s: number) => `${s}-${String((s + 1) % 100).padStart(2, "0")}`;
 
 export function seasonSpan(seasons: number[]): string {
   const first = seasons[0];

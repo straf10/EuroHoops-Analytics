@@ -163,7 +163,12 @@ def score(
 
 
 def paired_bootstrap_ci(diff: FloatArray, resamples: int, seed: int) -> tuple[float, float, float]:
-    """Mean of ``diff`` and the 95% percentile CI of its mean over paired resamples."""
+    """Mean of ``diff`` and the 95% percentile CI of its mean over paired resamples.
+
+    An empty ``diff`` (a split with no games) gives NaN for all three, without numpy warnings.
+    """
+    if not len(diff):
+        return math.nan, math.nan, math.nan
     rng = np.random.default_rng(seed)
     idx = rng.integers(0, len(diff), size=(resamples, len(diff)))
     means = diff[idx].mean(axis=1)
