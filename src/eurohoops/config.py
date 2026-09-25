@@ -47,6 +47,46 @@ class Backtest:
 
 
 @dataclass(frozen=True)
+class DecayGrid:
+    """M1 ridge hyperparameters: time-decay half-life, season carry-over and ridge penalty."""
+
+    half_life_days: tuple[float, ...]
+    carry: tuple[float, ...]
+    ridge: tuple[float, ...]
+
+
+# Pre-declared in reports/week5-7_progress.md before any M1 run on real data.
+M1_RATING_GRID = DecayGrid(
+    half_life_days=(60.0, 120.0, 240.0, 480.0),
+    carry=(0.25, 0.5, 0.75, 1.0),
+    ridge=(250.0, 500.0, 1000.0, 2000.0, 4000.0),  # possessions of evidence
+)
+M1_PACE_GRID = DecayGrid(
+    half_life_days=(60.0, 120.0, 240.0, 480.0),
+    carry=(0.25, 0.5, 0.75, 1.0),
+    ridge=(2.0, 5.0, 10.0, 20.0),  # games of evidence
+)
+
+
+@dataclass(frozen=True)
+class M1Backtest:
+    """M1 vs a comparison Elo re-tuned on the same tuning seasons (E-a, E-b).
+
+    Training always uses every game before the prediction point from the first warm-up season;
+    the seasons only say where tuning, validation and test scores are computed.
+    """
+
+    report: Path
+    warmup: tuple[int, ...]
+    tuning: tuple[int, ...]
+    validation: tuple[int, ...]
+    test: tuple[int, ...]
+    elo_grid: Grid = DEFAULT_GRID
+    rating_grid: DecayGrid = M1_RATING_GRID
+    pace_grid: DecayGrid = M1_PACE_GRID
+
+
+@dataclass(frozen=True)
 class Competition:
     name: str
     default_seasons: tuple[int, ...]
@@ -59,6 +99,7 @@ class Competition:
     # are committed by the workflow in the run that stamps them.
     manual_pushes: tuple[datetime, ...] = ()
     odds_log: Path | None = None  # forward-recorded market consensus (EuroLeague only)
+    m1: M1Backtest | None = None
 
     @property
     def raw_dir(self) -> Path:
@@ -97,6 +138,19 @@ EUROLEAGUE = Competition(
         datetime(2026, 9, 24, 20, 29, 32, tzinfo=UTC),  # round-1 rows v0.2.0
     ),
     odds_log=Path("odds/euroleague_2026-27.csv"),
+    m1=M1Backtest(
+        Path("reports/backtest_m1.json"),
+        warmup=_seasons(2007, 2014),
+        tuning=_seasons(2015, 2022),
+        validation=(2023,),
+        test=(2024, 2025),
+    ),
+)
+
+GBL_ELO_GRID = Grid(
+    k=(10.0, 15.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0),
+    hca=(0.0, 50.0, 90.0, 110.0, 130.0, 150.0, 170.0, 200.0, 230.0, 260.0),
+    reversion=(0.0, 0.1, 0.25, 0.5, 0.75),
 )
 
 GBL = Competition(
@@ -109,16 +163,20 @@ GBL = Competition(
         _seasons(2018, 2021),
         (2022, 2023),
         (2024, 2025),
-        grid=Grid(
-            k=(10.0, 15.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0),
-            hca=(0.0, 50.0, 90.0, 110.0, 130.0, 150.0, 170.0, 200.0, 230.0, 260.0),
-            reversion=(0.0, 0.1, 0.25, 0.5, 0.75),
-        ),
+        grid=GBL_ELO_GRID,
         frozen=EloParams(k=40.0, hca=130.0, reversion=0.25),
     ),
     history_backtests=(),
     prediction_log=Path("predictions/gbl_2026-27.csv"),
     scorecard=Path("reports/live_scorecard_gbl.json"),
+    m1=M1Backtest(
+        Path("reports/backtest_m1_gbl.json"),
+        warmup=_seasons(2018, 2020),
+        tuning=(2021, 2022),
+        validation=(2023,),
+        test=(2024, 2025),
+        elo_grid=GBL_ELO_GRID,
+    ),
 )
 
 COMPETITIONS = {c.name: c for c in (EUROLEAGUE, GBL)}
