@@ -29,3 +29,4 @@ Note (iteration 7): the user authorised stopping the stale astro preview (PIDs 8
 Screenshots via Playwright + installed Edge against a local copy served under the /EuroHoops-Analytics base.
 iteration 8 | D8 GBL PBP ingester + 2018-20 fill | full gate 1-7, ingest --pbp (682 requests, then 0), build; checks 14 | green; 101/101 2018-20 games filled, points = result | a656abb
 iteration 9 | full checklist run 1 | items 1-16 green (12 BLOCKED 401); 17 RED: 1 px overflow at 390 px GBL (hidden table) | fixed | 496b4f0
+iteration 10 | full checklist run 2 (d058e25) | items 1-18 top to bottom, no edits between | ALL PASS, 12 BLOCKED (401) - stop condition met | fe03d73
