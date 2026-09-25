@@ -33,6 +33,7 @@ from eurohoops.config import (
     STINTS_MART_REPORT,
 )
 from eurohoops.eval.backtest import format_table, load_tuned_model, run_backtest
+from eurohoops.eval.m1_backtest import format_m1_table, run_m1_backtest
 from eurohoops.eval.scorecard import build_scorecard
 from eurohoops.ingest import euroleague, gbl
 from eurohoops.ingest.http import Fetcher, make_client
@@ -68,6 +69,11 @@ log = logging.getLogger("eurohoops")
 class CompetitionName(StrEnum):
     euroleague = "euroleague"
     gbl = "gbl"
+
+
+class ModelName(StrEnum):
+    elo = "elo"
+    m1 = "m1"
 
 
 CompetitionOption = Annotated[
@@ -267,10 +273,28 @@ def possessions() -> None:
 
 
 @app.command()
-def backtest(competition: CompetitionOption = CompetitionName.euroleague) -> None:
-    """Tune Elo and score it vs B0; the live backtest report holds the live parameters."""
+def backtest(
+    competition: CompetitionOption = CompetitionName.euroleague,
+    model: Annotated[ModelName, typer.Option(help="elo (live model) or m1")] = ModelName.elo,
+    score_test: Annotated[
+        bool,
+        typer.Option(help="M1: also score the test seasons (only after the gate verdict)"),
+    ] = False,
+) -> None:
+    """Tune and score a model vs its baselines; the Elo live report holds the live parameters."""
     comp = COMPETITIONS[competition]
     games = read_games(MART_PATH, comp.name)
+    if model is ModelName.m1:
+        team_games = read_table(MART_PATH, "team_games", comp.name)
+        if team_games is None or comp.m1 is None:
+            log.error("no team_games in the marts; run: eurohoops build")
+            raise typer.Exit(code=1)
+        report = run_m1_backtest(
+            games, team_games, comp.m1, score_test=score_test, progress=log.info
+        )
+        _write_json(comp.m1.report, report)
+        typer.echo(f"{comp.m1.report}\n{format_m1_table(report)}")
+        return
     for spec in (comp.live_backtest, *comp.history_backtests):
         report = run_backtest(games, spec)
         _write_json(spec.report, report)

@@ -1,3 +1,4 @@
+import dataclasses
 import json
 from collections.abc import Iterator
 from datetime import UTC, datetime
@@ -25,11 +26,12 @@ from eurohoops.config import (
     STINTS_MART_REPORT,
 )
 from eurohoops.eval.backtest import load_tuned_model
-from eurohoops.marts import read_games
-from tests.conftest import REPO, make_games, write_pipeline
+from eurohoops.marts import read_games, write_tables
+from tests.conftest import REPO, make_games, make_team_games, write_pipeline
 from tests.test_gbl_ingest import FakeEsake
 from tests.test_gbl_pbp import GAME, FakeBasketHotel, export
 from tests.test_ingest import FakeApi
+from tests.test_m1_backtest import SPEC as M1_SPEC
 from tests.test_stints import game, write_game
 from tests.test_stints_mart import full_box
 
@@ -250,6 +252,44 @@ def test_stints_mart_builds_tables_and_a_reproducible_report() -> None:
         len(report["not_cached"])
         == len(read_games(MART_PATH, "euroleague").query("played and season >= 2011")) - 1
     )
+
+
+@pytest.fixture
+def small_m1(pipeline: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """The pipeline plus team_games, with the small test grids in both M1 specs."""
+    comps = {}
+    for comp in (EUROLEAGUE, GBL):
+        assert comp.m1 is not None
+        spec = dataclasses.replace(
+            comp.m1,
+            elo_grid=M1_SPEC.elo_grid,
+            rating_grid=M1_SPEC.rating_grid,
+            pace_grid=M1_SPEC.pace_grid,
+        )
+        comps[comp.name] = dataclasses.replace(comp, m1=spec)
+    monkeypatch.setattr(cli, "COMPETITIONS", comps)
+    return pipeline
+
+
+def test_backtest_m1_writes_reproducible_reports_for_both_competitions(small_m1: Path) -> None:
+    failed = runner.invoke(cli.app, ["backtest", "--model", "m1"])
+    assert failed.exit_code == 1  # no team_games in the marts yet
+    rows = pd.concat(
+        [make_team_games(read_games(MART_PATH, c)) for c in ("euroleague", "gbl")],
+        ignore_index=True,
+    )
+    write_tables(MART_PATH, {"team_games": rows})
+    output = invoke("backtest", "--model", "m1")
+    assert "gate (" in output
+    assert EUROLEAGUE.m1 is not None and GBL.m1 is not None
+    first = EUROLEAGUE.m1.report.read_bytes()
+    invoke("backtest", "--model", "m1")
+    assert EUROLEAGUE.m1.report.read_bytes() == first
+    assert "test" not in json.loads(first)["metrics"]
+    invoke("backtest", "--model", "m1", "--competition", "gbl", "--score-test")
+    gbl = json.loads(GBL.m1.report.read_text(encoding="utf-8"))
+    assert gbl["test_scored"] and gbl["metrics"]["test"]["m1"]["n"] > 0
+    assert gbl["seasons"]["validation"] == [2023]
 
 
 class AnyGameHotel(FakeBasketHotel):
