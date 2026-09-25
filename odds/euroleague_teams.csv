@@ -15,7 +15,7 @@ EA7 Emporio Armani Milano,MIL,no
 Bayern Munich,MUN,no
 Olympiacos,OLY,no
 Olympiacos Piraeus,OLY,no
-Valencia Basket,PAM,no
+Valencia Basket,PAM,yes
 Valencia,PAM,no
 Panathinaikos,PAN,no
 Panathinaikos Athens,PAN,no
@@ -29,3 +29,8 @@ Fenerbahce,ULK,no
 Virtus Bologna,VIR,no
 Zalgiris Kaunas,ZAL,no
 Zalgiris,ZAL,no
+Beşiktaş J.K.,BES,yes
+Fenerbahce SK,ULK,yes
+Virtus Segafredo Bologna,VIR,yes
+KK Partizan NIS,PAR,yes
+Pallacanestro Olimpia Milano,MIL,yes
