@@ -107,14 +107,160 @@
         "log_loss": 0.43133,
         "brier": 0.138408,
         "accuracy": 0.805643,
-        "margin_mae": 9.790541
+        "margin_mae": 9.790541,
+        "ece": 0.076322,
+        "reliability": [
+          {
+            "low": 0.0,
+            "high": 0.1,
+            "n": 5,
+            "mean_p": 0.076075,
+            "observed": 0.0
+          },
+          {
+            "low": 0.1,
+            "high": 0.2,
+            "n": 19,
+            "mean_p": 0.15299,
+            "observed": 0.0
+          },
+          {
+            "low": 0.2,
+            "high": 0.3,
+            "n": 16,
+            "mean_p": 0.248854,
+            "observed": 0.125
+          },
+          {
+            "low": 0.3,
+            "high": 0.4,
+            "n": 21,
+            "mean_p": 0.355596,
+            "observed": 0.428571
+          },
+          {
+            "low": 0.4,
+            "high": 0.5,
+            "n": 27,
+            "mean_p": 0.452479,
+            "observed": 0.37037
+          },
+          {
+            "low": 0.5,
+            "high": 0.6,
+            "n": 29,
+            "mean_p": 0.555721,
+            "observed": 0.517241
+          },
+          {
+            "low": 0.6,
+            "high": 0.7,
+            "n": 56,
+            "mean_p": 0.644036,
+            "observed": 0.75
+          },
+          {
+            "low": 0.7,
+            "high": 0.8,
+            "n": 40,
+            "mean_p": 0.755941,
+            "observed": 0.775
+          },
+          {
+            "low": 0.8,
+            "high": 0.9,
+            "n": 62,
+            "mean_p": 0.850796,
+            "observed": 0.951613
+          },
+          {
+            "low": 0.9,
+            "high": 1.0,
+            "n": 44,
+            "mean_p": 0.948508,
+            "observed": 0.977273
+          }
+        ]
       },
       "b0": {
         "n": 319,
         "log_loss": 0.641081,
         "brier": 0.224396,
         "accuracy": 0.661442,
-        "margin_mae": 13.120141
+        "margin_mae": 13.120141,
+        "ece": 0.021442,
+        "reliability": [
+          {
+            "low": 0.0,
+            "high": 0.1,
+            "n": 0,
+            "mean_p": null,
+            "observed": null
+          },
+          {
+            "low": 0.1,
+            "high": 0.2,
+            "n": 0,
+            "mean_p": null,
+            "observed": null
+          },
+          {
+            "low": 0.2,
+            "high": 0.3,
+            "n": 0,
+            "mean_p": null,
+            "observed": null
+          },
+          {
+            "low": 0.3,
+            "high": 0.4,
+            "n": 0,
+            "mean_p": null,
+            "observed": null
+          },
+          {
+            "low": 0.4,
+            "high": 0.5,
+            "n": 0,
+            "mean_p": null,
+            "observed": null
+          },
+          {
+            "low": 0.5,
+            "high": 0.6,
+            "n": 0,
+            "mean_p": null,
+            "observed": null
+          },
+          {
+            "low": 0.6,
+            "high": 0.7,
+            "n": 319,
+            "mean_p": 0.64,
+            "observed": 0.661442
+          },
+          {
+            "low": 0.7,
+            "high": 0.8,
+            "n": 0,
+            "mean_p": null,
+            "observed": null
+          },
+          {
+            "low": 0.8,
+            "high": 0.9,
+            "n": 0,
+            "mean_p": null,
+            "observed": null
+          },
+          {
+            "low": 0.9,
+            "high": 1.0,
+            "n": 0,
+            "mean_p": null,
+            "observed": null
+          }
+        ]
       }
     },
     "test": {
@@ -123,14 +269,160 @@
         "log_loss": 0.484529,
         "brier": 0.159803,
         "accuracy": 0.761765,
-        "margin_mae": 9.565704
+        "margin_mae": 9.565704,
+        "ece": 0.050269,
+        "reliability": [
+          {
+            "low": 0.0,
+            "high": 0.1,
+            "n": 4,
+            "mean_p": 0.089068,
+            "observed": 0.0
+          },
+          {
+            "low": 0.1,
+            "high": 0.2,
+            "n": 28,
+            "mean_p": 0.149412,
+            "observed": 0.0
+          },
+          {
+            "low": 0.2,
+            "high": 0.3,
+            "n": 16,
+            "mean_p": 0.232978,
+            "observed": 0.125
+          },
+          {
+            "low": 0.3,
+            "high": 0.4,
+            "n": 7,
+            "mean_p": 0.369428,
+            "observed": 0.142857
+          },
+          {
+            "low": 0.4,
+            "high": 0.5,
+            "n": 19,
+            "mean_p": 0.456069,
+            "observed": 0.473684
+          },
+          {
+            "low": 0.5,
+            "high": 0.6,
+            "n": 39,
+            "mean_p": 0.552897,
+            "observed": 0.512821
+          },
+          {
+            "low": 0.6,
+            "high": 0.7,
+            "n": 70,
+            "mean_p": 0.651333,
+            "observed": 0.642857
+          },
+          {
+            "low": 0.7,
+            "high": 0.8,
+            "n": 67,
+            "mean_p": 0.740692,
+            "observed": 0.776119
+          },
+          {
+            "low": 0.8,
+            "high": 0.9,
+            "n": 39,
+            "mean_p": 0.844971,
+            "observed": 0.769231
+          },
+          {
+            "low": 0.9,
+            "high": 1.0,
+            "n": 51,
+            "mean_p": 0.952557,
+            "observed": 0.980392
+          }
+        ]
       },
       "b0": {
         "n": 340,
         "log_loss": 0.667972,
         "brier": 0.237482,
         "accuracy": 0.614706,
-        "margin_mae": 12.426694
+        "margin_mae": 12.426694,
+        "ece": 0.025294,
+        "reliability": [
+          {
+            "low": 0.0,
+            "high": 0.1,
+            "n": 0,
+            "mean_p": null,
+            "observed": null
+          },
+          {
+            "low": 0.1,
+            "high": 0.2,
+            "n": 0,
+            "mean_p": null,
+            "observed": null
+          },
+          {
+            "low": 0.2,
+            "high": 0.3,
+            "n": 0,
+            "mean_p": null,
+            "observed": null
+          },
+          {
+            "low": 0.3,
+            "high": 0.4,
+            "n": 0,
+            "mean_p": null,
+            "observed": null
+          },
+          {
+            "low": 0.4,
+            "high": 0.5,
+            "n": 0,
+            "mean_p": null,
+            "observed": null
+          },
+          {
+            "low": 0.5,
+            "high": 0.6,
+            "n": 0,
+            "mean_p": null,
+            "observed": null
+          },
+          {
+            "low": 0.6,
+            "high": 0.7,
+            "n": 340,
+            "mean_p": 0.64,
+            "observed": 0.614706
+          },
+          {
+            "low": 0.7,
+            "high": 0.8,
+            "n": 0,
+            "mean_p": null,
+            "observed": null
+          },
+          {
+            "low": 0.8,
+            "high": 0.9,
+            "n": 0,
+            "mean_p": null,
+            "observed": null
+          },
+          {
+            "low": 0.9,
+            "high": 1.0,
+            "n": 0,
+            "mean_p": null,
+            "observed": null
+          }
+        ]
       }
     }
   },
