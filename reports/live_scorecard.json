@@ -84,7 +84,8 @@
         "mean_p": null,
         "observed": null
       }
-    ]
+    ],
+    "margin_crps": 5.949388
   },
   "b0": {
     "n": 5,
@@ -164,7 +165,12 @@
         "mean_p": null,
         "observed": null
       }
-    ]
+    ],
+    "margin_crps": 7.42543
+  },
+  "totals": {
+    "n": 5,
+    "mae": 11.022678
   },
   "all_rows": {
     "elo": {
@@ -245,7 +251,8 @@
           "mean_p": null,
           "observed": null
         }
-      ]
+      ],
+      "margin_crps": 5.273785
     },
     "b0": {
       "n": 7,
@@ -325,7 +332,12 @@
           "mean_p": null,
           "observed": null
         }
-      ]
+      ],
+      "margin_crps": 6.279252
+    },
+    "totals": {
+      "n": 7,
+      "mae": 10.048595
     }
   }
 }

@@ -1,11 +1,14 @@
 import math
+from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import pytest
 
 from eurohoops.eval.backtest import TunedModel
+from eurohoops.eval.metrics import crps_normal
 from eurohoops.eval.scorecard import build_scorecard, public_at
 from eurohoops.predict import LOG_COLUMNS
 
@@ -23,6 +26,7 @@ def results(played: bool) -> pd.DataFrame:
     return pd.DataFrame(
         {
             "game_id": ["G1", "G2", "G3", "G4"],
+            "season": [2026] * 4,
             "home_score": pd.array([90, 82, 70, None] if played else [None] * 4, dtype="Int64"),
             "away_score": pd.array([80, 80, 60, None] if played else [None] * 4, dtype="Int64"),
             "played": [played, played, played, False],
@@ -67,6 +71,7 @@ def test_zero_completed_games(tmp_path: Path, tuned: TunedModel) -> None:
         "accuracy": None,
         "margin_mae": None,
         "ece": None,
+        "margin_crps": None,
     }
     assert [b["n"] for b in reliability] == [0] * 10
 
@@ -108,3 +113,18 @@ def test_public_at_takes_the_first_push_at_or_after_the_stamp() -> None:
     )
     pushes = (datetime(2026, 10, 1, 12, tzinfo=UTC), datetime(2026, 10, 1, 10, tzinfo=UTC))
     assert public_at(stamps, pushes).dt.hour.tolist() == [10, 10, 13]
+
+
+def test_totals_baseline_and_margin_crps(tmp_path: Path, tuned: TunedModel) -> None:
+    log = tmp_path / "log.csv"
+    log.write_text(LOG)
+    model = replace(tuned, margin_sigma=12.0, totals_baseline={2026: 160.0})
+    card = build_scorecard(log, results(played=True), model)
+    # G1 total 170, G2 162 against a baseline of 160.
+    assert card["totals"] == {"n": 2, "mae": 6.0}
+    expected = crps_normal(np.array([5.0, -3.0]), 12.0, np.array([10.0, 2.0])).mean()
+    assert card["elo"]["margin_crps"] == pytest.approx(expected, abs=1e-6)
+    assert card["b0"]["margin_crps"] == pytest.approx(
+        crps_normal(np.array([3.0, 3.0]), 12.0, np.array([10.0, 2.0])).mean(), abs=1e-6
+    )
+    assert build_scorecard(log, results(played=True), tuned)["totals"] == {"n": 0, "mae": None}

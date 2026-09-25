@@ -1,5 +1,6 @@
 """Proper scoring rules, calibration and a paired bootstrap for per-game loss differences."""
 
+import math
 from dataclasses import dataclass
 from typing import Any
 
@@ -18,6 +19,7 @@ class Metrics:
     margin_mae: float | None
     ece: float | None
     reliability: list[dict[str, Any]]
+    margin_crps: float | None
 
     def as_dict(self) -> dict[str, Any]:
         """JSON-ready, rounded to 6 decimals so reports diff cleanly."""
@@ -29,6 +31,7 @@ class Metrics:
             "margin_mae": _round(self.margin_mae),
             "ece": _round(self.ece),
             "reliability": self.reliability,
+            "margin_crps": _round(self.margin_crps),
         }
 
 
@@ -75,8 +78,33 @@ def ece(p: FloatArray, y: FloatArray, bins: int = 10) -> float:
     return total / len(p)
 
 
-def score(p_home: FloatArray, exp_margin: FloatArray, margin: FloatArray) -> Metrics:
-    """Accuracy counts p_home >= 0.5 as a home pick. Empty input gives n=0 and null metrics."""
+_erf = np.vectorize(math.erf, otypes=[np.float64])
+
+
+def crps_normal(mu: FloatArray, sigma: float, y: FloatArray) -> FloatArray:
+    """Per-game CRPS of a Normal(mu, sigma) forecast for outcome y, in closed form.
+
+    CRPS = sigma * (z * (2 * Phi(z) - 1) + 2 * phi(z) - 1 / sqrt(pi)), z = (y - mu) / sigma
+    (Gneiting & Raftery 2007). Same units as y; for sigma -> 0 it becomes |y - mu|.
+    """
+    z = (y - mu) / sigma
+    cdf = 0.5 * (1.0 + _erf(z / math.sqrt(2.0)))
+    pdf = np.exp(-0.5 * z**2) / math.sqrt(2.0 * math.pi)
+    crps: FloatArray = sigma * (z * (2.0 * cdf - 1.0) + 2.0 * pdf - 1.0 / math.sqrt(math.pi))
+    return crps
+
+
+def mean_absolute_error(predicted: FloatArray, actual: FloatArray) -> float | None:
+    return float(np.mean(np.abs(predicted - actual))) if len(actual) else None
+
+
+def score(
+    p_home: FloatArray, exp_margin: FloatArray, margin: FloatArray, sigma: float | None = None
+) -> Metrics:
+    """Accuracy counts p_home >= 0.5 as a home pick. Empty input gives n=0 and null metrics.
+
+    With ``sigma``, the margin forecast is Normal(exp_margin, sigma) and scored by mean CRPS.
+    """
     n = len(p_home)
     if n == 0:
         return Metrics(
@@ -87,6 +115,7 @@ def score(p_home: FloatArray, exp_margin: FloatArray, margin: FloatArray) -> Met
             margin_mae=None,
             ece=None,
             reliability=reliability(p_home, p_home),
+            margin_crps=None,
         )
     home_won = (margin > 0).astype(np.float64)
     return Metrics(
@@ -94,9 +123,10 @@ def score(p_home: FloatArray, exp_margin: FloatArray, margin: FloatArray) -> Met
         log_loss=float(per_game_log_loss(p_home, home_won).mean()),
         brier=float(np.mean((p_home - home_won) ** 2)),
         accuracy=float(np.mean((p_home >= 0.5) == (home_won == 1.0))),
-        margin_mae=float(np.mean(np.abs(exp_margin - margin))),
+        margin_mae=mean_absolute_error(exp_margin, margin),
         ece=ece(p_home, home_won),
         reliability=reliability(p_home, home_won),
+        margin_crps=None if sigma is None else float(crps_normal(exp_margin, sigma, margin).mean()),
     )
 
 

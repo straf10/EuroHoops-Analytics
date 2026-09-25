@@ -3,11 +3,15 @@
 Elo is replayed chronologically from the first warm-up game, so every prediction uses only
 games that tipped off before it. The grid search is |grid| independent O(N) passes.
 Forfeits carry no rating information and are left out entirely.
+
+The margin forecast is Normal(Elo expected margin, sigma), sigma fitted on the tuning seasons.
+Totals have no model yet: the baseline predicts the mean total of the previous two seasons.
 """
 
 import hashlib
 import json
-from dataclasses import asdict, dataclass
+from collections.abc import Mapping
+from dataclasses import asdict, dataclass, field
 from importlib.metadata import version
 from itertools import product
 from pathlib import Path
@@ -17,7 +21,13 @@ import numpy as np
 import pandas as pd
 
 from eurohoops.config import Backtest, Grid
-from eurohoops.eval.metrics import paired_bootstrap_ci, per_game_log_loss, score
+from eurohoops.eval.metrics import (
+    crps_normal,
+    mean_absolute_error,
+    paired_bootstrap_ci,
+    per_game_log_loss,
+    score,
+)
 from eurohoops.models.elo import (
     EloParams,
     FloatArray,
@@ -29,6 +39,7 @@ from eurohoops.models.elo import (
 
 BOOTSTRAP_RESAMPLES = 1000
 BOOTSTRAP_SEED = 20260924
+TOTALS_LOOKBACK = 2  # seasons averaged by the totals baseline
 
 win_probabilities = np.vectorize(win_probability, otypes=[np.float64])
 
@@ -39,6 +50,8 @@ class TunedModel:
     margin_scale: float
     b0_home_win_rate: float
     b0_home_margin: float
+    margin_sigma: float | None = None  # residual RMS of the margin forecast on tuning seasons
+    totals_baseline: Mapping[int, float | None] = field(default_factory=dict)
 
     def version(self) -> str:
         """Short hash of the tuned parameters plus the package (code) version."""
@@ -61,7 +74,36 @@ def load_tuned_model(report_path: Path) -> TunedModel:
         margin_scale=tuned["margin_scale"],
         b0_home_win_rate=report["b0"]["home_win_rate"],
         b0_home_margin=report["b0"]["home_margin"],
+        margin_sigma=tuned["margin_sigma"],
+        totals_baseline={
+            int(season): value for season, value in report["totals"]["baseline_by_season"].items()
+        },
     )
+
+
+def totals_baseline(games: pd.DataFrame, season: int) -> float | None:
+    """Mean total points of the rated games in the ``TOTALS_LOOKBACK`` seasons before ``season``.
+
+    It reads nothing from ``season`` or later, so it is frozen before the season starts.
+    None if any of those seasons has no rated game (history not ingested).
+    """
+    seasons = set(range(season - TOTALS_LOOKBACK, season))
+    rated = games[games["played"] & ~games["forfeit"] & games["season"].isin(seasons)]
+    if set(rated["season"]) != seasons:
+        return None
+    return round(float((rated["home_score"] + rated["away_score"]).mean()), 6)
+
+
+def totals_scores(
+    games: pd.DataFrame, baseline: Mapping[int, float | None]
+) -> dict[str, float | int | None]:
+    """Totals MAE of the baseline over rated ``games`` whose season has a baseline."""
+    predicted = games["season"].map(baseline).astype("float64")
+    known = predicted.notna()
+    total: FloatArray = (games["home_score"] + games["away_score"])[known].to_numpy(np.float64)
+    expected = np.asarray(predicted[known], dtype=np.float64)
+    mae = mean_absolute_error(expected, total)
+    return {"n": int(known.sum()), "mae": None if mae is None else round(mae, 6)}
 
 
 def _log_loss(diffs: FloatArray, home_won: FloatArray) -> float:
@@ -114,11 +156,13 @@ def run_backtest(games: pd.DataFrame, spec: Backtest) -> dict[str, Any]:
     p_elo = win_probabilities(diffs)
     exp_elo = diffs / model.margin_scale
     p_b0, exp_b0 = model.b0(neutral)
+    sigma = round(float(np.sqrt(np.mean((margin[tuning] - exp_elo[tuning]) ** 2))), 6)
+    baseline = {s: totals_baseline(games, s) for s in (*spec.tuning, *spec.test, spec.test[-1] + 1)}
 
     metrics = {
         name: {
-            "elo": score(p_elo[mask], exp_elo[mask], margin[mask]).as_dict(),
-            "b0": score(p_b0[mask], exp_b0[mask], margin[mask]).as_dict(),
+            "elo": score(p_elo[mask], exp_elo[mask], margin[mask], sigma).as_dict(),
+            "b0": score(p_b0[mask], exp_b0[mask], margin[mask], sigma).as_dict(),
         }
         for name, mask in (("tuning", tuning), ("test", test))
     }
@@ -126,6 +170,9 @@ def run_backtest(games: pd.DataFrame, spec: Backtest) -> dict[str, Any]:
         p_b0[test], home_won[test]
     )
     abs_error_diff = np.abs(exp_elo[test] - margin[test]) - np.abs(exp_b0[test] - margin[test])
+    crps_diff = crps_normal(exp_elo[test], sigma, margin[test]) - crps_normal(
+        exp_b0[test], sigma, margin[test]
+    )
     p_grid_best = win_probabilities(replay(arrays, grid_best))
     grid_best_vs_tuned = {
         name: _ci(
@@ -156,32 +203,44 @@ def run_backtest(games: pd.DataFrame, spec: Backtest) -> dict[str, Any]:
             **asdict(best),
             "frozen": spec.frozen is not None,
             "margin_scale": model.margin_scale,
+            "margin_sigma": sigma,
             "tuning_log_loss": round(_log_loss(diffs[tuning], home_won[tuning]), 6),
             "home_win_prob_equal_ratings": round(win_probability(best.hca), 6),
         },
         "b0": {"home_win_rate": model.b0_home_win_rate, "home_margin": model.b0_home_margin},
         "metrics": metrics,
+        "totals": {
+            "baseline": f"mean total of the previous {TOTALS_LOOKBACK} seasons' rated games",
+            "baseline_by_season": {str(s): value for s, value in baseline.items()},
+            **{
+                name: totals_scores(history[mask], baseline)
+                for name, mask in (("tuning", tuning), ("test", test))
+            },
+        },
         "test_log_loss_diff_elo_minus_b0": _ci(loss_diff),
         "test_margin_abs_error_diff_elo_minus_b0": _ci(abs_error_diff),
+        "test_margin_crps_diff_elo_minus_b0": _ci(crps_diff),
     }
 
 
 def format_table(report: dict[str, Any]) -> str:
     header = (
-        f"{'split':<8}{'model':<6}{'n':>5}{'logloss':>9}{'brier':>8}{'acc':>7}{'mae':>7}{'ece':>7}"
+        f"{'split':<8}{'model':<6}{'n':>5}{'logloss':>9}{'brier':>8}{'acc':>7}{'mae':>7}"
+        f"{'ece':>7}{'crps':>7}"
     )
     lines = [header, "-" * len(header)]
     for split, models in report["metrics"].items():
         for name, m in models.items():
             lines.append(
                 f"{split:<8}{name:<6}{m['n']:>5}{m['log_loss']:>9.4f}{m['brier']:>8.4f}"
-                f"{m['accuracy']:>7.3f}{m['margin_mae']:>7.2f}{m['ece']:>7.3f}"
+                f"{m['accuracy']:>7.3f}{m['margin_mae']:>7.2f}{m['ece']:>7.3f}{m['margin_crps']:>7.2f}"
             )
     tuned = report["tuned"]
     lines.append(
         f"tuned: K={tuned['k']:g} HCA={tuned['hca']:g} reversion={tuned['reversion']:g} "
-        f"s={tuned['margin_scale']:.2f} (home win at equal ratings "
-        f"{tuned['home_win_prob_equal_ratings']:.3f})" + (" [frozen]" if tuned["frozen"] else "")
+        f"s={tuned['margin_scale']:.2f} sigma={tuned['margin_sigma']:.2f} "
+        f"(home win at equal ratings {tuned['home_win_prob_equal_ratings']:.3f})"
+        + (" [frozen]" if tuned["frozen"] else "")
     )
     grid, gap = report["grid"]["best"], report["grid"]["best_minus_tuned_log_loss"]["test"]
     lines.append(
@@ -189,9 +248,18 @@ def format_table(report: dict[str, Any]) -> str:
         f"on edge: {', '.join(report['grid']['best_on_edge']) or 'none'}; test logloss vs tuned "
         f"{gap['mean']:+.4f} 95% CI [{gap['ci95'][0]:+.4f}, {gap['ci95'][1]:+.4f}]"
     )
+    totals = report["totals"]
+    lines.append(
+        "totals baseline MAE: "
+        + ", ".join(
+            f"{split} {totals[split]['mae']} (n={totals[split]['n']})"
+            for split in ("tuning", "test")
+        )
+    )
     for key, label in (
         ("test_log_loss_diff_elo_minus_b0", "logloss"),
         ("test_margin_abs_error_diff_elo_minus_b0", "margin abs error"),
+        ("test_margin_crps_diff_elo_minus_b0", "margin CRPS"),
     ):
         ci = report[key]
         lines.append(
