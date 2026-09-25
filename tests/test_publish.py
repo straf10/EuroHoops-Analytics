@@ -2,11 +2,12 @@ import json
 from datetime import UTC, datetime
 
 import pandas as pd
+from pytest import MonkeyPatch
 
 from eurohoops.eval.backtest import TunedModel
 from eurohoops.models.elo import EloParams
 from eurohoops.predict import LOG_COLUMNS
-from eurohoops.publish import Section, section_data, site_data
+from eurohoops.publish import DISPLAY_CODES, Section, section_data, site_data
 from tests.conftest import make_games
 
 NOW = datetime(2026, 10, 8, 8, 0, tzinfo=UTC)
@@ -96,3 +97,13 @@ def test_site_without_a_log_is_json_ready() -> None:
     assert comp["upcoming"] == comp["results"] == []
     assert comp["logged"] == 0
     assert data["generated_at_utc"] == "2026-10-08T08:00:00Z"
+
+
+def test_display_codes_rename_only_what_the_site_shows(monkeypatch: MonkeyPatch) -> None:
+    monkeypatch.setitem(DISPLAY_CODES, "gbl", {"AAA": "OLY"})
+    data = section_data(section(), NOW)
+    rated = {r["code"]: r["name"] for r in data["ratings"]}
+    assert rated["OLY"] == "Ολυμπιακός & <Co>"  # the name is still looked up by the source code
+    assert "AAA" not in rated
+    teams = {t["code"] for g in data["upcoming"] + data["results"] for t in (g["home"], g["away"])}
+    assert "AAA" not in teams
