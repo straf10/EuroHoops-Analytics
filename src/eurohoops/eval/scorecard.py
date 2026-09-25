@@ -135,19 +135,52 @@ def monitoring_warnings(
     return alerts
 
 
+def market_scores(scored: pd.DataFrame, odds_path: Path) -> dict[str, Any]:
+    """Log loss of the de-vigged market P(home) on scored games with a pre-tip-off odds row.
+
+    Each game uses its latest snapshot fetched before tip-off (the closest to a closing line);
+    Elo and B0 are scored on the same games so the three numbers compare like for like.
+    """
+    odds = (
+        pd.read_csv(odds_path, dtype={"game_id": str})
+        if odds_path.exists()
+        else pd.DataFrame(columns=["game_id", "fetched_at_utc", "p_home"])
+    )
+    odds = odds.loc[odds["p_home"].notna(), ["game_id", "fetched_at_utc", "p_home"]]
+    joined = scored.merge(odds.rename(columns={"p_home": "p_market"}), on="game_id")
+    joined = joined[pd.to_datetime(joined["fetched_at_utc"], utc=True) < joined["tipoff_utc"]]
+    latest = joined.sort_values("fetched_at_utc").drop_duplicates("game_id", keep="last")
+    home_won = (latest["margin"].to_numpy(dtype=np.float64) > 0).astype(np.float64)
+
+    def mean_loss(column: str) -> float | None:
+        if latest.empty:
+            return None
+        loss = per_game_log_loss(latest[column].to_numpy(dtype=np.float64), home_won)
+        return round(float(loss.mean()), 6)
+
+    return {
+        "n": len(latest),
+        "log_loss": mean_loss("p_market"),
+        "elo_log_loss": mean_loss("p_home"),
+        "b0_log_loss": mean_loss("p_b0"),
+    }
+
+
 def build_scorecard(
     log_path: Path,
     games: pd.DataFrame,
     model: TunedModel,
     now: datetime,
+    *,
     manual_pushes: Sequence[datetime] = (),
+    odds_path: Path | None = None,
 ) -> dict[str, Any]:
     """Score logged games that have finished; a missing log or no finished games gives n=0.
 
     Only rows stamped strictly before tip-off count; if a game was logged by several model
     versions, its earliest valid row is the pre-registered one. The headline (``elo``/``b0``)
     also drops rows that became public only after tip-off; ``all_rows`` keeps them. The rolling
-    window and the warnings use the headline rows.
+    window, the warnings and the market column (only with ``odds_path``) use the headline rows.
     """
     log = read_log(log_path)
     valid = log[
@@ -167,4 +200,5 @@ def build_scorecard(
         "all_rows": _metrics(_scored(valid, games, model), model),
         "rolling": {"window": ROLLING_WINDOW, "series": rolling},
         "warnings": monitoring_warnings(rolling, log, games, now),
+        "market": None if odds_path is None else market_scores(headline, odds_path),
     }

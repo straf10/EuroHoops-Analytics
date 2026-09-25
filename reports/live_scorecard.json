@@ -344,5 +344,11 @@
     "window": 50,
     "series": []
   },
-  "warnings": []
+  "warnings": [],
+  "market": {
+    "n": 0,
+    "log_loss": null,
+    "elo_log_loss": null,
+    "b0_log_loss": null
+  }
 }

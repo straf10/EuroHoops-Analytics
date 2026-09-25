@@ -55,6 +55,7 @@ class Competition:
     # A row first became public at the earliest such push at or after its stamp; later rows
     # are committed by the workflow in the run that stamps them.
     manual_pushes: tuple[datetime, ...] = ()
+    odds_log: Path | None = None  # forward-recorded market consensus (EuroLeague only)
 
     @property
     def raw_dir(self) -> Path:
@@ -92,6 +93,7 @@ EUROLEAGUE = Competition(
         datetime(2026, 9, 24, 16, 24, 29, tzinfo=UTC),  # branch creation, round-1 rows v0.1.0
         datetime(2026, 9, 24, 20, 29, 32, tzinfo=UTC),  # round-1 rows v0.2.0
     ),
+    odds_log=Path("odds/euroleague_2026-27.csv"),
 )
 
 GBL = Competition(
@@ -119,3 +121,6 @@ GBL = Competition(
 COMPETITIONS = {c.name: c for c in (EUROLEAGUE, GBL)}
 GBL_PLAYER_BOX = Path("data/staging/gbl_player_box.parquet")
 GBL_TEAM_BOX = Path("data/staging/gbl_team_box.parquet")
+ODDS_CALLS = Path("odds/api_calls.csv")
+ODDS_TEAMS = Path("odds/euroleague_teams.csv")
+ODDS_RAW_DIR = Path("data/raw/odds/euroleague")
