@@ -27,3 +27,4 @@ iteration 7 | D4 site sections + D8 CI web job | full gate 1-7 (web built from f
 
 Note (iteration 7): the user authorised stopping the stale astro preview (PIDs 8200/10892); done.
 Screenshots via Playwright + installed Edge against a local copy served under the /EuroHoops-Analytics base.
+iteration 8 | D8 GBL PBP ingester + 2018-20 fill | full gate 1-7, ingest --pbp (682 requests, then 0), build; checks 14 | green; 101/101 2018-20 games filled, points = result | a656abb
