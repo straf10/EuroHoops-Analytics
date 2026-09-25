@@ -43,3 +43,32 @@ Local gate 1-6 green on the branch start (224 tests, coverage 98.75%).
 ## Loop log
 iteration 1 | E1 team_games possession mart | §6 1-11, 18, 19 (12-17 not built yet; 7 in a clean web/ copy) | green; 6378/6387 games with rows, 9 listed missing, 0 points mismatches, EL sample 89.0% within 2 (explained) | be1c18e
 iteration 2 | E2 stints mart | §6 1-12, 18, 19 (13-17 not built yet) | green; 2011-14 95.9%, 2015+ 98.9%, points=final for all passing games, two builds identical (tables + report) | 3dda083
+
+## Pre-declared M1 variants (committed before any M1 run on real data, 2026-09-25)
+No M1 code has run on real data when this is committed. The gate uses the declared variant
+with the best **tuning** log loss; every declared variant is reported on validation.
+
+Shared by all variants (hyperparameters chosen on the tuning seasons only):
+- Ratings: weighted ridge on team-game rows, `100·points/poss_game = μ + h·home + off[team] −
+  def[opp]` (home = +1 home row, −1 away row, 0 neutral), weight = poss_game × 0.5^(age/half-life)
+  × carry^(seasons back); μ and h unpenalised, off/def penalised by `ridge` (in possessions).
+  Grid (by tuning log loss, Normal margin with tuning-RMS σ): half_life_days {60, 120, 240,
+  480} × carry {0.25, 0.5, 0.75, 1.0} × ridge {250, 500, 1000, 2000, 4000} = 80.
+- Pace: ridge on game rows, `poss_game·40/minutes = μ_p + pace[home] + pace[away]`, weight =
+  decay as above; grid (by tuning MSE of possessions per 40) half_life_days {60, 120, 240, 480}
+  × carry {0.25, 0.5, 0.75, 1.0} × ridge_games {2, 5, 10, 20} = 64.
+- Refit before each round's first tip-off on games that tipped off before it.
+- Totals: Normal(expected total, σ_T), σ_T = tuning RMS.
+
+Margin distribution variants (E-e), 4 of the allowed 6:
+1. `normal_const`: Normal(m, σ), σ = tuning RMS residual.
+2. `normal_pace`: Normal(m, σ0·sqrt(P/P̄)), σ0 by maximum likelihood on tuning, P̄ = mean expected
+   pace on tuning.
+3. `student_t_const`: m + s·T_df; df from {3, 4, 5, 7, 10, 15, 20, 30, 50} by tuning log loss,
+   s by maximum likelihood on tuning for each df.
+4. `student_t_pace`: as 3 with s·sqrt(P/P̄).
+
+Comparison Elo (E-b): the existing grid (EL `DEFAULT_GRID`; GBL its wide grid) re-tuned on the
+M1 tuning seasons, replayed from the first warm-up season; margin σ = tuning RMS; totals =
+the existing 2-season baseline with σ_T = tuning RMS. B0: home-win rate and margin of the
+non-neutral games up to the last tuning season.
