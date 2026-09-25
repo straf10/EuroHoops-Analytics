@@ -33,6 +33,23 @@ DISPLAY_CODES: dict[str, dict[str, str]] = {
         "BES": "BJK",  # Besiktas
         "MAD": "RMB",  # Real Madrid
     },
+    # ESAKE's team ids (stable across seasons)
+    "gbl": {
+        "00000001": "PAO",  # Panathinaikos
+        "00000002": "OLY",  # Olympiacos
+        "00000005": "ARI",  # Aris
+        "0000000A": "KOL",  # Kolossos Rodou
+        "0000000C": "PAOK",  # PAOK
+        "0000000D": "PER",  # Peristeri
+        "0000000F": "MAR",  # Maroussi
+        "00000010": "AEK",  # AEK
+        "00000011": "IRA",  # Iraklis
+        "0041ADCB": "FAL",  # Vikos Falcons
+        "2A25C696": "PRO",  # Promitheas Patras
+        "3CA10C07": "DOX",  # Doxa Lefkadas
+        "B742845D": "KAR",  # Karditsa
+        "BB4B460F": "MYK",  # Mykonos
+    },
 }
 
 
