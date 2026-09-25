@@ -6,6 +6,7 @@ import "../styles/global.css";
 import arrow from "@phosphor-icons/core/assets/bold/arrow-up-right-bold.svg?raw";
 import github from "@phosphor-icons/core/assets/bold/github-logo-bold.svg?raw";
 import Court from "../components/Court.astro";
+import Performance from "../components/Performance.astro";
 import Ratings from "../components/Ratings.astro";
 import Results from "../components/Results.astro";
 import Scorecard from "../components/Scorecard.astro";
@@ -65,6 +66,7 @@ const description =
         <nav class="links" aria-label="Sections">
           <a href="#results">Results</a>
           <a href="#scorecard">Scorecard</a>
+          <a href="#calibration">Calibration</a>
           <a href="#ratings">Ratings</a>
           <a class="gh" href={REPO} aria-label="Source code on GitHub">
             <Fragment set:html={github} />
@@ -127,6 +129,15 @@ const description =
             better number in each pair is underlined.
           </p>
           {comps.map((c) => <Scorecard comp={c} />)}
+        </section>
+
+        <section class="band" id="calibration" aria-labelledby="calibration-title">
+          <h2 id="calibration-title">Do the percentages hold?</h2>
+          <p class="intro">
+            A forecast of 70% should come true about seven times in ten. The first chart checks
+            that on the held-out seasons; the second tracks the live season, fifty games at a time.
+          </p>
+          {comps.map((c) => <Performance comp={c} />)}
         </section>
 
         <section class="band" id="ratings" aria-labelledby="ratings-title">

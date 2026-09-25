@@ -21,12 +21,33 @@ export interface Result extends Game {
   provable: boolean;
 }
 
+/** One equal-width bin of predicted P(home): its games, mean prediction and home win rate. */
+export interface Bin {
+  low: number;
+  high: number;
+  n: number;
+  mean_p: number | null;
+  observed: number | null;
+}
+
 export interface Metrics {
   n: number;
   log_loss: number | null;
   brier: number | null;
   accuracy: number | null;
   margin_mae: number | null;
+  ece: number | null;
+  margin_crps: number | null;
+  reliability: Bin[];
+}
+
+/** Mean log loss over the latest `window` scored games, ending at game `n`. */
+export interface RollingPoint {
+  game_id: string;
+  tipoff_utc: string;
+  n: number;
+  elo: number;
+  b0: number;
 }
 
 export interface Rating extends Team {
@@ -42,7 +63,12 @@ export interface Competition {
   next_tipoff_utc: string | null;
   upcoming: Game[];
   results: Result[];
-  scorecard: { elo: Metrics; b0: Metrics; not_provable: number };
+  scorecard: {
+    elo: Metrics;
+    b0: Metrics;
+    not_provable: number;
+    rolling: { window: number; series: RollingPoint[] };
+  };
   backtest: {
     tuning_seasons: number[];
     test_seasons: number[];

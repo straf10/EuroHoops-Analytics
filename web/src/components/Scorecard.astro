@@ -1,5 +1,5 @@
 ---
-import type { Competition, Metrics } from "../lib/format";
+import type { Competition } from "../lib/format";
 import { seasonSpan } from "../lib/format";
 
 interface Props {
@@ -10,12 +10,14 @@ const live = comp.scorecard;
 const test = comp.backtest.test;
 const diff = comp.backtest.log_loss_diff;
 
-type Key = Exclude<keyof Metrics, "n">;
+type Key = "log_loss" | "brier" | "ece" | "accuracy" | "margin_mae" | "margin_crps";
 const rows: { key: Key; label: string; lower: boolean; fmt: (x: number) => string }[] = [
   { key: "log_loss", label: "Log loss", lower: true, fmt: (x) => x.toFixed(3) },
   { key: "brier", label: "Brier score", lower: true, fmt: (x) => x.toFixed(3) },
+  { key: "ece", label: "Calibration error (ECE)", lower: true, fmt: (x) => x.toFixed(3) },
   { key: "accuracy", label: "Accuracy", lower: false, fmt: (x) => `${(x * 100).toFixed(1)}%` },
   { key: "margin_mae", label: "Margin error (pts)", lower: true, fmt: (x) => x.toFixed(1) },
+  { key: "margin_crps", label: "Margin CRPS (pts)", lower: true, fmt: (x) => x.toFixed(2) },
 ];
 
 function better(elo: number | null, b0: number | null, lower: boolean) {

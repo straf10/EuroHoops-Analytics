@@ -13,6 +13,7 @@ NOW = datetime(2026, 10, 8, 8, 0, tzinfo=UTC)
 CARD = {
     "elo": {"n": 3, "log_loss": 0.61, "brier": 0.21, "accuracy": 2 / 3, "margin_mae": 9.5},
     "b0": {"n": 3, "log_loss": 0.66, "brier": 0.23, "accuracy": 0.6, "margin_mae": 9.9},
+    "rolling": {"window": 50, "series": []},
 }
 REPORT = {
     "seasons": {"warmup": [2024], "tuning": [2025], "test": [2025]},

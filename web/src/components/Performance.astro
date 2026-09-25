@@ -1,0 +1,244 @@
+---
+import type { Bin, Competition, RollingPoint } from "../lib/format";
+import { seasonSpan } from "../lib/format";
+
+interface Props {
+  comp: Competition;
+}
+const { comp } = Astro.props;
+
+// Reliability: the held-out test seasons (the live season is far too small to bin).
+const test = comp.backtest.test.elo;
+const bins = test.reliability.filter(
+  (b): b is Bin & { mean_p: number; observed: number } => b.n > 0 && b.mean_p !== null && b.observed !== null,
+);
+const S = 300; // plot square, in SVG units
+const PAD = { left: 60, right: 14, top: 12, bottom: 40 };
+const W = PAD.left + S + PAD.right;
+const H = PAD.top + S + PAD.bottom;
+const px = (p: number) => PAD.left + p * S;
+const py = (p: number) => PAD.top + (1 - p) * S;
+const maxN = Math.max(1, ...bins.map((b) => b.n));
+const radius = (n: number) => 3 + 7 * Math.sqrt(n / maxN);
+const path = bins.map((b, i) => `${i ? "L" : "M"}${px(b.mean_p).toFixed(1)},${py(b.observed).toFixed(1)}`).join("");
+const ticks = [0, 0.5, 1];
+const pct = (x: number) => `${Math.round(x * 100)}%`;
+
+// Rolling window: one point per scored game from the window-th on.
+const rolling = comp.scorecard.rolling;
+const series: RollingPoint[] = rolling.series;
+const scored = comp.scorecard.elo.n;
+const RW = 360;
+const RH = 220;
+const RPAD = { left: 44, right: 64, top: 14, bottom: 34 };
+const values = series.flatMap((p) => [p.elo, p.b0]);
+const lo = values.length ? Math.min(...values) : 0;
+const hi = values.length ? Math.max(...values) : 1;
+const span = hi - lo || 0.05;
+const ymin = lo - span * 0.15;
+const ymax = hi + span * 0.15;
+const first = series.length ? series[0].n : 0;
+const last = series.length ? series[series.length - 1].n : 1;
+const rx = (n: number) => RPAD.left + ((n - first) / Math.max(1, last - first)) * (RW - RPAD.left - RPAD.right);
+const ry = (v: number) => RPAD.top + (1 - (v - ymin) / (ymax - ymin)) * (RH - RPAD.top - RPAD.bottom);
+const line = (key: "elo" | "b0") =>
+  series.map((p, i) => `${i ? "L" : "M"}${rx(p.n).toFixed(1)},${ry(p[key]).toFixed(1)}`).join("");
+const end = series[series.length - 1];
+---
+
+<div class="performance" data-comp={comp.key}>
+  <figure class="panel">
+    <h3 id={`rel-${comp.key}`}>Called 70%, won 70%?</h3>
+    <svg
+      viewBox={`0 0 ${W} ${H}`}
+      role="img"
+      aria-labelledby={`rel-${comp.key} rel-${comp.key}-cap`}
+      class="chart"
+    >
+      {
+        ticks.map((t) => (
+          <g class="grid">
+            <line x1={px(0)} x2={px(1)} y1={py(t)} y2={py(t)} />
+            <line x1={px(t)} x2={px(t)} y1={py(0)} y2={py(1)} />
+            <text class="tick" x={PAD.left - 8} y={py(t) + 4} text-anchor="end">
+              {pct(t)}
+            </text>
+            <text class="tick" x={px(t)} y={py(0) + 18} text-anchor="middle">
+              {pct(t)}
+            </text>
+          </g>
+        ))
+      }
+      <line class="diagonal" x1={px(0)} y1={py(0)} x2={px(1)} y2={py(1)} />
+      <text class="axis" x={px(0.5)} y={H - 4} text-anchor="middle">Elo's home-win chance</text>
+      <text class="axis" transform={`translate(11 ${py(0.5)}) rotate(-90)`} text-anchor="middle">
+        Home teams that won
+      </text>
+      {bins.length > 1 && <path class="call" d={path} />}
+      {
+        bins.map((b) => (
+          <g>
+            <circle class="dot" cx={px(b.mean_p)} cy={py(b.observed)} r={radius(b.n)} />
+            <text
+              class="count"
+              x={px(b.mean_p) + radius(b.n) + 4}
+              y={py(b.observed) + (b.observed > 0.9 ? 14 : -6)}
+            >
+              {b.n}
+            </text>
+          </g>
+        ))
+      }
+    </svg>
+    <figcaption id={`rel-${comp.key}-cap`}>
+      Held-out {seasonSpan(comp.backtest.test_seasons)}, {test.n} games in ten bins of the forecast.
+      A calibrated model sits on the diagonal; the number beside each dot is its games.
+      {test.ece !== null && <> Expected calibration error {test.ece.toFixed(3)}.</>}
+    </figcaption>
+    <table class="sr-only">
+      <caption>Reliability bins</caption>
+      <thead>
+        <tr><th scope="col">Forecast bin</th><th scope="col">Games</th><th scope="col">Mean forecast</th><th scope="col">Home win rate</th></tr>
+      </thead>
+      <tbody>
+        {bins.map((b) => (
+          <tr><td>{pct(b.low)} to {pct(b.high)}</td><td>{b.n}</td><td>{pct(b.mean_p)}</td><td>{pct(b.observed)}</td></tr>
+        ))}
+      </tbody>
+    </table>
+  </figure>
+
+  <figure class="panel">
+    <h3 id={`roll-${comp.key}`}>The last {rolling.window} games</h3>
+    {
+      series.length === 0 ? (
+        <p class="empty">
+          The rolling line starts at the {rolling.window}th scored game of the live season.{" "}
+          <span class="n">{scored} scored so far.</span> Until then, one lucky week would look
+          like a trend.
+        </p>
+      ) : (
+        <>
+          <svg
+            viewBox={`0 0 ${RW} ${RH}`}
+            role="img"
+            aria-labelledby={`roll-${comp.key} roll-${comp.key}-cap`}
+            class="chart"
+          >
+            {[ymin + (ymax - ymin) * 0.1, (ymin + ymax) / 2, ymax - (ymax - ymin) * 0.1].map((v) => (
+              <g class="grid">
+                <line x1={RPAD.left} x2={RW - RPAD.right} y1={ry(v)} y2={ry(v)} />
+                <text class="tick" x={RPAD.left - 8} y={ry(v) + 4} text-anchor="end">
+                  {v.toFixed(2)}
+                </text>
+              </g>
+            ))}
+            <text class="tick" x={rx(first)} y={RH - 12} text-anchor="start">
+              game {first}
+            </text>
+            <text class="tick" x={rx(last)} y={RH - 12} text-anchor="end">
+              game {last}
+            </text>
+            <path class="baseline" d={line("b0")} />
+            <path class="call" d={line("elo")} />
+            <text class="end elo" x={rx(last) + 6} y={ry(end.elo) + 4}>
+              Elo {end.elo.toFixed(3)}
+            </text>
+            <text class="end" x={rx(last) + 6} y={ry(end.b0) + 4}>
+              Base {end.b0.toFixed(3)}
+            </text>
+          </svg>
+          <figcaption id={`roll-${comp.key}-cap`}>
+            Log loss over each run of {rolling.window} consecutive scored games, lower is better.
+            Blue is Elo, grey dashes the home-win baseline.
+          </figcaption>
+        </>
+      )
+    }
+  </figure>
+</div>
+
+<style>
+  .performance {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(28px, 5vw, 72px);
+  }
+  .panel {
+    margin: 0;
+    min-width: 0;
+  }
+  h3 {
+    font-size: clamp(1.5rem, 2.4vw, 1.9rem);
+    margin-bottom: 14px;
+  }
+  .chart {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: 460px;
+    overflow: visible;
+  }
+  .grid line {
+    stroke: var(--line);
+    stroke-width: 1;
+  }
+  .tick,
+  .count,
+  .end {
+    font: 600 11px var(--text);
+    fill: var(--ink-2);
+    font-variant-numeric: tabular-nums;
+  }
+  .axis {
+    font: 600 10.5px var(--text);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    fill: var(--ink-2);
+  }
+  .diagonal {
+    stroke: var(--ink-2);
+    stroke-width: 1.25;
+    stroke-dasharray: 5 5;
+  }
+  .call {
+    fill: none;
+    stroke: var(--blue);
+    stroke-width: 2.25;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+  .baseline {
+    fill: none;
+    stroke: var(--ink-2);
+    stroke-width: 1.75;
+    stroke-dasharray: 6 5;
+  }
+  .dot {
+    fill: var(--blue);
+    stroke: var(--board);
+    stroke-width: 1.5;
+  }
+  .count {
+    fill: var(--ink);
+  }
+  .end.elo {
+    fill: var(--blue);
+  }
+  figcaption,
+  .empty {
+    margin-top: 12px;
+    color: var(--ink-2);
+    font-size: 0.9rem;
+    max-width: 58ch;
+  }
+  .n {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  @media (max-width: 760px) {
+    .performance {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -115,7 +115,12 @@ def section_data(section: Section, now: datetime) -> dict[str, Any]:
         "next_tipoff_utc": _next_tipoff(section, now),
         "upcoming": upcoming,
         "results": results,
-        "scorecard": {"elo": card["elo"], "b0": card["b0"], "not_provable": len(hidden)},
+        "scorecard": {
+            "elo": card["elo"],
+            "b0": card["b0"],
+            "not_provable": len(hidden),
+            "rolling": card["rolling"],
+        },
         "backtest": _backtest(section.backtest),
         "ratings": _ratings(section),
     }
