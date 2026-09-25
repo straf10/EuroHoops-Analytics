@@ -72,3 +72,28 @@ Comparison Elo (E-b): the existing grid (EL `DEFAULT_GRID`; GBL its wide grid) r
 M1 tuning seasons, replayed from the first warm-up season; margin σ = tuning RMS; totals =
 the existing 2-season baseline with σ_T = tuning RMS. B0: home-win rate and margin of the
 non-neutral games up to the last tuning season.
+iteration 3 | E3 M1 model | §6 1-12, 13 (E3 tests 28 passed; full EL M1 backtest 122 s < 600 s), 18, 19 (14-17 not built yet) | green | 0341eb4
+
+## GATE VERDICT (validation 2023-24; committed before any test-season run)
+First validation run: 2026-09-25, after the variant declaration (f921181). Variant = the
+declared variant with the best tuning log loss. Diffs are M1 − comparison Elo, paired
+bootstrap 95% CI (1000 resamples, seed 20260924).
+
+**EuroLeague: PASS** (variant `student_t_const`, df 7, s 10.41)
+- log loss 0.5872 vs 0.5885: −0.0013 [−0.0084, +0.0064] (CI spans 0: not significant)
+- Brier 0.2012 vs 0.2014: −0.0003 [−0.0034, +0.0032]; ECE 0.043 vs 0.057
+- margin CRPS −0.026 [−0.092, +0.045]; totals CRPS −1.007 [−1.385, −0.606] (Elo has no
+  totals model: it uses the 2-season baseline)
+- rating grid best on edge: half-life 480 d (max) and ridge 250 (min); pace: half-life 60 d,
+  ridge 2 (both min). Declared grids are kept; reported as a limitation.
+
+**GBL: PASS** (variant `student_t_pace`, df 7, s 10.65 at P̄ 73.55)
+- log loss 0.4328 vs 0.4362: −0.0035 [−0.0356, +0.0242] (not significant; n = 163)
+- Brier 0.1393 vs 0.1433; ECE 0.060 vs 0.095
+- For GBL the spread and total errors are the more informative metrics (PLAN §5: many
+  lopsided games): margin CRPS −0.172 [−0.419, +0.072] (not significant), margin MAE 9.55 vs
+  9.90; totals CRPS −0.835 [−1.295, −0.388] (significant, vs the baseline).
+- rating grid best on edge: ridge 250 (min).
+
+Both competitions pass the pre-registered rule (point estimate below Elo), but neither
+log-loss gain is distinguishable from zero. Per E-g, M1 goes live for both.

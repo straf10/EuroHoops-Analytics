@@ -12,6 +12,7 @@ from eurohoops.eval.backtest import TunedModel
 from eurohoops.marts import build_marts
 from eurohoops.models.elo import EloParams
 from eurohoops.parse.games import conform, write_table
+from eurohoops.parse.team_box import TEAM_GAMES_SCHEMA
 
 FIXTURES = Path(__file__).parent / "fixtures"
 REPO = Path(__file__).parent.parent
@@ -96,3 +97,44 @@ def tuned() -> TunedModel:
         b0_home_win_rate=0.6,
         b0_home_margin=3.0,
     )
+
+
+def make_team_games(games: pd.DataFrame, seed: int = 11) -> pd.DataFrame:
+    """``team_games`` rows for every rated game of ``make_games`` output (points = scores).
+
+    FTA 20, OREB 10, TOV 12 per team, FGA 55-65, so poss_raw = FGA + 10.8 (65.8-75.8).
+    """
+    rng = np.random.default_rng(seed)
+    rated = games[games["played"] & ~games["forfeit"]]
+    rows = []
+    for game in rated.to_dict("records"):
+        fga = rng.integers(55, 66, size=2)
+        raw = fga + 10.8
+        competition = "gbl" if str(game["game_id"]).startswith("GBL") else "euroleague"
+        for side, (team, opp, points) in enumerate(
+            (
+                (game["home"], game["away"], game["home_score"]),
+                (game["away"], game["home"], game["away_score"]),
+            )
+        ):
+            rows.append(
+                {
+                    "competition": competition,
+                    "season": game["season"],
+                    "game_id": game["game_id"],
+                    "team": team,
+                    "opponent": opp,
+                    "home": side == 0 and not game["neutral"],
+                    "points": int(points),
+                    "fga": int(fga[side]),
+                    "fta": 20,
+                    "oreb": 10,
+                    "dreb": 25,
+                    "tov": 12,
+                    "minutes": 40.0,
+                    "poss_raw": float(raw[side]),
+                    "poss_game": float(raw.mean()),
+                    "source": "esake_box" if competition == "gbl" else "euroleague_box",
+                }
+            )
+    return TEAM_GAMES_SCHEMA.validate(pd.DataFrame(rows))
