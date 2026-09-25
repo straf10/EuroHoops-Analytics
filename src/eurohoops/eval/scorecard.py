@@ -1,7 +1,7 @@
 """Live scorecard: the prediction log joined with results, Elo vs B0."""
 
 from collections.abc import Sequence
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -9,8 +9,11 @@ import numpy as np
 import pandas as pd
 
 from eurohoops.eval.backtest import TunedModel, totals_scores
-from eurohoops.eval.metrics import score
-from eurohoops.predict import LOG_COLUMNS
+from eurohoops.eval.metrics import per_game_log_loss, score
+from eurohoops.predict import LOG_COLUMNS, TIME_FORMAT
+
+ROLLING_WINDOW = 50  # scored games per point of the rolling log loss (PLAN §7 monitoring)
+RESULT_GRACE = timedelta(hours=48)  # a logged game without a result after this is flagged
 
 
 def read_log(log_path: Path) -> pd.DataFrame:
@@ -36,42 +39,115 @@ def not_provable(log: pd.DataFrame, manual_pushes: Sequence[datetime]) -> pd.Ser
     return (predicted_at < tipoff) & (public_at(predicted_at, manual_pushes) >= tipoff)
 
 
-def _metrics(rows: pd.DataFrame, games: pd.DataFrame, model: TunedModel) -> dict[str, Any]:
-    """Score each game's earliest row against its result, Elo vs B0, plus the totals baseline."""
+def _scored(rows: pd.DataFrame, games: pd.DataFrame, model: TunedModel) -> pd.DataFrame:
+    """Each game's earliest row joined with its result, in tip-off order, with B0 alongside."""
     first = rows.sort_values("predicted_at_utc").drop_duplicates("game_id", keep="first")
     scored = first[["game_id", "p_home", "exp_margin"]].merge(
         games.loc[
             games["played"] & ~games["forfeit"],
-            ["game_id", "season", "home_score", "away_score", "neutral"],
+            ["game_id", "season", "tipoff_utc", "home_score", "away_score", "neutral"],
         ],
         on="game_id",
     )
-    margin = (scored["home_score"] - scored["away_score"]).to_numpy(dtype=np.float64)
+    scored = scored.sort_values(["tipoff_utc", "game_id"], ignore_index=True)
     p_b0, exp_b0 = model.b0(scored["neutral"].to_numpy(dtype=np.float64))
-    elo = score(
-        scored["p_home"].to_numpy(dtype=np.float64),
-        scored["exp_margin"].to_numpy(dtype=np.float64),
-        margin,
-        model.margin_sigma,
+    return scored.assign(
+        margin=(scored["home_score"] - scored["away_score"]).astype("float64"),
+        p_b0=p_b0,
+        exp_b0=exp_b0,
     )
+
+
+def _metrics(scored: pd.DataFrame, model: TunedModel) -> dict[str, Any]:
+    """Elo vs B0 on the scored games, plus the totals baseline."""
+    margin = scored["margin"].to_numpy(dtype=np.float64)
+    sigma = model.margin_sigma
     return {
-        "elo": elo.as_dict(),
-        "b0": score(p_b0, exp_b0, margin, model.margin_sigma).as_dict(),
+        "elo": score(
+            scored["p_home"].to_numpy(dtype=np.float64),
+            scored["exp_margin"].to_numpy(dtype=np.float64),
+            margin,
+            sigma,
+        ).as_dict(),
+        "b0": score(
+            scored["p_b0"].to_numpy(dtype=np.float64),
+            scored["exp_b0"].to_numpy(dtype=np.float64),
+            margin,
+            sigma,
+        ).as_dict(),
         "totals": totals_scores(scored, model.totals_baseline),
     }
+
+
+def rolling_log_loss(scored: pd.DataFrame, window: int = ROLLING_WINDOW) -> list[dict[str, Any]]:
+    """Mean log loss of Elo and B0 over each run of ``window`` consecutive scored games.
+
+    One point per game from the ``window``-th on (empty below ``window`` games), labelled with
+    the window's last game.
+    """
+    home_won = (scored["margin"].to_numpy(dtype=np.float64) > 0).astype(np.float64)
+    losses = pd.DataFrame(
+        {
+            "elo": per_game_log_loss(scored["p_home"].to_numpy(dtype=np.float64), home_won),
+            "b0": per_game_log_loss(scored["p_b0"].to_numpy(dtype=np.float64), home_won),
+        }
+    )
+    means = losses.rolling(window).mean().round(6)
+    ids, tipoffs = scored["game_id"].tolist(), scored["tipoff_utc"].tolist()
+    elo, b0 = means["elo"].tolist(), means["b0"].tolist()
+    return [
+        {
+            "game_id": ids[i],
+            "tipoff_utc": tipoffs[i].strftime(TIME_FORMAT),
+            "n": i + 1,
+            "elo": elo[i],
+            "b0": b0[i],
+        }
+        for i in range(window - 1, len(scored))
+    ]
+
+
+def monitoring_warnings(
+    rolling: list[dict[str, Any]], log: pd.DataFrame, games: pd.DataFrame, now: datetime
+) -> list[dict[str, Any]]:
+    """Monitoring alerts: Elo losing to B0 over the latest window, and results gone missing."""
+    alerts: list[dict[str, Any]] = []
+    if rolling and rolling[-1]["elo"] > rolling[-1]["b0"]:
+        alerts.append(
+            {
+                "code": "elo_worse_than_b0",
+                "message": f"Elo is worse than B0 over the last {ROLLING_WINDOW} scored games",
+            }
+        )
+    logged = games[games["game_id"].isin(set(log["game_id"]))]
+    stale = logged[~logged["played"] & (logged["tipoff_utc"] < now - RESULT_GRACE)]
+    if not stale.empty:
+        alerts.append(
+            {
+                "code": "missing_result",
+                "message": (
+                    f"{len(stale)} logged game(s) have no result "
+                    f"{RESULT_GRACE.total_seconds() / 3600:.0f} h after tip-off"
+                ),
+                "games": sorted(stale["game_id"]),
+            }
+        )
+    return alerts
 
 
 def build_scorecard(
     log_path: Path,
     games: pd.DataFrame,
     model: TunedModel,
+    now: datetime,
     manual_pushes: Sequence[datetime] = (),
 ) -> dict[str, Any]:
     """Score logged games that have finished; a missing log or no finished games gives n=0.
 
     Only rows stamped strictly before tip-off count; if a game was logged by several model
     versions, its earliest valid row is the pre-registered one. The headline (``elo``/``b0``)
-    also drops rows that became public only after tip-off; ``all_rows`` keeps them.
+    also drops rows that became public only after tip-off; ``all_rows`` keeps them. The rolling
+    window and the warnings use the headline rows.
     """
     log = read_log(log_path)
     valid = log[
@@ -80,11 +156,15 @@ def build_scorecard(
     ]
     hidden = not_provable(valid, manual_pushes)
     provable_games = set(valid.loc[~hidden, "game_id"])
+    headline = _scored(valid[~hidden], games, model)
+    rolling = rolling_log_loss(headline)
     return {
         "rows_in_log": len(log),
         "rows_excluded_late": len(log) - len(valid),
         "rows_not_provable": int(hidden.sum()),
         "games_not_provable": sorted(set(valid["game_id"]) - provable_games),
-        **_metrics(valid[~hidden], games, model),
-        "all_rows": _metrics(valid, games, model),
+        **_metrics(headline, model),
+        "all_rows": _metrics(_scored(valid, games, model), model),
+        "rolling": {"window": ROLLING_WINDOW, "series": rolling},
+        "warnings": monitoring_warnings(rolling, log, games, now),
     }

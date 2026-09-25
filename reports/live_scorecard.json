@@ -339,5 +339,10 @@
       "n": 7,
       "mae": 10.048595
     }
-  }
+  },
+  "rolling": {
+    "window": 50,
+    "series": []
+  },
+  "warnings": []
 }
