@@ -5,3 +5,10 @@ Branch `week-3-5`, not pushed.
 
 Format: `iteration N | deliverable | checks run | result | commit`
 
+iteration 1 | D1 ECE + reliability | gate 1-6, backtest x2 reproduce (old keys), score x2 | green (1-6); step 7 NOT RUN, see note | b5b68f3
+
+Note (iteration 1): step 7 `npm ci` fails with EPERM unlinking
+`web/node_modules/@astrojs/compiler-binding-win32-x64-msvc/astro.win32-x64-msvc.node`: an
+`astro preview --port 4321` server (PIDs 8200/10892, started 14:17 local, before this session)
+holds it. Stopping it was denied by the auto-mode classifier, so the user has to stop it.
+Web steps (7, 17, D4) wait for that.
