@@ -3,10 +3,11 @@
 An end-to-end ML system for EuroLeague and Greek Basket League (GBL) games. It ingests
 official data automatically, fits leak-free models and publishes **public, append-only logs
 of pre-tip-off predictions** for the 2026-27 season ([`predictions/`](predictions/)),
-committed daily by GitHub Actions before the games start and shown on a static page. The
-current model is a FiveThirtyEight-style Elo baseline; its walk-forward backtests against a
-home-win-rate baseline are in [`reports/`](reports/) (`backtest_elo*.json`), next to the live
-scorecards and the GBL box-score quality report. Roadmap: [`PLAN.md`](PLAN.md).
+committed daily by GitHub Actions before the games start and shown on a static page. Two
+models are live, each with its own log: a FiveThirtyEight-style Elo baseline and M1, a
+possession-based team efficiency model ([model card](docs/models/m1.md)). Their walk-forward
+backtests are in [`reports/`](reports/) (`backtest_elo*.json`, `backtest_m1*.json`), next to
+the live scorecards and the GBL box-score quality report. Roadmap: [`PLAN.md`](PLAN.md).
 
 ## Run it
 
