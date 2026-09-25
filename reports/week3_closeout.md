@@ -6,7 +6,7 @@
 - [x] 5. EL round-1 rows flagged as not provable
 - [x] 3. GBL box-score gaps classified (fill policy: DECISION NEEDED)
 - [x] 7a. EuroLeague shot coordinate system
-- [ ] 7b. 2026-27 formats and tiebreak rules
+- [x] 7b. 2026-27 formats and tiebreak rules (GBL format partly UNVERIFIED)
 
 ## 2. GBL Elo tuning grid
 The old grid's best value (K=40, HCA=130, reversion=0.25) sat on the edge of all three axes.
@@ -157,3 +157,71 @@ Source: the `Points` endpoint (`COORD_X`, `COORD_Y`, cached in `data/raw/eurolea
   the correct side of the line.
 - The plot comes from a scratch script run with `uv run --with matplotlib`. It isn't
   committed, and matplotlib isn't a project dependency.
+
+## 7b. 2026-27 formats and tie-breaks
+Code: `src/eurohoops/standings.py`. It holds the `Format` configs (`EUROLEAGUE_2026` and
+`GBL_2026`, each with sources and an `unverified` list) and `rank()`, which implements the
+tie-break procedure. Sources were accessed on 2026-09-25.
+
+### EuroLeague: verified from the official 2026-27 bylaws
+Source: [EuroLeague Bylaws 2026-27](https://ftpserver.euroleague.net/general/2026_27_EuroLeague_Bylaws.pdf).
+- **Art. 18 (competition system):**
+  - 20 teams play a double round robin over 38 rounds.
+  - Places 1–6 go to the playoffs, 7–10 to the play-in, and 11–20 are out.
+  - Play-in, single games at the better-placed team: A = 7 v 8, B = 9 v 10, C = loser A v
+    winner B. Winner A becomes the 7th seed and winner C the 8th.
+  - Playoffs are best of five: 1 v 8, 4 v 5, 3 v 6, 2 v 7. Games 1, 2 and 5 are at the
+    higher seed.
+  - Final Four: semifinals are winner(1/8) v winner(4/5) and winner(2/7) v winner(3/6).
+- **Art. 19 (tie breakers):**
+  - When all tied teams have met twice (19.5.2):
+    1. head-to-head wins
+    2. head-to-head score difference
+    3. overall difference
+    4. overall points scored
+    5. goal average
+  - When more than two teams are tied, the procedure restarts with head-to-head wins for any
+    teams still tied after a partial resolution (d, e).
+  - When the tied teams haven't all met twice (19.5.1): overall difference, then points
+    scored, then goal average.
+  - **Overtime points don't count** (19.4).
+  - A team with wins deducted is last among the teams it is tied with (19.1).
+  - Not modelled: fewer games played (19.2–19.3) and the 20-0 forfeit exclusion (19.6).
+- **Check against the official final tables** (`api-live.euroleague.net/v1/standings`) for
+  **all 10 single-table seasons, 2016-17 → 2025-26**: **10/10 exact matches**.
+  - These include ties of 2 to 5 teams (2019-20 had a 5-way tie), the 2021-22 annulled
+    results of withdrawn teams, and the 2022-23 two-win deduction for Panathinaikos.
+  - 2022-23 matches only when overtime points are excluded, which confirms 19.4 in the data.
+  - Regulation scores come from `EndOfQuarter` Q4 in the cached box scores.
+
+### GBL
+| Rule | Status | Source |
+|---|---|---|
+| 14 teams, 26 rounds, double round robin | verified | published ESAKE schedule (182 games plus 1 duplicate, see gap 4) |
+| QF/SF best of 3, final best of 5 | **UNVERIFIED for 2026-27** (official for 2025-26) | [ESAKE general assembly 2025](https://www.esake.gr/31B83429) |
+| Playoff places 1–8 | **UNVERIFIED** | 2024-25 format ([esake.gr/el/CE79238E](https://www.esake.gr/el/CE79238E)); no 2026-27 competition notice found |
+| 14th place relegated | **UNVERIFIED** (2025-26 rule) | same |
+| Tie-breaks | **UNVERIFIED** as a rule; the EuroLeague procedure is used | ESAKE's regulation defers to each season's notice ([Art. 28, 2022-23 regulation](https://www.esake.gr/img/kanon1-2022-2023.pdf)) |
+
+- **Empirical check:** the EuroLeague procedure reproduces the 2024-25 and 2025-26 GBL final
+  tables exactly, including the 2025-26 three-way tie at 8–16 (Kolossos, Iraklis,
+  Promitheas). Source: Wikipedia's season pages, a secondary source. ESAKE's own ranking
+  archive returns all-zero tables for past seasons.
+- **The GBL ranks by points, not wins.** A win is worth 2 and a loss 1. The live 2026-27
+  ESAKE table already shows **Olympiacos and Panathinaikos at −2 points before round 1**,
+  which looks like a sanction. Standings simulations must start them at −2 (one win's worth
+  of deduction in `rank(deducted_wins=…)`). The reason for the deduction is **UNVERIFIED**.
+- The 2026-27 ESAKE table also lists a 15th placeholder team "Χ" (`B93197B3`), probably the
+  wild-card slot. Watch it.
+- GBL overtime scores: regulation scores aren't parsed yet. The quarter scores exist on the
+  ESAKE pages if the overtime rule turns out to apply.
+
+### Tests
+`tests/test_standings.py`:
+- **Regression fixtures** (`tests/fixtures/standings.json`): EL 2019-20 (5-way tie), EL
+  2022-23 (overtime rule and sanction) and GBL 2025-26 (3-way tie), each checked against its
+  official or published final order.
+- **Hand-computed scenarios:** a three-way head-to-head split, a two-team restart after a
+  partial resolution, the 19.5.1 path and a sanction.
+- **Mutation check:** a naive tie-break (one sort, no restart) fails the EL 2019-20 fixture
+  and the restart scenario.
