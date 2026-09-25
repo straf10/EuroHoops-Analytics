@@ -25,4 +25,4 @@ jobs:
       - name: Tests
         run: uv run pytest -q --cov=eurohoops --cov-fail-under=85
       - name: Dead code
-        run: uv run vulture src --min-confidence 60
+        run: uv run vulture src vulture_whitelist.py --min-confidence 60
