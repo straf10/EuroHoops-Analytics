@@ -45,6 +45,7 @@ ignore = ["PLR0913", "PLR2004"]
 [tool.ruff.lint.per-file-ignores]
 # Greek text is data here (month names, table labels), not a confusable typo.
 "src/eurohoops/parse/esake.py" = ["RUF001", "RUF002", "RUF003"]
+"vulture_whitelist.py" = ["B018"]  # bare names are how vulture whitelists mark usage
 "tests/**" = ["RUF001", "RUF002", "RUF003"]
 
 [tool.mypy]
@@ -65,5 +66,5 @@ show_missing = true
 skip_covered = true
 
 [tool.vulture]
-paths = ["src"]
+paths = ["src", "vulture_whitelist.py"]
 ignore_decorators = ["@app.command", "@app.callback"]
