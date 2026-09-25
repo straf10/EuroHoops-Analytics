@@ -1,6 +1,8 @@
 {
   "rows_in_log": 0,
   "rows_excluded_late": 0,
+  "rows_not_provable": 0,
+  "games_not_provable": [],
   "elo": {
     "n": 0,
     "log_loss": null,
@@ -14,5 +16,21 @@
     "brier": null,
     "accuracy": null,
     "margin_mae": null
+  },
+  "all_rows": {
+    "elo": {
+      "n": 0,
+      "log_loss": null,
+      "brier": null,
+      "accuracy": null,
+      "margin_mae": null
+    },
+    "b0": {
+      "n": 0,
+      "log_loss": null,
+      "brier": null,
+      "accuracy": null,
+      "margin_mae": null
+    }
   }
 }

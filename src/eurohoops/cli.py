@@ -160,6 +160,7 @@ def score(competition: CompetitionOption = CompetitionName.euroleague) -> None:
         comp.prediction_log,
         read_games(MART_PATH, comp.name),
         load_tuned_model(comp.live_backtest.report),
+        comp.manual_pushes,
     )
     _write_json(comp.scorecard, card)
     typer.echo(json.dumps(card, indent=2))

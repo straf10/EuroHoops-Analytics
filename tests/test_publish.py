@@ -40,6 +40,17 @@ def test_page_lists_upcoming_and_recent_games_with_escaped_names(tmp_path: Path)
     assert "Athens time" in page
     assert "not betting advice" in page
     assert "66.7%" in page
+    assert "Not scored" not in page
+
+
+def test_unprovable_games_are_marked_and_explained(tmp_path: Path) -> None:
+    plain = section(tmp_path)
+    first = plain.games.loc[plain.games["round"] == 1, "game_id"].iloc[0]
+    card = {**CARD, "games_not_provable": [first]}
+    page = render_page([Section(plain.title, plain.log_path, card, plain.games, {})], NOW)
+    recent = page.split("<h3>Recent results</h3>")[1].split("<h3>Scorecard")[0]
+    assert recent.count("*") == 1
+    assert "* Not scored: 1 game whose prediction" in page
 
 
 def test_page_without_a_log(tmp_path: Path) -> None:

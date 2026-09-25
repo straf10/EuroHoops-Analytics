@@ -1,11 +1,12 @@
 import math
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pandas as pd
 import pytest
 
 from eurohoops.eval.backtest import TunedModel
-from eurohoops.eval.scorecard import build_scorecard
+from eurohoops.eval.scorecard import build_scorecard, public_at
 from eurohoops.predict import LOG_COLUMNS
 
 HEADER = ",".join(LOG_COLUMNS)
@@ -80,3 +81,26 @@ def test_forfeits_are_not_scored(tmp_path: Path, tuned: TunedModel) -> None:
     card = build_scorecard(log, games, tuned)
     assert card["elo"]["n"] == 1
     assert card["elo"]["log_loss"] == pytest.approx(-math.log(0.8), abs=1e-6)
+
+
+def test_rows_pushed_after_tipoff_leave_the_headline(tmp_path: Path, tuned: TunedModel) -> None:
+    log = tmp_path / "log.csv"
+    log.write_text(LOG)
+    pushes = (datetime(2026, 10, 1, 18, 30, tzinfo=UTC),)  # after G1/G2 tip-off, before G4
+    card = build_scorecard(log, results(played=True), tuned, pushes)
+    assert card["rows_not_provable"] == 3  # G1, both G2 rows; G3 is late, not unprovable
+    assert card["games_not_provable"] == ["G1", "G2"]
+    assert card["elo"]["n"] == 0
+    assert card["all_rows"]["elo"]["n"] == 2
+    assert card["all_rows"]["elo"]["log_loss"] == pytest.approx(
+        -(math.log(0.8) + math.log(0.4)) / 2, abs=1e-6
+    )
+
+
+def test_public_at_takes_the_first_push_at_or_after_the_stamp() -> None:
+    stamps = pd.to_datetime(
+        pd.Series(["2026-10-01T08:00:00Z", "2026-10-01T10:00:00Z", "2026-10-01T13:00:00Z"]),
+        utc=True,
+    )
+    pushes = (datetime(2026, 10, 1, 12, tzinfo=UTC), datetime(2026, 10, 1, 10, tzinfo=UTC))
+    assert public_at(stamps, pushes).dt.hour.tolist() == [10, 10, 13]

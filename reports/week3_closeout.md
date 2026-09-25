@@ -3,7 +3,7 @@
 ## Checklist
 - [x] 2. GBL Elo tuning grid widened; live parameters frozen for 2026-27
 - [x] 1. GBL live logging ready for Sat 3 Oct
-- [ ] 5. EL round-1 rows flagged as not provable
+- [x] 5. EL round-1 rows flagged as not provable
 - [ ] 3. GBL box-score gaps classified
 - [ ] 7a. EuroLeague shot coordinate system
 - [ ] 7b. 2026-27 formats and tiebreak rules
@@ -54,3 +54,28 @@ Top tuning-set results (log loss):
 - `tests/test_cli.py` covers the GBL predict path end to end (twice → no duplicates).
 - Watch: GitHub can delay scheduled runs. A delay of up to 12 h still leaves every game
   covered by at least one run. Check the Actions tab on Fri 2 Oct.
+
+## 5. EL round-1 rows that aren't provable
+- A local commit's timestamp proves nothing, so I used GitHub's server-side push times
+  (`gh api repos/straf10/EuroHoops-Analytics/activity`):
+  - 16:24:29 UTC 24 Sep: branch creation (`0b60463`), which already contained the 10 v0.1.0
+    round-1 rows.
+  - 20:29:32 UTC: the push containing the 3 v0.2.0 rows.
+- **Only 2 of the 10 round-1 games aren't provable**: E2026_2 (DUB–MAD) and E2026_3 (HTA–MUN),
+  both tipping off at 16:00 UTC, 24 minutes before the first push. The other 8 were public
+  before tip-off. The earlier claim that all of round 1 was unprovable was too strict.
+- `Competition.manual_pushes` records those two push times. A row became public at the first
+  manual push at or after its stamp. Later rows are committed by the workflow in the run that
+  stamps them.
+- The scorecard now splits the counts:
+  - Headline `elo`/`b0`: provable rows only.
+  - `all_rows`: keeps everything.
+  - `rows_not_provable` and `games_not_provable`: list what was dropped.
+- The page marks those results with `*` and adds a "Not scored" note.
+- The prediction logs are untouched (`git diff -- predictions/` is empty).
+- Current EL scorecard (7 finished games): headline n=5, Elo log loss 0.555 vs B0 0.675;
+  all_rows n=7.
+- Local-only side effect, now reverted: a plain `eurohoops ingest` rewrites EL staging with
+  the default seasons 2023-26 and drops the 2007+ history the history backtest needs.
+  I rebuilt it from cache (`--seasons 2007 … 2026`, 5,502 games), and all backtest reports
+  reproduce byte for byte. Worth knowing before running `ingest` locally.
