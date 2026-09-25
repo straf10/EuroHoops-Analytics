@@ -22,6 +22,7 @@ from eurohoops.config import (
     SITE_DATA,
     SQL_DIR,
     STINT_REPORT,
+    STINTS_MART_REPORT,
 )
 from eurohoops.eval.backtest import load_tuned_model
 from eurohoops.marts import read_games
@@ -30,6 +31,7 @@ from tests.test_gbl_ingest import FakeEsake
 from tests.test_gbl_pbp import GAME, FakeBasketHotel, export
 from tests.test_ingest import FakeApi
 from tests.test_stints import game, write_game
+from tests.test_stints_mart import full_box
 
 runner = CliRunner()
 NOW = datetime(2026, 10, 1, 8, 0, tzinfo=UTC)
@@ -227,6 +229,27 @@ def test_stints_writes_a_reproducible_report() -> None:
     invoke("stints")
     assert STINT_REPORT.read_bytes() == first
     assert json.loads(first)["failing_games"].keys() == {"E2025_9"}
+
+
+@pytest.mark.usefixtures("pipeline")
+def test_stints_mart_builds_tables_and_a_reproducible_report() -> None:
+    assert runner.invoke(cli.app, ["stints", "--mart"]).exit_code == 1  # no team_games yet
+    pbp, box = game()
+    write_game(EUROLEAGUE.raw_dir, 2024, 1, pbp, full_box(box))  # E2024_1 is AAA vs BBB
+    invoke("build")
+    output = invoke("stints", "--mart")
+    assert "pass rate 2011-14 no games, 2015+ 100.0%" in output
+    first = STINTS_MART_REPORT.read_bytes()
+    invoke("stints", "--mart")
+    assert STINTS_MART_REPORT.read_bytes() == first
+    assert b"NaN" not in first
+    report = json.loads(first)
+    assert report["games"] == 1
+    assert report["pbp_vs_box_possessions"]["2011_2014"] is None
+    assert (
+        len(report["not_cached"])
+        == len(read_games(MART_PATH, "euroleague").query("played and season >= 2011")) - 1
+    )
 
 
 class AnyGameHotel(FakeBasketHotel):

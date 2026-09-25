@@ -79,3 +79,9 @@ The remaining spread (sd ≈ 1.1) comes from logging-order cases the counter can
 technical during a live trip, rebounds logged after the next event). The task fixes the R1
 formula with 0.44, so `team_games` keeps it; the bias is a constant ~0.5% level shift that the
 model's league mean absorbs and it cancels in efficiency *differences* between teams.
+
+## The full population (from the stints mart, `reports/stints_mart.json`)
+The same counter over every cached game from 2011-12: PBP within ±2 of the box formula for
+87.3% of team-games in 2011-14 (mean gap −0.05) and 89.3% from 2015-16 (mean gap −0.55), so the
+sample is representative. The possession check of the stints mart uses ±5 per team (a logging
+gap, not the formula bias) and passes in 99.6% of games.

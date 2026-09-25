@@ -30,6 +30,7 @@ from eurohoops.config import (
     SITE_DATA,
     SQL_DIR,
     STINT_REPORT,
+    STINTS_MART_REPORT,
 )
 from eurohoops.eval.backtest import format_table, load_tuned_model, run_backtest
 from eurohoops.eval.scorecard import build_scorecard
@@ -55,6 +56,7 @@ from eurohoops.parse.games import (
 from eurohoops.parse.gbl_pbp import build_pbp_table
 from eurohoops.parse.possession_report import possession_report
 from eurohoops.parse.stints import validate_sample
+from eurohoops.parse.stints_mart import build_stints_mart, mart_report
 from eurohoops.parse.team_box import build_team_games
 from eurohoops.predict import LatePredictionError, predict_upcoming
 from eurohoops.publish import Section, site_data
@@ -192,8 +194,39 @@ def build() -> None:
 
 
 @app.command()
-def stints() -> None:
-    """Validate EuroLeague stints on the seeded 50-game sample (reads the local raw cache)."""
+def stints(
+    mart: Annotated[
+        bool,
+        typer.Option(help="Build the 2011+ stints mart and write reports/stints_mart.json instead"),
+    ] = False,
+) -> None:
+    """Validate EuroLeague stints on the seeded 50-game sample (reads the local raw cache).
+
+    With ``--mart``: build the ``stints`` and ``stint_game_checks`` tables for every cached
+    game from 2011-12 (needs ``eurohoops build`` first for ``team_games``).
+    """
+    if mart:
+        games = read_games(MART_PATH, EUROLEAGUE.name)
+        team_games = read_table(MART_PATH, "team_games", EUROLEAGUE.name)
+        if team_games is None:
+            log.error("no team_games in the marts; run: eurohoops build")
+            raise typer.Exit(code=1)
+        built = build_stints_mart(EUROLEAGUE.raw_dir, games)
+        write_tables(MART_PATH, {"stints": built.stints, "stint_game_checks": built.checks})
+        summary = mart_report(built, games, team_games)
+        _write_json(STINTS_MART_REPORT, summary)
+        spans = {
+            span: "no games" if rate is None else f"{rate:.1%}"
+            for span, rate in (
+                ("2011-14", summary["pass_rate_2011_2014"]),
+                ("2015+", summary["pass_rate_2015_on"]),
+            )
+        }
+        typer.echo(
+            f"{summary['games']} games, {summary['stints']} stints; pass rate 2011-14 "
+            f"{spans['2011-14']}, 2015+ {spans['2015+']}; wrote {STINTS_MART_REPORT}"
+        )
+        return
     report = validate_sample(EUROLEAGUE.raw_dir)
     _write_json(STINT_REPORT, report)
     rates = ", ".join(f"{check} {rate:.0%}" for check, rate in report["pass_rate"].items())
