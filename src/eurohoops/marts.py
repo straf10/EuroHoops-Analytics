@@ -10,7 +10,7 @@ from typing import Any
 import duckdb
 import pandas as pd
 
-from eurohoops.config import EUROLEAGUE, GBL, GBL_PLAYER_BOX, GBL_TEAM_BOX
+from eurohoops.config import EUROLEAGUE, GBL, GBL_BOX_FILL, GBL_PLAYER_BOX, GBL_TEAM_BOX
 from eurohoops.parse.games import TEAMS_SCHEMA, conform
 
 MINUTES_PER_GAME = 200.0
@@ -38,10 +38,15 @@ def build_marts(mart_path: Path, sql_dir: Path) -> bool:
                 gbl_teams=GBL.staging_teams,
             )
         )
-        has_box = GBL_PLAYER_BOX.exists() and GBL_TEAM_BOX.exists()
+        has_box = all(p.exists() for p in (GBL_PLAYER_BOX, GBL_TEAM_BOX, GBL_BOX_FILL))
         if has_box:
             con.execute(
-                _sql(sql_dir / "box.sql", gbl_player_box=GBL_PLAYER_BOX, gbl_team_box=GBL_TEAM_BOX)
+                _sql(
+                    sql_dir / "box.sql",
+                    gbl_player_box=GBL_PLAYER_BOX,
+                    gbl_team_box=GBL_TEAM_BOX,
+                    gbl_box_fill=GBL_BOX_FILL,
+                )
             )
     return has_box
 
@@ -69,10 +74,32 @@ def _minutes_ok(minutes: pd.Series) -> pd.Series:
     return (minutes - expected).abs() <= MINUTES_TOLERANCE
 
 
+def _fill_summary(fill: pd.DataFrame) -> dict[str, Any]:
+    """Per season: teams of short games, how many were filled from PBP and whether they add up."""
+    filled = fill[fill["fill"] != "not_filled"]
+    return {
+        str(season): {
+            "teams": len(rows),
+            "by_fill": {k: int(v) for k, v in rows["fill"].value_counts().sort_index().items()},
+            "filled_points_match_result": int(
+                (
+                    filled.loc[filled["season"] == season, "filled_points"]
+                    == filled.loc[filled["season"] == season, "score"]
+                ).sum()
+            ),
+        }
+        for season, rows in fill.groupby("season")
+    }
+
+
 def box_invariants(mart_path: Path) -> dict[str, Any]:
-    """Per-season pass rates; failing games are listed with reasons, never dropped."""
+    """Per-season pass rates of the official box scores; failing games are listed, never dropped.
+
+    ``pbp_fill`` reports the PBP fill separately: it never changes an official pass rate.
+    """
     with duckdb.connect(str(mart_path), read_only=True) as con:
         sides = con.execute("SELECT * FROM box_checks").df()
+        fill = con.execute("SELECT * FROM box_fill_checks ORDER BY game_id, team").df()
     checks = pd.DataFrame(
         {
             "season": sides["season"],
@@ -101,4 +128,39 @@ def box_invariants(mart_path: Path) -> dict[str, Any]:
                 for row in failed.reset_index().to_dict("records")
             },
         }
-    return {"tolerance_minutes": MINUTES_TOLERANCE, "seasons": seasons}
+    return {
+        "tolerance_minutes": MINUTES_TOLERANCE,
+        "seasons": seasons,
+        "pbp_fill": _fill_summary(fill),
+    }
+
+
+def refresh_box_gaps(mart_path: Path, gaps_csv: Path) -> None:
+    """Add each listed game's PBP fill outcome to the gaps report (other columns untouched).
+
+    The report is a curated list; without one there is nothing to refresh.
+    """
+    if not gaps_csv.exists():
+        return
+    gaps = pd.read_csv(gaps_csv, dtype=str, keep_default_na=False)
+    with duckdb.connect(str(mart_path), read_only=True) as con:
+        fill = con.execute("SELECT * FROM box_fill_checks ORDER BY game_id, team").df()
+    by_game = {
+        game_id: rows.to_dict("records") for game_id, rows in fill.groupby("game_id", sort=True)
+    }
+    outcome, detail, matches = [], [], []
+    for game_id in gaps["game_id"]:
+        rows = by_game.get(game_id, [])
+        fills = sorted({str(r["fill"]) for r in rows})
+        outcome.append("+".join(fills) if rows else "not_filled")
+        detail.append(
+            "; ".join(f"{r['team']}: {r['detail']}" for r in rows)
+            if rows
+            else "not short against the result in the current box tables"
+        )
+        done = [r for r in rows if r["fill"] != "not_filled"]
+        matches.append(str(all(r["filled_points"] == r["score"] for r in done)) if done else "")
+    gaps = gaps.assign(
+        pbp_fill=outcome, pbp_fill_detail=detail, pbp_filled_points_match_result=matches
+    )
+    gaps.to_csv(gaps_csv, index=False, lineterminator="\n")

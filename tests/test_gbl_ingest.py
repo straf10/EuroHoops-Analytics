@@ -82,8 +82,10 @@ def test_esake_throttle_is_at_least_two_seconds(no_sleep: list[float]) -> None:
 def test_box_tables_cover_played_non_forfeit_games(tmp_path: Path) -> None:
     rounds = ingest_gbl(fetcher_for(FakeEsake()), tmp_path, [2018], details=True, live_season=2026)
     games, _ = build_gbl_tables(rounds)
-    player_box, team_box = build_box_tables(tmp_path, games)
+    tables = build_box_tables(tmp_path, games)
+    player_box, team_box = tables.player_box, tables.team_box
     assert len(team_box) == 2 * 4
+    assert set(team_box["source"]) == set(player_box["source"]) == {"esake"}
     assert set(team_box["game_id"]) == set(games.loc[~games["forfeit"], "game_id"])
     assert len(player_box) == 4 * 24
     assert (team_box.groupby("game_id")["total_points"].sum() == 81 + 64).all()

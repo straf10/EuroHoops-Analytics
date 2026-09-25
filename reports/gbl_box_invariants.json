@@ -618,5 +618,30 @@
         ]
       }
     }
+  },
+  "pbp_fill": {
+    "2018": {
+      "teams": 119,
+      "by_fill": {
+        "missing_player_from_pbp": 15,
+        "team_totals_from_pbp": 104
+      },
+      "filled_points_match_result": 119
+    },
+    "2019": {
+      "teams": 60,
+      "by_fill": {
+        "missing_player_from_pbp": 8,
+        "team_totals_from_pbp": 52
+      },
+      "filled_points_match_result": 60
+    },
+    "2022": {
+      "teams": 2,
+      "by_fill": {
+        "not_filled": 2
+      },
+      "filled_points_match_result": 0
+    }
   }
 }
