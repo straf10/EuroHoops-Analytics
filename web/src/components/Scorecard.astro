@@ -1,0 +1,170 @@
+---
+import type { Competition, Metrics } from "../lib/format";
+import { seasonSpan } from "../lib/format";
+
+interface Props {
+  comp: Competition;
+}
+const { comp } = Astro.props;
+const live = comp.scorecard;
+const test = comp.backtest.test;
+const diff = comp.backtest.log_loss_diff;
+
+type Key = Exclude<keyof Metrics, "n">;
+const rows: { key: Key; label: string; lower: boolean; fmt: (x: number) => string }[] = [
+  { key: "log_loss", label: "Log loss", lower: true, fmt: (x) => x.toFixed(3) },
+  { key: "brier", label: "Brier score", lower: true, fmt: (x) => x.toFixed(3) },
+  { key: "accuracy", label: "Accuracy", lower: false, fmt: (x) => `${(x * 100).toFixed(1)}%` },
+  { key: "margin_mae", label: "Margin error (pts)", lower: true, fmt: (x) => x.toFixed(1) },
+];
+
+function better(elo: number | null, b0: number | null, lower: boolean) {
+  if (elo === null || b0 === null || elo === b0) return null;
+  return (elo < b0) === lower ? "elo" : "b0";
+}
+
+const blocks = [
+  {
+    id: "live",
+    title: "This season, live",
+    n: live.elo.n,
+    elo: live.elo,
+    b0: live.b0,
+    note:
+      live.elo.n < 50
+        ? `${live.elo.n} scored game${live.elo.n === 1 ? "" : "s"} so far. Far too few to separate the two models; read these as a running tally.`
+        : `${live.elo.n} scored games since the season opened.`,
+  },
+  {
+    id: "test",
+    title: `Held-out test, ${seasonSpan(comp.backtest.test_seasons)}`,
+    n: test.elo.n,
+    elo: test.elo,
+    b0: test.b0,
+    note: diff
+      ? `Elo minus baseline log loss: ${diff.mean.toFixed(3)} (95% CI ${diff.ci95[0].toFixed(3)} to ${diff.ci95[1].toFixed(3)}, bootstrap over games).`
+      : "",
+  },
+];
+---
+
+<div class="scorecard" data-comp={comp.key}>
+  {
+    blocks.map((b) => (
+      <section class="block" aria-labelledby={`sc-${comp.key}-${b.id}`}>
+        <h3 id={`sc-${comp.key}-${b.id}`}>{b.title}</h3>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">
+                <span class="sr-only">Metric</span>
+              </th>
+              <th scope="col" class="num">
+                Elo
+              </th>
+              <th scope="col" class="num">
+                Baseline
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => {
+              const e = b.elo[r.key];
+              const h = b.b0[r.key];
+              const win = better(e, h, r.lower);
+              return (
+                <tr>
+                  <th scope="row">
+                    {r.label}
+                    <small>{r.lower ? "lower is better" : "higher is better"}</small>
+                  </th>
+                  <td class:list={["num", { win: win === "elo" }]}>
+                    {e === null ? "n/a" : r.fmt(e)}
+                    {win === "elo" && <span class="sr-only"> (better)</span>}
+                  </td>
+                  <td class:list={["num", { win: win === "b0" }]}>
+                    {h === null ? "n/a" : r.fmt(h)}
+                    {win === "b0" && <span class="sr-only"> (better)</span>}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        <p class="note">
+          <span class="n">{b.n} games.</span> {b.note}
+        </p>
+      </section>
+    ))
+  }
+</div>
+
+<style>
+  .scorecard {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(28px, 5vw, 72px);
+  }
+  h3 {
+    font-size: clamp(1.5rem, 2.4vw, 1.9rem);
+    margin-bottom: 14px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  thead th {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 1.15rem;
+    padding: 0 0 8px 12px;
+    border-bottom: 2px solid var(--ink);
+  }
+  tbody th {
+    text-align: left;
+    font-weight: 600;
+    padding: 12px 0;
+  }
+  tbody th small {
+    display: block;
+    color: var(--ink-2);
+    font-weight: 400;
+    font-size: 0.8rem;
+  }
+  tbody tr + tr > * {
+    border-top: 1px solid var(--line);
+  }
+  td {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 1.45rem;
+    padding: 10px 0 10px 12px;
+    width: 26%;
+  }
+  .num {
+    text-align: right;
+  }
+  /* The better number of each pair is underlined in blue marker. */
+  td.win {
+    color: var(--blue);
+    text-decoration: underline wavy var(--blue);
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 6px;
+    text-decoration-skip-ink: none;
+  }
+  .note {
+    margin-top: 14px;
+    color: var(--ink-2);
+    font-size: 0.9rem;
+    max-width: 58ch;
+  }
+  .n {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  @media (max-width: 760px) {
+    .scorecard {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

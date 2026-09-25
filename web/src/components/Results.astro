@@ -1,0 +1,227 @@
+---
+import type { Competition } from "../lib/format";
+import { athensDay, call, pct } from "../lib/format";
+
+interface Props {
+  comp: Competition;
+}
+const { comp } = Astro.props;
+const results = comp.results;
+---
+
+<div class="results" data-comp={comp.key}>
+  {
+    results.length > 0 ? (
+      <div class="scroll">
+        <table>
+          <caption class="sr-only">
+            {comp.title}: latest finished games against the pre-registered call
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Date</th>
+              <th scope="col">Home</th>
+              <th scope="col" class="num">Score</th>
+              <th scope="col">Away</th>
+              <th scope="col">Model's call</th>
+            </tr>
+          </thead>
+          <tbody>
+            {results.map((r) => {
+              const c = call(r);
+              const homeWon = r.home_score > r.away_score;
+              return (
+                <tr id={`r-${r.game_id}`}>
+                  <td class="date">{athensDay(r.tipoff_utc)}</td>
+                  <td class:list={["team", { won: homeWon }]}>
+                    <b>{r.home.code}</b>
+                    <span class="name">{r.home.name}</span>
+                  </td>
+                  <td class="num score">
+                    {r.home_score}
+                    <span class="dash">-</span>
+                    {r.away_score}
+                  </td>
+                  <td class:list={["team", { won: !homeWon }]}>
+                    <b>{r.away.code}</b>
+                    <span class="name">{r.away.name}</span>
+                  </td>
+                  <td class="call">
+                    <span class:list={["mark", r.hit ? "hit" : "miss"]}>
+                      <span class="hand">
+                        {c.team.code} {pct(c.p)}
+                      </span>
+                      <svg viewBox="0 0 120 44" preserveAspectRatio="none" aria-hidden="true">
+                        {r.hit ? (
+                          <path pathLength="1" d="M62 5C28 3 5 11 5 23c0 11 22 17 55 16 33-1 56-8 55-19C114 9 88 3 52 6" />
+                        ) : (
+                          <path pathLength="1" d="M6 30C38 22 80 17 114 13" />
+                        )}
+                      </svg>
+                    </span>
+                    <span class="verdict">{r.hit ? "hit" : "miss"}</span>
+                    {!r.provable && (
+                      <a class="star" href="#not-provable" aria-label="Not scored, see note">
+                        *
+                      </a>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    ) : (
+      <p class="none hand">No logged {comp.title} game has finished yet.</p>
+    )
+  }
+  {
+    comp.scorecard.not_provable > 0 && (
+      <p class="footnote" id="not-provable">
+        * Shown but not scored: {comp.scorecard.not_provable} game
+        {comp.scorecard.not_provable > 1 ? "s" : ""} whose prediction was stamped before tip-off but
+        reached the public log only after it.
+      </p>
+    )
+  }
+</div>
+
+<style>
+  .scroll {
+    overflow-x: auto;
+    margin-inline: -4px;
+    padding-inline: 4px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 520px;
+  }
+  th {
+    text-align: left;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--ink-2);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0 10px 10px 0;
+    border-bottom: 2px solid var(--ink);
+  }
+  td {
+    padding: 12px 10px 12px 0;
+    vertical-align: middle;
+  }
+  tbody tr + tr td {
+    border-top: 1px solid var(--line);
+  }
+  .num {
+    text-align: center;
+  }
+  .date {
+    color: var(--ink-2);
+    white-space: nowrap;
+    font-size: 0.92rem;
+  }
+  .team b {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 1.1rem;
+    letter-spacing: 0.02em;
+    margin-right: 8px;
+  }
+  .team .name {
+    color: var(--ink-2);
+    font-size: 0.9rem;
+  }
+  .team.won b {
+    font-weight: 900;
+  }
+  .score {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 1.35rem;
+    white-space: nowrap;
+  }
+  .dash {
+    color: var(--ink-2);
+    margin-inline: 4px;
+  }
+  .call {
+    white-space: nowrap;
+  }
+  .mark {
+    position: relative;
+    display: inline-block;
+    padding: 4px 12px;
+  }
+  .mark .hand {
+    font-size: 1.2rem;
+  }
+  .mark svg {
+    position: absolute;
+    inset: -3px -4px;
+    width: calc(100% + 8px);
+    height: calc(100% + 6px);
+    overflow: visible;
+    fill: none;
+    stroke: var(--red);
+    stroke-width: 2.6;
+    stroke-linecap: round;
+  }
+  .verdict {
+    color: var(--red);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-left: 6px;
+  }
+  .star {
+    color: var(--red);
+    font-weight: 700;
+    text-decoration: none;
+    margin-left: 4px;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .mark path {
+      stroke-dasharray: 1;
+      stroke-dashoffset: 0;
+      animation: draw 520ms var(--ease-out) both;
+      animation-timeline: view();
+      animation-range: entry 20% cover 35%;
+    }
+    @keyframes draw {
+      from {
+        stroke-dashoffset: 1;
+      }
+    }
+  }
+
+  .none {
+    font-size: 1.5rem;
+    padding: 24px 0;
+  }
+  .footnote {
+    margin-top: 14px;
+    color: var(--ink-2);
+    font-size: 0.88rem;
+    max-width: 70ch;
+  }
+
+  @media (max-width: 480px) {
+    .date,
+    th:first-child {
+      display: none;
+    }
+  }
+  @media (max-width: 640px) {
+    .team .name {
+      display: none;
+    }
+    table {
+      min-width: 0;
+    }
+  }
+</style>

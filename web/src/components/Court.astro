@@ -1,0 +1,350 @@
+---
+import type { Competition } from "../lib/format";
+import { athensDay, athensTime, call, pct, signed } from "../lib/format";
+
+interface Props {
+  comp: Competition;
+}
+const { comp } = Astro.props;
+const games = comp.upcoming;
+const days = [...new Set(games.map((g) => athensDay(g.tipoff_utc)))];
+const rounds = [...new Set(games.map((g) => g.round))];
+---
+
+<figure class="board-court" data-comp={comp.key} aria-labelledby={`court-cap-${comp.key}`}>
+  <figcaption id={`court-cap-${comp.key}`} class="court-head">
+    {
+      games.length > 0 ? (
+        <>
+          <span class="hand court-title">
+            {comp.title}, round {rounds.join(" & ")}
+          </span>
+          <span class="court-when">{days.join(" to ")}, Athens time</span>
+        </>
+      ) : (
+        <span class="hand court-title">{comp.title}: nothing drawn up yet</span>
+      )
+    }
+  </figcaption>
+
+  <div class="court" style={`--lanes:${Math.max(games.length, 4)}`}>
+    <div class="lines" aria-hidden="true">
+      <span class="key key-away"></span>
+      <span class="arc arc-away"></span>
+      <span class="circle"></span>
+      <span class="key key-home"></span>
+      <span class="arc arc-home"></span>
+    </div>
+
+    {
+      games.length > 0 ? (
+        <ol class="lanes">
+          {games.map((g, i) => {
+            const c = call(g);
+            const side = g.p_home >= 0.5 ? "home" : "away";
+            return (
+              <li
+                class="lane"
+                id={g.game_id}
+                style={`--p:${(g.p_home * 100).toFixed(1)};--i:${i}`}
+                title={`${g.away.name} at ${g.home.name}`}
+                tabindex="0"
+                data-side={side}
+              >
+                <span class="end end-away">
+                  <b>{g.away.code}</b>
+                  <small>{athensTime(g.tipoff_utc)}</small>
+                </span>
+                <span class="track">
+                  <span class={`puck puck-${side}`}>
+                    <span class="puck-face">{c.team.code}</span>
+                    <span class="hand note">{pct(c.p)}</span>
+                  </span>
+                </span>
+                <span class="end end-home">
+                  <b>{g.home.code}</b>
+                </span>
+                <span class="sr-only">
+                  {g.home.name} host {g.away.name}, {athensDay(g.tipoff_utc)}{" "}
+                  {athensTime(g.tipoff_utc)}. Home win chance {pct(g.p_home)}, expected margin{" "}
+                  {signed(g.exp_margin)} points.
+                </span>
+              </li>
+            );
+          })}
+        </ol>
+      ) : (
+        <div class="empty">
+          <p class="hand empty-note">
+            {comp.next_tipoff_utc
+              ? `Next tip-off ${athensDay(comp.next_tipoff_utc)}, ${athensTime(comp.next_tipoff_utc)}.`
+              : "The season has no scheduled games left."}
+          </p>
+          <p class="empty-sub">
+            Games are drawn up here once they are 36 hours from tip-off. Every forecast so far
+            stays in the public log.
+          </p>
+        </div>
+      )
+    }
+  </div>
+
+  <div class="axis" aria-hidden="true">
+    <span>Away win</span>
+    <span class="axis-mid">50%</span>
+    <span>Home win</span>
+  </div>
+</figure>
+
+<style>
+  .board-court {
+    --end: clamp(2.9rem, 6vw, 3.6rem);
+    margin: 0;
+    min-width: 0;
+    container-type: inline-size;
+  }
+
+  .court-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 14px;
+    margin-bottom: 14px;
+  }
+  .court-title {
+    font-size: clamp(1.45rem, 2.3vw, 1.85rem);
+    line-height: 1.1;
+  }
+  .court-when {
+    color: var(--ink-2);
+    font-size: 0.9rem;
+  }
+
+  /* Printed court: boundary, half-court line, circle, keys and arcs, all in faint line ink. */
+  .court {
+    position: relative;
+    border: 2px solid var(--line);
+    border-radius: 3px;
+    display: grid;
+    align-content: center;
+    padding-block: 10px;
+    /* Keep a court's proportions (28 x 15 m) however few games are drawn up. */
+    min-height: max(calc(var(--lanes) * 56px + 20px), 48cqi);
+  }
+  .lines {
+    position: absolute;
+    inset: 0 var(--end);
+    pointer-events: none;
+  }
+  .lines::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 50%;
+    border-left: 2px solid var(--line);
+  }
+  .circle {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: clamp(84px, 14vw, 128px);
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    border: 2px solid var(--line);
+    border-radius: 50%;
+  }
+  .key {
+    position: absolute;
+    top: 32%;
+    height: 36%;
+    width: 17%;
+    border: 2px solid var(--line);
+  }
+  .key-away {
+    left: calc(var(--end) * -1);
+    border-left: 0;
+  }
+  .key-home {
+    right: calc(var(--end) * -1);
+    border-right: 0;
+  }
+  .arc {
+    position: absolute;
+    top: 8%;
+    height: 84%;
+    width: 30%;
+    border: 2px solid var(--line);
+  }
+  .arc-away {
+    left: calc(var(--end) * -1);
+    border-left: 0;
+    border-radius: 0 50% 50% 0 / 0 50% 50% 0;
+  }
+  .arc-home {
+    right: calc(var(--end) * -1);
+    border-right: 0;
+    border-radius: 50% 0 0 50% / 50% 0 0 50%;
+  }
+
+  .lanes {
+    position: relative;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .lane {
+    display: grid;
+    grid-template-columns: var(--end) 1fr var(--end);
+    align-items: center;
+    height: 56px;
+    scroll-margin-top: 80px;
+    border-radius: 6px;
+  }
+  .lane:focus-visible {
+    outline-offset: -2px;
+  }
+  .lane[data-side="away"] {
+    --from: right;
+  }
+  .lane:target .track::before {
+    border-top-color: var(--blue);
+  }
+
+  .end {
+    display: grid;
+    justify-items: center;
+    line-height: 1.05;
+  }
+  .end b {
+    font-family: var(--display);
+    font-weight: 750;
+    font-size: 1.05rem;
+    letter-spacing: 0.02em;
+  }
+  .end small {
+    color: var(--ink-2);
+    font-size: 0.72rem;
+  }
+
+  .track {
+    position: relative;
+    height: 100%;
+    container-type: inline-size;
+  }
+  .track::before {
+    content: "";
+    position: absolute;
+    inset: 50% 0 auto;
+    border-top: 1.5px dashed var(--line);
+  }
+
+  /* The call, drawn in marker from centre court to the magnet on hover or focus. */
+  .track::after {
+    content: "";
+    position: absolute;
+    top: calc(50% - 1.5px);
+    height: 3px;
+    border-radius: 2px;
+    background: var(--blue);
+    left: calc(min(var(--p), 50) * 1%);
+    width: calc(max(var(--p) - 50, 50 - var(--p)) * 1%);
+    transform: scaleX(0);
+    transform-origin: var(--from, left);
+    transition: transform 220ms var(--ease-out);
+  }
+  .lane:hover .track::after,
+  .lane:focus-visible .track::after {
+    transform: scaleX(1);
+  }
+  .puck {
+    position: absolute;
+    top: 50%;
+    left: calc(var(--p) * 1%);
+    translate: -50% -50%;
+    display: grid;
+    place-items: center;
+  }
+  .puck-face {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--blue);
+    color: var(--on-blue);
+    font: 750 0.72rem/1 var(--text);
+    letter-spacing: 0.03em;
+    box-shadow:
+      0 2px 3px var(--shadow),
+      0 6px 14px -6px var(--shadow);
+  }
+  .note {
+    position: absolute;
+    bottom: calc(100% - 2px);
+    left: 50%;
+    translate: -50% 0;
+    font-size: 1.15rem;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  /* Signature: each magnet slides from centre court to the model's call, once. */
+  @media (prefers-reduced-motion: no-preference) {
+    .puck {
+      animation: place 900ms var(--ease-out) both;
+      animation-delay: calc(var(--i) * 60ms + 120ms);
+    }
+    @keyframes place {
+      from {
+        transform: translateX(calc((50 - var(--p)) * 1cqi));
+      }
+    }
+    .note {
+      animation: ink 360ms ease-out both;
+      animation-delay: calc(var(--i) * 60ms + 780ms);
+    }
+    @keyframes ink {
+      from {
+        opacity: 0;
+        filter: blur(2px);
+      }
+    }
+  }
+
+
+  .axis {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    margin: 8px 0 0;
+    padding-inline: var(--end);
+    color: var(--ink-2);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .axis span:last-child {
+    text-align: right;
+  }
+
+  .empty {
+    position: relative;
+    display: grid;
+    place-content: center;
+    gap: 10px;
+    min-height: 228px;
+    padding: 20px var(--end);
+    text-align: center;
+  }
+  .empty-note {
+    font-size: clamp(1.5rem, 3vw, 2.1rem);
+    line-height: 1.1;
+    background: var(--board);
+    padding: 2px 8px;
+  }
+  .empty-sub {
+    color: var(--ink-2);
+    max-width: 36ch;
+    margin-inline: auto;
+    background: var(--board);
+    font-size: 0.95rem;
+  }
+</style>

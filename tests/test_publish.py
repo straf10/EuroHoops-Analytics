@@ -1,8 +1,12 @@
+import json
 from datetime import UTC, datetime
-from pathlib import Path
 
+import pandas as pd
+
+from eurohoops.eval.backtest import TunedModel
+from eurohoops.models.elo import EloParams
 from eurohoops.predict import LOG_COLUMNS
-from eurohoops.publish import Section, render_page
+from eurohoops.publish import Section, section_data, site_data
 from tests.conftest import make_games
 
 NOW = datetime(2026, 10, 8, 8, 0, tzinfo=UTC)
@@ -10,51 +14,84 @@ CARD = {
     "elo": {"n": 3, "log_loss": 0.61, "brier": 0.21, "accuracy": 2 / 3, "margin_mae": 9.5},
     "b0": {"n": 3, "log_loss": 0.66, "brier": 0.23, "accuracy": 0.6, "margin_mae": 9.9},
 }
+REPORT = {
+    "seasons": {"warmup": [2024], "tuning": [2025], "test": [2025]},
+    "tuned": {"k": 20.0, "hca": 90.0, "reversion": 0.25},
+    "metrics": {"test": CARD},
+    "test_log_loss_diff_elo_minus_b0": {"mean": -0.05, "ci95": [-0.08, -0.02]},
+}
+MODEL = TunedModel(EloParams(k=20.0, hca=90.0, reversion=0.25), 25.0, 0.63, 3.7)
 
 
-def section(tmp_path: Path) -> Section:
-    games = make_games({2026: False})
-    played = games["round"] == 1
+def section(card: dict[str, object] = CARD, logged_rounds: int = 2) -> Section:
+    games = make_games({2025: True, 2026: False})
+    played = (games["season"] == 2026) & (games["round"] == 1)
     games.loc[played, ["home_score", "away_score", "played"]] = [90, 80, True]
-    log = tmp_path / "log.csv"
-    rows = [
-        f"{g.game_id},2026,{g.round},RS,{g.tipoff_utc:%Y-%m-%dT%H:%M:%SZ},{g.home},{g.away},"
-        f"0.4,-2.0,elo,v1,2026-09-30T08:00:00Z"
-        for g in games[games["round"] <= 2].itertuples()
-    ]
-    log.write_text(",".join(LOG_COLUMNS) + "\n" + "\n".join(rows) + "\n")
+    live = games[(games["season"] == 2026) & (games["round"] <= logged_rounds)]
+    log = pd.DataFrame(
+        [
+            [g.game_id, 2026, g.round, "RS", "", g.home, g.away, 0.4, -2.0, "elo", "v1", stamp]
+            for g in live.itertuples()
+            for stamp in ("2026-09-30T08:00:00Z", "2026-09-30T09:00:00Z")  # a re-log
+        ],
+        columns=list(LOG_COLUMNS),
+    )
     names = {"AAA": "Ολυμπιακός & <Co>"}
-    return Section("Greek Basket League", log, CARD, games, names)
+    return Section("gbl", "Greek Basket League", log, card, REPORT, games, names, MODEL, 2026, 2025)
 
 
-def test_page_lists_upcoming_and_recent_games_with_escaped_names(tmp_path: Path) -> None:
-    page = render_page([section(tmp_path)], NOW)
-    upcoming = page.split("<h3>Upcoming</h3>")[1].split("<h3>Recent results</h3>")[0]
-    recent = page.split("<h3>Recent results</h3>")[1].split("<h3>Scorecard")[0]
-    assert upcoming.count("<tr>") == 1 + 3  # header + the three round-2 games
-    assert recent.count("<tr>") == 1 + 3
-    assert "90-80" in recent
-    assert "miss" in recent  # p_home 0.4 but the home team won
-    assert "Ολυμπιακός &amp; &lt;Co&gt;" in page
-    assert "<Co>" not in page
-    assert "Athens time" in page
-    assert "not betting advice" in page
-    assert "66.7%" in page
-    assert "Not scored" not in page
+def test_upcoming_results_and_scorecard() -> None:
+    data = section_data(section(), NOW)
+    assert data["season"] == "2026-27"
+    assert data["logged"] == 6  # first row per game only
+    assert len(data["upcoming"]) == 3
+    assert len(data["results"]) == 3
+    result = data["results"][0]
+    assert (result["home_score"], result["away_score"]) == (90, 80)
+    assert not result["hit"]  # p_home 0.4 but the home team won
+    assert result["provable"]
+    assert result["predicted_at_utc"] == "2026-09-30T08:00:00Z"
+    assert data["scorecard"]["elo"]["log_loss"] == 0.61
+    assert data["scorecard"]["not_provable"] == 0
+    assert data["backtest"]["params"] == {"k": 20.0, "hca": 90.0, "reversion": 0.25}
+    assert data["backtest"]["log_loss_diff"]["ci95"] == [-0.08, -0.02]
+    assert data["next_tipoff_utc"] == data["upcoming"][0]["tipoff_utc"]
 
 
-def test_unprovable_games_are_marked_and_explained(tmp_path: Path) -> None:
-    plain = section(tmp_path)
-    first = plain.games.loc[plain.games["round"] == 1, "game_id"].iloc[0]
-    card = {**CARD, "games_not_provable": [first]}
-    page = render_page([Section(plain.title, plain.log_path, card, plain.games, {})], NOW)
-    recent = page.split("<h3>Recent results</h3>")[1].split("<h3>Scorecard")[0]
-    assert recent.count("*") == 1
-    assert "* Not scored: 1 game whose prediction" in page
+def test_ratings_cover_the_live_season_and_keep_raw_names() -> None:
+    ratings = section_data(section(), NOW)["ratings"]
+    assert len(ratings) == 6
+    assert [r["rating"] for r in ratings] == sorted((r["rating"] for r in ratings), reverse=True)
+    assert any(r["name"] == "Ολυμπιακός & <Co>" for r in ratings)  # escaping is the page's job
+    assert all(isinstance(r["change"], float) for r in ratings)
 
 
-def test_page_without_a_log(tmp_path: Path) -> None:
-    empty = Section("EuroLeague", tmp_path / "none.csv", CARD, make_games({2026: False}), {})
-    page = render_page([empty], NOW)
-    assert "No logged games in the next window." in page
-    assert "No logged game has finished yet." in page
+def test_unprovable_games_are_flagged() -> None:
+    plain = section()
+    first = plain.games.loc[
+        (plain.games["season"] == 2026) & (plain.games["round"] == 1), "game_id"
+    ].iloc[0]
+    data = section_data(section({**CARD, "games_not_provable": [first]}), NOW)
+    assert data["scorecard"]["not_provable"] == 1
+    assert [r["provable"] for r in data["results"]].count(False) == 1
+
+
+def test_site_without_a_log_is_json_ready() -> None:
+    empty = Section(
+        "euroleague",
+        "EuroLeague",
+        pd.DataFrame(),
+        CARD,
+        REPORT,
+        make_games({2026: False}),
+        {},
+        MODEL,
+        2026,
+        2026,
+    )
+    data = site_data([empty], NOW)
+    json.dumps(data)
+    comp = data["competitions"][0]
+    assert comp["upcoming"] == comp["results"] == []
+    assert comp["logged"] == 0
+    assert data["generated_at_utc"] == "2026-10-08T08:00:00Z"

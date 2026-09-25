@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-25T14:30:00Z",
+  "title": "Design System: EuroHoops Analytics",
+  "extensions": {
+    "colorMeta": {
+      "marker-blue": { "role": "primary", "displayName": "Marker Blue", "canonical": "#1f4fb8", "tonalRamp": ["#0c1f4a", "#123070", "#1a4296", "#1f4fb8", "#4a74cc", "#7aa2ff", "#b3caff", "#e3ecff"] },
+      "marker-red": { "role": "secondary", "displayName": "Marker Red", "canonical": "#c4362a", "tonalRamp": ["#4a130e", "#7a2019", "#a42d23", "#c4362a", "#dc5b4f", "#ff6f61", "#ffb0a8", "#ffe4e1"] },
+      "melamine-board": { "role": "neutral", "displayName": "Melamine Board", "canonical": "#f4f6f5", "tonalRamp": ["#121518", "#1c2126", "#33393e", "#4a535b", "#979fa5", "#b7bec3", "#d3dad9", "#f4f6f5"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "The one hero headline." },
+      "headline": { "displayName": "Headline", "purpose": "Section titles." },
+      "annotation": { "displayName": "Marker hand", "purpose": "Short annotations only; never a compared number." }
+    },
+    "shadows": [
+      { "name": "magnet", "value": "0 2px 3px var(--shadow), 0 6px 14px -6px var(--shadow)", "purpose": "Pucks and magnets sitting on the board." },
+      { "name": "board-inset", "value": "inset 0 0 0 1px rgb(255 255 255 / 0.4), inset 0 2px 10px var(--shadow)", "purpose": "The board seated in its frame." }
+    ],
+    "motion": [
+      { "name": "ease-out", "value": "cubic-bezier(0.23, 1, 0.32, 1)", "purpose": "Puck placement, marker stroke, icon nudge." },
+      { "name": "puck-place", "value": "900ms, 60ms stagger", "purpose": "Pucks slide from centre court to their call on load." },
+      { "name": "press", "value": "scale(0.97) 140-160ms ease-out", "purpose": "Buttons and switch labels." }
+    ],
+    "breakpoints": [
+      { "name": "phone", "value": "480px" },
+      { "name": "narrow", "value": "560px" },
+      { "name": "stack", "value": "760px" },
+      { "name": "hero-stack", "value": "980px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "html": "<a class=\"cta\" href=\"#\">Read the log</a>",
+      "css": ".cta{display:inline-flex;align-items:center;gap:10px;padding:13px 22px;border-radius:999px;background:#1c2126;color:#f4f6f5;font-weight:700;text-decoration:none}.cta:hover{background:#1f4fb8}.cta:active{transform:scale(.97)}"
+    },
+    {
+      "name": "Puck",
+      "kind": "custom",
+      "html": "<span class=\"puck\">PAN</span>",
+      "css": ".puck{display:grid;place-items:center;width:40px;aspect-ratio:1;border-radius:50%;background:#1f4fb8;color:#f4f6f5;font:750 .72rem/1 'Sofia Sans Variable',sans-serif;box-shadow:0 2px 3px rgb(38 48 56/.18),0 6px 14px -6px rgb(38 48 56/.18)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Coach's Clipboard",
+    "overview": "Every forecast is drawn up on the board before tip-off and marked up after the whistle. The page is a white melamine tactics board in an aluminium frame (a black glass board in dark mode), carrying printed court lines and three marker inks.",
+    "keyCharacteristics": ["One board, one frame, three inks.", "Court geometry is the chart: the half-court line is 50%, the baskets are certainty.", "Handwriting annotates; it never carries a number that has to be compared."],
+    "rules": [
+      { "section": "colors", "name": "The Three Inks Rule", "body": "Black, blue and red are the only inks. Blue is the model, red is what happened. No fourth accent, ever." },
+      { "section": "colors", "name": "The Flat Ink Rule", "body": "Inks and frame are flat colour. No gradients imitating brushed metal, glossy magnets or marker sheen." },
+      { "section": "typography", "name": "The Marker Hand Rule", "body": "Caveat Brush writes annotations: the round title, puck percentages, the call being marked. Every number a reader compares is set in Sofia Sans." }
+    ],
+    "dos": ["Do show Elo beside the home-win baseline every time a metric appears.", "Do keep scored and not-scored rows visibly distinct.", "Do honour reduced motion: pucks and marks render in place."],
+    "donts": ["Don't add team logos, photos or club colours. None are licensed, and the three inks carry identity.", "Don't present odds, stakes or \"picks\": this is a model benchmark, not betting advice.", "Don't put a label or eyebrow above a heading.", "Don't use a filled track behind a bar or rating rail."]
+  }
+}

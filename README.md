@@ -17,6 +17,20 @@ uv run eurohoops predict && uv run eurohoops predict --competition gbl
 ```
 
 `backtest` re-tunes Elo and rewrites the reports, `score` rebuilds a scorecard and `publish`
-renders `site/index.html` (each takes `--competition gbl` where it applies). `ingest --details`
+writes `web/src/data/site.json` (each takes `--competition gbl` where it applies). `ingest --details`
 also caches game details: EuroLeague box scores, play-by-play and shots; GBL box scores. The
 first GBL ingest reads ~350 ESAKE pages at 2 s each; later runs only refresh unfinished rounds.
+
+## Website
+
+The public page is an [Astro](https://astro.build) static site in [`web/`](web/) that renders
+the data `eurohoops publish` exports. The daily workflow builds it into `site/` and deploys it to
+GitHub Pages. Locally, after `uv run eurohoops publish`:
+
+```bash
+cd web && npm ci
+npm run dev      # http://localhost:4321/EuroHoops-Analytics/
+npm run build    # writes ../site
+```
+
+Design direction and tokens: [`DESIGN.md`](DESIGN.md); product brief: [`PRODUCT.md`](PRODUCT.md).

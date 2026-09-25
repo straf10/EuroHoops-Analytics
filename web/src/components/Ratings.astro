@@ -1,0 +1,161 @@
+---
+import caretUp from "@phosphor-icons/core/assets/bold/caret-up-bold.svg?raw";
+import caretDown from "@phosphor-icons/core/assets/bold/caret-down-bold.svg?raw";
+import type { Competition } from "../lib/format";
+import { signed } from "../lib/format";
+
+interface Props {
+  comp: Competition;
+}
+const { comp } = Astro.props;
+const ratings = comp.ratings;
+const values = ratings.map((r) => r.rating);
+const lo = Math.floor((Math.min(...values) - 20) / 50) * 50;
+const hi = Math.ceil((Math.max(...values) + 20) / 50) * 50;
+const pos = (x: number) => ((x - lo) / (hi - lo)) * 100;
+const half = Math.ceil(ratings.length / 2);
+const columns = [ratings.slice(0, half), ratings.slice(half)];
+---
+
+<div class="ratings" data-comp={comp.key}>
+  {
+    columns.map((col, c) => (
+      <ol class="ladder" start={c * half + 1}>
+        {col.map((r) => (
+          <li style={`--x:${pos(r.rating).toFixed(1)}`}>
+            <span class="team">
+              <b>{r.code}</b>
+              <span class="name">{r.name}</span>
+            </span>
+            <span class="rail" aria-hidden="true">
+              <span class="magnet" />
+            </span>
+            <span class="value">{r.rating.toFixed(0)}</span>
+            <span
+              class:list={["change", r.change > 0.5 ? "up" : r.change < -0.5 ? "down" : "flat"]}
+            >
+              {r.change > 0.5 && <Fragment set:html={caretUp} />}
+              {r.change < -0.5 && <Fragment set:html={caretDown} />}
+              <span>{signed(r.change, 0)}</span>
+              <span class="sr-only"> since the season started</span>
+            </span>
+          </li>
+        ))}
+      </ol>
+    ))
+  }
+  <p class="scale" aria-hidden="true">
+    <span>{lo}</span>
+    <span class="hand">rating scale, 1500 = average team</span>
+    <span>{hi}</span>
+  </p>
+</div>
+
+<style>
+  .ratings {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: clamp(28px, 5vw, 72px);
+  }
+  .ladder {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .ladder li {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(64px, 1fr) 3.2rem 3.4rem;
+    align-items: center;
+    gap: 12px;
+    min-height: 46px;
+    border-bottom: 1px solid var(--line);
+  }
+  .team {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    min-width: 0;
+  }
+  .team b {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 1.1rem;
+    letter-spacing: 0.02em;
+    min-width: 2.6rem;
+  }
+  .name {
+    color: var(--ink-2);
+    font-size: 0.92rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .rail {
+    position: relative;
+    height: 14px;
+  }
+  .rail::before {
+    content: "";
+    position: absolute;
+    inset: 50% 0 auto;
+    border-top: 1.5px solid var(--line);
+  }
+  .magnet {
+    position: absolute;
+    top: 50%;
+    left: calc(var(--x) * 1%);
+    width: 14px;
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    border-radius: 50%;
+    background: var(--ink);
+    box-shadow: 0 1px 2px var(--shadow);
+  }
+  .value {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 1.3rem;
+    text-align: right;
+  }
+  .change {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 2px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--ink-2);
+  }
+  .change :global(svg) {
+    width: 12px;
+    height: 12px;
+    fill: currentColor;
+  }
+  .change.up {
+    color: var(--blue);
+  }
+  .change.down {
+    color: var(--red);
+  }
+  .scale {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-top: 12px;
+    color: var(--ink-2);
+    font-size: 0.8rem;
+  }
+  .scale .hand {
+    font-size: 1.1rem;
+  }
+  @media (max-width: 760px) {
+    .ratings {
+      grid-template-columns: 1fr;
+    }
+    .ladder li {
+      grid-template-columns: minmax(0, 1fr) 72px 3rem 3.2rem;
+      gap: 10px;
+    }
+  }
+</style>
