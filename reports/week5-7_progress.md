@@ -99,3 +99,4 @@ Both competitions pass the pre-registered rule (point estimate below Elo), but n
 log-loss gain is distinguishable from zero. Per E-g, M1 goes live for both.
 iteration 4 | E4 (part 1) backtest + validation gate + verdict | §6 1-12, 13, 18, 19 (run before the commit, same tree) | green; verdict EL PASS, GBL PASS | 37cf85f
 TEST RUN (once, after verdict commit 37cf85f): 2026-09-25T15:09Z
+iteration 5 | E4 (part 2) test seasons scored once | check 15 (order declaration f921181 < verdict 37cf85f < test fc7de59; two runs byte-identical, both comps), tests | green; test EL -0.0025 [-0.0077,+0.0027], GBL +0.0076 [-0.0232,+0.0360] | fc7de59
