@@ -2,6 +2,7 @@
 
 import json
 import logging
+import os
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from pathlib import Path
@@ -19,6 +20,9 @@ from eurohoops.config import (
     GBL_TEAM_BOX,
     LIVE_SEASON,
     MART_PATH,
+    ODDS_CALLS,
+    ODDS_RAW_DIR,
+    ODDS_TEAMS,
     SITE_DATA,
     SQL_DIR,
 )
@@ -27,6 +31,7 @@ from eurohoops.eval.scorecard import build_scorecard
 from eurohoops.ingest import euroleague, gbl
 from eurohoops.ingest.http import Fetcher, make_client
 from eurohoops.marts import box_invariants, build_marts, read_games, read_teams
+from eurohoops.odds import OddsApiError, OddsPaths, api_key, record_odds
 from eurohoops.parse.box import build_box_tables
 from eurohoops.parse.games import (
     build_games_table,
@@ -154,6 +159,30 @@ def predict(
 
 
 @app.command()
+def odds() -> None:
+    """Record EuroLeague market odds: one The Odds API call, consensus rows appended."""
+    key = api_key(os.environ, Path(".env"))
+    if key is None:
+        log.error("ODDS_API_KEY is not set (environment or .env); no call made")
+        raise typer.Exit(code=1)
+    assert EUROLEAGUE.odds_log is not None
+    paths = OddsPaths(EUROLEAGUE.odds_log, ODDS_CALLS, ODDS_TEAMS, ODDS_RAW_DIR)
+    try:
+        with make_client() as client:
+            summary = record_odds(
+                client, key, read_games(MART_PATH, EUROLEAGUE.name), paths, utc_now
+            )
+    except OddsApiError as exc:
+        log.error("odds: %s", exc)
+        raise typer.Exit(code=1) from None
+    typer.echo(
+        f"{summary['rows_written']} consensus rows from {summary['events']} events appended to "
+        f"{paths.log}; {len(summary['unmatched'])} unmatched; "
+        f"requests remaining {summary['requests_remaining'] or '?'}"
+    )
+
+
+@app.command()
 def score(competition: CompetitionOption = CompetitionName.euroleague) -> None:
     """Score the prediction log against results and write the competition's scorecard."""
     comp = COMPETITIONS[competition]
@@ -162,7 +191,8 @@ def score(competition: CompetitionOption = CompetitionName.euroleague) -> None:
         read_games(MART_PATH, comp.name),
         load_tuned_model(comp.live_backtest.report),
         utc_now(),
-        comp.manual_pushes,
+        manual_pushes=comp.manual_pushes,
+        odds_path=comp.odds_log,
     )
     _write_json(comp.scorecard, card)
     typer.echo(json.dumps(card, indent=2))

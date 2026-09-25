@@ -341,5 +341,6 @@
     "window": 50,
     "series": []
   },
-  "warnings": []
+  "warnings": [],
+  "market": null
 }

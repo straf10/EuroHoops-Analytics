@@ -15,6 +15,7 @@ from eurohoops.config import (
     EUROLEAGUE,
     GBL,
     MART_PATH,
+    ODDS_TEAMS,
     SITE_DATA,
     SQL_DIR,
 )
@@ -134,3 +135,62 @@ def test_predict_exits_non_zero_when_stamp_is_not_before_tipoff(
     result = runner.invoke(cli.app, ["predict"])
     assert result.exit_code == 1
     assert not EUROLEAGUE.prediction_log.exists()
+
+
+def odds_api(status: int) -> httpx.MockTransport:
+    events = [
+        {
+            "commence_time": "2026-10-01T18:00:00Z",
+            "home_team": "Alpha",
+            "away_team": "Bravo",
+            "bookmakers": [
+                {
+                    "key": "a",
+                    "markets": [
+                        {
+                            "key": "h2h",
+                            "outcomes": [
+                                {"name": "Alpha", "price": 1.5},
+                                {"name": "Bravo", "price": 2.5},
+                            ],
+                        }
+                    ],
+                }
+            ],
+        }
+    ]
+    body = events if status == 200 else {"error_code": "INVALID_KEY"}
+    headers = {"x-requests-last": "3", "x-requests-remaining": "400"}
+    return httpx.MockTransport(lambda request: httpx.Response(status, json=body, headers=headers))
+
+
+@pytest.mark.usefixtures("pipeline")
+def test_odds_records_a_consensus_row(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ODDS_API_KEY", "fake-key")
+    ODDS_TEAMS.parent.mkdir(parents=True, exist_ok=True)
+    ODDS_TEAMS.write_text("odds_api_name,team,verified\nAlpha,AAA,no\nBravo,BBB,no\n")
+    monkeypatch.setattr(cli, "make_client", lambda: httpx.Client(transport=odds_api(200)))
+    output = invoke("odds")
+    assert "1 consensus rows from 1 events" in output
+    assert "requests remaining 400" in output
+    assert EUROLEAGUE.odds_log is not None
+    [row] = pd.read_csv(EUROLEAGUE.odds_log).to_dict("records")
+    assert (row["game_id"], row["p_home"]) == ("E2026_1", 0.625)
+    invoke("backtest")
+    invoke("backtest", "--competition", "gbl")
+    invoke("score")
+    assert json.loads(EUROLEAGUE.scorecard.read_text())["market"]["n"] == 0  # not played yet
+    invoke("score", "--competition", "gbl")
+    assert json.loads(GBL.scorecard.read_text())["market"] is None
+
+
+@pytest.mark.usefixtures("pipeline")
+def test_odds_fails_cleanly(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("ODDS_API_KEY", raising=False)
+    result = runner.invoke(cli.app, ["odds"])
+    assert result.exit_code == 1
+    monkeypatch.setenv("ODDS_API_KEY", "fake-key")
+    monkeypatch.setattr(cli, "make_client", lambda: httpx.Client(transport=odds_api(401)))
+    result = runner.invoke(cli.app, ["odds"])
+    assert result.exit_code == 1
+    assert "fake-key" not in result.output

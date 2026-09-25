@@ -10,6 +10,7 @@ import pytest
 from eurohoops.eval.backtest import TunedModel
 from eurohoops.eval.metrics import crps_normal
 from eurohoops.eval.scorecard import build_scorecard, public_at, rolling_log_loss
+from eurohoops.odds import ODDS_COLUMNS
 from eurohoops.predict import LOG_COLUMNS
 
 HEADER = ",".join(LOG_COLUMNS)
@@ -98,7 +99,7 @@ def test_rows_pushed_after_tipoff_leave_the_headline(tmp_path: Path, tuned: Tune
     log = tmp_path / "log.csv"
     log.write_text(LOG)
     pushes = (datetime(2026, 10, 1, 18, 30, tzinfo=UTC),)  # after G1/G2 tip-off, before G4
-    card = build_scorecard(log, results(played=True), tuned, NOW, pushes)
+    card = build_scorecard(log, results(played=True), tuned, NOW, manual_pushes=pushes)
     assert card["rows_not_provable"] == 3  # G1, both G2 rows; G3 is late, not unprovable
     assert card["games_not_provable"] == ["G1", "G2"]
     assert card["elo"]["n"] == 0
@@ -215,3 +216,40 @@ def test_missing_result_48h_after_tipoff(
         "games": ["G000"],
     }
     assert card["warnings"] == ([expected] if warned else [])
+
+
+TIP = "2026-10-01T18:00:00Z"
+ODDS = "\n".join(
+    [
+        ",".join(ODDS_COLUMNS),
+        f"G1,2026,1,{TIP},AAA,BBB,{TIP},2026-10-01T08:00:00Z,5,0.7000,5,-4.5,5,160.5",
+        f"G1,2026,1,{TIP},AAA,BBB,{TIP},2026-10-01T17:00:00Z,5,0.7500,5,-5.5,5,160.5",
+        f"G1,2026,1,{TIP},AAA,BBB,{TIP},2026-10-01T19:00:00Z,5,0.9900,5,-9.5,5,160.5",
+        f"G2,2026,1,{TIP},CCC,DDD,{TIP},2026-10-01T08:00:00Z,0,,2,1.5,2,158.5",
+    ]
+)
+
+
+def test_market_column_uses_the_latest_pre_tipoff_snapshot(
+    tmp_path: Path, tuned: TunedModel
+) -> None:
+    log, odds = tmp_path / "log.csv", tmp_path / "odds.csv"
+    log.write_text(LOG)
+    odds.write_text(ODDS)
+    card = build_scorecard(log, results(played=True), tuned, NOW, odds_path=odds)
+    # G1: the 17:00 snapshot (.75); the 19:00 one is after tip-off. G2 has no moneyline.
+    assert card["market"] == {
+        "n": 1,
+        "log_loss": round(-math.log(0.75), 6),
+        "elo_log_loss": round(-math.log(0.8), 6),
+        "b0_log_loss": round(-math.log(0.6), 6),
+    }
+    assert card["elo"]["n"] == 2  # games without odds leave only the market column
+
+
+def test_market_column_without_odds(tmp_path: Path, tuned: TunedModel) -> None:
+    log = tmp_path / "log.csv"
+    log.write_text(LOG)
+    card = build_scorecard(log, results(played=True), tuned, NOW, odds_path=tmp_path / "none.csv")
+    assert card["market"] == {"n": 0, "log_loss": None, "elo_log_loss": None, "b0_log_loss": None}
+    assert build_scorecard(log, results(played=True), tuned, NOW)["market"] is None

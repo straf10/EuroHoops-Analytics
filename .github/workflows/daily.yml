@@ -34,6 +34,17 @@ jobs:
           uv run --no-dev eurohoops ingest --competition gbl
       - name: Build marts
         run: uv run --no-dev eurohoops build
+      # Market benchmark (EuroLeague only): one The Odds API call. The repository secret is
+      # set by the owner; without it the step is skipped with a warning, never failed.
+      - name: Record EuroLeague odds
+        env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+        run: |
+          if [ -z "$ODDS_API_KEY" ]; then
+            echo "::warning::ODDS_API_KEY secret is not set; skipping the odds recorder"
+          else
+            uv run --no-dev eurohoops odds
+          fi
       - name: Predict upcoming games
         run: |
           uv run --no-dev eurohoops predict
@@ -59,7 +70,7 @@ jobs:
           path: site
       - name: Commit predictions and reports if changed
         run: |
-          git add predictions/ reports/
+          git add predictions/ reports/ odds/
           if git diff --cached --quiet; then
             echo "No changes to commit."
             exit 0
