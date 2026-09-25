@@ -336,5 +336,10 @@
       "n": 0,
       "mae": null
     }
-  }
+  },
+  "rolling": {
+    "window": 50,
+    "series": []
+  },
+  "warnings": []
 }

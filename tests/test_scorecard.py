@@ -1,6 +1,6 @@
 import math
 from dataclasses import replace
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import numpy as np
@@ -9,10 +9,11 @@ import pytest
 
 from eurohoops.eval.backtest import TunedModel
 from eurohoops.eval.metrics import crps_normal
-from eurohoops.eval.scorecard import build_scorecard, public_at
+from eurohoops.eval.scorecard import build_scorecard, public_at, rolling_log_loss
 from eurohoops.predict import LOG_COLUMNS
 
 HEADER = ",".join(LOG_COLUMNS)
+NOW = datetime(2026, 10, 2, 12, tzinfo=UTC)
 LOG = f"""{HEADER}
 G1,2026,1,RS,2026-10-01T18:00:00Z,AAA,BBB,0.8,5.0,elo,v1,2026-10-01T08:00:00Z
 G2,2026,1,RS,2026-10-01T18:00:00Z,CCC,DDD,0.4,-3.0,elo,v1,2026-10-01T08:00:00Z
@@ -27,6 +28,7 @@ def results(played: bool) -> pd.DataFrame:
         {
             "game_id": ["G1", "G2", "G3", "G4"],
             "season": [2026] * 4,
+            "tipoff_utc": pd.to_datetime(["2026-10-01T18:00:00Z"] * 3 + ["2026-10-08T18:00:00Z"]),
             "home_score": pd.array([90, 82, 70, None] if played else [None] * 4, dtype="Int64"),
             "away_score": pd.array([80, 80, 60, None] if played else [None] * 4, dtype="Int64"),
             "played": [played, played, played, False],
@@ -39,7 +41,7 @@ def results(played: bool) -> pd.DataFrame:
 def test_hand_computed_metrics_and_late_rows_excluded(tmp_path: Path, tuned: TunedModel) -> None:
     log = tmp_path / "log.csv"
     log.write_text(LOG)
-    card = build_scorecard(log, results(played=True), tuned)
+    card = build_scorecard(log, results(played=True), tuned, NOW)
     # G3 is late (stamped at tip-off); G2 counts its earliest (v1) row; G4 is not played yet.
     # G1: p=.8, home +10 (exp 5).  G2: p=.4, home +2 (exp -3).
     assert card["rows_in_log"] == 5
@@ -62,7 +64,7 @@ def test_hand_computed_metrics_and_late_rows_excluded(tmp_path: Path, tuned: Tun
 def test_zero_completed_games(tmp_path: Path, tuned: TunedModel) -> None:
     log = tmp_path / "log.csv"
     log.write_text(LOG)
-    card = build_scorecard(log, results(played=False), tuned)
+    card = build_scorecard(log, results(played=False), tuned, NOW)
     reliability = card["elo"].pop("reliability")
     assert card["elo"] == {
         "n": 0,
@@ -77,7 +79,7 @@ def test_zero_completed_games(tmp_path: Path, tuned: TunedModel) -> None:
 
 
 def test_missing_log_is_an_empty_scorecard(tmp_path: Path, tuned: TunedModel) -> None:
-    card = build_scorecard(tmp_path / "missing.csv", results(played=True), tuned)
+    card = build_scorecard(tmp_path / "missing.csv", results(played=True), tuned, NOW)
     assert card["rows_in_log"] == 0
     assert card["b0"]["n"] == 0
 
@@ -87,7 +89,7 @@ def test_forfeits_are_not_scored(tmp_path: Path, tuned: TunedModel) -> None:
     log.write_text(LOG)
     games = results(played=True)
     games.loc[games["game_id"] == "G2", ["home_score", "away_score", "forfeit"]] = [20, 0, True]
-    card = build_scorecard(log, games, tuned)
+    card = build_scorecard(log, games, tuned, NOW)
     assert card["elo"]["n"] == 1
     assert card["elo"]["log_loss"] == pytest.approx(-math.log(0.8), abs=1e-6)
 
@@ -96,7 +98,7 @@ def test_rows_pushed_after_tipoff_leave_the_headline(tmp_path: Path, tuned: Tune
     log = tmp_path / "log.csv"
     log.write_text(LOG)
     pushes = (datetime(2026, 10, 1, 18, 30, tzinfo=UTC),)  # after G1/G2 tip-off, before G4
-    card = build_scorecard(log, results(played=True), tuned, pushes)
+    card = build_scorecard(log, results(played=True), tuned, NOW, pushes)
     assert card["rows_not_provable"] == 3  # G1, both G2 rows; G3 is late, not unprovable
     assert card["games_not_provable"] == ["G1", "G2"]
     assert card["elo"]["n"] == 0
@@ -119,7 +121,7 @@ def test_totals_baseline_and_margin_crps(tmp_path: Path, tuned: TunedModel) -> N
     log = tmp_path / "log.csv"
     log.write_text(LOG)
     model = replace(tuned, margin_sigma=12.0, totals_baseline={2026: 160.0})
-    card = build_scorecard(log, results(played=True), model)
+    card = build_scorecard(log, results(played=True), model, NOW)
     # G1 total 170, G2 162 against a baseline of 160.
     assert card["totals"] == {"n": 2, "mae": 6.0}
     expected = crps_normal(np.array([5.0, -3.0]), 12.0, np.array([10.0, 2.0])).mean()
@@ -127,4 +129,89 @@ def test_totals_baseline_and_margin_crps(tmp_path: Path, tuned: TunedModel) -> N
     assert card["b0"]["margin_crps"] == pytest.approx(
         crps_normal(np.array([3.0, 3.0]), 12.0, np.array([10.0, 2.0])).mean(), abs=1e-6
     )
-    assert build_scorecard(log, results(played=True), tuned)["totals"] == {"n": 0, "mae": None}
+    assert build_scorecard(log, results(played=True), tuned, NOW)["totals"] == {"n": 0, "mae": None}
+
+
+def scored_games(n: int, lost: tuple[int, ...] = (0,)) -> pd.DataFrame:
+    """``n`` games in tip-off order: Elo says .8 and B0 .6 for home; home loses ``lost``."""
+    margin = [-5.0 if i in lost else 5.0 for i in range(n)]
+    return pd.DataFrame(
+        {
+            "game_id": [f"G{i:03d}" for i in range(n)],
+            "tipoff_utc": pd.date_range("2026-10-01T18:00Z", periods=n, freq="h"),
+            "p_home": 0.8,
+            "p_b0": 0.6,
+            "margin": margin,
+        }
+    )
+
+
+@pytest.mark.parametrize(("n", "points"), [(49, 0), (50, 1), (51, 2)])
+def test_rolling_window_starts_at_fifty_games(n: int, points: int) -> None:
+    assert len(rolling_log_loss(scored_games(n))) == points
+
+
+def test_rolling_window_values_and_the_oldest_game_dropping_out() -> None:
+    series = rolling_log_loss(scored_games(51))
+    # Point 1 covers games 0-49 (game 0 a home loss); point 2 covers games 1-50 (all wins).
+    assert series[0]["n"] == 50
+    assert series[0]["game_id"] == "G049"
+    assert series[0]["elo"] == pytest.approx((-math.log(0.2) - 49 * math.log(0.8)) / 50, abs=1e-6)
+    assert series[0]["b0"] == pytest.approx((-math.log(0.4) - 49 * math.log(0.6)) / 50, abs=1e-6)
+    assert series[1]["elo"] == pytest.approx(-math.log(0.8), abs=1e-6)
+    assert series[1]["tipoff_utc"] == "2026-10-03T20:00:00Z"
+
+
+def log_of(games: pd.DataFrame, p_home: float) -> str:
+    rows = [
+        f"{g},2026,1,RS,{t:%Y-%m-%dT%H:%M:%SZ},AAA,BBB,{p_home},1.0,elo,v1,2026-09-30T08:00:00Z"
+        for g, t in zip(games["game_id"], games["tipoff_utc"], strict=True)
+    ]
+    return "\n".join([HEADER, *rows]) + "\n"
+
+
+def mart_games(n: int, played: bool = True) -> pd.DataFrame:
+    tipoff = pd.date_range("2026-10-01T18:00Z", periods=n, freq="h")
+    return pd.DataFrame(
+        {
+            "game_id": [f"G{i:03d}" for i in range(n)],
+            "season": 2026,
+            "tipoff_utc": tipoff,
+            "home_score": pd.array([85 if played else None] * n, dtype="Int64"),
+            "away_score": pd.array([80 if played else None] * n, dtype="Int64"),
+            "played": played,
+            "forfeit": False,
+            "neutral": False,
+        }
+    )
+
+
+@pytest.mark.parametrize(
+    ("n", "p_home", "warned"), [(50, 0.3, True), (49, 0.3, False), (50, 0.9, False)]
+)
+def test_elo_worse_than_b0_warning_needs_fifty_games(
+    tmp_path: Path, tuned: TunedModel, n: int, p_home: float, warned: bool
+) -> None:
+    games = mart_games(n)
+    log = tmp_path / "log.csv"
+    log.write_text(log_of(games, p_home))
+    card = build_scorecard(log, games, tuned, datetime(2026, 10, 9, tzinfo=UTC))
+    assert card["elo"]["n"] == n
+    assert ("elo_worse_than_b0" in [w["code"] for w in card["warnings"]]) is warned
+
+
+@pytest.mark.parametrize(("hours", "warned"), [(47, False), (49, True)])
+def test_missing_result_48h_after_tipoff(
+    tmp_path: Path, tuned: TunedModel, hours: int, warned: bool
+) -> None:
+    games = mart_games(1, played=False)
+    log = tmp_path / "log.csv"
+    log.write_text(log_of(games, 0.6))
+    now = datetime(2026, 10, 1, 18, tzinfo=UTC) + timedelta(hours=hours)  # G000 tip-off
+    card = build_scorecard(log, games, tuned, now)
+    expected = {
+        "code": "missing_result",
+        "message": "1 logged game(s) have no result 48 h after tip-off",
+        "games": ["G000"],
+    }
+    assert card["warnings"] == ([expected] if warned else [])
