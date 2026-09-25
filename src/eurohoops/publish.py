@@ -89,10 +89,14 @@ def _section_html(section: Section, now: datetime) -> str:
         parts.append('<p class="note">No logged games in the next window.</p>')
     parts.append("<h3>Recent results</h3>")
     finished = [g for g in records if g["played"] and not g["forfeit"]][-RECENT_RESULTS:]
+    card = section.scorecard
+    hidden = set(card.get("games_not_provable", []))
     results = []
     for g in reversed(finished):
         hit = (g["p_home"] >= 0.5) == (g["home_score"] > g["away_score"])
         mark = f'<span class="{"good" if hit else "bad"}">{"hit" if hit else "miss"}</span>'
+        if g["game_id"] in hidden:
+            mark += "*"
         score = f"{g['home_score']}-{g['away_score']}"
         results.append([*teams(g), score, f"{g['p_home']:.0%}", mark])
     if results:
@@ -100,7 +104,6 @@ def _section_html(section: Section, now: datetime) -> str:
         parts.append(_table(headers, results, {2, 3}))
     else:
         parts.append('<p class="note">No logged game has finished yet.</p>')
-    card = section.scorecard
     elo, b0 = card["elo"], card["b0"]
 
     def metric(m: dict[str, Any], key: str, fmt: str) -> str:
@@ -117,6 +120,11 @@ def _section_html(section: Section, now: datetime) -> str:
     ]
     parts.append(f"<h3>Scorecard: {elo['n']} finished games</h3>")
     parts.append(_table(["Metric", "Elo", "Baseline"], rows, {1, 2}))
+    if hidden:
+        parts.append(
+            f'<p class="note">* Not scored: {len(hidden)} game{"s" * (len(hidden) > 1)} whose '
+            "prediction was stamped before tip-off but reached the public log only after it.</p>"
+        )
     return "".join(parts)
 
 

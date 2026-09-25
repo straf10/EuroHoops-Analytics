@@ -1,6 +1,7 @@
 """Competitions, their seasons, backtest splits and file locations (relative to the repo root)."""
 
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 
 from eurohoops.models.elo import EloParams
@@ -50,6 +51,10 @@ class Competition:
     history_backtests: tuple[Backtest, ...]  # informational only, never used live
     prediction_log: Path
     scorecard: Path
+    # GitHub push times of log rows committed by hand before the daily workflow took over.
+    # A row first became public at the earliest such push at or after its stamp; later rows
+    # are committed by the workflow in the run that stamps them.
+    manual_pushes: tuple[datetime, ...] = ()
 
     @property
     def raw_dir(self) -> Path:
@@ -82,6 +87,11 @@ EUROLEAGUE = Competition(
     ),
     prediction_log=Path("predictions/euroleague_2026-27.csv"),
     scorecard=Path("reports/live_scorecard.json"),
+    # From the repository's activity feed (gh api repos/straf10/EuroHoops-Analytics/activity).
+    manual_pushes=(
+        datetime(2026, 9, 24, 16, 24, 29, tzinfo=UTC),  # branch creation, round-1 rows v0.1.0
+        datetime(2026, 9, 24, 20, 29, 32, tzinfo=UTC),  # round-1 rows v0.2.0
+    ),
 )
 
 GBL = Competition(
