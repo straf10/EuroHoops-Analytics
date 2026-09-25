@@ -16,9 +16,9 @@ Per the provider's documentation ([v4 guide](https://the-odds-api.com/liveapi/gu
 
 | Fact | Value | Status |
 |---|---|---|
-| Cost of one `/odds` call | markets × regions = 3 × 1 = **3 credits** | documented; **not yet seen in `x-requests-last`** |
+| Cost of one `/odds` call | markets × regions = 3 × 1 = **3 credits** | **verified** 2026-09-25: `x-requests-last: 3` |
 | `/sports` and `/events` | free ("does not count against the usage quota") | documented |
-| Free (Starter) plan | **500 credits / month** | documented; **not yet seen in headers** |
+| Free (Starter) plan | **500 credits / month** | **verified**: `used 3, remaining 497` after the first call |
 | Cheapest paid plan | 20K credits for USD 30 / month | documented |
 | Daily run cost | 3 credits × ~30 days ≈ **90 credits / month** (18% of the free quota) | derived |
 
@@ -29,12 +29,14 @@ Per the provider's documentation ([v4 guide](https://the-odds-api.com/liveapi/gu
   and appended to `odds/api_calls.csv`. That file holds no prices or keys.
 - The recorder refuses to call while the last known remaining quota is **below 20**.
 
-### Live verification: BLOCKED (2026-09-25)
+### Live verification: BLOCKED, then fixed (2026-09-25)
 One call to the free `/events` endpoint with the key in `.env` returned **HTTP 401**
 `{"error_code":"INVALID_KEY","message":"API key is not valid. ..."}`, with no quota headers.
 The stored value is 30 hex characters. The keys I know of are 32, so it's probably truncated.
-**The quota, the cost per call, the team names and the market coverage below all wait for a
-valid key.**
+**Fixed the same day:** the replaced key returned HTTP 200 at 13:36 UTC (3 events, 15–18
+bookmakers each, all offering h2h, spreads and totals; exchanges also send `h2h_lay`, which
+the consensus ignores). Its 6 team names were unmatched, as designed, and are now in the map
+with `verified=yes`; the other 29 candidates stay `verified=no`.
 
 ## What is stored (D-b)
 | Where | What | In git |
