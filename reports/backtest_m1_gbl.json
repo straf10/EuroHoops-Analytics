@@ -1,6 +1,6 @@
 {
   "model": "m1",
-  "model_version": "0.2.0+m1.49583fa7",
+  "model_version": "0.2.0+m1.3f4861e2",
   "seasons": {
     "warmup": [
       2018,
@@ -118,7 +118,7 @@
     },
     "margin": {
       "variant": "student_t_pace",
-      "scale": 10.650608,
+      "scale": 10.650607,
       "df": 7.0,
       "ref_pace": 73.552433
     },
@@ -203,7 +203,7 @@
             "low": 0.7,
             "high": 0.8,
             "n": 54,
-            "mean_p": 0.751416,
+            "mean_p": 0.751417,
             "observed": 0.833333
           },
           {
@@ -433,7 +433,7 @@
             "low": 0.4,
             "high": 0.5,
             "n": 13,
-            "mean_p": 0.440519,
+            "mean_p": 0.440518,
             "observed": 0.461538
           },
           {
@@ -1035,7 +1035,7 @@
       "post_hoc": false,
       "chosen": false,
       "df": 7.0,
-      "scale": 10.649646,
+      "scale": 10.649645,
       "ref_pace": null,
       "tuning": {
         "n": 336,
@@ -1080,8 +1080,8 @@
         "margin_crps_m1_minus_elo": {
           "mean": -0.171118,
           "ci95": [
-            -0.417969,
-            0.074019
+            -0.41797,
+            0.07402
           ],
           "resamples": 1000,
           "seed": 20260924
@@ -1102,7 +1102,7 @@
       "post_hoc": false,
       "chosen": true,
       "df": 7.0,
-      "scale": 10.650608,
+      "scale": 10.650607,
       "ref_pace": 73.552433,
       "tuning": {
         "n": 336,

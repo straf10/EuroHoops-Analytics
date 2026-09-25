@@ -76,7 +76,10 @@ def _decay_edges(grid: DecayGrid, best: DecayParams) -> list[str]:
     ]
 
 
-def _ci(diff: FloatArray) -> dict[str, Any]:
+def _ci(diff: FloatArray) -> dict[str, Any] | None:
+    """Mean and paired bootstrap 95% CI; None for an empty split."""
+    if not len(diff):
+        return None
     mean, low, high = paired_bootstrap_ci(diff, BOOTSTRAP_RESAMPLES, BOOTSTRAP_SEED)
     return {
         "mean": _round(mean),
@@ -462,7 +465,8 @@ def run_m1_backtest(
         }
     gate = _comparison(chosen, base.elo, data, data.split["validation"])
     validation = metrics["validation"]
-    passed = validation["m1"]["log_loss"] < validation["elo"]["log_loss"]
+    m1_loss, elo_loss = validation["m1"]["log_loss"], validation["elo"]["log_loss"]
+    passed = None if m1_loss is None else bool(m1_loss < elo_loss)  # None: no validation games
     seasons = data.games["season"]
     report: dict[str, Any] = {
         "model": "m1",
@@ -493,7 +497,7 @@ def run_m1_backtest(
             "variant": tuned.variant,
             "m1_log_loss": validation["m1"]["log_loss"],
             "elo_log_loss": validation["elo"]["log_loss"],
-            "passed": bool(passed),
+            "passed": passed,
             **gate,
         },
         "validation_segments": _segments(chosen, base.elo, data, data.split["validation"]),

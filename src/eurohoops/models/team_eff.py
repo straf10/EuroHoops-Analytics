@@ -52,6 +52,8 @@ class DecayedRidge:
 
     ``advance(t, season)`` rescales everything added so far to time ``t`` of ``season``;
     ``add`` then adds rows with their own age at ``t``. The penalty matrix ``penalty`` is fixed.
+    ``solve`` works on the columns rows have touched so far (the rest stay 0), so a team that
+    first appears later cannot change an earlier solution, not even in the last bit.
     """
 
     def __init__(self, penalty: FloatArray, params: DecayParams) -> None:
@@ -60,6 +62,7 @@ class DecayedRidge:
         size = len(penalty)
         self.gram = np.zeros((size, size))
         self.rhs = np.zeros(size)
+        self.seen = np.zeros(size, dtype=bool)
         self.time = 0.0
         self.season: int | None = None
 
@@ -99,9 +102,13 @@ class DecayedRidge:
         products = np.repeat(values, k, axis=1) * np.tile(values, (1, k)) * w[:, None]
         np.add.at(self.gram, (rows, cols), products)
         np.add.at(self.rhs, columns, values * (w * target)[:, None])
+        self.seen[columns] = True
 
     def solve(self) -> FloatArray:
-        solution: FloatArray = np.linalg.solve(self.gram + np.diag(self.penalty), self.rhs)
+        used = np.flatnonzero(self.seen)
+        system = self.gram[np.ix_(used, used)] + np.diag(self.penalty[used])
+        solution = np.zeros(len(self.rhs))
+        solution[used] = np.linalg.solve(system, self.rhs[used])
         return solution
 
 
