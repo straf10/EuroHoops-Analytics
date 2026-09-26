@@ -31,6 +31,7 @@ from eurohoops.config import (
     SQL_DIR,
     STINT_REPORT,
     STINTS_MART_REPORT,
+    TEAM_CONTINUITY_REPORT,
 )
 from eurohoops.eval.backtest import format_table, load_tuned_model, run_backtest
 from eurohoops.eval.m1_backtest import format_m1_table, run_m1_backtest
@@ -50,9 +51,12 @@ from eurohoops.marts import (
 )
 from eurohoops.odds import OddsApiError, OddsPaths, api_key, record_odds
 from eurohoops.parse.box import build_box_tables
+from eurohoops.parse.continuity import continuity_report
 from eurohoops.parse.games import (
     build_games_table,
     build_gbl_tables,
+    build_gbl_team_seasons,
+    build_team_seasons,
     build_teams_table,
     write_table,
 )
@@ -62,7 +66,7 @@ from eurohoops.parse.stints import validate_sample
 from eurohoops.parse.stints_mart import build_stints_mart, mart_report
 from eurohoops.parse.team_box import TEAM_GAMES_SCHEMA, build_team_games
 from eurohoops.predict import LatePredictionError, predict_upcoming
-from eurohoops.publish import Section, site_data
+from eurohoops.publish import DISPLAY_CODES, Section, site_data
 
 app = typer.Typer(no_args_is_help=True, add_completion=False)
 log = logging.getLogger("eurohoops")
@@ -158,6 +162,7 @@ def ingest(
                 pbp_seasons=chosen if pbp else (),
             )
             games, teams = build_gbl_tables(rounds)
+            team_seasons = build_gbl_team_seasons(rounds)
             if details or pbp:
                 tables = build_box_tables(comp.raw_dir, games)
                 write_table(tables.player_box, GBL_PLAYER_BOX)
@@ -171,8 +176,10 @@ def ingest(
                 fetcher, comp.raw_dir, chosen, details, LIVE_SEASON
             )
             games, teams = build_games_table(schedules), build_teams_table(schedules)
+            team_seasons = build_team_seasons(schedules)
     write_table(games, comp.staging_games)
     write_table(teams, comp.staging_teams)
+    write_table(team_seasons, comp.staging_team_seasons)
     log.info(
         "wrote %d games (%d played) to %s", len(games), games["played"].sum(), comp.staging_games
     )
@@ -204,7 +211,44 @@ def build() -> None:
         refresh_box_gaps(MART_PATH, GBL_BOX_GAPS)
         for season, stats in report["seasons"].items():
             typer.echo(f"gbl box scores {season}: {stats['passed']}/{stats['games']} pass")
+    _team_continuity()
     typer.echo(f"marts written to {MART_PATH}")
+
+
+def _team_continuity() -> None:
+    """Stage-to-marts ``team_seasons`` and the continuity report (skipped before the first
+    ingest that stages team seasons)."""
+    staged = [c for c in (EUROLEAGUE, GBL) if c.staging_team_seasons.exists()]
+    if not staged:
+        return
+    team_seasons = pd.concat(
+        [pd.read_parquet(c.staging_team_seasons).assign(competition=c.name) for c in staged],
+        ignore_index=True,
+    )
+    write_tables(MART_PATH, {"team_seasons": team_seasons})
+    report = continuity_report(team_seasons)
+    _write_json(TEAM_CONTINUITY_REPORT, report)
+    for competition, block in report.items():
+        live = block["seasons"].get(str(LIVE_SEASON))
+        if live is None or live.get("first_season_in_data"):
+            continue
+        shown = DISPLAY_CODES.get(competition, {})
+        changes = ", ".join(
+            f"{kind} {' '.join(shown.get(e['team'], e['team']) for e in live[kind])}"
+            for kind in ("new", "returning", "left")
+            if live[kind]
+        )
+        typer.echo(f"{competition} {LIVE_SEASON} teams: {changes or 'no changes'}")
+    # ESAKE ids mean nothing to a reader: every live GBL team needs a display code on the site.
+    live_gbl = team_seasons[
+        (team_seasons["competition"] == GBL.name) & (team_seasons["season"] == LIVE_SEASON)
+    ]
+    unnamed = sorted(set(live_gbl["team"]) - set(DISPLAY_CODES["gbl"]))
+    if unnamed:
+        typer.echo(f"gbl {LIVE_SEASON}: no display code for {' '.join(unnamed)} (publish.py)")
+    flagged = sum(len(block["review_name_changes"]) for block in report.values())
+    if flagged:
+        typer.echo(f"team continuity: {flagged} name changes to review in {TEAM_CONTINUITY_REPORT}")
 
 
 @app.command()

@@ -13,6 +13,7 @@ BOX_INVARIANTS_REPORT = Path("reports/gbl_box_invariants.json")
 STINT_REPORT = Path("reports/stint_validation.json")
 POSSESSION_REPORT = Path("reports/possessions.json")
 STINTS_MART_REPORT = Path("reports/stints_mart.json")
+TEAM_CONTINUITY_REPORT = Path("reports/team_continuity.json")
 SITE_DATA = Path("web/src/data/site.json")  # read by the Astro build in web/
 
 
@@ -114,6 +115,10 @@ class Competition:
     @property
     def staging_teams(self) -> Path:
         return Path("data/staging") / f"{self.name}_teams.parquet"
+
+    @property
+    def staging_team_seasons(self) -> Path:
+        return Path("data/staging") / f"{self.name}_team_seasons.parquet"
 
 
 def _seasons(first: int, last: int) -> tuple[int, ...]:

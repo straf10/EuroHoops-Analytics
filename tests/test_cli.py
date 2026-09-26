@@ -24,9 +24,11 @@ from eurohoops.config import (
     SQL_DIR,
     STINT_REPORT,
     STINTS_MART_REPORT,
+    TEAM_CONTINUITY_REPORT,
 )
 from eurohoops.eval.backtest import load_tuned_model
 from eurohoops.marts import read_games, write_tables
+from eurohoops.parse.games import write_table
 from tests.conftest import REPO, make_games, make_team_games, write_pipeline
 from tests.test_gbl_ingest import FakeEsake
 from tests.test_gbl_pbp import GAME, FakeBasketHotel, export
@@ -80,6 +82,10 @@ def test_ingest_both_competitions_then_build(monkeypatch: pytest.MonkeyPatch) ->
     assert report["seasons"]["2018"]["games"] == 4
     assert list(read_games(MART_PATH, "euroleague")["season"].unique()) == [2024, 2026]
     assert read_games(MART_PATH, "gbl")["forfeit"].sum() == 1
+    continuity = json.loads(TEAM_CONTINUITY_REPORT.read_text())
+    assert set(continuity) == {"euroleague", "gbl"}
+    assert continuity["euroleague"]["seasons"]["2024"]["first_season_in_data"]
+    assert "2026" in continuity["euroleague"]["seasons"]
 
 
 @pytest.mark.usefixtures("workdir")
@@ -354,3 +360,24 @@ def test_ingest_gbl_pbp_caches_exports_and_keeps_every_season(
 def test_pbp_flag_is_gbl_only() -> None:
     result = runner.invoke(cli.app, ["ingest", "--pbp"])
     assert result.exit_code != 0
+
+
+@pytest.mark.usefixtures("pipeline")
+def test_build_reports_team_continuity_and_unnamed_live_gbl_teams() -> None:
+    def staged(rows: list[tuple[int, str, str]]) -> pd.DataFrame:
+        return pd.DataFrame(rows, columns=["season", "team", "name"])
+
+    write_table(
+        staged([(2025, "MCO", "AS Monaco"), (2025, "PAN", "Pana"), (2026, "PAN", "Pana")]),
+        EUROLEAGUE.staging_team_seasons,
+    )
+    write_table(
+        staged([(2025, "00000001", "PAO"), (2026, "00000001", "PAO"), (2026, "NEWID", "New")]),
+        GBL.staging_team_seasons,
+    )
+    output = invoke("build")
+    assert "euroleague 2026 teams: left MCO" in output
+    assert "gbl 2026 teams: new NEWID" in output
+    assert "gbl 2026: no display code for NEWID (publish.py)" in output
+    report = json.loads(TEAM_CONTINUITY_REPORT.read_text())
+    assert report["gbl"]["seasons"]["2026"]["new"] == [{"team": "NEWID", "name": "New"}]

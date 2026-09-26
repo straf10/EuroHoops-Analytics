@@ -6,6 +6,7 @@ are not numbers) and ``forfeit`` (a forfeit is played, scored 20-0, but carries 
 information). EuroLeague adds phase ``TS`` (Top 16, 2007-08 to 2015-16).
 """
 
+from collections.abc import Iterable
 from datetime import UTC
 from pathlib import Path
 from typing import Any
@@ -77,6 +78,43 @@ GAMES_SCHEMA = pa.DataFrameSchema(
 TEAMS_SCHEMA = pa.DataFrameSchema(
     {"team": pa.Column(str, unique=True), "name": pa.Column(str)}, strict=True
 )
+
+# The club's name in each season it played: the continuity report compares them across seasons.
+TEAM_SEASONS_SCHEMA = pa.DataFrameSchema(
+    {"season": pa.Column("int64"), "team": pa.Column(str), "name": pa.Column(str)},
+    unique=["season", "team"],
+    strict=True,
+)
+
+
+def _team_seasons(pairs: Iterable[tuple[int, str, str]]) -> pd.DataFrame:
+    """One row per (season, team); a name changed mid-season keeps its alphabetically first form."""
+    names: dict[tuple[int, str], str] = {}
+    for season, team, name in pairs:
+        names[season, team] = min(name, names.get((season, team), name))
+    df = pd.DataFrame(
+        [(season, team, name) for (season, team), name in names.items()],
+        columns=["season", "team", "name"],
+    ).astype({"season": "int64", "team": str, "name": str})
+    return TEAM_SEASONS_SCHEMA.validate(df.sort_values(["season", "team"], ignore_index=True))
+
+
+def build_team_seasons(schedules: dict[int, list[RawGame]]) -> pd.DataFrame:
+    return _team_seasons(
+        (season, side["club"]["code"], side["club"]["name"])
+        for season, games in schedules.items()
+        for game in games
+        for side in (game["local"], game["road"])
+    )
+
+
+def build_gbl_team_seasons(rounds: list[RoundPage]) -> pd.DataFrame:
+    return _team_seasons(
+        (r.season, team, name)
+        for r in rounds
+        for game in r.page.games
+        for team, name in ((game.home, game.home_name), (game.away, game.away_name))
+    )
 
 
 def conform(df: pd.DataFrame) -> pd.DataFrame:
