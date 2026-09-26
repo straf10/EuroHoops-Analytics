@@ -85,6 +85,8 @@ def test_design_has_no_identity_columns() -> None:
     assert not has_identity_column(spec.names)
     assert not has_identity_column(tuple(features(shots).columns))
     assert has_identity_column(("zone_A", "shooter"))  # the guard itself works
+    for names in (spec.names, tuple(features(shots).columns)):  # outcome-coded feed flags
+        assert not set(names) & {"fastbreak", "second_chance", "points_off_turnover"}
 
 
 def test_penalty_shrinks_and_fit_is_deterministic() -> None:

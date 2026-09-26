@@ -15,6 +15,13 @@ from eurohoops.models.elo import FloatArray
 THREE_RADIUS_M = 6.75
 CORNER_THREE_M = 6.60  # |x| of the straight corner segments
 CORNER_END_Y_M = 2.99 - 1.575  # corner lines end 2.99 m from the baseline; basket 1.575 m in
+# FIBA court (m), basket at the origin, y toward half court: used to draw shot charts.
+BASKET_FROM_BASELINE_M = 1.575
+BASELINE_Y_M = -BASKET_FROM_BASELINE_M
+SIDELINE_X_M = 7.5
+KEY_HALF_WIDTH_M = 2.45
+FREE_THROW_LINE_Y_M = 5.8 - BASKET_FROM_BASELINE_M
+RESTRICTED_AREA_RADIUS_M = 1.25
 FREE_THROW_SENTINEL = -1
 FIRST_VALIDATED_SEASON = 2011
 

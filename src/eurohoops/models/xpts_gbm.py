@@ -14,15 +14,13 @@ import pandas as pd
 
 from eurohoops.models.elo import FloatArray
 from eurohoops.models.xpts import has_identity_column
+from eurohoops.parse.shot_table import OUTCOME_CODED_FLAGS
 
 FEATURES = (
     "distance",
     "angle",
     "zone_code",
     "three",
-    "fastbreak",
-    "second_chance",
-    "points_off_turnover",
     "seconds_left",
     "period",
     "margin_before",
@@ -46,7 +44,8 @@ N_TRIALS = 60
 
 
 def features(shots: pd.DataFrame) -> pd.DataFrame:
-    """The challenger's feature frame (F-b): no identity column; period caps at 5 (OT)."""
+    """The challenger's feature frame (F-b without the outcome-coded flags): no identity column;
+    period caps at 5 (OT)."""
     zone = shots["zone"].astype(str)
     return pd.DataFrame(
         {
@@ -54,9 +53,6 @@ def features(shots: pd.DataFrame) -> pd.DataFrame:
             "angle": shots["angle"].to_numpy(dtype=np.float64),
             "zone_code": np.array([ZONES.index(z) if z in ZONES else -1 for z in zone]),
             "three": (shots["value"].to_numpy() == 3).astype(np.float64),
-            "fastbreak": shots["fastbreak"].to_numpy(dtype=np.float64),
-            "second_chance": shots["second_chance"].to_numpy(dtype=np.float64),
-            "points_off_turnover": shots["points_off_turnover"].to_numpy(dtype=np.float64),
             "seconds_left": shots["seconds_left"].to_numpy(dtype=np.float64),
             "period": np.minimum(shots["period"].to_numpy(), 5).astype(np.float64),
             "margin_before": shots["margin_before"].to_numpy(dtype=np.float64),
@@ -67,8 +63,8 @@ def features(shots: pd.DataFrame) -> pd.DataFrame:
     )
 
 
-if has_identity_column(FEATURES):  # R9: quality is not skill
-    raise ValueError(f"identity column in the M2 features: {FEATURES}")
+if has_identity_column(FEATURES) or set(FEATURES) & set(OUTCOME_CODED_FLAGS):
+    raise ValueError(f"identity or outcome-coded column in the M2 features: {FEATURES}")
 
 
 def search_space(trial: Any) -> dict[str, Any]:
@@ -114,11 +110,30 @@ def fit_gbm(shots: pd.DataFrame, params: dict[str, Any], seed: int) -> GbmModel:
 Objective = Callable[[dict[str, Any]], float]
 
 
-def run_study(objective: Objective, n_trials: int, seed: int = STUDY_SEED) -> Any:
-    """TPE study minimising ``objective(params)``; returns the Optuna study."""
+def run_study(
+    objective: Objective,
+    n_trials: int,
+    seed: int = STUDY_SEED,
+    progress: Callable[[str], None] | None = None,
+) -> Any:
+    """TPE study minimising ``objective(params)``; returns the Optuna study. ``progress`` gets
+    one line per finished trial (its number, value and the best so far)."""
     import optuna  # noqa: PLC0415 - dev dependency (F-j)
 
     optuna.logging.set_verbosity(optuna.logging.WARNING)
     study = optuna.create_study(direction="minimize", sampler=optuna.samplers.TPESampler(seed=seed))
-    study.optimize(lambda trial: objective(search_space(trial)), n_trials=n_trials, n_jobs=1)
+
+    def report(study: Any, trial: Any) -> None:
+        if progress is not None:
+            progress(
+                f"optuna trial {trial.number + 1}/{n_trials}: {trial.value:.6f} "
+                f"(best {study.best_value:.6f}, trial {study.best_trial.number})"
+            )
+
+    study.optimize(
+        lambda trial: objective(search_space(trial)),
+        n_trials=n_trials,
+        n_jobs=1,
+        callbacks=[report],
+    )
     return study

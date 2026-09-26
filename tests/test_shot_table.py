@@ -273,3 +273,14 @@ def test_committed_report_meets_the_f1_thresholds() -> None:
             assert block["excluded_share"] <= 0.01, season
             mismatches = block["reconciliation"]["mismatches"]
             assert all(m["game_id"] == "E2017_14" for m in mismatches), season
+
+
+def test_the_feed_context_flags_are_outcome_coded() -> None:
+    """From 2015-16 FASTBREAK, SECOND_CHANCE and POINTS_OFF_TURNOVER are set on made shots only,
+    so they are scoring tags, not shot context: M2 must not use them (docs/data/shots.md)."""
+    report = json.loads((REPO / "reports/shots.json").read_text(encoding="utf-8"))
+    for season in range(2015, 2026):
+        flags = report["seasons"][str(season)]["outcome_coded_flags"]
+        for flag in ("fastbreak", "second_chance", "points_off_turnover"):
+            assert flags[flag]["share_of_fga"] > 0.02
+            assert flags[flag]["make_rate_when_set"] >= 0.995, (season, flag)
