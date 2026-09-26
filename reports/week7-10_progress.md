@@ -137,3 +137,36 @@ Decision recorded for the user: this departs from the accepted F-b default.
 Features (both families): distance, |angle|, `ZONE`, 2 vs 3, seconds left in the period,
 period (OT as one level), pre-shot margin, home, season (numeric). Variants, grids, search
 space, isotonic nesting, seeds and gate: unchanged from the declaration above.
+
+DECLARATION afbc08e
+
+## GATE VERDICT (validation 2023-24; committed before any test-season run)
+Second run (the first valid one): `backtest --model m2 --search` at afbc08e, 10:25Z-12:13Z.
+MLflow parent run a6d1ae891d434fe5aa410b2ea58210dd.
+RUNTIME study 3508 s
+RUNTIME backtest 2951 s
+
+- Optuna: best pooled LOSO CV log loss 0.629734 (trial 57 of 60): num_leaves 15, learning_rate
+  0.0183, n_estimators 900, min_child_samples 178, feature_fraction 0.955, bagging_fraction
+  0.783, lambda_l2 0.140. Spline grid best: 8 knots, L2 1e-4 (CV 0.631577).
+- CV log loss: spline 0.631577, spline_iso 0.631513, lgbm 0.629699, lgbm_iso 0.629867 → challenger
+  `lgbm`, baseline `spline_iso` (both by CV).
+- Validation log loss: spline 0.635097, spline_iso 0.635286, lgbm 0.633267, lgbm_iso 0.633333.
+- **Beats baseline: YES.** lgbm − spline_iso = −0.002019, game-level 95% CI [−0.002910,
+  −0.001255]; Brier −0.000756 [−0.001027, −0.000509]; ECE +0.001243 [−0.002595, +0.005604].
+  5 seeds: validation log loss 0.633300 ± 0.000049 (sd); no single seed flips the verdict.
+- **Calibrated: NO.** Chosen M2 = lgbm: validation ECE 0.010438 > 0.010, and 2 of 20 bins with
+  ≥ 500 shots fall outside ±0.02 (P 0.401: +0.0338; P 0.694: −0.0236).
+- **Gate: FAILED** (exit-gate item 1). Applied literally; no re-run to make it pass. For
+  context only (not a choice): the spline's validation ECE is 0.0092, but it is not the chosen
+  model because it loses on log loss, and F-f applies to the chosen M2.
+- Hypothesis for the calibration miss: the failing bins sit in the 0.40 and 0.69 regions, and
+  development CV per season shows season-level shifts of league shooting (as with FT points in
+  F2); a model fitted on 2011-2022 cannot know the 2023-24 level exactly. Isotonic calibration
+  (fitted on other seasons) does not fix it (lgbm_iso ECE 0.0116).
+- **Runtime budget: RED.** The backtest (5 seeds, nested isotonic: 395 LightGBM fits of 900
+  trees) takes 2,951 s > 2,400 s. Feature building is ~0.5 s of each ~6 s fit, so no
+  number-preserving speed-up reaches 40 min; meeting it needs a change to the declared
+  computation (fewer threads/seeds or no nested isotonic for LightGBM), which I did not make.
+
+VERDICT (this commit)
