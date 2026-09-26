@@ -45,3 +45,61 @@ Format: `iteration N | deliverable | checks run | result | commit`
 ## Loop log
 iteration 1 | F1 shot table (marts shots/shots_excluded, reports/shots.json, docs/data/shots.md) | full §6 1-22 (one run, no edits) | 1-21 PASS; 22 FAIL (F2, see decision) — F1 done: feed = box 99.99%, exclusions ≤ 0.53%/season, two builds identical | see F1+F2 commit
 iteration 2 | F2 free-throw generation (ft_team_games, reports/free_throws.json) | same run | code + tests green; item 22 FAIL (structural, diagnosed above) | see F1+F2 commit
+
+## Pre-declared M2 variants and search space (committed before any validation run, 2026-09-26)
+No M2 model has been scored on validation (2023-24) or test (2024-25, 2025-26) when this is
+committed. Development = 2011-12 → 2022-23, LOSO CV (12 folds). Every choice below is made on
+pooled development out-of-fold log loss only; all four variants are reported on validation.
+
+Features (F-b), both families: distance, |angle|, `ZONE`, 2 vs 3, `FASTBREAK`,
+`SECOND_CHANCE`, `POINTS_OFF_TURNOVER`, seconds left in the period, period (1-4, OT as one
+level), pre-shot margin from the shooter's side, home, season (numeric). No identity column.
+
+Variants (4 of the allowed 6):
+1. `spline`: logistic regression, natural cubic splines in distance separately for 2s and 3s
+   (knots at development quantiles 2.5%…97.5%, evenly spaced in probability), a 3-pt indicator,
+   linear terms for the rest (zone levels with ≥ 1,000 training shots; margin clipped at ±40),
+   whitened design, L2 on the whitened coefficients (mean log-loss scale). Grid: knots
+   {4, 6, 8} × L2 {1e-5, 1e-4, 1e-3} = 9, chosen by pooled LOSO CV log loss (ties: fewer knots,
+   smaller L2).
+2. `spline_iso`: variant 1 + isotonic calibration (see below).
+3. `lgbm`: LightGBM, `objective=binary`, `deterministic`, `force_row_wise`, `num_threads=6`,
+   `bagging_freq=1`, `max_bin=255`, zone as a categorical feature; no early stopping.
+   Optuna TPE (seed 20261001, `n_jobs=1`, 60 trials), objective = pooled LOSO CV log loss on
+   development seasons with LightGBM seed 20261001. Search space:
+   - `num_leaves` int 8-128 (log)
+   - `learning_rate` float 0.01-0.2 (log)
+   - `n_estimators` int 100-1000, step 50
+   - `min_child_samples` int 20-2000 (log)
+   - `feature_fraction` float 0.5-1.0
+   - `bagging_fraction` float 0.5-1.0
+   - `lambda_l2` float 1e-3-100 (log)
+   The best parameters are stored in `reports/backtest_m2.json` (`optuna_study`) and reused.
+4. `lgbm_iso`: variant 3 + isotonic calibration.
+
+Isotonic calibration (PAV, linear interpolation between fitted points): for development
+season s the calibrator is fitted on predictions for every other development season t from
+models trained without s and t (66 leave-two-out fits per configuration and seed); validation
+and test are calibrated on the development LOSO predictions. No calibrator sees the season it
+calibrates.
+
+Seeds (F-l): LightGBM variants use the mean prediction of seeds 20261001-20261005 in every
+fold; per-seed CV and validation log loss (mean, sd) are reported, with whether any single seed
+would flip the gate. The study is not repeated per seed. Challenger/baseline choice: the
+variant with the lower pooled CV log loss in each family (LightGBM on the 5-seed mean).
+
+Gate: challenger − baseline validation log loss, game-level cluster bootstrap 95% CI (1,000
+resamples, seed 20261001); also Brier and ECE differences with CIs. `beats_baseline` = mean
+difference < 0; the chosen M2 = challenger if it beats the baseline, else the baseline;
+`calibrated` = F-f on the chosen M2's validation predictions (ECE ≤ 0.010 with 20 equal-count
+bins, every bin with ≥ 500 shots within ±0.02); `passed` = both.
+
+F7 (fixed now, before any player number exists): sampling variance of a player-season's raw
+shot-making (100 × mean(actual − xPTS)) is its game-level bootstrap variance (1,000 resamples);
+prior N(0, τ²) with τ² = var(raw) − mean(sampling variance) over development player-seasons
+with ≥ 100 FGA (floored at 0); 90% posterior intervals. Year-to-year: Pearson r of shrunk
+shot-making, players with ≥ 200 FGA in consecutive development seasons, 90% CI by bootstrap
+over player pairs (the unit of that correlation; recorded as a decision: F-g's game-level
+bootstrap does not apply across seasons). Split-half: Pearson r of raw shot-making on odd vs
+even games (by tip-off) in development player-seasons with ≥ 200 FGA, not Spearman-Brown
+corrected. Verdict per F-k.

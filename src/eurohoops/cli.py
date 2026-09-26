@@ -23,6 +23,7 @@ from eurohoops.config import (
     GBL_PLAYER_BOX,
     GBL_TEAM_BOX,
     LIVE_SEASON,
+    M2_REPORT,
     M2_SEASONS,
     MART_PATH,
     ODDS_CALLS,
@@ -38,8 +39,10 @@ from eurohoops.config import (
 )
 from eurohoops.eval.backtest import format_table, load_tuned_model, run_backtest
 from eurohoops.eval.m1_backtest import format_m1_table, run_m1_backtest
+from eurohoops.eval.m2_backtest import run_m2_backtest
+from eurohoops.eval.m2_backtest import search as m2_search
 from eurohoops.eval.scorecard import build_scorecard
-from eurohoops.eval.tracking import default_tracking_uri, log_backtest
+from eurohoops.eval.tracking import default_tracking_uri, log_backtest, log_m2_backtest
 from eurohoops.ingest import euroleague, gbl
 from eurohoops.ingest.http import Fetcher, make_client
 from eurohoops.live_m1 import load_m1, predict_upcoming_m1
@@ -85,6 +88,7 @@ class CompetitionName(StrEnum):
 class ModelName(StrEnum):
     elo = "elo"
     m1 = "m1"
+    m2 = "m2"
 
 
 CompetitionOption = Annotated[
@@ -388,10 +392,16 @@ def possessions() -> None:
 @app.command()
 def backtest(
     competition: CompetitionOption = CompetitionName.euroleague,
-    model: Annotated[ModelName, typer.Option(help="elo (live model) or m1")] = ModelName.elo,
+    model: Annotated[
+        ModelName, typer.Option(help="elo (live model), m1, or m2 (EuroLeague shot model)")
+    ] = ModelName.elo,
     score_test: Annotated[
         bool,
-        typer.Option(help="M1: also score the test seasons (only after the gate verdict)"),
+        typer.Option(help="M1/M2: also score the test seasons (only after the gate verdict)"),
+    ] = False,
+    search: Annotated[
+        bool,
+        typer.Option(help="M2: run the declared Optuna study first (only when F4 changes)"),
     ] = False,
     tracking_uri: Annotated[
         str | None,
@@ -399,6 +409,9 @@ def backtest(
     ] = None,
 ) -> None:
     """Tune and score a model vs its baselines; the Elo live report holds the live parameters."""
+    if model is ModelName.m2:
+        _backtest_m2(score_test, search, tracking_uri or default_tracking_uri())
+        return
     comp = COMPETITIONS[competition]
     games = read_games(MART_PATH, comp.name)
     if model is ModelName.m1:
@@ -421,6 +434,34 @@ def backtest(
         report = run_backtest(games, spec)
         _write_json(spec.report, report)
         typer.echo(f"{spec.report}\n{format_table(report)}")
+
+
+def _backtest_m2(score_test: bool, search_first: bool, tracking_uri: str) -> None:
+    """M2 (EuroLeague only): the declared variants, the gate, and ``shot_xpts`` in the marts."""
+    shots_table = read_table(MART_PATH, "shots")
+    if shots_table is None:
+        log.error("no shots in the marts; run: eurohoops shots")
+        raise typer.Exit(code=1)
+    if search_first:
+        study = m2_search(shots_table[shots_table["validated_season"]], M2_SEASONS.development)
+    elif M2_REPORT.exists():
+        study = json.loads(M2_REPORT.read_text(encoding="utf-8"))["optuna_study"]
+    else:
+        log.error("no stored Optuna result in %s; run: backtest --model m2 --search", M2_REPORT)
+        raise typer.Exit(code=1)
+    report, xpts = run_m2_backtest(shots_table, M2_SEASONS, study, score_test, log.info)
+    _write_json(M2_REPORT, report)
+    write_tables(MART_PATH, {"shot_xpts": xpts})
+    g = report["gate"]
+    diff = g["log_loss_challenger_minus_baseline"]
+    typer.echo(
+        f"{M2_REPORT}: {g['challenger']} vs {g['baseline']} validation log loss "
+        f"{diff['mean']:+.5f} {diff['ci95']}; calibrated {g['calibrated']}; "
+        f"gate {'PASSED' if g['passed'] else 'FAILED'} (chosen M2: {g['chosen']})"
+    )
+    run_id = log_m2_backtest(report, tracking_uri)
+    if run_id is not None:
+        typer.echo(f"MLflow parent run {run_id}")
 
 
 @app.command()

@@ -27,8 +27,11 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
+    "lightgbm>=4.7.0",
+    "matplotlib>=3.11.2",
     "mlflow>=3.16.1",
     "mypy>=2.3.1",
+    "optuna>=5.0.0",
     "pandas-stubs>=3.0.5.260914",
     "pre-commit>=4.6.2",
     "pytest>=9.1.1",
