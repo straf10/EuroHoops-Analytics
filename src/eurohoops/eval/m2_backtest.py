@@ -1,0 +1,395 @@
+"""M2 backtest (F5): leave-one-season-out CV on development seasons, validation, then test.
+
+Declared variants (F-c; reports/week7-10_progress.md): ``spline`` (knots x L2 grid chosen by
+pooled LOSO CV log loss), ``spline_iso``, ``lgbm`` (the Optuna-tuned parameters stored in this
+report) and ``lgbm_iso``. Isotonic calibration never sees the season it calibrates: for
+development season s it is fitted on predictions for the other development seasons t made by
+models trained without s *and* t (leave-two-seasons-out), so a season-s out-of-fold value
+depends on no season-s shot; validation and test are calibrated on the development
+out-of-fold predictions. LightGBM variants use the mean prediction of five seeds (F-l); the
+per-seed numbers are kept.
+
+The gate (exit-gate items 1-2): the best-on-CV challenger vs the best-on-CV baseline on
+validation log loss, with game-level bootstrap CIs (F-g); the chosen M2 (the challenger if it
+wins, else the spline baseline) must meet F-f.
+"""
+
+import hashlib
+import json
+from collections.abc import Callable, Sequence
+from itertools import combinations
+from typing import Any
+
+import numpy as np
+import numpy.typing as npt
+import pandas as pd
+
+from eurohoops.config import M2Seasons
+from eurohoops.eval.shot_metrics import calibrated, cluster_bootstrap, ece, scores, shot_log_loss
+from eurohoops.models.elo import FloatArray
+from eurohoops.models.xpts import fit_isotonic, fit_spline
+from eurohoops.models.xpts_gbm import N_TRIALS, STUDY_SEED, fit_gbm, run_study
+from eurohoops.parse.shot_table import BANDS
+
+SEEDS = tuple(range(20261001, 20261006))
+SPLINE_KNOTS = (4, 6, 8)
+SPLINE_L2 = (1e-5, 1e-4, 1e-3)
+VARIANTS = ("spline", "spline_iso", "lgbm", "lgbm_iso")
+BASELINES = ("spline", "spline_iso")
+CHALLENGERS = ("lgbm", "lgbm_iso")
+BOOTSTRAP_RESAMPLES = 1000
+BOOTSTRAP_SEED = 20261001
+FLAGS = ("fastbreak", "second_chance", "points_off_turnover")
+
+Predictor = Callable[[pd.DataFrame], FloatArray]
+Fitter = Callable[[pd.DataFrame], Predictor]
+Progress = Callable[[str], None]
+
+
+def _labels(shots: pd.DataFrame) -> FloatArray:
+    return shots["made"].to_numpy(dtype=np.float64)
+
+
+def _r(value: float) -> float:
+    return round(float(value), 6)
+
+
+class Folds:
+    """Out-of-fold predictions of one fitter: LOSO on development, leave-two-out pairs for the
+    nested isotonic fit, and a development-wide fit for the later splits."""
+
+    def __init__(
+        self,
+        shots: pd.DataFrame,
+        development: Sequence[int],
+        fit: Fitter,
+        pairs: bool,
+        later: pd.DataFrame,
+    ) -> None:
+        season = shots["season"].to_numpy()
+        self.index = {s: np.flatnonzero(season == s) for s in development}
+        self.oof = np.full(len(shots), np.nan)
+        for s in development:
+            train = shots.iloc[np.flatnonzero(np.isin(season, development) & (season != s))]
+            self.oof[self.index[s]] = fit(train)(shots.iloc[self.index[s]])
+        self.pair: dict[tuple[int, int], FloatArray] = {}  # (left out s, t) -> preds on t
+        if pairs:
+            for s, t in combinations(development, 2):
+                keep = np.isin(season, development) & (season != s) & (season != t)
+                model = fit(shots.iloc[np.flatnonzero(keep)])
+                self.pair[(s, t)] = model(shots.iloc[self.index[t]])
+                self.pair[(t, s)] = model(shots.iloc[self.index[s]])
+        self.later = (
+            fit(shots.iloc[np.flatnonzero(np.isin(season, development))])(later)
+            if len(later)
+            else np.empty(0)
+        )
+
+
+def mean_folds(folds: Sequence[Folds]) -> Folds:
+    """The seed-mean predictions of several fits of one configuration."""
+    out = object.__new__(Folds)
+    out.index = folds[0].index
+    out.oof = np.mean([f.oof for f in folds], axis=0)
+    out.pair = {k: np.mean([f.pair[k] for f in folds], axis=0) for k in folds[0].pair}
+    out.later = np.mean([f.later for f in folds], axis=0)
+    return out
+
+
+def calibrate(folds: Folds, y: FloatArray) -> tuple[FloatArray, FloatArray]:
+    """Isotonic-calibrated (out-of-fold development, later) predictions; see the module doc."""
+    oof = np.full_like(folds.oof, np.nan)
+    for s, rows in folds.index.items():
+        others = [t for t in folds.index if t != s]
+        p = np.concatenate([folds.pair[(s, t)] for t in others])
+        target = np.concatenate([y[folds.index[t]] for t in others])
+        oof[rows] = fit_isotonic(p, target)(folds.oof[rows])
+    dev_rows = np.concatenate(list(folds.index.values()))
+    later = fit_isotonic(folds.oof[dev_rows], y[dev_rows])(folds.later)
+    return oof, later
+
+
+def _scores_only(p: FloatArray, y: FloatArray) -> dict[str, Any]:
+    return {k: v for k, v in scores(p, y).items() if k != "reliability"}
+
+
+def split_scores(p: FloatArray, shots: pd.DataFrame) -> dict[str, Any]:
+    """Overall scores with reliability, per distance band and shot type (with reliability),
+    and per context flag."""
+    y = _labels(shots)
+    band = shots["band"].to_numpy()
+    value = shots["value"].to_numpy()
+    flags = {}
+    for flag in FLAGS:
+        on = shots[flag].to_numpy(dtype=bool)
+        flags[flag] = {"on": _scores_only(p[on], y[on]), "off": _scores_only(p[~on], y[~on])}
+    return {
+        **scores(p, y),
+        "by_band": {b: scores(p[band == b], y[band == b]) for b in BANDS},
+        "by_type": {f"{v}pt": scores(p[value == v], y[value == v]) for v in (2, 3)},
+        "by_flag": flags,
+    }
+
+
+def spline_fitter(n_knots: int, l2: float) -> Fitter:
+    return lambda train: fit_spline(train, n_knots, l2).predict
+
+
+def gbm_fitter(params: dict[str, Any], seed: int) -> Fitter:
+    return lambda train: fit_gbm(train, params, seed).predict
+
+
+def cv_log_loss(folds: Folds, y: FloatArray) -> float:
+    rows = np.concatenate(list(folds.index.values()))
+    return float(shot_log_loss(folds.oof[rows], y[rows]).mean())
+
+
+def study_objective(
+    shots: pd.DataFrame, development: Sequence[int]
+) -> Callable[[dict[str, Any]], float]:
+    """Pooled LOSO CV log loss on development seasons (LightGBM seed 20261001), per F-d."""
+    dev = shots[shots["season"].isin(development)].reset_index(drop=True)
+    y = _labels(dev)
+
+    def objective(params: dict[str, Any]) -> float:
+        folds = Folds(dev, development, gbm_fitter(params, SEEDS[0]), False, dev.iloc[:0])
+        return cv_log_loss(folds, y)
+
+    return objective
+
+
+def search(
+    shots: pd.DataFrame, development: Sequence[int], n_trials: int = N_TRIALS
+) -> dict[str, Any]:
+    """Run the declared Optuna study; its trials and best parameters, JSON-ready."""
+    study = run_study(study_objective(shots, development), n_trials, STUDY_SEED)
+    return {
+        "sampler": "TPESampler",
+        "seed": STUDY_SEED,
+        "n_trials": n_trials,
+        "objective": "pooled LOSO CV log loss on development seasons, LightGBM seed 20261001",
+        "development": list(development),
+        "best_trial": study.best_trial.number,
+        "best_value": round(float(study.best_value), 8),
+        "best_params": study.best_params,
+        "trials": [
+            {"number": t.number, "value": round(float(t.value), 8), "params": t.params}
+            for t in study.trials
+        ],
+    }
+
+
+def data_sha256(shots: pd.DataFrame) -> str:
+    text = shots.sort_values(["game_id", "event"]).to_csv(index=False, lineterminator="\n")
+    return hashlib.sha256(text.encode()).hexdigest()
+
+
+def model_version(spline: dict[str, Any], params: dict[str, Any]) -> str:
+    payload = json.dumps({"spline": spline, "lgbm": params, "seeds": SEEDS}, sort_keys=True)
+    return hashlib.sha256(payload.encode()).hexdigest()[:8]
+
+
+def _ece_diff_ci(
+    p_a: FloatArray, p_b: FloatArray, y: FloatArray, games: npt.NDArray[Any]
+) -> tuple[float, float]:
+    """95% game-level bootstrap CI of ECE(a) - ECE(b)."""
+    codes, inverse = np.unique(games, return_inverse=True)
+    order = np.argsort(inverse, kind="stable")
+    starts = np.searchsorted(inverse[order], np.arange(len(codes) + 1))
+    members = [order[starts[g] : starts[g + 1]] for g in range(len(codes))]
+    rng = np.random.default_rng(BOOTSTRAP_SEED)
+    stats = []
+    for _ in range(BOOTSTRAP_RESAMPLES):
+        rows = np.concatenate([members[g] for g in rng.integers(0, len(codes), len(codes))])
+        stats.append(ece(p_a[rows], y[rows]) - ece(p_b[rows], y[rows]))
+    low, high = np.percentile(stats, [2.5, 97.5])
+    return float(low), float(high)
+
+
+def _diff_ci(diff: FloatArray, games: npt.NDArray[Any]) -> dict[str, Any]:
+    mean, low, high = cluster_bootstrap(diff, games, BOOTSTRAP_RESAMPLES, BOOTSTRAP_SEED)
+    return {"n": len(diff), "mean": _r(mean), "ci95": [_r(low), _r(high)]}
+
+
+def gate(
+    variants: dict[str, dict[str, Any]],
+    split: str,
+    preds: dict[str, FloatArray],
+    per_seed: dict[str, dict[int, FloatArray]],
+    shots: pd.DataFrame,
+) -> dict[str, Any]:
+    """Exit-gate items 1-2 on one held-out split, applied literally: the best-on-CV challenger
+    vs the best-on-CV baseline by log loss, and F-f on the chosen model."""
+    cv = {v: variants[v]["cv"]["log_loss"] for v in VARIANTS}
+    challenger = min(CHALLENGERS, key=lambda v: cv[v])
+    baseline = min(BASELINES, key=lambda v: cv[v])
+    y = _labels(shots)
+    games = shots["game_id"].to_numpy()
+    base_loss = shot_log_loss(preds[baseline], y)
+    diff = shot_log_loss(preds[challenger], y) - base_loss
+    brier = (preds[challenger] - y) ** 2 - (preds[baseline] - y) ** 2
+    ll = _diff_ci(diff, games)
+    beats = ll["mean"] < 0.0
+    chosen = challenger if beats else baseline
+    flips = {
+        str(seed): bool((float(shot_log_loss(p, y).mean()) < float(base_loss.mean())) != beats)
+        for seed, p in per_seed[challenger].items()
+    }
+    groups: dict[str, dict[str, npt.NDArray[np.bool_]]] = {
+        "by_band": {b: shots["band"].to_numpy() == b for b in BANDS},
+        "by_type": {f"{v}pt": shots["value"].to_numpy() == v for v in (2, 3)},
+    }
+    for flag in FLAGS:
+        on = shots[flag].to_numpy(dtype=bool)
+        groups[f"by_{flag}"] = {"on": on, "off": ~on}
+    breakdown = {
+        name: {key: _diff_ci(diff[mask], games[mask]) for key, mask in masks.items() if mask.any()}
+        for name, masks in groups.items()
+    }
+    ece_low, ece_high = _ece_diff_ci(preds[challenger], preds[baseline], y, games)
+    ok = calibrated(variants[chosen][split])
+    return {
+        "split": split,
+        "challenger": challenger,
+        "baseline": baseline,
+        "chosen": chosen,
+        "log_loss_challenger_minus_baseline": ll,
+        "brier_challenger_minus_baseline": _diff_ci(brier, games),
+        "ece_challenger_minus_baseline": {
+            "mean": _r(variants[challenger][split]["ece"] - variants[baseline][split]["ece"]),
+            "ci95": [_r(ece_low), _r(ece_high)],
+        },
+        "single_seed_would_flip": flips,
+        "any_seed_flips": any(flips.values()),
+        "diff_breakdown": breakdown,
+        "calibrated": ok,
+        "beats_baseline": bool(beats),
+        "passed": bool(ok and beats),
+    }
+
+
+def run_m2_backtest(
+    shots: pd.DataFrame,
+    seasons: M2Seasons,
+    study: dict[str, Any],
+    score_test: bool,
+    progress: Progress,
+) -> tuple[dict[str, Any], pd.DataFrame]:
+    """The report and the chosen M2's out-of-fold P(make) per shot (development LOSO,
+    validation, and test when scored). ``study`` is the stored Optuna result."""
+    used = shots[shots["validated_season"]]
+    dev = used[used["season"].isin(seasons.development)].reset_index(drop=True)
+    later_seasons = [*seasons.validation, *(seasons.test if score_test else ())]
+    later = used[used["season"].isin(later_seasons)].reset_index(drop=True)
+    y_dev, y_later = _labels(dev), _labels(later)
+    val = later["season"].isin(seasons.validation).to_numpy()
+    params = study["best_params"]
+
+    grid = []
+    for n_knots in SPLINE_KNOTS:
+        for l2 in SPLINE_L2:
+            folds = Folds(dev, seasons.development, spline_fitter(n_knots, l2), False, later[:0])
+            grid.append({"knots": n_knots, "l2": l2, "cv_log_loss": _r(cv_log_loss(folds, y_dev))})
+            progress(f"spline knots {n_knots} l2 {l2}: CV log loss {grid[-1]['cv_log_loss']}")
+    best = min(grid, key=lambda g: (g["cv_log_loss"], g["knots"], g["l2"]))
+    spline = Folds(
+        dev, seasons.development, spline_fitter(int(best["knots"]), float(best["l2"])), True, later
+    )
+    progress(f"spline knots {best['knots']} l2 {best['l2']}: leave-two-out fits done")
+    seeds: dict[int, Folds] = {}
+    for seed in SEEDS:
+        seeds[seed] = Folds(dev, seasons.development, gbm_fitter(params, seed), True, later)
+        progress(f"lgbm seed {seed}: done")
+    gbm = mean_folds(list(seeds.values()))
+
+    oof: dict[str, FloatArray] = {"spline": spline.oof, "lgbm": gbm.oof}
+    held: dict[str, FloatArray] = {"spline": spline.later, "lgbm": gbm.later}
+    oof["spline_iso"], held["spline_iso"] = calibrate(spline, y_dev)
+    oof["lgbm_iso"], held["lgbm_iso"] = calibrate(gbm, y_dev)
+
+    seed_held: dict[str, dict[int, FloatArray]] = {"lgbm": {}, "lgbm_iso": {}}
+    per_seed: dict[str, Any] = {}
+    for seed, folds in seeds.items():
+        iso_oof, iso_later = calibrate(folds, y_dev)
+        seed_held["lgbm"][seed], seed_held["lgbm_iso"][seed] = folds.later, iso_later
+        per_seed[str(seed)] = {
+            variant: {
+                "cv_log_loss": _r(shot_log_loss(o, y_dev).mean()),
+                "validation_log_loss": _r(shot_log_loss(h[val], y_later[val]).mean()),
+            }
+            for variant, o, h in (
+                ("lgbm", folds.oof, folds.later),
+                ("lgbm_iso", iso_oof, iso_later),
+            )
+        }
+    summary = {
+        variant: {
+            key: {
+                "mean_of_seeds": _r(np.mean([per_seed[str(s)][variant][key] for s in SEEDS])),
+                "sd": _r(np.std([per_seed[str(s)][variant][key] for s in SEEDS], ddof=1)),
+            }
+            for key in ("cv_log_loss", "validation_log_loss")
+        }
+        for variant in CHALLENGERS
+    }
+
+    variants: dict[str, Any] = {}
+    for variant in VARIANTS:
+        variants[variant] = {
+            "post_hoc": False,
+            "cv": split_scores(oof[variant], dev),
+            "cv_per_season": {
+                str(s): _r(shot_log_loss(oof[variant][rows], y_dev[rows]).mean())
+                for s, rows in spline.index.items()
+            },
+            "validation": split_scores(held[variant][val], later[val]),
+            "test": split_scores(held[variant][~val], later[~val]) if score_test else None,
+        }
+    verdict = gate(
+        variants,
+        "validation",
+        {v: held[v][val] for v in VARIANTS},
+        {v: {s: p[val] for s, p in seed_held[v].items()} for v in CHALLENGERS},
+        later[val],
+    )
+    test_gate = (
+        gate(
+            variants,
+            "test",
+            {v: held[v][~val] for v in VARIANTS},
+            {v: {s: p[~val] for s, p in seed_held[v].items()} for v in CHALLENGERS},
+            later[~val],
+        )
+        if score_test
+        else None
+    )
+    chosen = verdict["chosen"]
+    keys = ["game_id", "event", "season"]
+    xpts = pd.concat(
+        [
+            dev[keys].assign(split="development", p_make=oof[chosen]),
+            later[keys].assign(split=np.where(val, "validation", "test"), p_make=held[chosen]),
+        ],
+        ignore_index=True,
+    ).assign(variant=chosen)
+    report = {
+        "model_version": model_version(best, params),
+        "seasons": {
+            "development": list(seasons.development),
+            "validation": list(seasons.validation),
+            "test": list(seasons.test),
+        },
+        "data_sha256": data_sha256(pd.concat([dev, later], ignore_index=True)),
+        "shots": {"development": len(dev), "validation": int(val.sum()), "test": int((~val).sum())},
+        "declared_variants": list(VARIANTS),
+        "spline_grid": grid,
+        "spline_chosen": {"knots": best["knots"], "l2": best["l2"]},
+        "optuna_study": study,
+        "lightgbm_params": params,
+        "seed_robustness": {"seeds": list(SEEDS), "per_seed": per_seed, "summary": summary},
+        "variants": variants,
+        "gate": verdict,
+        "test_scored": score_test,
+        "test_gate": test_gate,
+    }
+    return report, xpts

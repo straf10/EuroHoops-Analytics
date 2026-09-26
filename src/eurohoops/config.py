@@ -204,6 +204,7 @@ class M2Seasons:
 
 M2_SEASONS = M2Seasons()
 FREE_THROWS_REPORT = Path("reports/free_throws.json")
+M2_REPORT = Path("reports/backtest_m2.json")
 GBL_PLAYER_BOX = Path("data/staging/gbl_player_box.parquet")
 GBL_TEAM_BOX = Path("data/staging/gbl_team_box.parquet")
 GBL_BOX_FILL = Path("data/staging/gbl_box_fill.parquet")
