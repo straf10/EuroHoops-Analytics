@@ -29,6 +29,7 @@ FEATURES = (
 )
 CATEGORICAL = ("zone_code",)
 ZONES = tuple("ABCDEFGHIJ")
+ZONE_CODES = {zone: code for code, zone in enumerate(ZONES)}  # unknown zones -> -1
 NUM_THREADS = 6  # physical cores of the reference machine; fixed for determinism
 FIXED_PARAMS: dict[str, Any] = {
     "objective": "binary",
@@ -51,7 +52,7 @@ def features(shots: pd.DataFrame) -> pd.DataFrame:
         {
             "distance": shots["distance"].to_numpy(dtype=np.float64),
             "angle": shots["angle"].to_numpy(dtype=np.float64),
-            "zone_code": np.array([ZONES.index(z) if z in ZONES else -1 for z in zone]),
+            "zone_code": zone.map(ZONE_CODES).fillna(-1).astype(np.int64).to_numpy(),
             "three": (shots["value"].to_numpy() == 3).astype(np.float64),
             "seconds_left": shots["seconds_left"].to_numpy(dtype=np.float64),
             "period": np.minimum(shots["period"].to_numpy(), 5).astype(np.float64),
