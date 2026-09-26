@@ -120,6 +120,18 @@ team foul-drawing rate) declared as a new variant.
   57f0e20f166d44cf904e0426a05b186e.
   RUNTIME backtest 2774 s
 
+## G5 leakage tests: deliberate breaks, each shown once and reverted (tree clean after)
+- (a) offset uses its own tip-off group (`n = int(b)`): FAILED
+  `test_an_offset_uses_only_games_that_tipped_off_earlier`,
+  `test_no_level_offset_uses_its_own_game_or_a_later_one[spline, lgbm]`.
+- (b) development prior from the previous season's LOSO prediction (that model trained on
+  season s): FAILED `test_no_level_offset_uses_its_own_game_or_a_later_one[spline, lgbm]`
+  ("Mismatched elements: 348 / 348").
+- (c) prior from two seasons back: FAILED
+  `test_other_seasons_reach_an_offset_only_through_the_prior_and_k` (2011 reached 2013 with k
+  held). After each revert: 13/13 green. Guards in the same tests prove the edits reach later
+  games, the next season (prior) and k.
+
 ## G5 result (post-hoc, not a clean hold-out)
 - `lgbm_level`: CV log loss 0.629697 (lgbm 0.629699); validation log loss 0.633309, ECE
   0.01022 → **does not meet F-f** (target 0.010); test ECE 0.00947 but a bin outside ±0.02 →
@@ -193,3 +205,4 @@ LEVEL_RUN 327d0a3
 ## Loop log
 iteration 1 | G1 flags dropped for good + outcome-coding audit (item 32) | tests/test_feature_audit.py (6), fast gate 1-6, 14, 19, 32 (green after a format fix), items 23/28/29 tests | green; full §6 pending (see sequencing) | 62b9526
 iteration 2 | G2 F2 share checks (code 1b09043 before the run) | tests/test_free_throws.py 11 (3-SE planted errors fail), item 22 real run, card test | item 22 FAIL (12/78 band flags > 7; team r below bar in 13/13) - diagnosed, not tuned; card updated | 8cc5640
+iteration 3 | G3 runtime (profile, class A: LightGBM+spline pool, LOSO reuse, zone codes once) + G5 level variants | before 2,921 s, after-1 2,743 s, after-2 2,774 s (UI server ~1.6 cores); weeks 7-10 bytes identical each time; level leakage tests; card test | G3 under budget; G5 lgbm_level misses F-f (post-hoc) | 5328d64
