@@ -203,8 +203,11 @@ const description = "Up to five EuroLeague players side by side, a season each o
         input.value = "";
         return;
       }
-      picks = [...picks, { slug, season: c.seasons[c.seasons.length - 1].season }];
+      const season = c.seasons[c.seasons.length - 1].season;
       input.value = "";
+      // Enter fires both change and submit: the second call finds the pick already made.
+      if (picks.some((p) => p.slug === slug && p.season === season)) return;
+      picks = [...picks, { slug, season }];
       await paint();
       input.focus();
     };
