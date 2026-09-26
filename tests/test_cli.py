@@ -82,6 +82,7 @@ def test_ingest_both_competitions_then_build(monkeypatch: pytest.MonkeyPatch) ->
     assert report["seasons"]["2018"]["games"] == 4
     assert list(read_games(MART_PATH, "euroleague")["season"].unique()) == [2024, 2026]
     assert read_games(MART_PATH, "gbl")["forfeit"].sum() == 1
+    invoke("continuity")
     continuity = json.loads(TEAM_CONTINUITY_REPORT.read_text())
     assert set(continuity) == {"euroleague", "gbl"}
     assert continuity["euroleague"]["seasons"]["2024"]["first_season_in_data"]
@@ -379,5 +380,14 @@ def test_build_reports_team_continuity_and_unnamed_live_gbl_teams() -> None:
     assert "euroleague 2026 teams: left MCO" in output
     assert "gbl 2026 teams: new NEWID" in output
     assert "gbl 2026: no display code for NEWID (publish.py)" in output
+    assert not TEAM_CONTINUITY_REPORT.exists()  # build never writes the committed report
+    assert "wrote" in invoke("continuity")
     report = json.loads(TEAM_CONTINUITY_REPORT.read_text())
     assert report["gbl"]["seasons"]["2026"]["new"] == [{"team": "NEWID", "name": "New"}]
+
+
+@pytest.mark.usefixtures("pipeline")
+def test_continuity_needs_team_seasons_in_the_marts() -> None:
+    invoke("build")  # the synthetic pipeline stages no team seasons
+    result = runner.invoke(cli.app, ["continuity"])
+    assert result.exit_code == 1

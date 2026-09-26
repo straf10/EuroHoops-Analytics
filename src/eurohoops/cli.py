@@ -216,8 +216,9 @@ def build() -> None:
 
 
 def _team_continuity() -> None:
-    """Stage-to-marts ``team_seasons`` and the continuity report (skipped before the first
-    ingest that stages team seasons)."""
+    """Stage-to-marts ``team_seasons`` and print the live season's team changes (skipped before
+    the first ingest that stages team seasons). The report file is ``eurohoops continuity``:
+    the daily workflow stages fewer seasons, so ``build`` never rewrites it."""
     staged = [c for c in (EUROLEAGUE, GBL) if c.staging_team_seasons.exists()]
     if not staged:
         return
@@ -227,7 +228,6 @@ def _team_continuity() -> None:
     )
     write_tables(MART_PATH, {"team_seasons": team_seasons})
     report = continuity_report(team_seasons)
-    _write_json(TEAM_CONTINUITY_REPORT, report)
     for competition, block in report.items():
         live = block["seasons"].get(str(LIVE_SEASON))
         if live is None or live.get("first_season_in_data"):
@@ -248,7 +248,23 @@ def _team_continuity() -> None:
         typer.echo(f"gbl {LIVE_SEASON}: no display code for {' '.join(unnamed)} (publish.py)")
     flagged = sum(len(block["review_name_changes"]) for block in report.values())
     if flagged:
-        typer.echo(f"team continuity: {flagged} name changes to review in {TEAM_CONTINUITY_REPORT}")
+        typer.echo(f"team continuity: {flagged} name changes to review (eurohoops continuity)")
+
+
+@app.command()
+def continuity() -> None:
+    """Write reports/team_continuity.json from the marts: new, returning and departed codes per
+    season, and name changes to review (a code another club took over would show up there)."""
+    team_seasons = read_table(MART_PATH, "team_seasons")
+    if team_seasons is None:
+        log.error("no team_seasons in the marts; run: eurohoops ingest, then eurohoops build")
+        raise typer.Exit(1)
+    report = continuity_report(team_seasons)
+    _write_json(TEAM_CONTINUITY_REPORT, report)
+    for competition, block in report.items():
+        for item in block["review_name_changes"]:  # names (Greek for the GBL) are in the file
+            typer.echo(f"review: {competition} {item['season']} {item['team']} changed name")
+    typer.echo(f"wrote {TEAM_CONTINUITY_REPORT}")
 
 
 @app.command()
