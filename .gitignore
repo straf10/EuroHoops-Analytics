@@ -27,10 +27,11 @@ htmlcov/
 # Generated static page (deployed by the daily workflow, not committed)
 /site/
 
-# Astro front-end: dependencies, build cache and the data file `eurohoops publish` writes
+# Astro front-end: dependencies, build cache and the data `eurohoops publish` and `export-stats` write
 web/node_modules/
 web/.astro/
 web/src/data/site.json
+web/src/data/stats/
 
 # Impeccable scratch (screenshots, decision-page state); DESIGN.md, design.json and briefs are kept
 .impeccable/review/
