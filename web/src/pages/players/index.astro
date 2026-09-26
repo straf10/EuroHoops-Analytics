@@ -165,7 +165,7 @@ const description =
                 {ls.length} players
               </p>
             </div>
-            <div class="scroll">
+            <div class="scroll" id="scroll">
               <table id="table">
                 <caption class="sr-only">
                   Players, sorted by the chosen measure
@@ -174,6 +174,7 @@ const description =
                 <tbody id="tbody" set:html={bodyHtml(ls, view, base)} />
               </table>
             </div>
+            <button type="button" class="more" id="more" hidden>Show all {ls.length} players</button>
           </div>
         </div>
 
@@ -280,8 +281,32 @@ const description =
       $("thead").innerHTML = headHtml(view);
       $("tbody").innerHTML = bodyHtml(ls, view, cfg.base);
       $("count").textContent = `${ls.length} player${ls.length === 1 ? "" : "s"}`;
+      shorten(ls.length);
       history.replaceState(null, "", location.pathname + toQuery(view, cfg.defaultSeason));
     };
+
+    // Phones list the first PHONE_ROWS rows until asked; wider screens scroll the table in its box.
+    const PHONE_ROWS = 50;
+    const narrow = matchMedia("(max-width: 1080px)");
+    const list = $("scroll").parentElement as HTMLElement;
+    const more = $("more") as HTMLButtonElement;
+    let all = false;
+    const shorten = (n: number) => {
+      list.classList.toggle("cut", !all);
+      more.hidden = all || !narrow.matches || n <= PHONE_ROWS;
+      more.textContent = `Show all ${n} players`;
+    };
+    more.addEventListener("click", () => {
+      all = true;
+      shorten(0);
+    });
+    narrow.addEventListener("change", () => shorten($("tbody").children.length));
+    shorten($("tbody").children.length);
+    // The fade under the table box says there is more; it lifts at the end.
+    const box = $("scroll");
+    const atEnd = () => box.classList.toggle("end", box.scrollTop + box.clientHeight >= box.scrollHeight - 2);
+    box.addEventListener("scroll", atEnd, { passive: true });
+    new ResizeObserver(atEnd).observe(box);
 
     let pending = 0;
     const update = async () => {
@@ -496,7 +521,7 @@ const description =
   /* One grid for the axis, the gridlines and every row (rows are subgrids), so they line up. */
   .plot {
     display: grid;
-    grid-template-columns: 1.6rem minmax(0, 8.5rem) minmax(0, 1fr) 3.2rem;
+    grid-template-columns: 1.6rem minmax(0, 10.5rem) minmax(0, 1fr) 3.2rem;
     grid-template-rows: 30px auto;
     column-gap: 10px;
   }
@@ -638,6 +663,35 @@ const description =
     min-height: 420px;
     overflow: auto;
     overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--rule-strong) transparent;
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 48px), transparent);
+  }
+  .scroll.end {
+    mask-image: none;
+  }
+  .more {
+    display: block;
+    width: 100%;
+    margin-top: 16px;
+    padding: 9px 16px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--sunk);
+    box-shadow: inset 0 0 0 1px var(--rule-strong);
+    color: var(--ink);
+    font: inherit;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .more[hidden] {
+    display: none;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .more:hover {
+      box-shadow: inset 0 0 0 1px var(--ink-2);
+    }
   }
   table {
     width: 100%;
@@ -770,6 +824,10 @@ const description =
     .scroll {
       max-height: none;
       min-height: 0;
+      mask-image: none;
+    }
+    .cut tbody :global(tr:nth-child(n + 51)) {
+      display: none;
     }
   }
   @media (max-width: 560px) {
@@ -780,8 +838,16 @@ const description =
       font-size: 1.875rem;
     }
     .plot {
-      grid-template-columns: 1.4rem minmax(0, 6.5rem) minmax(0, 1fr) 2.8rem;
+      grid-template-columns: 1.4rem minmax(0, 8.75rem) minmax(0, 1fr) 2.8rem;
       column-gap: 8px;
+    }
+    /* The sticky name column gives way so a phone sees more than three measures. */
+    tbody :global(th.c-nm) {
+      min-width: 8.5rem;
+    }
+    tbody :global(.tm) {
+      display: block;
+      margin-left: 0;
     }
     .grow {
       max-width: none;

@@ -213,13 +213,13 @@ const cfg = { base, open, seasons: seasons.map((x) => x.season) };
               <p class="hint">Click a bar to keep only those shots; click more to add them.</p>
             </div>
           </div>
+          <p class="note">
+            Blue bars are the shots kept, gray bars the ones filtered out; each facet counts the shots the other
+            facets keep, so it shows what a click would give. The play-by-play marks fastbreaks and second chances
+            on made shots only (from 2015-16), so a play filter keeps made shots and FG% no longer applies; a make
+            can be both. Shots from deeper than 9.3 m are counted but not drawn.
+          </p>
         </div>
-        <p class="note">
-          Blue bars are the shots kept, gray bars the ones filtered out; each facet counts the shots the other
-          facets keep, so it shows what a click would give. The play-by-play marks fastbreaks and second chances
-          on made shots only (from 2015-16), so a play filter keeps made shots and FG% no longer applies; a make
-          can be both. Shots from deeper than 9.3 m are counted but not drawn.
-        </p>
       </section>
     )
   }
@@ -570,14 +570,22 @@ const cfg = { base, open, seasons: seasons.map((x) => x.season) };
     color: var(--muted);
     font-size: 0.75rem;
   }
-  .note {
-    margin-top: 32px;
+  /* The note sits under the court, beside the taller facet column; on one column it comes last. */
+  .side-col {
+    grid-row: span 2;
+  }
+  .board > .note {
+    grid-column: 1;
+    margin-top: 0;
   }
 
   @media (max-width: 980px) {
     .board {
       grid-template-columns: minmax(0, 1fr);
       gap: 36px;
+    }
+    .side-col {
+      grid-row: auto;
     }
     .court-col {
       max-width: 640px;

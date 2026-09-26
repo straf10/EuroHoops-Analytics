@@ -136,7 +136,8 @@ export function jerseySvg({ code, name, number, size = 72, label = false }: Shir
     `<path d="${BODY}" fill="${body}"/>` +
     TRIM.map((d) => `<path d="${d}" fill="none" stroke="${trim}" stroke-width="4.5"/>`).join("") +
     `<path class="shirt-edge" d="${BODY}" fill="none"/>` +
-    `<text x="50" y="37" text-anchor="middle" font-size="8.6" font-weight="650" letter-spacing="0.4" fill="${ink}"${fit}>${esc(last)}</text>` +
+    // Under 48px the surname would render around 5px: small shirts carry the number only.
+    (size >= 48 ? `<text x="50" y="37" text-anchor="middle" font-size="8.6" font-weight="650" letter-spacing="0.4" fill="${ink}"${fit}>${esc(last)}</text>` : "") +
     (num ? `<text x="50" y="85" text-anchor="middle" font-size="40" font-weight="700" fill="${ink}">${num}</text>` : "") +
     `</svg>`
   );

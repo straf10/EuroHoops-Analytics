@@ -9,6 +9,7 @@ import {
   STATS,
   benchHtml,
   board,
+  benchNote,
   caption,
   compareHref,
   entries,
@@ -137,7 +138,7 @@ const description =
               <p id="floor-note">{floorNote(view, pool.most)}</p>
             </figcaption>
             <div class="floor">
-              <Fragment set:html={court("", "Half court")} />
+              <Fragment set:html={court("", "Half court", true)} />
               <ol class="five" id="five" aria-label="On court" set:html={fiveHtml(b, view, base)} />
               <p class="empty-floor" id="empty-floor" hidden>No player qualifies here yet.</p>
             </div>
@@ -149,7 +150,10 @@ const description =
           </figure>
 
           <section class="bench-box" aria-labelledby="bench-title">
-            <h3 id="bench-title">Bench</h3>
+            <div class="bench-head">
+              <h3 id="bench-title">Bench</h3>
+              <p id="bench-note">{benchNote(b)}</p>
+            </div>
             <ol class="bench" id="bench" set:html={benchHtml(b, view, base)} />
           </section>
         </div>
@@ -162,6 +166,7 @@ const description =
   import {
     benchHtml,
     board,
+    benchNote,
     caption,
     careers,
     compareHref,
@@ -266,6 +271,7 @@ const description =
       $("five-lines").innerHTML = fiveLinesHtml(b, view, cfg.base);
       $("empty-floor").hidden = b.five.length > 0;
       $("court-caption").textContent = caption(b);
+      $("bench-note").textContent = benchNote(b);
       const link = $("compare-link") as HTMLAnchorElement;
       link.hidden = b.five.length < 2;
       link.href = compareHref(b, view, cfg.base);
@@ -541,9 +547,18 @@ const description =
   }
 
   /* Bench */
-  .bench-box h3 {
+  .bench-head {
     padding-bottom: 12px;
     border-bottom: 1px solid var(--rule-strong);
+    margin-bottom: 18px;
+  }
+  .bench-head p {
+    margin-top: 6px;
+    color: var(--muted);
+    font-size: 0.8125rem;
+  }
+  .bench-box h3 {
+    line-height: 1.15;
     font-size: 1rem;
     font-weight: 600;
     letter-spacing: -0.01em;

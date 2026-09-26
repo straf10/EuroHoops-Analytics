@@ -190,9 +190,10 @@ export function bodyHtml(g: Grid, cols: Col[]): string {
                 .map((c) => {
                   const cls = ["num", c.lead ? "lead" : "", c.floor ? "muted" : ""].filter(Boolean).join(" ");
                   const tip = c.floor && c.floor !== "No value" ? ` data-tip="${esc(c.floor)}"` : "";
-                  const dot = c.lead ? `<i class="lead-dot" aria-hidden="true"></i>` : "";
-                  const place = c.place ? `<small>${c.lead ? "<span class=\"sr-only\">leads, </span>" : ""}${ordinal(c.place)}</small>` : "";
-                  return `<td class="${cls}"${tip}>${dot}${c.text}${place}</td>`;
+                  // Fixed slots (dot, value, place) so figures line up down each column.
+                  const dot = c.lead ? `<i class="lead-dot" aria-hidden="true"></i>` : `<i aria-hidden="true"></i>`;
+                  const place = `<small>${c.lead ? "<span class=\"sr-only\">leads, </span>" : ""}${c.place ? ordinal(c.place) : ""}</small>`;
+                  return `<td class="${cls}"${tip}><span class="cell">${dot}<span class="v">${c.text}</span>${place}</span></td>`;
                 })
                 .join("") +
               `</tr>`,
