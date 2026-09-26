@@ -83,3 +83,4 @@ team foul-drawing rate) declared as a new variant.
 
 ## Loop log
 iteration 1 | G1 flags dropped for good + outcome-coding audit (item 32) | tests/test_feature_audit.py (6), fast gate 1-6, 14, 19, 32 (green after a format fix), items 23/28/29 tests | green; full §6 pending (see sequencing) | 62b9526
+iteration 2 | G2 F2 share checks (code 1b09043 before the run) | tests/test_free_throws.py 11 (3-SE planted errors fail), item 22 real run, card test | item 22 FAIL (12/78 band flags > 7; team r below bar in 13/13) - diagnosed, not tuned; card updated | 8cc5640

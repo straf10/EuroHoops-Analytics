@@ -481,8 +481,10 @@ def _backtest_m2(score_test: bool, search_first: bool, tracking_uri: str) -> Non
     start = time.monotonic()
     report, xpts = run_m2_backtest(shots_table, M2_SEASONS, study, score_test, log.info)
     log.info("backtest (without the study): %.0f s", time.monotonic() - start)
+    start = time.monotonic()
     _write_json(M2_REPORT, report)
     write_tables(MART_PATH, {"shot_xpts": xpts})
+    log.info("TIMING report + shot_xpts mart written: %.1f s", time.monotonic() - start)
     g = report["gate"]
     diff = g["log_loss_challenger_minus_baseline"]
     typer.echo(
@@ -490,7 +492,9 @@ def _backtest_m2(score_test: bool, search_first: bool, tracking_uri: str) -> Non
         f"{diff['mean']:+.5f} {diff['ci95']}; calibrated {g['calibrated']}; "
         f"gate {'PASSED' if g['passed'] else 'FAILED'} (chosen M2: {g['chosen']})"
     )
+    start = time.monotonic()
     run_id = log_m2_backtest(report, tracking_uri)
+    log.info("TIMING MLflow: %.1f s", time.monotonic() - start)
     if run_id is not None:
         typer.echo(f"MLflow parent run {run_id}")
 
