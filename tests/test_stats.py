@@ -12,6 +12,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pandas as pd
 import pytest
 from typer.testing import CliRunner
@@ -224,6 +225,37 @@ def test_payload_uses_display_codes_and_flags_early_coordinates(
     assert {line[0] for log in games["logs"].values() for line in log} <= set(games["games"])
     index = files["players.json"]["players"]
     assert len({p["slug"] for p in index}) == len(index)
+
+
+def test_attempts_decode_to_the_shot_bins_and_bands(files: dict[str, dict[str, Any]]) -> None:
+    attempts = files["seasons/2024/attempts.json"]
+    shots, teams = files["seasons/2024/shots.json"], files["seasons/2024/teams.json"]
+    bits = attempts["bits"]
+    flags = pd.Series(np.array(attempts["flags"], dtype=np.int64))
+
+    def bit(name: str, width: int = 1) -> pd.Series:
+        return (flags // 2 ** bits[name]) % 2**width
+
+    frame = pd.DataFrame(
+        {
+            "x": pd.Series(attempts["x"]) / 100,
+            "y": pd.Series(attempts["y"]) / 100,
+            "made": bit("made"),
+            "value": 2 + bit("three"),
+            "band": [BANDS[b] for b in bit("band", 3)],
+            "period": flags // 2 ** bits["period"],
+            "team": [attempts["teams"][i] for i in attempts["team"]],
+        }
+    )
+    columns = ("x", "y", "flags", "player", "team", "opp")
+    assert len({len(attempts[c]) for c in columns}) == 1
+    assert frame["period"].between(1, 8).all()
+    assert hexbins(frame)[""] == shots["league"]  # centimetres keep every shot in its hex
+    assert hexbins(frame, "team") == {c: v["taken"] for c, v in shots["teams"].items()}
+    counts = frame.groupby("band")["made"].agg(["size", "sum"])
+    assert {b: [int(n), int(m)] for b, (n, m) in counts.iterrows()} == {
+        b: v for b, v in teams["league"]["bands"].items() if v[0]
+    }
 
 
 def test_write_stats_replaces_old_seasons(tmp_path: Path) -> None:
