@@ -80,6 +80,8 @@ def test_the_card_covers_every_required_section() -> None:
         "## Team shot quality",
         "## Player shot-making and stability",
         "## Shot charts",
+        "## Season-level variant (post-hoc)",
+        "## Runtime",
         "## Limitations and what failed",
     ):
         assert heading in text, heading
