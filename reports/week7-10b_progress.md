@@ -81,6 +81,48 @@ this would be tuning it to pass. Item 22 stays red; it is not on the list of ite
 stay red. Next step (for the user): a team-level FT model (trips per possession plus a shrunk
 team foul-drawing rate) declared as a new variant.
 
+## §3 unverified facts, now verified (G3)
+- **Parallel processes, same `num_threads`:** 6 LightGBM fits (LOSO folds 2011-2016, seed
+  20261001, stored parameters, real development shots) run 1, 2 and 3 at a time in separate
+  processes give **byte-identical predictions** (same SHA-256 of every prediction array in all
+  three modes). Throughput: 1 process 6.5 s per fit (incl. loading), 2 processes 4.4 s,
+  3 processes 4.6 s (18 threads on 12 logical cores oversubscribe). Test:
+  `test_parallel_fits_equal_sequential_fits`. Measured with the `astro dev` server up.
+- Timings per phase: see `docs/models/m2_runtime.md` (from the TIMING lines of the runs below).
+
+## G3 runs
+- **Before** (HEAD 8a58e9d: sequential fits; code = weeks 7-10 + the G1 audit + timing lines),
+  `backtest --model m2 --score-test`, 19:08Z-19:57Z: **2,921 s wall** (backtest 2,909 s). The
+  report and the marts' `shot_xpts` came out byte-identical to the committed ones (tree clean),
+  so the refactor and the audit change no number. Machine: `astro dev` (node 5520) was busy
+  the whole time (its CPU time rose from 15 s to 3,661 s), and my own test runs overlapped
+  ~2 min of seed 1. MLflow parent fa928c5ebd6e4ba6a904ce6d8ad08f3e.
+  RUNTIME backtest 2921 s
+- **After** (HEAD b0b45e3: LightGBM in 2 processes; + the G5 level variants), same command,
+  19:58Z-20:44Z: **2,743 s wall** (backtest 2,728 s, of which the new level variants 169 s).
+  Like for like without G5: 2,559 s vs 2,909 s (−350 s, −12%). LightGBM seeds 357, 357, 451,
+  448, 459 s vs 486-493 s: seeds 1-2 −28%; seeds 3-5 only −8% while `astro dev` competed.
+  **Every weeks 7-10 field of the report is byte-identical** (the report minus
+  `level_variants`, dumped the same way, equals the committed file byte for byte);
+  `m2_teams`/`m2_players` checked by item 25. MLflow parent edee8ed94dcd4cd09eb110dfa3d66a34.
+  This run is the first G5 run on any split (declaration 1de203c came before it).
+  RUNTIME backtest 2743 s
+
+## G5 result (post-hoc, not a clean hold-out)
+- `lgbm_level`: CV log loss 0.629697 (lgbm 0.629699); validation log loss 0.633309, ECE
+  0.01022 → **does not meet F-f** (target 0.010); test ECE 0.00947 but a bin outside ±0.02 →
+  F-f false on test too. Level − lgbm validation log loss +0.000042 [−0.000049, +0.000139]:
+  no gain. k 2,312 shots (τ² 0.00196): after ~2,300 shots (≈ 15 games) the season's own level
+  gets half the weight.
+- Calibration in the large improves: `lgbm_level` 0.9835-1.0134 over development (base
+  0.9766-1.0198); 2023 0.9893, 2024 0.9934, 2025 1.0030 (base 0.9945, 0.9714, 0.9874).
+- `spline_level`: validation ECE 0.009695 → meets F-f on validation (not on test, 0.01198);
+  log loss vs spline +0.000009 [−0.000228, +0.000234].
+- G-g condition: meets F-f on validation False, CV below lgbm True → **does not hold**; F6/F7
+  are not recomputed with `lgbm_level`. Hypothesis: the season offset fixes the league-wide
+  level (calibration in the large) but F-f's failing bins sit at P ≈ 0.40 and 0.69, a shape
+  error by distance band (deep 3s, long 2s), which one additive offset per season cannot fix.
+
 ## Declared season-level variants (G5; §0 G-e, G-f) — committed before any run on any split
 No `lgbm_level` or `spline_level` number exists on any split, development, validation or test,
 when this is committed. Validation 2023-24 and test 2024-25/2025-26 have been seen by the weeks
