@@ -74,6 +74,8 @@ Guards:
 | G-f | Evaluation of the level variant (G5) | **Declared before its first run. Validation 2023-24 and test 2024-25/2025-26 have already been seen, so every G5 number on them is labelled "post-hoc, not a clean hold-out". The clean evaluation is the live 2026-27 season: G5 writes a scoring script and a pre-registered rule (F-f on 2026-27 shots, run after the season), but runs nothing on 2026-27 now. The weeks 7–10 verdict (84308f9) is not changed or re-labelled.** |
 | G-g | Which M2 feeds F6/F7 afterwards | **The weeks 7–10 chosen M2 (`lgbm`) stays the reported M2. If `lgbm_level` meets F-f on validation and beats `lgbm` on development LOSO log loss, F6/F7 are additionally computed with it and reported side by side, labelled post-hoc. Nothing replaces the committed weeks 7–10 numbers.** |
 
+Answered by the user, 2026-09-26: all defaults (G-a to G-g).
+
 ## 1. Hard constraints (all weeks 0–10 constraints still apply)
 - **Scope = this file.** No PBP-derived context features, no new data, no site changes, no live
   use of M2, no RAPM.
