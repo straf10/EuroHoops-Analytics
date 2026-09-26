@@ -22,3 +22,10 @@ FIRST VIEWPORT: filter row (Scope segment Season/Career/Best seasons, Season sel
 FORM: Court lineup, position 4 of 7 on the ranked list, seed key 17ed15d4. Signature interaction: on a change of stat, scope or club, the shirts on court exchange with a 200ms fade-and-rise while the bench rows reorder in place; nothing animates on load.
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+
+## Adaptations recorded at the finish review (2026-09-27)
+
+- Owner decision (2026-09-27): the court is closed to the halfway line with the centre-circle half; slots are placed so no court line touches text.
+- Owner decision (2026-09-27): 30px bench shirts carry the number only; the 72px court shirts and 64px Compare shirts keep the surname.
+- The court slot shows the ranked value large above the card line at every width (DESIGN.md "Court lineup"); the contract names the large value only for floors under 620px. Open for the owner to confirm or drop.
+- The bench head matches the court head: title, one-line note, strong rule.

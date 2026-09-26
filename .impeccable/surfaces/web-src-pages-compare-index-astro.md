@@ -22,3 +22,10 @@ FIRST VIEWPORT: filter row (player search with up to five chips, Scope segment S
 FORM: Head-to-head grid, position 5 of 7 on the ranked list, seed key c70c626f. Signature interaction: on adding a player, changing a season or the rate, the blue leader dots move to their new cells (160ms) and the tally recounts; nothing animates on load.
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+
+## Adaptations recorded at the finish review (2026-09-27)
+
+- Filter row: the jersey column heads stand in for the "chips"; each head carries the player's remove button.
+- Groups as built: Playing time, Scoring (shooting sits here), Playmaking, Rebounding, Defence, Overall.
+- Signature motion as built and documented in DESIGN.md: the leader dots pop into their new cells (160 ms scale and fade), not a move between cells.
+- Value cells use fixed slots (value with its leader dot, then the place) so figures line up down each column; the rows-led leader carries the dot too.
