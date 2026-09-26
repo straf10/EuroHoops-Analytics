@@ -81,6 +81,60 @@ this would be tuning it to pass. Item 22 stays red; it is not on the list of ite
 stay red. Next step (for the user): a team-level FT model (trips per possession plus a shrunk
 team foul-drawing rate) declared as a new variant.
 
+## Declared season-level variants (G5; §0 G-e, G-f) — committed before any run on any split
+No `lgbm_level` or `spline_level` number exists on any split, development, validation or test,
+when this is committed. Validation 2023-24 and test 2024-25/2025-26 have been seen by the weeks
+7–10 run, so **every G5 number on any split is post-hoc, not a clean hold-out**; the clean
+evaluation is the live 2026-27 season (rule below). The weeks 7–10 verdict (84308f9) and every
+committed number stay as they are.
+
+Bases (unchanged, from the same backtest run): `lgbm` = the 5-seed mean LightGBM with the stored
+Optuna parameters (the weeks 7–10 chosen M2); `spline` = the grid-chosen spline. For a shot i in
+game g of season s:
+
+    p_level = sigmoid(logit(p_base_i) + o_s(g)),   p_base clipped to [1e-6, 1 - 1e-6]
+    o_s(g)  = w * d_s(<g) + (1 - w) * prior_s,     w = n / (n + k)
+
+- n = season-s shots in games that tipped off **strictly before** g (`games.tipoff_utc`);
+  d_s(<g) = the maximum-likelihood intercept shift on those shots: the d solving
+  Σ (y − sigmoid(logit p_base + d)) = 0 (Newton). n = 0 (the season's first tip-off) → w = 0,
+  o = prior.
+- prior_s = the previous season's final offset = the same MLE shift over **all** shots of season
+  s − 1, with base predictions for s − 1 from a model trained on **neither s nor s − 1**:
+  development s → the leave-two-out model (s, s − 1) (the pair fits the nested isotonic already
+  makes; seed mean for LightGBM); validation 2023 → 2022's LOSO prediction (fitted on
+  development without 2022, never on 2023); test 2024 → 2023's development-fitted prediction;
+  test 2025 → 2024's development-fitted prediction. First development season 2011: prior 0
+  (2010-11 is not a validated season).
+- k (empirical Bayes, development seasons only): for fitting set F, D_t = full-season MLE shift of
+  season t, I_t = Σ p(1 − p) over t's shots (so Var D_t ≈ 1/I_t); over consecutive pairs
+  (t − 1, t) both in F: τ² = mean((D_t − D_{t−1})²) − mean(1/I_t + 1/I_{t−1}); v̄ = mean p(1 − p)
+  over F's shots; k = 1 / (v̄ τ²) (τ² ≤ 0 → w = 0, prior only). F and its predictions:
+  development season s → the development seasons other than s, D_t from the pair model (s, t);
+  validation and test → all development seasons, D_t from their LOSO predictions. So no offset
+  used for a season-s game depends on a season-s shot of that game or a later one, nor (for
+  development) on any season-s shot through the prior or k.
+
+Evaluation (every number labelled `post_hoc: true`, "post-hoc, not a clean hold-out"),
+development LOSO, validation and test: log loss, Brier, ECE + reliability (overall, per band,
+2s vs 3s, contexts) as for the other variants; calibration in the large per season (Σ xPTS /
+Σ actual FG points); `lgbm_level − lgbm` and `spline_level − spline`: log loss and Brier with
+the game-level bootstrap 95% CI (1,000, seed 20261001) and the ECE difference with its CI; F-f
+on validation for both (and on test, reported). G-g: F6/F7 are also computed with `lgbm_level`,
+side by side and post-hoc, only if it meets F-f on validation **and** its development LOSO log
+loss is below `lgbm`'s. Either outcome is accepted; no second variant is tried to make it pass.
+
+Pre-registered live rule (2026-27, `scripts/checks/m2_live_level.py`, run only after the
+season's last game): 2026-27 shots built from the cache with the F1 rules; `lgbm` = the 5 seeds
+refitted on 2011-12 → 2025-26 with the stored parameters; `lgbm_level` offsets from 2026-27 games
+before g, prior = the full-season shift of 2025-26 under the 5 seeds fitted on 2011-12 →
+2024-25, k = the report's validation/test k. Both scored on every 2026-27 shot: F-f (ECE ≤
+0.010 with 20 equal-count bins, every bin with ≥ 500 shots within ±0.02), log loss, Brier, and
+`lgbm_level − lgbm` log loss with the game-level bootstrap 95% CI. Rule: `lgbm_level` is
+calibrated on 2026-27 iff it meets F-f; it improves on `lgbm` iff that CI's upper bound < 0.
+
+LEVEL_DECLARATION (this commit; the sha is added on the next line after it)
+
 ## Loop log
 iteration 1 | G1 flags dropped for good + outcome-coding audit (item 32) | tests/test_feature_audit.py (6), fast gate 1-6, 14, 19, 32 (green after a format fix), items 23/28/29 tests | green; full §6 pending (see sequencing) | 62b9526
 iteration 2 | G2 F2 share checks (code 1b09043 before the run) | tests/test_free_throws.py 11 (3-SE planted errors fail), item 22 real run, card test | item 22 FAIL (12/78 band flags > 7; team r below bar in 13/13) - diagnosed, not tuned; card updated | 8cc5640
