@@ -108,6 +108,18 @@ team foul-drawing rate) declared as a new variant.
   This run is the first G5 run on any split (declaration 1de203c came before it).
   RUNTIME backtest 2743 s
 
+- 2026-09-27: the UI dev server (node 5520) is at ~1.6 cores continuously (CPU time 3,661 s →
+  13,050 s during the verification run; machine at 100%). Asked the user; they are working in
+  the UI worktree and **cannot stop it**. All remaining timed runs are measured with it up.
+
+- **After 2** (HEAD 2068902: + spline in the pool, the chosen spline reuses the grid's LOSO
+  fits, zone codes once), 20:44Z-21:31Z: **2,774 s wall** with the UI server at ~1.6 cores
+  (machine 100%). Spline 252 s (was 368), LightGBM 2,249 s (was 2,447; seeds slowed 393 → 529 s
+  as the load grew). Weeks 7-10 fields byte-identical to the declaration commit's report; the
+  level block identical to After 1 (plus the new `mean_offset`). MLflow parent
+  57f0e20f166d44cf904e0426a05b186e.
+  RUNTIME backtest 2774 s
+
 ## G5 result (post-hoc, not a clean hold-out)
 - `lgbm_level`: CV log loss 0.629697 (lgbm 0.629699); validation log loss 0.633309, ECE
   0.01022 → **does not meet F-f** (target 0.010); test ECE 0.00947 but a bin outside ±0.02 →
