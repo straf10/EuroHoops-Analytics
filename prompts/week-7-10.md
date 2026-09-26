@@ -52,6 +52,12 @@ Guards:
 
 Answered by the user, 2026-09-26: all defaults (F-a to F-l).
 
+F-b amended by the user, 2026-09-26 (weeks 7–10b decision 1): `FASTBREAK`, `SECOND_CHANCE` and
+`POINTS_OFF_TURNOVER` are **dropped from M2 for good** (from 2015-16 the feed sets them only on
+made shots, i.e. they are the outcome). Rebuilding transition / put-back context from the
+play-by-play is out of scope. A data audit (checklist item 32) fails if any level of either
+feature builder has a make rate ≥ 0.99 (or ≤ 0.01) on the development shots where it is set.
+
 ## 1. Hard constraints (all weeks 0–7 constraints still apply)
 - **Scope = this file only.** No RAPM, no player impact beyond shot-making, no league translation, no GBL shot model (the GBL has no coordinates), no site pages, no live use of M2. Build nothing "for later".
 - **The live logs are sacred.** Existing rows in `predictions/*.csv` and `odds/*.csv` stay byte-identical; `git diff origin/main -- predictions/ odds/` shows only added lines. No `model_version` of Elo or M1 changes.
