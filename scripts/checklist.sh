@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# The phase checklist, top to bottom (first used as the weeks 5-7 §6 run). Prints PASS/FAIL per
+# The phase checklist, top to bottom (weeks 5-7 §6 items 1-20, weeks 7-10 items 21-30, weeks
+# 7-10b items 31-32). Prints PASS/FAIL per
 # item; the exit code is the number of FAILs. Run from anywhere: `bash scripts/checklist.sh`.
 #
 #   BASE      git ref the predictions and the stint sample are compared with (default origin/main)
@@ -91,6 +92,30 @@ skip 20 "screenshots" || {
   item "20 screenshots 1440/390, light/dark"
   (bash "$CHECKS/web_build.sh" >/dev/null 2>&1 \
     && uv run --with playwright python "$CHECKS/screenshots.py" "$SCRATCH/web/site" reports/screenshots)
+  res $?
+}
+skip 21 "F1 shots" || { item "21 F1 shot reconciliation, exclusion shares, two builds identical"; bash "$CHECKS/shots.sh"; res $?; }
+skip 22 "F2 free throws" || { item "22 F2 FT reconciliation per season (LOSO rates)"; bash "$CHECKS/free_throws.sh"; res $?; }
+skip 23 "F3/F4 models" || { item "23 F3/F4 unit tests, Optuna reproducibility, recorded runtimes"; bash "$CHECKS/m2_models.sh"; res $?; }
+skip 24 "F5 report" || { item "24 F5 backtest_m2.json complete, declaration < verdict < test, two runs identical"; bash "$CHECKS/m2_reports.sh"; res $?; }
+skip 25 "F6 teams" || { item "25 F6 calibration in the large per development season"; bash "$CHECKS/m2_teams.sh"; res $?; }
+skip 26 "F7 players" || { item "26 F7 m2_players.json with CIs, stability verdict = F-k rule"; bash "$CHECKS/m2_players.sh"; res $?; }
+skip 27 "F8 charts" || { item "27 F8 charts exist, geometry test"; bash "$CHECKS/m2_charts.sh"; res $?; }
+skip 28 "F9 MLflow + leakage" || { item "28 F9 MLflow parent + children, leakage tests"; bash "$CHECKS/m2_mlflow.sh"; res $?; }
+skip 29 "F10 model card" || {
+  item "29 F10 model card numbers match the reports"
+  uv run pytest -q -p no:cacheprovider tests/test_model_card_m2.py 2>&1 | tail -1
+  res "${PIPESTATUS[0]}"
+}
+skip 30 "no-dev build + predict" || { item "30 uv sync --no-dev, then build + predict"; bash "$CHECKS/no_dev.sh"; res $?; }
+skip 31 "G5 level variants" || {
+  item "31 G5 level variants: fields, post-hoc labels, two runs identical, leakage, declaration < run"
+  bash "$CHECKS/m2_level.sh"
+  res $?
+}
+skip 32 "G1 outcome coding" || {
+  item "32 G1 no outcome-coded M2 feature level (both builders, development shots)"
+  uv run python "$CHECKS/m2_outcome_coding.py"
   res $?
 }
 echo; echo "FAILS: $fails (end $(date -u +%H:%MZ))"; exit "$fails"

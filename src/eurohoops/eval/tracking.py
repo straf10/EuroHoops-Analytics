@@ -134,3 +134,79 @@ def log_backtest(
                 mlflow.log_metrics(flatten_metrics(block))
     run_id: str = parent.info.run_id
     return run_id
+
+
+EXPERIMENT_M2 = "m2-backtest"
+
+
+def _experiment(client: Any, name: str, tracking_uri: str) -> str:
+    experiment = client.get_experiment_by_name(name)
+    if experiment is not None:
+        return str(experiment.experiment_id)
+    artifacts = Path(tracking_uri.removeprefix("sqlite:///")).parent / "artifacts"
+    return str(client.create_experiment(name, artifact_location=artifacts.as_uri()))
+
+
+def log_m2_backtest(report: dict[str, Any], tracking_uri: str) -> str | None:
+    """Log one M2 backtest (F9): a parent run (params, data hash, commit, every numeric report
+    value, the report JSON), one child per declared variant and one for the Optuna study with
+    every trial's value as a stepped metric. None when MLflow is not installed."""
+    try:
+        import mlflow  # noqa: PLC0415 - optional dev dependency, only on the backtest path
+    except ImportError:
+        log.warning("MLflow is not installed (dev dependency): backtest not tracked")
+        return None
+    commit, dirty = git_state()
+    shared = {
+        "competition": "euroleague",
+        "data_sha256": report["data_sha256"],
+        "git_commit": commit,
+        "git_dirty": str(dirty).lower(),
+        "model_version": report["model_version"],
+    }
+    params = {
+        **shared,
+        **{f"spline.{k}": v for k, v in report["spline_chosen"].items()},
+        **{f"lgbm.{k}": v for k, v in report["lightgbm_params"].items()},
+        **{f"seasons.{k}": ",".join(map(str, v)) for k, v in report["seasons"].items()},
+        "seeds": ",".join(map(str, report["seed_robustness"]["seeds"])),
+        "gate_chosen": report["gate"]["chosen"],
+        "test_scored": report["test_scored"],
+    }
+    mlflow.set_tracking_uri(tracking_uri)
+    experiment_id = _experiment(mlflow.MlflowClient(), EXPERIMENT_M2, tracking_uri)
+    name = f"m2 {report['model_version']}"
+    with mlflow.start_run(experiment_id=experiment_id, run_name=name) as parent:
+        mlflow.log_params(params)
+        mlflow.set_tags(shared)
+        mlflow.log_metrics(flatten_metrics({k: v for k, v in report.items() if k != "variants"}))
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "backtest_m2.json"
+            path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+            mlflow.log_artifact(str(path))
+        for variant, block in report["variants"].items():
+            with mlflow.start_run(
+                experiment_id=experiment_id, run_name=f"{name} {variant}", nested=True
+            ):
+                mlflow.log_params({**params, "variant": variant, "post_hoc": block["post_hoc"]})
+                mlflow.set_tags(shared)
+                mlflow.log_metrics(flatten_metrics(block))
+        study = report["optuna_study"]
+        with mlflow.start_run(
+            experiment_id=experiment_id, run_name=f"{name} optuna-study", nested=True
+        ):
+            mlflow.log_params(
+                {
+                    **shared,
+                    "sampler": study["sampler"],
+                    "study_seed": study["seed"],
+                    "n_trials": study["n_trials"],
+                    **{f"best.{k}": v for k, v in study["best_params"].items()},
+                }
+            )
+            mlflow.set_tags(shared)
+            mlflow.log_metric("best_value", study["best_value"])
+            for trial in study["trials"]:
+                mlflow.log_metric("trial_value", trial["value"], step=trial["number"])
+    run_id: str = parent.info.run_id
+    return run_id
