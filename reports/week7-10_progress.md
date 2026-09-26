@@ -169,4 +169,15 @@ RUNTIME backtest 2951 s
   number-preserving speed-up reaches 40 min; meeting it needs a change to the declared
   computation (fewer threads/seeds or no nested isotonic for LightGBM), which I did not make.
 
-VERDICT (this commit)
+VERDICT 84308f9
+
+## TEST RUN (once, after verdict commit 84308f9): 2026-09-26 12:14Z-13:07Z
+`backtest --model m2 --score-test`; MLflow parent run d5ca70bafbbc411791aff2c649bb2e65.
+RUNTIME backtest 3130 s (with the test seasons; over the 2,400 s budget)
+Every development and validation number is identical to the verdict report (checked).
+- Test (2024-25 + 2025-26, 93,119 shots) log loss: spline 0.635433, spline_iso 0.635587, lgbm
+  0.633467, lgbm_iso 0.633374.
+- lgbm − spline_iso: −0.002119 [−0.002601, −0.001658]; Brier −0.000842 [−0.001034, −0.000654];
+  ECE +0.000633 [−0.003120, +0.003892]; no seed flips. lgbm test ECE 0.012626 → not
+  calibrated on test either. Same verdict as validation: beats the baseline, fails F-f.
+iteration 3 | F3 spline, F4 LightGBM + Optuna, F5 evaluation/gate/test | fast gate 1-6, 14, 19 before each commit; F3/F4 tests; study 3508 s; backtest 2951 s (RED > 2400 s) | declared → invalid run (leak) → amended declaration afbc08e → verdict 84308f9 (FAILED: not calibrated) → test run | see TEST line
