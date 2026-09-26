@@ -67,7 +67,9 @@ jobs:
           uv run --no-dev eurohoops score
           uv run --no-dev eurohoops score --competition gbl
       - name: Export the site data
-        run: uv run --no-dev eurohoops publish
+        run: |
+          uv run --no-dev eurohoops publish
+          uv run --no-dev eurohoops export-stats
       - uses: actions/setup-node@v4
         with:
           node-version: 24
