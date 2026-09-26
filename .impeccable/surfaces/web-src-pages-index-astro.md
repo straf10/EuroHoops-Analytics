@@ -31,3 +31,4 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
 - Hero subtext runs to three lines on desktop, not one. Kept as written: it is factual product copy, and copy is replaced only with the owner's word. Open for the owner to shorten.
 - Split bar: the away share is always the same Baseline Gray (no dimming for the underdog); the favourite is carried by its ink semibold percentage.
+- Owner decision (2026-09-27): on phones the competition switch takes a full-width second row of the bar, so the site links keep the first row and "Forecasts" shows in full.

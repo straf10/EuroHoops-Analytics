@@ -22,3 +22,7 @@ FIRST VIEWPORT: one row of subject, season and view controls; court on the left 
 FORM: Filters that are charts, position 5 of 7 on the ranked list, seed key 425eeb26. Signature interaction: a click on a facet bar toggles it; other facets' bars resize in place (200 ms) and the court redraws.
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+
+## Adaptations recorded at the finish review (2026-09-27)
+
+- Owner decision (2026-09-27, recommendations accepted, on "Shots: Play facet's Diff column is all dashes. Leave the dashes; they honestly say there's no comparison."): the Play facet keeps its Diff column, with dashes where the league has no comparison.

@@ -27,5 +27,5 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
 - Owner decision (2026-09-27): the court is closed to the halfway line with the centre-circle half; slots are placed so no court line touches text.
 - Owner decision (2026-09-27): 30px bench shirts carry the number only; the 72px court shirts and 64px Compare shirts keep the surname.
-- The court slot shows the ranked value large above the card line at every width (DESIGN.md "Court lineup"); the contract names the large value only for floors under 620px. Open for the owner to confirm or drop.
+- Owner decision (2026-09-27, "go with your recommendations" on "Leaders: ranked value shown twice on desktop. Keep it. The big number is what you scan the court for."): the court slot keeps the large ranked value above the card line at every width.
 - The bench head matches the court head: title, one-line note, strong rule.
