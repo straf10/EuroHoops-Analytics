@@ -6,6 +6,8 @@ Layout (every number a raw total; the site derives per-game, per-36 and per-100 
 - ``players.json``: every player once (id, display name, URL slug, seasons played).
 - ``splits.json``: one row per player, season and club (the number he wore most there and his
   totals), for career, best-season and club views.
+- ``twins.json``: the Shot Profile Twin pool (player-seasons) and, per player, the closest pool
+  rows to his last 5/10/20 games and latest season (``stats/twins.py``).
 - ``seasons/{season}/players.json``: one row per player-season: totals for the season and for
   his last 5/10/20 games (a window is left out when he played no more games than it holds),
   and attempts/makes per distance band.
@@ -38,6 +40,7 @@ from eurohoops.ingest.euroleague import RawGame
 from eurohoops.parse.games import ATHENS, build_games_table, build_teams_table
 from eurohoops.stats.box import STATS, BoxGames
 from eurohoops.stats.shots import BANDS, HEX_RADIUS_M, Shots, band_counts, band_table, hexbins
+from eurohoops.stats.twins import twins_payload
 
 STATS_DIR = Path("web/src/data/stats")  # read by the Astro build in web/
 WINDOWS = (5, 10, 20)
@@ -343,6 +346,7 @@ def build_payloads(inputs: Inputs, now: datetime) -> dict[str, dict[str, Any]]:
         )
     }
     files["splits.json"] = _splits_payload(frame, inputs)
+    files["twins.json"] = twins_payload(frame, inputs.shots.table, inputs.codes)
     codes = sorted(set(inputs.box.teams["team"]))
     files["meta.json"] = {
         "generated_at": now.strftime("%Y-%m-%dT%H:%MZ"),
