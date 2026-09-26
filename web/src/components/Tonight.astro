@@ -1,0 +1,341 @@
+---
+import type { Competition } from "../lib/format";
+import { athensDay, athensTime, call, pct } from "../lib/format";
+
+interface Props {
+  comp: Competition;
+}
+const { comp } = Astro.props;
+const games = comp.upcoming;
+const days = [...new Set(games.map((g) => athensDay(g.tipoff_utc)))];
+const rounds = [...new Set(games.map((g) => g.round))];
+---
+
+<section class="tonight" data-comp={comp.key} aria-labelledby={`tn-${comp.key}`}>
+  <header class="head">
+    <h2 id={`tn-${comp.key}`}>
+      {games.length > 0 ? `Round ${rounds.join(" & ")}` : "Next up"}
+    </h2>
+    {games.length > 0 && <p>{days.join(" to ")}, Athens time</p>}
+  </header>
+
+  {
+    games.length > 0 ? (
+      <ol class="games">
+        {games.map((g, i) => {
+          const fav = call(g);
+          const homeFav = g.p_home >= 0.5;
+          const margin = Math.abs(g.exp_margin).toFixed(1);
+          return (
+            <li class="game" id={g.game_id} style={`--p:${(g.p_home * 100).toFixed(1)};--i:${i}`}>
+              <time class="when" datetime={g.tipoff_utc}>
+                {athensTime(g.tipoff_utc)}
+                <small>{athensDay(g.tipoff_utc)}</small>
+              </time>
+              <span class:list={["team away", { fav: !homeFav }]}>
+                <b>{g.away.code}</b>
+                <span class="name">{g.away.name}</span>
+              </span>
+              <span
+                class="split"
+                tabindex="0"
+                data-tip={`<b>${g.home.name}</b> win chance ${pct(g.p_home)}<br>${g.away.name} ${pct(1 - g.p_home)}<br>Expected margin: ${fav.team.code} by ${margin}`}
+                aria-label={`${g.home.name} host ${g.away.name}. Home win chance ${pct(g.p_home)}. Expected margin ${fav.team.code} by ${margin} points.`}
+              >
+                <span class="pa">{pct(1 - g.p_home)}</span>
+                <span class="bars" aria-hidden="true">
+                  <span class="seg-away" />
+                  <span class="seg-home" />
+                </span>
+                <span class="ph">{pct(g.p_home)}</span>
+              </span>
+              <span class:list={["team home", { fav: homeFav }]}>
+                <b>{g.home.code}</b>
+                <span class="name">{g.home.name}</span>
+              </span>
+              <span class="margin">
+                {fav.team.code} <span>by {margin}</span>
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+    ) : (
+      <div class="empty">
+        <p class="lead">
+          {comp.next_tipoff_utc
+            ? `Next tip-off ${athensDay(comp.next_tipoff_utc)}, ${athensTime(comp.next_tipoff_utc)}.`
+            : "The season has no scheduled games left."}
+        </p>
+        <p>
+          Forecasts appear here once a game is 36 hours from tip-off. Every forecast so far stays in
+          the public log.
+        </p>
+      </div>
+    )
+  }
+  {
+    games.length > 0 && (
+      <p class="legend" aria-hidden="true">
+        <span>
+          <i class="k-away" />
+          Away win
+        </span>
+        <span>
+          <i class="k-home" />
+          Home win
+        </span>
+      </p>
+    )
+  }
+</section>
+
+<style>
+  .tonight {
+    min-width: 0;
+    container-type: inline-size;
+  }
+  .head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4px 16px;
+    flex-wrap: wrap;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--rule-strong);
+  }
+  .head h2 {
+    font-size: 1rem;
+  }
+  .head p {
+    color: var(--muted);
+    font-size: 0.8125rem;
+  }
+
+  .games {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .game {
+    display: grid;
+    grid-template-columns: 3.4rem minmax(0, 1fr) minmax(150px, 1.35fr) minmax(0, 1fr) 4.6rem;
+    align-items: center;
+    gap: 14px;
+    min-height: 56px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .when {
+    font-size: 0.875rem;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+  }
+  .when small {
+    display: block;
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-weight: 400;
+  }
+
+  .team {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    min-width: 0;
+    color: var(--ink-2);
+  }
+  .team.home {
+    justify-content: flex-start;
+  }
+  .team.away {
+    justify-content: flex-end;
+    text-align: right;
+  }
+  .team b {
+    font-weight: 600;
+    font-size: 0.9375rem;
+    letter-spacing: 0.01em;
+  }
+  .team .name {
+    font-size: 0.8125rem;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+  .team.away .name {
+    order: -1;
+  }
+  .team.fav b {
+    color: var(--ink);
+  }
+
+  /* Split bar: away share (neutral) meets home share (the model's blue) at P(home). */
+  .split {
+    display: grid;
+    grid-template-columns: 2.4rem minmax(0, 1fr) 2.4rem;
+    align-items: center;
+    gap: 8px;
+    border-radius: 6px;
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+    cursor: default;
+  }
+  .pa {
+    text-align: right;
+    color: var(--muted);
+  }
+  .ph {
+    color: var(--muted);
+  }
+  .bars {
+    position: relative;
+    display: flex;
+    gap: 2px;
+    height: 10px;
+  }
+  .bars::after {
+    /* even-odds tick, stands proud of the bar */
+    content: "";
+    position: absolute;
+    left: calc(50% - 0.5px);
+    top: -5px;
+    bottom: -5px;
+    width: 1px;
+    background: var(--ink-2);
+    opacity: 0.5;
+  }
+  .seg-away,
+  .seg-home {
+    height: 100%;
+  }
+  /* Each call grows out of even odds when the panel appears (load and competition switch). */
+  @keyframes from-even {
+    from {
+      flex-basis: 50%;
+    }
+  }
+  .seg-away {
+    animation: from-even 320ms var(--ease-out) both;
+    animation-delay: calc(var(--i) * 40ms);
+  }
+  .seg-away {
+    flex: 0 0 calc((100 - var(--p)) * 1%);
+    background: var(--data-2);
+    border-radius: 4px 0 0 4px;
+    opacity: 0.55;
+  }
+  .seg-home {
+    flex: 1 1 auto;
+    background: var(--data-1);
+    border-radius: 0 4px 4px 0;
+  }
+  .game:has(.team.away.fav) .pa,
+  .game:has(.team.home.fav) .ph {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .game:has(.team.away.fav) .seg-away {
+    opacity: 1;
+  }
+
+  .margin {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    text-align: right;
+    white-space: nowrap;
+  }
+  .margin span {
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  .legend {
+    display: flex;
+    gap: 18px;
+    margin-top: 12px;
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+  .legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .legend i {
+    width: 14px;
+    height: 8px;
+    border-radius: 2px;
+  }
+  .k-away {
+    background: var(--data-2);
+  }
+  .k-home {
+    background: var(--data-1);
+  }
+
+  .empty {
+    padding: 28px 0 8px;
+    max-width: 52ch;
+  }
+  .empty .lead {
+    font-size: 1.125rem;
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+  .empty p:not(.lead) {
+    color: var(--ink-2);
+  }
+
+  /* Full names only when the panel is wide enough to keep every column whole. */
+  @container (max-width: 820px) {
+    .team .name {
+      display: none;
+    }
+    .game {
+      grid-template-columns: 3.4rem 2.8rem minmax(140px, 1fr) 2.8rem 5.4rem;
+    }
+  }
+
+  @container (max-width: 520px) {
+    .game {
+      grid-template-columns: 3.2rem minmax(0, 1fr) minmax(0, 1fr);
+      grid-template-areas:
+        "when away home"
+        "when split split"
+        "when margin margin";
+      row-gap: 6px;
+      padding-block: 10px;
+    }
+    .when {
+      grid-area: when;
+      align-self: start;
+    }
+    .team.away {
+      grid-area: away;
+      justify-content: flex-start;
+      text-align: left;
+    }
+    .team.away .name {
+      order: 0;
+    }
+    .team.home {
+      grid-area: home;
+      justify-content: flex-end;
+    }
+    .team .name {
+      display: none;
+    }
+    .split {
+      grid-area: split;
+    }
+    .margin {
+      grid-area: margin;
+      text-align: left;
+      color: var(--ink-2);
+    }
+  }
+</style>

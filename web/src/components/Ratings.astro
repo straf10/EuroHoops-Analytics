@@ -1,6 +1,6 @@
 ---
-import caretUp from "@phosphor-icons/core/assets/bold/caret-up-bold.svg?raw";
-import caretDown from "@phosphor-icons/core/assets/bold/caret-down-bold.svg?raw";
+import caretUp from "@phosphor-icons/core/assets/fill/caret-up-fill.svg?raw";
+import caretDown from "@phosphor-icons/core/assets/fill/caret-down-fill.svg?raw";
 import type { Competition } from "../lib/format";
 import { signed } from "../lib/format";
 
@@ -10,32 +10,48 @@ interface Props {
 const { comp } = Astro.props;
 const ratings = comp.ratings;
 const values = ratings.map((r) => r.rating);
-const lo = Math.floor((Math.min(...values) - 20) / 50) * 50;
-const hi = Math.ceil((Math.max(...values) + 20) / 50) * 50;
+const lo = Math.floor((Math.min(...values, 1500) - 20) / 50) * 50;
+const hi = Math.ceil((Math.max(...values, 1500) + 20) / 50) * 50;
 const pos = (x: number) => ((x - lo) / (hi - lo)) * 100;
 const half = Math.ceil(ratings.length / 2);
 const columns = [ratings.slice(0, half), ratings.slice(half)];
 ---
 
-<div class="ratings" data-comp={comp.key}>
+<div class="ratings" data-comp={comp.key} style={`--avg:${pos(1500).toFixed(1)}`}>
   {
     columns.map((col, c) => (
       <ol class="ladder" start={c * half + 1}>
-        {col.map((r) => (
-          <li style={`--x:${pos(r.rating).toFixed(1)}`}>
+        <li class="axis" aria-hidden="true">
+          <span />
+          <span class="scale">
+            <span>{lo}</span>
+            <span class="avg">1500</span>
+            <span>{hi}</span>
+          </span>
+          <span />
+          <span />
+        </li>
+        {col.map((r, i) => (
+          <li
+            class:list={{ below: r.rating < 1500 }}
+            style={`--x:${pos(r.rating).toFixed(1)};--s:${Math.min(pos(r.rating), pos(1500)).toFixed(1)};--w:${Math.abs(pos(r.rating) - pos(1500)).toFixed(1)}`}
+            tabindex="0"
+            data-tip={`<b>${r.name}</b><br>Elo ${r.rating.toFixed(0)}, ${signed(r.change, 0)} since the season started`}
+          >
             <span class="team">
+              <span class="rank">{c * half + i + 1}</span>
               <b>{r.code}</b>
               <span class="name">{r.name}</span>
             </span>
             <span class="rail" aria-hidden="true">
-              <span class="magnet" />
+              <span class="dot" />
             </span>
             <span class="value">{r.rating.toFixed(0)}</span>
             <span
               class:list={["change", r.change > 0.5 ? "up" : r.change < -0.5 ? "down" : "flat"]}
             >
-              {r.change > 0.5 && <Fragment set:html={caretUp} />}
-              {r.change < -0.5 && <Fragment set:html={caretDown} />}
+              {r.change > 0.5 && <span class="icon" set:html={caretUp} />}
+              {r.change < -0.5 && <span class="icon" set:html={caretDown} />}
               <span>{signed(r.change, 0)}</span>
               <span class="sr-only"> since the season started</span>
             </span>
@@ -44,18 +60,16 @@ const columns = [ratings.slice(0, half), ratings.slice(half)];
       </ol>
     ))
   }
-  <p class="scale" aria-hidden="true">
-    <span>{lo}</span>
-    <span class="hand">rating scale, 1500 = average team</span>
-    <span>{hi}</span>
-  </p>
 </div>
+<p class="note" data-comp={comp.key}>
+  Elo rating; 1500 is an average team, marked by the dashed line. Blue sits above average, red below.
+</p>
 
 <style>
   .ratings {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: clamp(28px, 5vw, 72px);
+    column-gap: 56px;
   }
   .ladder {
     list-style: none;
@@ -64,11 +78,36 @@ const columns = [ratings.slice(0, half), ratings.slice(half)];
   }
   .ladder li {
     display: grid;
-    grid-template-columns: minmax(0, 1.25fr) minmax(64px, 1fr) 3.2rem 3.4rem;
+    grid-template-columns: minmax(0, 1.3fr) minmax(80px, 1fr) 3rem 3.4rem;
     align-items: center;
-    gap: 12px;
-    min-height: 46px;
-    border-bottom: 1px solid var(--line);
+    gap: 14px;
+    min-height: 42px;
+    border-bottom: 1px solid var(--rule);
+    font-size: 0.875rem;
+    font-variant-numeric: tabular-nums;
+    cursor: default;
+    transition: background-color 120ms ease;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .ladder li:not(.axis):hover {
+      background: var(--sunk);
+    }
+  }
+  .ladder li.axis {
+    min-height: 32px;
+    border-bottom-color: var(--rule-strong);
+    color: var(--muted);
+    font-size: 0.6875rem;
+  }
+  .scale {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+  }
+  .scale .avg {
+    position: absolute;
+    left: calc(var(--avg) * 1%);
+    translate: -50% 0;
   }
   .team {
     display: flex;
@@ -76,86 +115,108 @@ const columns = [ratings.slice(0, half), ratings.slice(half)];
     gap: 10px;
     min-width: 0;
   }
+  .rank {
+    width: 1.4rem;
+    color: var(--muted);
+    font-size: 0.75rem;
+    text-align: right;
+    flex: none;
+  }
   .team b {
-    font-family: var(--display);
-    font-weight: 800;
-    font-size: 1.1rem;
-    letter-spacing: 0.02em;
-    min-width: 2.6rem;
+    font-weight: 600;
+    flex: none;
   }
   .name {
-    color: var(--ink-2);
-    font-size: 0.92rem;
+    color: var(--muted);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
   .rail {
     position: relative;
-    height: 14px;
+    height: 12px;
   }
   .rail::before {
+    /* the league-average line */
     content: "";
     position: absolute;
-    inset: 50% 0 auto;
-    border-top: 1.5px solid var(--line);
+    left: calc(var(--avg) * 1%);
+    top: -15px;
+    bottom: -15px;
+    border-left: 1px dashed var(--rule-strong);
   }
-  .magnet {
+  .rail::after {
+    /* stem from average to the team's rating */
+    content: "";
     position: absolute;
     top: 50%;
+    height: 2px;
+    translate: 0 -50%;
+    left: calc(var(--s) * 1%);
+    width: calc(var(--w) * 1%);
+    background: var(--data-1);
+    opacity: 0.4;
+    border-radius: 1px;
+  }
+  /* Diverging: above average in the model's blue, below average in red. */
+  .below .rail::after,
+  .below .dot {
+    background: var(--data-neg);
+  }
+  .dot {
+    position: absolute;
+    z-index: 1;
+    top: 50%;
     left: calc(var(--x) * 1%);
-    width: 14px;
-    aspect-ratio: 1;
+    width: 10px;
+    height: 10px;
     translate: -50% -50%;
     border-radius: 50%;
-    background: var(--ink);
-    box-shadow: 0 1px 2px var(--shadow);
+    background: var(--data-1);
+    box-shadow: 0 0 0 2px var(--page);
   }
   .value {
-    font-family: var(--display);
-    font-weight: 800;
-    font-size: 1.3rem;
     text-align: right;
+    font-weight: 600;
   }
   .change {
     display: inline-flex;
     align-items: center;
     justify-content: flex-end;
     gap: 2px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--ink-2);
+    color: var(--muted);
+    font-size: 0.8125rem;
   }
-  .change :global(svg) {
-    width: 12px;
-    height: 12px;
-    fill: currentColor;
+  .change .icon {
+    display: inline-grid;
+    font-size: 10px;
   }
-  .change.up {
-    color: var(--blue);
+  .up .icon {
+    color: var(--data-1);
   }
-  .change.down {
-    color: var(--red);
+  .down .icon {
+    color: var(--data-neg);
   }
-  .scale {
-    grid-column: 1 / -1;
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-top: 12px;
-    color: var(--ink-2);
-    font-size: 0.8rem;
+  .note {
+    margin-top: 14px;
+    color: var(--muted);
+    font-size: 0.8125rem;
   }
-  .scale .hand {
-    font-size: 1.1rem;
-  }
-  @media (max-width: 760px) {
+  @media (max-width: 900px) {
     .ratings {
       grid-template-columns: 1fr;
     }
+    .ladder + .ladder li.axis {
+      display: none;
+    }
+  }
+  @media (max-width: 480px) {
     .ladder li {
-      grid-template-columns: minmax(0, 1fr) 72px 3rem 3.2rem;
+      grid-template-columns: minmax(0, 1fr) minmax(60px, 0.8fr) 2.6rem 3rem;
       gap: 10px;
+    }
+    .name {
+      display: none;
     }
   }
 </style>

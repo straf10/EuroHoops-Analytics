@@ -1,0 +1,391 @@
+---
+import "@fontsource-variable/geist";
+import "../styles/global.css";
+import github from "@phosphor-icons/core/assets/regular/github-logo.svg?raw";
+import sun from "@phosphor-icons/core/assets/regular/sun.svg?raw";
+import moon from "@phosphor-icons/core/assets/regular/moon.svg?raw";
+
+interface Props {
+  title?: string;
+  description: string;
+  /** In-page sections for the top bar, until the stats pages ship. */
+  sections?: { href: string; label: string }[];
+  /** Show the EuroLeague / Greek League switch in the top bar. */
+  compSwitch?: boolean;
+  updated?: string;
+}
+const { title, description, sections = [], compSwitch = false, updated } = Astro.props;
+const REPO = "https://github.com/straf10/EuroHoops-Analytics";
+const fullTitle = title ? `${title} · EuroHoops` : "EuroHoops Analytics";
+const home = import.meta.env.BASE_URL;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#f9f9f7" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0e0e0d" media="(prefers-color-scheme: dark)" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23111110'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%232a78d6' stroke-width='3'/%3E%3C/svg%3E"
+    />
+    <script is:inline>
+      // Theme: the visitor's saved choice wins, otherwise the system decides.
+      try {
+        const t = localStorage.getItem("eh-theme");
+        if (t === "light" || t === "dark") document.documentElement.dataset.theme = t;
+      } catch {}
+      // Competition: ?comp=gbl, #gbl or the saved choice.
+      try {
+        const asked = new URLSearchParams(location.search).get("comp") ?? location.hash.slice(1);
+        const saved = localStorage.getItem("eh-comp");
+        if (asked === "gbl" || (asked !== "euroleague" && saved === "gbl")) {
+          document.addEventListener("DOMContentLoaded", () => {
+            const r = document.getElementById("comp-gbl");
+            if (r) r.checked = true;
+          });
+        }
+      } catch {}
+    </script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="bar">
+      <div class="wrap bar-inner">
+        <a class="wordmark" href={home} aria-label="EuroHoops Analytics, home">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="6.5" /></svg>
+          <span>EuroHoops</span>
+        </a>
+
+        {
+          sections.length > 0 && (
+            <nav class="links" aria-label="Sections">
+              {sections.map((s) => (
+                <a href={s.href}>{s.label}</a>
+              ))}
+            </nav>
+          )
+        }
+
+        <div class="tools">
+          {
+            compSwitch && (
+              <fieldset class="seg">
+                <legend class="sr-only">Competition</legend>
+                <input type="radio" name="comp" id="comp-euroleague" value="euroleague" checked />
+                <label for="comp-euroleague">EuroLeague</label>
+                <input type="radio" name="comp" id="comp-gbl" value="gbl" />
+                <label for="comp-gbl">
+                  <span class="long">Greek League</span>
+                  <span class="short">GBL</span>
+                </label>
+              </fieldset>
+            )
+          }
+          <button class="icon-btn" id="theme" type="button" aria-label="Switch to dark theme">
+            <span class="icon when-light" set:html={moon} />
+            <span class="icon when-dark" set:html={sun} />
+          </button>
+          <a class="icon-btn" href={REPO} aria-label="Source code on GitHub">
+            <span class="icon" set:html={github} />
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <footer class="foot">
+      <div class="wrap foot-inner">
+        <p>A model benchmark, not betting advice. No affiliation with EuroLeague or the Greek Basket League.</p>
+        {updated && <p>Updated {updated}.</p>}
+        <a href={REPO}>Code, data and logs on GitHub</a>
+      </div>
+    </footer>
+
+    <div class="tip" id="tip" role="tooltip" aria-hidden="true"></div>
+
+    <script>
+      // Theme toggle: flips against whatever is showing now and remembers it.
+      const root = document.documentElement;
+      const btn = document.getElementById("theme") as HTMLButtonElement;
+      const isDark = () =>
+        root.dataset.theme
+          ? root.dataset.theme === "dark"
+          : matchMedia("(prefers-color-scheme: dark)").matches;
+      const label = () =>
+        btn.setAttribute("aria-label", isDark() ? "Switch to light theme" : "Switch to dark theme");
+      label();
+      btn.addEventListener("click", () => {
+        const next = isDark() ? "light" : "dark";
+        root.dataset.theme = next;
+        try {
+          localStorage.setItem("eh-theme", next);
+        } catch {
+          /* storage unavailable: the choice lasts for this visit */
+        }
+        label();
+      });
+
+      // Competition switch memory.
+      document.querySelectorAll<HTMLInputElement>('input[name="comp"]').forEach((r) =>
+        r.addEventListener("change", () => {
+          root.classList.add("comp-switched");
+          try {
+            localStorage.setItem("eh-comp", r.value);
+          } catch {
+            /* storage unavailable: the switch still works for this visit */
+          }
+        }),
+      );
+
+      // Tooltips: any element with data-tip. The first one waits, later ones open instantly.
+      const tip = document.getElementById("tip") as HTMLDivElement;
+      let timer = 0;
+      let warm = false;
+      let coolTimer = 0;
+      const place = (el: Element) => {
+        const r = el.getBoundingClientRect();
+        const t = tip.getBoundingClientRect();
+        let x = r.left + r.width / 2 - t.width / 2;
+        x = Math.max(8, Math.min(x, innerWidth - t.width - 8));
+        let y = r.top - t.height - 8;
+        if (y < 8) y = r.bottom + 8;
+        tip.style.translate = `${Math.round(x)}px ${Math.round(y)}px`;
+      };
+      const show = (el: Element) => {
+        clearTimeout(timer);
+        clearTimeout(coolTimer);
+        tip.innerHTML = el.getAttribute("data-tip") ?? "";
+        const open = () => {
+          if (warm) tip.setAttribute("data-instant", "");
+          else tip.removeAttribute("data-instant");
+          place(el);
+          tip.setAttribute("data-open", "");
+          warm = true;
+        };
+        if (warm) open();
+        else timer = window.setTimeout(open, 120);
+      };
+      const hide = () => {
+        clearTimeout(timer);
+        tip.removeAttribute("data-open");
+        coolTimer = window.setTimeout(() => (warm = false), 300);
+      };
+      document.addEventListener("pointerover", (e) => {
+        const el = (e.target as Element).closest?.("[data-tip]");
+        if (el) show(el);
+      });
+      document.addEventListener("pointerout", (e) => {
+        const el = (e.target as Element).closest?.("[data-tip]");
+        if (el && !el.contains(e.relatedTarget as Node)) hide();
+      });
+      document.addEventListener("focusin", (e) => {
+        const el = (e.target as Element).closest?.("[data-tip]");
+        if (el) show(el);
+      });
+      document.addEventListener("focusout", hide);
+      addEventListener("scroll", hide, { passive: true });
+    </script>
+  </body>
+</html>
+
+<style>
+  .skip {
+    position: absolute;
+    left: 12px;
+    top: -48px;
+    z-index: 60;
+    padding: 8px 12px;
+    background: var(--ink);
+    color: var(--on-ink);
+    border-radius: 6px;
+    text-decoration: none;
+  }
+  .skip:focus {
+    top: 12px;
+  }
+
+  .bar {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background: color-mix(in srgb, var(--page) 88%, transparent);
+    backdrop-filter: saturate(1.4) blur(10px);
+    -webkit-backdrop-filter: saturate(1.4) blur(10px);
+    border-bottom: 1px solid var(--rule);
+  }
+  .bar-inner {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    height: 56px;
+  }
+  .wordmark {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 650;
+    font-size: 0.98rem;
+    letter-spacing: -0.02em;
+    text-decoration: none;
+    flex: none;
+  }
+  .wordmark svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: var(--data-1);
+    stroke-width: 2.6;
+  }
+  .links {
+    display: flex;
+    gap: 22px;
+    font-size: 0.875rem;
+    color: var(--ink-2);
+    min-width: 0;
+  }
+  .links a {
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 150ms ease;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .links a:hover {
+      color: var(--ink);
+    }
+  }
+  .tools {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+  }
+
+  /* Segmented control: ink fill marks the choice, never colour. */
+  .seg {
+    display: inline-flex;
+    margin: 0 6px 0 0;
+    padding: 2px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--sunk);
+    box-shadow: inset 0 0 0 1px var(--rule);
+  }
+  .seg input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .seg label {
+    padding: 4px 11px;
+    border-radius: 6px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--ink-2);
+    cursor: pointer;
+    user-select: none;
+    transition:
+      background-color 180ms var(--ease-out),
+      color 180ms var(--ease-out),
+      transform 140ms ease-out;
+  }
+  .seg label:active {
+    transform: scale(0.97);
+  }
+  .seg input:checked + label {
+    background: var(--ink);
+    color: var(--on-ink);
+  }
+  .seg input:focus-visible + label {
+    outline: 2px solid var(--data-1);
+    outline-offset: 1px;
+  }
+  .seg .short {
+    display: none;
+  }
+
+  .icon-btn {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--ink-2);
+    font-size: 18px;
+    cursor: pointer;
+    transition:
+      background-color 150ms ease,
+      color 150ms ease,
+      transform 140ms ease-out;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .icon-btn:hover {
+      background: var(--sunk);
+      color: var(--ink);
+    }
+  }
+  .icon-btn:active {
+    transform: scale(0.94);
+  }
+  .when-dark {
+    display: none;
+  }
+  :global(:root[data-theme="dark"]) .when-dark {
+    display: grid;
+  }
+  :global(:root[data-theme="dark"]) .when-light {
+    display: none;
+  }
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme="light"])) .when-dark {
+      display: grid;
+    }
+    :global(:root:not([data-theme="light"])) .when-light {
+      display: none;
+    }
+  }
+
+  .foot {
+    margin-top: 96px;
+    border-top: 1px solid var(--rule);
+    color: var(--muted);
+    font-size: 0.8125rem;
+  }
+  .foot-inner {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 28px;
+    padding-block: 28px 40px;
+  }
+  .foot-inner a {
+    margin-left: auto;
+  }
+
+  @media (max-width: 900px) {
+    .links {
+      display: none;
+    }
+  }
+  @media (max-width: 480px) {
+    .seg .long {
+      display: none;
+    }
+    .seg .short {
+      display: inline;
+    }
+    .foot-inner a {
+      margin-left: 0;
+    }
+  }
+</style>
