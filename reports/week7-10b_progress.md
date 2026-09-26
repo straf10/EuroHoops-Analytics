@@ -176,6 +176,7 @@ before g, prior = the full-season shift of 2025-26 under the 5 seeds fitted on 2
 calibrated on 2026-27 iff it meets F-f; it improves on `lgbm` iff that CI's upper bound < 0.
 
 LEVEL_DECLARATION 1de203c
+LEVEL_RUN 327d0a3
 
 ## Loop log
 iteration 1 | G1 flags dropped for good + outcome-coding audit (item 32) | tests/test_feature_audit.py (6), fast gate 1-6, 14, 19, 32 (green after a format fix), items 23/28/29 tests | green; full §6 pending (see sequencing) | 62b9526

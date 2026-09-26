@@ -40,7 +40,7 @@ from eurohoops.models.elo import FloatArray
 from eurohoops.models.feature_audit import outcome_coded_levels
 from eurohoops.models.season_level import level_predictions
 from eurohoops.models.xpts import fit_isotonic, fit_spline
-from eurohoops.models.xpts_gbm import N_TRIALS, STUDY_SEED, fit_gbm, run_study
+from eurohoops.models.xpts_gbm import N_TRIALS, STUDY_SEED, fit_gbm, run_study, zone_codes
 from eurohoops.parse.shot_table import BANDS
 
 SEEDS = tuple(range(20261001, 20261006))
@@ -137,7 +137,9 @@ class FitPool:
 class Folds:
     """Out-of-fold predictions of one fitter: LOSO on development, leave-two-out pairs for the
     nested isotonic fit, and a development-wide fit for the later splits. With a ``pool`` the
-    fits run in its worker processes (same jobs, same results)."""
+    fits run in its worker processes (same jobs, same results). ``loso`` reuses the LOSO
+    predictions of an earlier Folds of the same fitter on the same shots (the spline grid
+    already made them) instead of refitting them."""
 
     def __init__(
         self,
@@ -148,18 +150,23 @@ class Folds:
         later: pd.DataFrame,
         *,
         pool: FitPool | None = None,
+        loso: "Folds | None" = None,
     ) -> None:
         clock = time.perf_counter()
         season = shots["season"].to_numpy()
         self.index = {s: np.flatnonzero(season == s) for s in development}
         jobs = fold_jobs(development, pairs, bool(len(later)))
+        if loso is not None:
+            jobs = [job for job in jobs if len(job[0]) != 1]
         if pool is None:
             results = [run_job(fit, shots, later, development, job) for job in jobs]
         else:
-            if pool.shots is not shots or pool.later is not later:
+            if pool.shots is not shots or (len(later) and pool.later is not later):
                 raise ValueError("the pool holds other shots than this Folds")
             results = pool.run(fit, jobs)
-        self.oof = np.full(len(shots), np.nan)
+        self.oof: FloatArray = (
+            np.full(len(shots), np.nan) if loso is None else np.array(loso.oof, copy=True)
+        )
         self.pair: dict[tuple[int, int], FloatArray] = {}  # (left out s, t) -> preds on t
         self.later = np.empty(0)
         for (left_out, targets), predictions in zip(jobs, results, strict=True):
@@ -232,8 +239,19 @@ def split_scores(p: FloatArray, shots: pd.DataFrame) -> dict[str, Any]:
     }
 
 
+@dataclass(frozen=True)
+class SplineFitter:
+    """A spline fitter that can be sent to a worker process."""
+
+    n_knots: int
+    l2: float
+
+    def __call__(self, train: pd.DataFrame) -> Predictor:
+        return fit_spline(train, self.n_knots, self.l2).predict
+
+
 def spline_fitter(n_knots: int, l2: float) -> Fitter:
-    return lambda train: fit_spline(train, n_knots, l2).predict
+    return SplineFitter(n_knots, l2)
 
 
 @dataclass(frozen=True)
@@ -466,6 +484,13 @@ def level_variants(
             },
             "shrinkage": lp.shrinkage,
             "priors": lp.priors,
+            "mean_offset": {
+                str(s): _r(float(o))
+                for s, o in pd.Series(np.r_[lp.offsets_oof, lp.offsets_later])
+                .groupby(np.r_[dev["season"].to_numpy(), later_season])
+                .mean()
+                .items()
+            },
         }
         block["meets_f_f"] = {
             "validation": calibrated(block["validation"]),
@@ -506,21 +531,26 @@ def spline_search(
     development: Sequence[int],
     progress: Progress,
     lap: Lap,
+    *,
+    pool: FitPool | None = None,
 ) -> tuple[list[dict[str, Any]], dict[str, Any], Folds]:
     """The declared knots x L2 grid by pooled LOSO CV log loss (ties: fewer knots, smaller
-    L2), then the chosen configuration's folds with the leave-two-out pairs."""
+    L2), then the chosen configuration's folds with the leave-two-out pairs (its LOSO fits are
+    the grid's, reused)."""
     y_dev = _labels(dev)
     grid = []
+    runs: dict[tuple[int, float], Folds] = {}
     for n_knots in SPLINE_KNOTS:
         for l2 in SPLINE_L2:
-            folds = Folds(dev, development, spline_fitter(n_knots, l2), False, later[:0])
+            fit = spline_fitter(n_knots, l2)
+            folds = Folds(dev, development, fit, False, later[:0], pool=pool)
+            runs[(n_knots, l2)] = folds
             grid.append({"knots": n_knots, "l2": l2, "cv_log_loss": _r(cv_log_loss(folds, y_dev))})
             progress(f"spline knots {n_knots} l2 {l2}: CV log loss {grid[-1]['cv_log_loss']}")
             lap(f"spline grid knots {n_knots} l2 {l2} (12 LOSO fits)")
     best = min(grid, key=lambda g: (g["cv_log_loss"], g["knots"], g["l2"]))
-    spline = Folds(
-        dev, development, spline_fitter(int(best["knots"]), float(best["l2"])), True, later
-    )
+    key = (int(best["knots"]), float(best["l2"]))
+    spline = Folds(dev, development, spline_fitter(*key), True, later, pool=pool, loso=runs[key])
     progress(f"spline knots {best['knots']} l2 {best['l2']}: leave-two-out fits done")
     lap(f"spline chosen ({spline.timing()})")
     return grid, best, spline
@@ -580,13 +610,16 @@ def run_m2_backtest(
     lap("split + outcome-coding audit")
     later_seasons = [*seasons.validation, *(seasons.test if score_test else ())]
     later = used[used["season"].isin(later_seasons)].reset_index(drop=True)
+    dev, later = (f.assign(zone_code=zone_codes(f)) for f in (dev, later))  # once, not per fit
     y_dev, y_later = _labels(dev), _labels(later)
     val = later["season"].isin(seasons.validation).to_numpy()
     params = study["best_params"]
 
-    grid, best, spline = spline_search(dev, later, seasons.development, progress, lap)
     seeds: dict[int, Folds] = {}
     with FitPool(dev, later, seasons.development, FIT_WORKERS) as pool:
+        grid, best, spline = spline_search(
+            dev, later, seasons.development, progress, lap, pool=pool
+        )
         for seed in SEEDS:
             fit = gbm_fitter(params, seed)
             seeds[seed] = Folds(dev, seasons.development, fit, True, later, pool=pool)
@@ -661,7 +694,9 @@ def run_m2_backtest(
             "validation": list(seasons.validation),
             "test": list(seasons.test),
         },
-        "data_sha256": data_sha256(pd.concat([dev, later], ignore_index=True)),
+        "data_sha256": data_sha256(
+            pd.concat([dev, later], ignore_index=True).drop(columns="zone_code")
+        ),
         "shots": {"development": len(dev), "validation": int(val.sum()), "test": int((~val).sum())},
         "declared_variants": list(VARIANTS),
         "spline_grid": grid,
