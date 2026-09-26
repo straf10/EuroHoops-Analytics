@@ -62,5 +62,24 @@ Deliberate breaks, each reverted right after (tree clean, check green again):
 - `second_chance` added to the spline builder as `putback` → item 32:
   `OUTCOME-CODED putback = 1: 17459 shots, make rate 0.9992…` → FAIL, exit 1.
 
+## G2 result (first real-data run, code committed first at 1b09043)
+`bash scripts/checks/free_throws.sh` → **FAIL** (item 22). Band flags 12 of 78 (allowed 7):
+2013 deep3; 2014 long2, deep3; 2015 three; 2019 three; 2020 mid, three; 2021 rim; 2022 rim,
+mid; 2023 rim, short. Team mean |gap| within 2 × noise in all 13 seasons (e.g. 2017 0.00783 ≤
+0.00890). Team r below its 2-SE bar in all 13 (−0.421 in 2017 to 0.298 in 2012).
+
+**Diagnosis (checked by hand for 2017 and 2021, not a bug).** Recomputed the team shares
+directly from `ft_team_games`: same r (2017 −0.421, 2021 −0.036). Expected team shares barely
+vary (sd 0.0025 vs actual 0.0075 in 2017; 0.0018 vs 0.0064 in 2021), and FT points per game
+correlate *negatively* with FGA per game across teams (2017 r = −0.44): a shooting foul on a
+miss ends a possession without an FGA, so FT trips and FGA compete. The F-e model's "other
+trips per FGA × FGA" assumes the opposite. It has no team foul-drawing term, so it cannot
+reproduce team shares; the band flags come from band and-one rates that move from season to
+season (e.g. 2021 rim share 0.522 actual vs 0.576 expected on 742 and-one points).
+**Not changed:** the F-e model is not a G2 deliverable, and changing the check after seeing
+this would be tuning it to pass. Item 22 stays red; it is not on the list of items allowed to
+stay red. Next step (for the user): a team-level FT model (trips per possession plus a shrunk
+team foul-drawing rate) declared as a new variant.
+
 ## Loop log
 iteration 1 | G1 flags dropped for good + outcome-coding audit (item 32) | tests/test_feature_audit.py (6), fast gate 1-6, 14, 19, 32 (green after a format fix), items 23/28/29 tests | green; full §6 pending (see sequencing) | 62b9526

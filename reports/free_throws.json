@@ -43,7 +43,73 @@
       "within_tolerance": false,
       "trips_per_fga": 0.176218,
       "points_per_trip": 1.356401,
-      "and_one_share_of_trips": 0.112041
+      "and_one_share_of_trips": 0.112041,
+      "level_check": "season level, not gated",
+      "shares": {
+        "bands": {
+          "rim": {
+            "actual_share": 0.622807,
+            "expected_share": 0.580547,
+            "gap": 0.04226,
+            "bootstrap_se": 0.028576,
+            "tolerance": 0.057152,
+            "within_tolerance": true
+          },
+          "short": {
+            "actual_share": 0.298246,
+            "expected_share": 0.312806,
+            "gap": -0.01456,
+            "bootstrap_se": 0.028794,
+            "tolerance": 0.057589,
+            "within_tolerance": true
+          },
+          "mid": {
+            "actual_share": 0.049708,
+            "expected_share": 0.060953,
+            "gap": -0.011246,
+            "bootstrap_se": 0.01111,
+            "tolerance": 0.02222,
+            "within_tolerance": true
+          },
+          "long2": {
+            "actual_share": 0.005848,
+            "expected_share": 0.007661,
+            "gap": -0.001813,
+            "bootstrap_se": 0.00409,
+            "tolerance": 0.00818,
+            "within_tolerance": true
+          },
+          "three": {
+            "actual_share": 0.020468,
+            "expected_share": 0.034993,
+            "gap": -0.014525,
+            "bootstrap_se": 0.007381,
+            "tolerance": 0.014761,
+            "within_tolerance": true
+          },
+          "deep3": {
+            "actual_share": 0.002924,
+            "expected_share": 0.003039,
+            "gap": -0.000115,
+            "bootstrap_se": 0.002921,
+            "tolerance": 0.005842,
+            "within_tolerance": true
+          }
+        },
+        "band_flags": 0,
+        "teams": {
+          "teams": 24,
+          "mean_abs_share_gap": 0.005933,
+          "gap_se_rms": 0.004241,
+          "mean_abs_tolerance": 0.008481,
+          "mean_abs_within_tolerance": true,
+          "pearson_r": 0.135991,
+          "r_bootstrap_se": 0.139727,
+          "r_tolerance": 0.279454,
+          "r_within_tolerance": false
+        },
+        "teams_pass": false
+      }
     },
     "2012": {
       "split": "development",
@@ -55,7 +121,73 @@
       "within_tolerance": false,
       "trips_per_fga": 0.165228,
       "points_per_trip": 1.344453,
-      "and_one_share_of_trips": 0.11877
+      "and_one_share_of_trips": 0.11877,
+      "level_check": "season level, not gated",
+      "shares": {
+        "bands": {
+          "rim": {
+            "actual_share": 0.680952,
+            "expected_share": 0.644525,
+            "gap": 0.036428,
+            "bootstrap_se": 0.023871,
+            "tolerance": 0.047742,
+            "within_tolerance": true
+          },
+          "short": {
+            "actual_share": 0.228571,
+            "expected_share": 0.255985,
+            "gap": -0.027414,
+            "bootstrap_se": 0.0228,
+            "tolerance": 0.0456,
+            "within_tolerance": true
+          },
+          "mid": {
+            "actual_share": 0.054762,
+            "expected_share": 0.052902,
+            "gap": 0.00186,
+            "bootstrap_se": 0.011996,
+            "tolerance": 0.023992,
+            "within_tolerance": true
+          },
+          "long2": {
+            "actual_share": 0.007143,
+            "expected_share": 0.007327,
+            "gap": -0.000184,
+            "bootstrap_se": 0.003975,
+            "tolerance": 0.007949,
+            "within_tolerance": true
+          },
+          "three": {
+            "actual_share": 0.02619,
+            "expected_share": 0.036207,
+            "gap": -0.010016,
+            "bootstrap_se": 0.007502,
+            "tolerance": 0.015005,
+            "within_tolerance": true
+          },
+          "deep3": {
+            "actual_share": 0.002381,
+            "expected_share": 0.003055,
+            "gap": -0.000674,
+            "bootstrap_se": 0.002357,
+            "tolerance": 0.004713,
+            "within_tolerance": true
+          }
+        },
+        "band_flags": 0,
+        "teams": {
+          "teams": 24,
+          "mean_abs_share_gap": 0.003787,
+          "gap_se_rms": 0.004163,
+          "mean_abs_tolerance": 0.008326,
+          "mean_abs_within_tolerance": true,
+          "pearson_r": 0.297572,
+          "r_bootstrap_se": 0.181863,
+          "r_tolerance": 0.363727,
+          "r_within_tolerance": false
+        },
+        "teams_pass": false
+      }
     },
     "2013": {
       "split": "development",
@@ -67,7 +199,73 @@
       "within_tolerance": false,
       "trips_per_fga": 0.156462,
       "points_per_trip": 1.33515,
-      "and_one_share_of_trips": 0.131
+      "and_one_share_of_trips": 0.131,
+      "level_check": "season level, not gated",
+      "shares": {
+        "bands": {
+          "rim": {
+            "actual_share": 0.595122,
+            "expected_share": 0.573282,
+            "gap": 0.02184,
+            "bootstrap_se": 0.022746,
+            "tolerance": 0.045493,
+            "within_tolerance": true
+          },
+          "short": {
+            "actual_share": 0.32439,
+            "expected_share": 0.323184,
+            "gap": 0.001207,
+            "bootstrap_se": 0.02294,
+            "tolerance": 0.045879,
+            "within_tolerance": true
+          },
+          "mid": {
+            "actual_share": 0.043902,
+            "expected_share": 0.054348,
+            "gap": -0.010445,
+            "bootstrap_se": 0.009782,
+            "tolerance": 0.019564,
+            "within_tolerance": true
+          },
+          "long2": {
+            "actual_share": 0.007317,
+            "expected_share": 0.007262,
+            "gap": 5.5e-05,
+            "bootstrap_se": 0.004198,
+            "tolerance": 0.008397,
+            "within_tolerance": true
+          },
+          "three": {
+            "actual_share": 0.029268,
+            "expected_share": 0.039116,
+            "gap": -0.009847,
+            "bootstrap_se": 0.008181,
+            "tolerance": 0.016361,
+            "within_tolerance": true
+          },
+          "deep3": {
+            "actual_share": 0.0,
+            "expected_share": 0.002809,
+            "gap": -0.002809,
+            "bootstrap_se": 0.00023,
+            "tolerance": 0.00046,
+            "within_tolerance": false
+          }
+        },
+        "band_flags": 1,
+        "teams": {
+          "teams": 24,
+          "mean_abs_share_gap": 0.00573,
+          "gap_se_rms": 0.004107,
+          "mean_abs_tolerance": 0.008215,
+          "mean_abs_within_tolerance": true,
+          "pearson_r": -0.185556,
+          "r_bootstrap_se": 0.155905,
+          "r_tolerance": 0.31181,
+          "r_within_tolerance": false
+        },
+        "teams_pass": false
+      }
     },
     "2014": {
       "split": "development",
@@ -79,7 +277,73 @@
       "within_tolerance": false,
       "trips_per_fga": 0.165653,
       "points_per_trip": 1.335017,
-      "and_one_share_of_trips": 0.135251
+      "and_one_share_of_trips": 0.135251,
+      "level_check": "season level, not gated",
+      "shares": {
+        "bands": {
+          "rim": {
+            "actual_share": 0.583838,
+            "expected_share": 0.554143,
+            "gap": 0.029696,
+            "bootstrap_se": 0.020788,
+            "tolerance": 0.041577,
+            "within_tolerance": true
+          },
+          "short": {
+            "actual_share": 0.335354,
+            "expected_share": 0.338611,
+            "gap": -0.003258,
+            "bootstrap_se": 0.019668,
+            "tolerance": 0.039336,
+            "within_tolerance": true
+          },
+          "mid": {
+            "actual_share": 0.042424,
+            "expected_share": 0.055753,
+            "gap": -0.013329,
+            "bootstrap_se": 0.00853,
+            "tolerance": 0.01706,
+            "within_tolerance": true
+          },
+          "long2": {
+            "actual_share": 0.00202,
+            "expected_share": 0.00751,
+            "gap": -0.00549,
+            "bootstrap_se": 0.002032,
+            "tolerance": 0.004065,
+            "within_tolerance": false
+          },
+          "three": {
+            "actual_share": 0.036364,
+            "expected_share": 0.041078,
+            "gap": -0.004714,
+            "bootstrap_se": 0.007853,
+            "tolerance": 0.015706,
+            "within_tolerance": true
+          },
+          "deep3": {
+            "actual_share": 0.0,
+            "expected_share": 0.002905,
+            "gap": -0.002905,
+            "bootstrap_se": 0.000237,
+            "tolerance": 0.000473,
+            "within_tolerance": false
+          }
+        },
+        "band_flags": 2,
+        "teams": {
+          "teams": 24,
+          "mean_abs_share_gap": 0.004024,
+          "gap_se_rms": 0.004505,
+          "mean_abs_tolerance": 0.009009,
+          "mean_abs_within_tolerance": true,
+          "pearson_r": 0.14842,
+          "r_bootstrap_se": 0.150539,
+          "r_tolerance": 0.301079,
+          "r_within_tolerance": false
+        },
+        "teams_pass": false
+      }
     },
     "2015": {
       "split": "development",
@@ -91,7 +355,73 @@
       "within_tolerance": false,
       "trips_per_fga": 0.164852,
       "points_per_trip": 1.367318,
-      "and_one_share_of_trips": 0.131883
+      "and_one_share_of_trips": 0.131883,
+      "level_check": "season level, not gated",
+      "shares": {
+        "bands": {
+          "rim": {
+            "actual_share": 0.534043,
+            "expected_share": 0.51338,
+            "gap": 0.020662,
+            "bootstrap_se": 0.02356,
+            "tolerance": 0.04712,
+            "within_tolerance": true
+          },
+          "short": {
+            "actual_share": 0.389362,
+            "expected_share": 0.375253,
+            "gap": 0.014109,
+            "bootstrap_se": 0.024278,
+            "tolerance": 0.048556,
+            "within_tolerance": true
+          },
+          "mid": {
+            "actual_share": 0.042553,
+            "expected_share": 0.056761,
+            "gap": -0.014208,
+            "bootstrap_se": 0.009598,
+            "tolerance": 0.019195,
+            "within_tolerance": true
+          },
+          "long2": {
+            "actual_share": 0.006383,
+            "expected_share": 0.007409,
+            "gap": -0.001026,
+            "bootstrap_se": 0.003697,
+            "tolerance": 0.007394,
+            "within_tolerance": true
+          },
+          "three": {
+            "actual_share": 0.025532,
+            "expected_share": 0.043245,
+            "gap": -0.017713,
+            "bootstrap_se": 0.008159,
+            "tolerance": 0.016319,
+            "within_tolerance": false
+          },
+          "deep3": {
+            "actual_share": 0.002128,
+            "expected_share": 0.003952,
+            "gap": -0.001824,
+            "bootstrap_se": 0.002137,
+            "tolerance": 0.004273,
+            "within_tolerance": true
+          }
+        },
+        "band_flags": 1,
+        "teams": {
+          "teams": 24,
+          "mean_abs_share_gap": 0.004634,
+          "gap_se_rms": 0.004182,
+          "mean_abs_tolerance": 0.008364,
+          "mean_abs_within_tolerance": true,
+          "pearson_r": 0.228143,
+          "r_bootstrap_se": 0.158533,
+          "r_tolerance": 0.317066,
+          "r_within_tolerance": false
+        },
+        "teams_pass": false
+      }
     },
     "2016": {
       "split": "development",
@@ -103,7 +433,73 @@
       "within_tolerance": false,
       "trips_per_fga": 0.157385,
       "points_per_trip": 1.392637,
-      "and_one_share_of_trips": 0.16398
+      "and_one_share_of_trips": 0.16398,
+      "level_check": "season level, not gated",
+      "shares": {
+        "bands": {
+          "rim": {
+            "actual_share": 0.530179,
+            "expected_share": 0.541688,
+            "gap": -0.011508,
+            "bootstrap_se": 0.020045,
+            "tolerance": 0.04009,
+            "within_tolerance": true
+          },
+          "short": {
+            "actual_share": 0.371941,
+            "expected_share": 0.350738,
+            "gap": 0.021203,
+            "bootstrap_se": 0.020099,
+            "tolerance": 0.040198,
+            "within_tolerance": true
+          },
+          "mid": {
+            "actual_share": 0.052202,
+            "expected_share": 0.055484,
+            "gap": -0.003282,
+            "bootstrap_se": 0.008878,
+            "tolerance": 0.017755,
+            "within_tolerance": true
+          },
+          "long2": {
+            "actual_share": 0.006525,
+            "expected_share": 0.007073,
+            "gap": -0.000548,
+            "bootstrap_se": 0.003068,
+            "tolerance": 0.006136,
+            "within_tolerance": true
+          },
+          "three": {
+            "actual_share": 0.034258,
+            "expected_share": 0.040913,
+            "gap": -0.006655,
+            "bootstrap_se": 0.007428,
+            "tolerance": 0.014857,
+            "within_tolerance": true
+          },
+          "deep3": {
+            "actual_share": 0.004894,
+            "expected_share": 0.004104,
+            "gap": 0.00079,
+            "bootstrap_se": 0.002805,
+            "tolerance": 0.00561,
+            "within_tolerance": true
+          }
+        },
+        "band_flags": 0,
+        "teams": {
+          "teams": 16,
+          "mean_abs_share_gap": 0.005988,
+          "gap_se_rms": 0.004504,
+          "mean_abs_tolerance": 0.009007,
+          "mean_abs_within_tolerance": true,
+          "pearson_r": 0.202636,
+          "r_bootstrap_se": 0.139028,
+          "r_tolerance": 0.278055,
+          "r_within_tolerance": false
+        },
+        "teams_pass": false
+      }
     },
     "2017": {
       "split": "development",
@@ -115,7 +511,73 @@
       "within_tolerance": false,
       "trips_per_fga": 0.169846,
       "points_per_trip": 1.393609,
-      "and_one_share_of_trips": 0.166605
+      "and_one_share_of_trips": 0.166605,
+      "level_check": "season level, not gated",
+      "shares": {
+        "bands": {
+          "rim": {
+            "actual_share": 0.611694,
+            "expected_share": 0.589391,
+            "gap": 0.022303,
+            "bootstrap_se": 0.020163,
+            "tolerance": 0.040326,
+            "within_tolerance": true
+          },
+          "short": {
+            "actual_share": 0.275862,
+            "expected_share": 0.308315,
+            "gap": -0.032453,
+            "bootstrap_se": 0.017331,
+            "tolerance": 0.034662,
+            "within_tolerance": true
+          },
+          "mid": {
+            "actual_share": 0.052474,
+            "expected_share": 0.052553,
+            "gap": -7.9e-05,
+            "bootstrap_se": 0.00864,
+            "tolerance": 0.01728,
+            "within_tolerance": true
+          },
+          "long2": {
+            "actual_share": 0.007496,
+            "expected_share": 0.005877,
+            "gap": 0.00162,
+            "bootstrap_se": 0.003374,
+            "tolerance": 0.006748,
+            "within_tolerance": true
+          },
+          "three": {
+            "actual_share": 0.050975,
+            "expected_share": 0.041111,
+            "gap": 0.009863,
+            "bootstrap_se": 0.008326,
+            "tolerance": 0.016651,
+            "within_tolerance": true
+          },
+          "deep3": {
+            "actual_share": 0.001499,
+            "expected_share": 0.002753,
+            "gap": -0.001254,
+            "bootstrap_se": 0.0015,
+            "tolerance": 0.003001,
+            "within_tolerance": true
+          }
+        },
+        "band_flags": 0,
+        "teams": {
+          "teams": 16,
+          "mean_abs_share_gap": 0.007835,
+          "gap_se_rms": 0.004452,
+          "mean_abs_tolerance": 0.008903,
+          "mean_abs_within_tolerance": true,
+          "pearson_r": -0.421258,
+          "r_bootstrap_se": 0.127886,
+          "r_tolerance": 0.255771,
+          "r_within_tolerance": false
+        },
+        "teams_pass": false
+      }
     },
     "2018": {
       "split": "development",
@@ -127,7 +589,73 @@
       "within_tolerance": true,
       "trips_per_fga": 0.158265,
       "points_per_trip": 1.409055,
-      "and_one_share_of_trips": 0.156275
+      "and_one_share_of_trips": 0.156275,
+      "level_check": "season level, not gated",
+      "shares": {
+        "bands": {
+          "rim": {
+            "actual_share": 0.546112,
+            "expected_share": 0.567574,
+            "gap": -0.021462,
+            "bootstrap_se": 0.02016,
+            "tolerance": 0.040321,
+            "within_tolerance": true
+          },
+          "short": {
+            "actual_share": 0.334539,
+            "expected_share": 0.328581,
+            "gap": 0.005958,
+            "bootstrap_se": 0.020463,
+            "tolerance": 0.040926,
+            "within_tolerance": true
+          },
+          "mid": {
+            "actual_share": 0.047016,
+            "expected_share": 0.053332,
+            "gap": -0.006315,
+            "bootstrap_se": 0.008449,
+            "tolerance": 0.016898,
+            "within_tolerance": true
+          },
+          "long2": {
+            "actual_share": 0.012658,
+            "expected_share": 0.005313,
+            "gap": 0.007345,
+            "bootstrap_se": 0.004749,
+            "tolerance": 0.009497,
+            "within_tolerance": true
+          },
+          "three": {
+            "actual_share": 0.056058,
+            "expected_share": 0.04322,
+            "gap": 0.012838,
+            "bootstrap_se": 0.009907,
+            "tolerance": 0.019814,
+            "within_tolerance": true
+          },
+          "deep3": {
+            "actual_share": 0.003617,
+            "expected_share": 0.001981,
+            "gap": 0.001636,
+            "bootstrap_se": 0.002593,
+            "tolerance": 0.005185,
+            "within_tolerance": true
+          }
+        },
+        "band_flags": 0,
+        "teams": {
+          "teams": 16,
+          "mean_abs_share_gap": 0.008084,
+          "gap_se_rms": 0.004566,
+          "mean_abs_tolerance": 0.009132,
+          "mean_abs_within_tolerance": true,
+          "pearson_r": -0.211459,
+          "r_bootstrap_se": 0.144201,
+          "r_tolerance": 0.288403,
+          "r_within_tolerance": false
+        },
+        "teams_pass": false
+      }
     },
     "2019": {
       "split": "development",
@@ -139,7 +667,73 @@
       "within_tolerance": true,
       "trips_per_fga": 0.155266,
       "points_per_trip": 1.428364,
-      "and_one_share_of_trips": 0.16087
+      "and_one_share_of_trips": 0.16087,
+      "level_check": "season level, not gated",
+      "shares": {
+        "bands": {
+          "rim": {
+            "actual_share": 0.579861,
+            "expected_share": 0.610662,
+            "gap": -0.030801,
+            "bootstrap_se": 0.019773,
+            "tolerance": 0.039546,
+            "within_tolerance": true
+          },
+          "short": {
+            "actual_share": 0.296875,
+            "expected_share": 0.291565,
+            "gap": 0.00531,
+            "bootstrap_se": 0.018569,
+            "tolerance": 0.037138,
+            "within_tolerance": true
+          },
+          "mid": {
+            "actual_share": 0.036458,
+            "expected_share": 0.045901,
+            "gap": -0.009442,
+            "bootstrap_se": 0.007867,
+            "tolerance": 0.015734,
+            "within_tolerance": true
+          },
+          "long2": {
+            "actual_share": 0.013889,
+            "expected_share": 0.004758,
+            "gap": 0.009131,
+            "bootstrap_se": 0.004732,
+            "tolerance": 0.009463,
+            "within_tolerance": true
+          },
+          "three": {
+            "actual_share": 0.071181,
+            "expected_share": 0.045285,
+            "gap": 0.025895,
+            "bootstrap_se": 0.011577,
+            "tolerance": 0.023154,
+            "within_tolerance": false
+          },
+          "deep3": {
+            "actual_share": 0.001736,
+            "expected_share": 0.001829,
+            "gap": -9.3e-05,
+            "bootstrap_se": 0.00177,
+            "tolerance": 0.00354,
+            "within_tolerance": true
+          }
+        },
+        "band_flags": 1,
+        "teams": {
+          "teams": 18,
+          "mean_abs_share_gap": 0.003985,
+          "gap_se_rms": 0.004078,
+          "mean_abs_tolerance": 0.008156,
+          "mean_abs_within_tolerance": true,
+          "pearson_r": 0.25281,
+          "r_bootstrap_se": 0.170503,
+          "r_tolerance": 0.341006,
+          "r_within_tolerance": false
+        },
+        "teams_pass": false
+      }
     },
     "2020": {
       "split": "development",
@@ -151,7 +745,73 @@
       "within_tolerance": true,
       "trips_per_fga": 0.153782,
       "points_per_trip": 1.448509,
-      "and_one_share_of_trips": 0.185863
+      "and_one_share_of_trips": 0.185863,
+      "level_check": "season level, not gated",
+      "shares": {
+        "bands": {
+          "rim": {
+            "actual_share": 0.594994,
+            "expected_share": 0.619803,
+            "gap": -0.024809,
+            "bootstrap_se": 0.016462,
+            "tolerance": 0.032924,
+            "within_tolerance": true
+          },
+          "short": {
+            "actual_share": 0.261661,
+            "expected_share": 0.278099,
+            "gap": -0.016438,
+            "bootstrap_se": 0.013479,
+            "tolerance": 0.026957,
+            "within_tolerance": true
+          },
+          "mid": {
+            "actual_share": 0.067122,
+            "expected_share": 0.049427,
+            "gap": 0.017694,
+            "bootstrap_se": 0.008719,
+            "tolerance": 0.017438,
+            "within_tolerance": false
+          },
+          "long2": {
+            "actual_share": 0.004551,
+            "expected_share": 0.006409,
+            "gap": -0.001859,
+            "bootstrap_se": 0.002163,
+            "tolerance": 0.004325,
+            "within_tolerance": true
+          },
+          "three": {
+            "actual_share": 0.065984,
+            "expected_share": 0.04438,
+            "gap": 0.021604,
+            "bootstrap_se": 0.008628,
+            "tolerance": 0.017256,
+            "within_tolerance": false
+          },
+          "deep3": {
+            "actual_share": 0.005688,
+            "expected_share": 0.001882,
+            "gap": 0.003807,
+            "bootstrap_se": 0.002908,
+            "tolerance": 0.005816,
+            "within_tolerance": true
+          }
+        },
+        "band_flags": 2,
+        "teams": {
+          "teams": 18,
+          "mean_abs_share_gap": 0.00506,
+          "gap_se_rms": 0.003623,
+          "mean_abs_tolerance": 0.007246,
+          "mean_abs_within_tolerance": true,
+          "pearson_r": -0.102949,
+          "r_bootstrap_se": 0.151105,
+          "r_tolerance": 0.302209,
+          "r_within_tolerance": false
+        },
+        "teams_pass": false
+      }
     },
     "2021": {
       "split": "development",
@@ -163,7 +823,73 @@
       "within_tolerance": false,
       "trips_per_fga": 0.144373,
       "points_per_trip": 1.407769,
-      "and_one_share_of_trips": 0.190968
+      "and_one_share_of_trips": 0.190968,
+      "level_check": "season level, not gated",
+      "shares": {
+        "bands": {
+          "rim": {
+            "actual_share": 0.521563,
+            "expected_share": 0.575937,
+            "gap": -0.054374,
+            "bootstrap_se": 0.018159,
+            "tolerance": 0.036317,
+            "within_tolerance": false
+          },
+          "short": {
+            "actual_share": 0.343666,
+            "expected_share": 0.315584,
+            "gap": 0.028082,
+            "bootstrap_se": 0.017558,
+            "tolerance": 0.035116,
+            "within_tolerance": true
+          },
+          "mid": {
+            "actual_share": 0.059299,
+            "expected_share": 0.053337,
+            "gap": 0.005962,
+            "bootstrap_se": 0.008724,
+            "tolerance": 0.017448,
+            "within_tolerance": true
+          },
+          "long2": {
+            "actual_share": 0.009434,
+            "expected_share": 0.00607,
+            "gap": 0.003364,
+            "bootstrap_se": 0.003534,
+            "tolerance": 0.007068,
+            "within_tolerance": true
+          },
+          "three": {
+            "actual_share": 0.063342,
+            "expected_share": 0.046403,
+            "gap": 0.016939,
+            "bootstrap_se": 0.008575,
+            "tolerance": 0.01715,
+            "within_tolerance": true
+          },
+          "deep3": {
+            "actual_share": 0.002695,
+            "expected_share": 0.002668,
+            "gap": 2.8e-05,
+            "bootstrap_se": 0.001883,
+            "tolerance": 0.003767,
+            "within_tolerance": true
+          }
+        },
+        "band_flags": 1,
+        "teams": {
+          "teams": 18,
+          "mean_abs_share_gap": 0.005576,
+          "gap_se_rms": 0.004273,
+          "mean_abs_tolerance": 0.008546,
+          "mean_abs_within_tolerance": true,
+          "pearson_r": -0.036207,
+          "r_bootstrap_se": 0.170719,
+          "r_tolerance": 0.341438,
+          "r_within_tolerance": false
+        },
+        "teams_pass": false
+      }
     },
     "2022": {
       "split": "development",
@@ -175,7 +901,73 @@
       "within_tolerance": false,
       "trips_per_fga": 0.166479,
       "points_per_trip": 1.424274,
-      "and_one_share_of_trips": 0.185141
+      "and_one_share_of_trips": 0.185141,
+      "level_check": "season level, not gated",
+      "shares": {
+        "bands": {
+          "rim": {
+            "actual_share": 0.558887,
+            "expected_share": 0.603353,
+            "gap": -0.044466,
+            "bootstrap_se": 0.016544,
+            "tolerance": 0.033087,
+            "within_tolerance": false
+          },
+          "short": {
+            "actual_share": 0.321199,
+            "expected_share": 0.299307,
+            "gap": 0.021892,
+            "bootstrap_se": 0.015395,
+            "tolerance": 0.03079,
+            "within_tolerance": true
+          },
+          "mid": {
+            "actual_share": 0.069593,
+            "expected_share": 0.042561,
+            "gap": 0.027033,
+            "bootstrap_se": 0.008021,
+            "tolerance": 0.016042,
+            "within_tolerance": false
+          },
+          "long2": {
+            "actual_share": 0.006424,
+            "expected_share": 0.004351,
+            "gap": 0.002073,
+            "bootstrap_se": 0.002577,
+            "tolerance": 0.005153,
+            "within_tolerance": true
+          },
+          "three": {
+            "actual_share": 0.040685,
+            "expected_share": 0.047398,
+            "gap": -0.006713,
+            "bootstrap_se": 0.006287,
+            "tolerance": 0.012574,
+            "within_tolerance": true
+          },
+          "deep3": {
+            "actual_share": 0.003212,
+            "expected_share": 0.00303,
+            "gap": 0.000182,
+            "bootstrap_se": 0.001869,
+            "tolerance": 0.003738,
+            "within_tolerance": true
+          }
+        },
+        "band_flags": 2,
+        "teams": {
+          "teams": 18,
+          "mean_abs_share_gap": 0.005234,
+          "gap_se_rms": 0.003476,
+          "mean_abs_tolerance": 0.006952,
+          "mean_abs_within_tolerance": true,
+          "pearson_r": -0.054908,
+          "r_bootstrap_se": 0.136146,
+          "r_tolerance": 0.272291,
+          "r_within_tolerance": false
+        },
+        "teams_pass": false
+      }
     },
     "2023": {
       "split": "validation",
@@ -187,8 +979,89 @@
       "within_tolerance": false,
       "trips_per_fga": 0.152113,
       "points_per_trip": 1.404167,
-      "and_one_share_of_trips": 0.188643
+      "and_one_share_of_trips": 0.188643,
+      "level_check": "season level, not gated",
+      "shares": {
+        "bands": {
+          "rim": {
+            "actual_share": 0.509029,
+            "expected_share": 0.599071,
+            "gap": -0.090042,
+            "bootstrap_se": 0.018014,
+            "tolerance": 0.036028,
+            "within_tolerance": false
+          },
+          "short": {
+            "actual_share": 0.374718,
+            "expected_share": 0.301532,
+            "gap": 0.073186,
+            "bootstrap_se": 0.017906,
+            "tolerance": 0.035811,
+            "within_tolerance": false
+          },
+          "mid": {
+            "actual_share": 0.049661,
+            "expected_share": 0.04707,
+            "gap": 0.002591,
+            "bootstrap_se": 0.007684,
+            "tolerance": 0.015369,
+            "within_tolerance": true
+          },
+          "long2": {
+            "actual_share": 0.006772,
+            "expected_share": 0.004031,
+            "gap": 0.002741,
+            "bootstrap_se": 0.002698,
+            "tolerance": 0.005396,
+            "within_tolerance": true
+          },
+          "three": {
+            "actual_share": 0.056433,
+            "expected_share": 0.045064,
+            "gap": 0.011369,
+            "bootstrap_se": 0.007654,
+            "tolerance": 0.015307,
+            "within_tolerance": true
+          },
+          "deep3": {
+            "actual_share": 0.003386,
+            "expected_share": 0.003231,
+            "gap": 0.000155,
+            "bootstrap_se": 0.001953,
+            "tolerance": 0.003906,
+            "within_tolerance": true
+          }
+        },
+        "band_flags": 2,
+        "teams": {
+          "teams": 18,
+          "mean_abs_share_gap": 0.004317,
+          "gap_se_rms": 0.00353,
+          "mean_abs_tolerance": 0.00706,
+          "mean_abs_within_tolerance": true,
+          "pearson_r": 0.151605,
+          "r_bootstrap_se": 0.157306,
+          "r_tolerance": 0.314612,
+          "r_within_tolerance": false
+        },
+        "teams_pass": false
+      }
     }
   },
-  "all_within_tolerance": false
+  "level_check": "season level, not gated",
+  "all_within_tolerance": false,
+  "share_check": {
+    "gate": "F2 (re-specified 2026-09-26): band and team shares within 2 x their game-level bootstrap SE, every development season and validation; band flags by the count rule (95th percentile of a right model)",
+    "resamples": 1000,
+    "seed": 20261001,
+    "se_multiple": 2.0,
+    "band_checks": 78,
+    "band_flags": 12,
+    "band_flag_rate_if_right": 0.0455,
+    "band_flags_allowed": 7,
+    "band_flags_within": false,
+    "team_checks_pass_every_season": false,
+    "passed": false
+  },
+  "share_checks_pass": false
 }
