@@ -198,3 +198,10 @@ a white "as expected" hexagon is visible; the first draw clipped long titles and
 - player_P005985_2023.png (James): lines in place; readable; centred at 0; +5.1 per 100.
 - player_P012774_2023.png (Nunn): lines in place; readable; centred at 0; few hexagons reach 5 shots; +2.7 per 100.
 iteration 4 | F6 team shot quality + F7 player shot-making + F8 charts | fast gate 1-6 (385 tests, 95.6%); F6 calibration in the large RED (ratio 0.977-1.020, 5/12 development seasons within 0.5%); F7 verdict "stable enough to show" (y2y r 0.396 [0.311, 0.481], split-half 0.315) = F-k rule (test); F8 7 charts opened and logged | see F6-F8 commit
+- (F9) **Deliberate fold-rule breaks, each shown once and reverted** (tests/test_m2_leakage.py):
+  (a) LOSO training set includes the scored season -> own-season test FAILED [spline, lgbm];
+  (b) the development-wide fit also sees validation/test shots -> development-fitted test FAILED [spline, lgbm];
+  (c) the isotonic calibrator for season s fitted on all development out-of-fold values (incl. s) -> own-season test FAILED [spline, lgbm].
+  After each revert: 5/5 pass. Guards in the same tests prove the edits move what they should.
+- (F10) Model card test catches an edited table value (0.633267 -> 0.633268: 2 tests failed; reverted, 3 pass).
+iteration 5 | F9 MLflow + leakage, F10 model card | leakage 5/5 (+3 deliberate breaks shown); card test 3/3 (+ mutation shown) | green | see F10 commit
