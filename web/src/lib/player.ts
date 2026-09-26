@@ -1,10 +1,8 @@
 // Player page renderers: shot chart, distance bands against the league, game log, season lines.
 // Pure (types only from ./stats), so the build and the in-page season switch share them.
 
+import { esc, hexChart } from "./court";
 import type { Bands, PlayerSeason } from "./stats";
-
-const esc = (s: string) =>
-  s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] ?? c);
 
 export const BAND_LABELS: Record<string, [string, string]> = {
   rim: ["At the rim", "under 1.5 m"],
@@ -43,67 +41,10 @@ export const SEASON_COLS: { head: string; about: string; cell: (t: Totals) => st
 ];
 
 // ---- Shot chart ----------------------------------------------------------------------------
-// Court metres, basket at the origin; drawn with the baseline on top (y grows down the page).
-
-const SQRT3 = Math.sqrt(3);
-const BASELINE = 1.575;
-const DEPTH = 9.3; // metres from the basket shown; deeper heaves are left off the chart
-const toY = (y: number) => y + BASELINE;
-
-export const COURT_VIEWBOX = `-7.7 -0.2 15.4 ${(DEPTH + BASELINE + 0.4).toFixed(2)}`;
-
-function courtLines(): string {
-  const arcY = Math.sqrt(6.75 ** 2 - 6.6 ** 2); // where the corner lines meet the arc
-  const ft = 5.8 - BASELINE;
-  return [
-    `<path class="line" d="M-7.5 ${toY(DEPTH)}V0H7.5V${toY(DEPTH)}"/>`,
-    `<path class="line" d="M-2.45 0V${toY(ft)}H2.45V0"/>`,
-    `<path class="line" d="M-1.8 ${toY(ft)}A1.8 1.8 0 0 0 1.8 ${toY(ft)}"/>`,
-    `<path class="line" d="M-6.6 0V${toY(arcY)}A6.75 6.75 0 0 0 6.6 ${toY(arcY)}V0"/>`,
-    `<path class="line" d="M-1.25 ${toY(0)}A1.25 1.25 0 0 0 1.25 ${toY(0)}"/>`,
-    `<path class="line" d="M-0.9 ${toY(-0.375)}H0.9"/>`,
-    `<circle class="rim" cx="0" cy="${toY(0)}" r="0.225"/>`,
-  ].join("");
-}
-
-function hexPath(cx: number, cy: number, r: number): string {
-  const pts: string[] = [];
-  for (let i = 0; i < 6; i++) {
-    const a = ((60 * i - 30) * Math.PI) / 180;
-    pts.push(`${(cx + r * Math.cos(a)).toFixed(3)} ${(cy + r * Math.sin(a)).toFixed(3)}`);
-  }
-  return `M${pts.join("L")}Z`;
-}
-
-/** Five steps of "FG% here against the league here", shrunk toward the league on small samples. */
-export function tone(att: number, made: number, leaguePermille: number): number {
-  if (leaguePermille < 0) return 0;
-  const league = leaguePermille / 1000;
-  const k = 8; // prior weight in attempts
-  const diff = 100 * ((made + k * league) / (att + k) - league);
-  if (diff <= -7) return -2;
-  if (diff <= -2.5) return -1;
-  if (diff < 2.5) return 0;
-  return diff < 7 ? 1 : 2;
-}
 
 export function shotChart(s: PlayerSeason, radius: number): string {
-  const shown = s.hex.filter(([q, r]) => radius * 1.5 * r <= DEPTH);
-  const most = Math.max(1, ...shown.map((c) => c[2]));
-  const full = Math.max(1, most * 0.6); // the busiest cells all draw at full size
-  const cells = shown
-    .map(([q, r, att, made, lg]) => {
-      const cx = radius * SQRT3 * (q + r / 2);
-      const cy = toY(radius * 1.5 * r);
-      const size = radius * 0.94 * (0.32 + 0.68 * Math.sqrt(Math.min(1, att / full)));
-      const league = lg < 0 ? "no league shots here" : `league ${(lg / 10).toFixed(1)}%`;
-      const tip = `<b>${made} of ${att}</b> (${((100 * made) / att).toFixed(0)}%)<br>${league}`;
-      return `<path class="t${tone(att, made, lg)}" d="${hexPath(cx, cy, size)}" data-tip="${esc(tip)}"/>`;
-    })
-    .join("");
   const attempts = s.hex.reduce((a, c) => a + c[2], 0);
-  const title = `${s.label} shot chart: ${attempts} located field-goal attempts`;
-  return `<svg class="court" viewBox="${COURT_VIEWBOX}" role="img" aria-label="${esc(title)}"><rect class="floor" x="-7.5" y="0" width="15" height="${toY(DEPTH)}"/>${courtLines()}<g class="cells">${cells}</g></svg>`;
+  return hexChart(s.hex, radius, { label: `${s.label} shot chart: ${attempts} located field-goal attempts` });
 }
 
 // ---- Distance bands ------------------------------------------------------------------------
@@ -113,25 +54,32 @@ function share(b: Bands, key: string) {
   return total ? (100 * b[key][0]) / total : 0;
 }
 
-export function bandsHtml(s: PlayerSeason, up: string, down: string): string {
-  const rows = Object.keys(BAND_LABELS)
+const signed = (x: number, digits = 1) =>
+  `${x > 0 ? "+" : x < 0 ? "−" : ""}${Math.abs(x).toFixed(digits)}`;
+
+/** Share and FG% per distance band against the league. `invert` for shots allowed: the caret
+ *  turns blue where opponents shoot worse than the league. */
+export function bandRows(b: Bands, league: Bands, up: string, down: string, invert = false): string {
+  return Object.keys(BAND_LABELS)
     .map((key) => {
-      const [att, made] = s.bands[key] ?? [0, 0];
-      const [la, lm] = s.leagueBands[key] ?? [0, 0];
+      const [att, made] = b[key] ?? [0, 0];
+      const [la, lm] = league[key] ?? [0, 0];
       const [label, range] = BAND_LABELS[key];
       const mine = att ? (100 * made) / att : null;
       const theirs = la ? (100 * lm) / la : null;
       const diff = mine !== null && theirs !== null && att >= 10 ? mine - theirs : null;
+      const good = diff !== null && (invert ? diff < 0 : diff > 0);
       const mark =
         diff === null || Math.abs(diff) < 2.5
           ? ""
-          : `<span class="car ${diff > 0 ? "up" : "down"}" aria-hidden="true">${diff > 0 ? up : down}</span>`;
-      const diffText = diff === null ? "–" : `${diff > 0 ? "+" : diff < 0 ? "−" : ""}${Math.abs(diff).toFixed(1)}`;
-      return `<tr><th scope="row">${label}<small>${range}</small></th><td class="num">${att}</td><td class="num">${share(s.bands, key).toFixed(0)}%</td><td class="num muted">${share(s.leagueBands, key).toFixed(0)}%</td><td class="num">${mine === null ? "–" : mine.toFixed(1)}</td><td class="num muted">${theirs === null ? "–" : theirs.toFixed(1)}</td><td class="num diff">${mark}${diffText}</td></tr>`;
+          : `<span class="car ${good ? "up" : "down"}" aria-hidden="true">${diff > 0 ? up : down}</span>`;
+      return `<tr><th scope="row">${label}<small>${range}</small></th><td class="num">${att}</td><td class="num">${share(b, key).toFixed(0)}%</td><td class="num muted">${share(league, key).toFixed(0)}%</td><td class="num">${mine === null ? "–" : mine.toFixed(1)}</td><td class="num muted">${theirs === null ? "–" : theirs.toFixed(1)}</td><td class="num diff">${mark}${diff === null ? "–" : signed(diff)}</td></tr>`;
     })
     .join("");
-  return rows;
 }
+
+export const bandsHtml = (s: PlayerSeason, up: string, down: string) =>
+  bandRows(s.bands, s.leagueBands, up, down);
 
 // ---- Game log ------------------------------------------------------------------------------
 

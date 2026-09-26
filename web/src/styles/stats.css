@@ -1,0 +1,410 @@
+/* Shared chrome of the stats pages (player, team, shots): page head, section heads, selects,
+   filter rows, tables, the shot chart and its key. Imported by those pages only. */
+
+.head {
+  padding-top: 56px;
+}
+.head h1 {
+  font-size: 2.25rem;
+  font-weight: 620;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin-top: 12px;
+  color: var(--ink-2);
+  font-size: 0.9375rem;
+  font-variant-numeric: tabular-nums;
+}
+.lede {
+  margin-top: 16px;
+  max-width: 62ch;
+  font-size: 1.125rem;
+  line-height: 1.45;
+  letter-spacing: -0.005em;
+}
+.band {
+  padding-top: 72px;
+}
+.sec-head {
+  margin-bottom: 20px;
+}
+.sec-head p {
+  margin-top: 6px;
+  color: var(--ink-2);
+  max-width: 64ch;
+}
+.split {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+}
+.note {
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  max-width: 70ch;
+}
+.ink-link {
+  color: var(--ink);
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: var(--rule-strong);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 150ms ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .ink-link:hover {
+    text-decoration-color: var(--ink);
+  }
+}
+
+/* Selects and filter rows */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 14px 20px;
+}
+.field {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.field > span:first-child,
+.field legend {
+  padding: 0;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+.field legend {
+  margin-bottom: 6px;
+}
+.select {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.select select {
+  appearance: none;
+  height: 32px;
+  max-width: 16rem;
+  padding: 0 30px 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--rule-strong);
+  color: var(--ink);
+  font: 500 0.8125rem/1 var(--font);
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transition: box-shadow 150ms ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .select select:hover {
+    box-shadow: inset 0 0 0 1px var(--ink-2);
+  }
+}
+.select select:focus-visible {
+  outline: 2px solid var(--data-1);
+  outline-offset: 1px;
+}
+.select .caret {
+  position: absolute;
+  right: 10px;
+  display: grid;
+  pointer-events: none;
+  color: var(--ink-2);
+  font-size: 11px;
+}
+.caret svg {
+  width: 1em;
+  height: 1em;
+  fill: currentColor;
+}
+[aria-busy] .busy-fade {
+  opacity: 0.6;
+  transition: opacity 150ms ease 150ms;
+}
+
+/* Tables */
+.scroll {
+  overflow-x: auto;
+}
+.grid {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+.grid :is(th, td) {
+  padding: 8px 0 8px 12px;
+  border-bottom: 1px solid var(--rule);
+  white-space: nowrap;
+  text-align: left;
+}
+.grid :is(th, td):first-child {
+  padding-left: 0;
+}
+.grid thead th {
+  padding-top: 0;
+  border-bottom-color: var(--rule-strong);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+.grid .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.grid tbody th {
+  font-weight: 500;
+}
+.grid td.num {
+  color: var(--ink-2);
+}
+.grid td.muted {
+  color: var(--muted);
+}
+.grid tfoot :is(th, td) {
+  border-top: 1px solid var(--rule-strong);
+  border-bottom: 0;
+  color: var(--ink);
+  font-weight: 600;
+}
+.grid th small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+.grid a {
+  color: inherit;
+  text-decoration: none;
+}
+.grid a:focus-visible {
+  outline: 2px solid var(--data-1);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .grid tbody tr:hover :is(td, th) {
+    background: var(--sunk);
+  }
+  .grid a:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+.car {
+  display: inline-grid;
+  vertical-align: -0.1em;
+  margin-right: 4px;
+  font-size: 10px;
+}
+.car svg {
+  width: 1em;
+  height: 1em;
+  fill: currentColor;
+}
+.car.up {
+  color: var(--data-1);
+}
+.car.down {
+  color: var(--data-neg);
+}
+td.diff {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* Shot chart (lib/court.ts): court in axis hairlines, hexes and dots in the data inks. */
+.chart-box {
+  margin: 0;
+}
+svg.court {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.court .floor {
+  fill: var(--surface);
+}
+.court .line {
+  fill: none;
+  stroke: var(--axis);
+  stroke-width: 0.045;
+}
+.court .rim {
+  fill: none;
+  stroke: var(--ink-2);
+  stroke-width: 0.06;
+}
+.court .cells path,
+.scale i {
+  stroke: var(--surface);
+  stroke-width: 0.04;
+}
+.court .t-2,
+.scale .t-2 {
+  fill: var(--data-neg);
+  background: var(--data-neg);
+}
+.court .t-1,
+.scale .t-1 {
+  fill: color-mix(in srgb, var(--data-neg) 50%, var(--surface));
+  background: color-mix(in srgb, var(--data-neg) 50%, var(--surface));
+}
+.court .t0,
+.scale .t0 {
+  fill: var(--data-2);
+  background: var(--data-2);
+}
+.court .t1,
+.scale .t1 {
+  fill: color-mix(in srgb, var(--data-1) 50%, var(--surface));
+  background: color-mix(in srgb, var(--data-1) 50%, var(--surface));
+}
+.court .t2,
+.scale .t2 {
+  fill: var(--data-1);
+  background: var(--data-1);
+}
+/* Frequency: one hue in five validated steps (tokens in global.css). */
+.court .f1,
+.scale .f1 {
+  fill: var(--freq-1);
+  background: var(--freq-1);
+}
+.court .f2,
+.scale .f2 {
+  fill: var(--freq-2);
+  background: var(--freq-2);
+}
+.court .f3,
+.scale .f3 {
+  fill: var(--freq-3);
+  background: var(--freq-3);
+}
+.court .f4,
+.scale .f4 {
+  fill: var(--freq-4);
+  background: var(--freq-4);
+}
+.court .f5,
+.scale .f5 {
+  fill: var(--freq-5);
+  background: var(--freq-5);
+}
+/* Attempts: makes are filled blue dots, misses hollow red rings (shape carries it too). */
+.court .made {
+  fill: var(--data-1);
+  fill-opacity: 0.75;
+}
+.court .miss {
+  fill: none;
+  stroke: var(--data-neg);
+  stroke-width: 0.05;
+  stroke-opacity: 0.8;
+}
+@media (hover: hover) and (pointer: fine) {
+  .court .cells path:hover {
+    stroke: var(--ink);
+    stroke-width: 0.06;
+  }
+}
+.key {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 10px;
+  align-items: center;
+  margin-top: 14px;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.key[hidden] {
+  display: none;
+}
+.scale {
+  display: flex;
+  gap: 2px;
+}
+.scale i {
+  width: 14px;
+  height: 10px;
+}
+.scale i:first-child {
+  border-radius: 3px 0 0 3px;
+}
+.scale i:last-child {
+  border-radius: 0 3px 3px 0;
+}
+.sizes {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.sizes i {
+  background: var(--data-2);
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+}
+.sizes .s1 {
+  width: 6px;
+  height: 7px;
+}
+.sizes .s2 {
+  width: 10px;
+  height: 11px;
+}
+.sizes .s3 {
+  width: 14px;
+  height: 16px;
+}
+.dots {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.dots i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+.dots .made {
+  background: var(--data-1);
+}
+.dots .miss {
+  box-shadow: inset 0 0 0 1.5px var(--data-neg);
+}
+.caveat {
+  grid-column: 1 / -1;
+  margin-top: 4px;
+  color: var(--ink-2);
+}
+
+@media (max-width: 560px) {
+  .head {
+    padding-top: 36px;
+  }
+  .head h1 {
+    font-size: 1.875rem;
+  }
+  .lede {
+    font-size: 1rem;
+  }
+  .band {
+    padding-top: 56px;
+  }
+  .split {
+    flex-direction: column;
+    align-items: start;
+  }
+}
