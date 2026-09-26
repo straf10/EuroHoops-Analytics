@@ -1,0 +1,1494 @@
+{
+  "euroleague": {
+    "seasons": {
+      "2007": {
+        "teams": 24,
+        "first_season_in_data": true
+      },
+      "2008": {
+        "teams": 24,
+        "new": [
+          {
+            "team": "AVE",
+            "name": "Air Avellino"
+          },
+          {
+            "team": "BER",
+            "name": "Alba Berlin"
+          },
+          {
+            "team": "JOV",
+            "name": "DKV Joventut"
+          },
+          {
+            "team": "NAN",
+            "name": "SLUC Nancy"
+          },
+          {
+            "team": "NIO",
+            "name": "Panionios On Telecoms"
+          }
+        ],
+        "returning": [],
+        "left": [
+          {
+            "team": "ARI",
+            "name": "Aris TT Bank"
+          },
+          {
+            "team": "BAM",
+            "name": "Brose Baskets"
+          },
+          {
+            "team": "LIE",
+            "name": "Lietuvos Rytas"
+          },
+          {
+            "team": "ROA",
+            "name": "Chorale Roanne"
+          },
+          {
+            "team": "VIR",
+            "name": "Virtus VidiVici"
+          }
+        ],
+        "renamed": [
+          {
+            "team": "BAR",
+            "from": "AXA FC Barcelona",
+            "to": "Regal FC Barcelona"
+          },
+          {
+            "team": "BAS",
+            "from": "Tau Ceramica Vitoria-Gasteiz",
+            "to": "Tau Ceramica"
+          },
+          {
+            "team": "OLY",
+            "from": "Olympiacos",
+            "to": "Olympiacos Piraeus"
+          },
+          {
+            "team": "PAN",
+            "from": "Panathinaikos",
+            "to": "Panathinaikos Athens"
+          },
+          {
+            "team": "PAR",
+            "from": "Partizan Igokea",
+            "to": "Partizan"
+          },
+          {
+            "team": "SOP",
+            "from": "Prokom Trefl Sopot",
+            "to": "Asseco Prokom"
+          },
+          {
+            "team": "TEL",
+            "from": "Maccabi Elite Tel Aviv",
+            "to": "Maccabi Electra"
+          }
+        ]
+      },
+      "2009": {
+        "teams": 24,
+        "new": [
+          {
+            "team": "ASV",
+            "name": "Asvel Basket"
+          },
+          {
+            "team": "KHI",
+            "name": "Khimki"
+          },
+          {
+            "team": "MAR",
+            "name": "Maroussi"
+          },
+          {
+            "team": "OLD",
+            "name": "EWE Baskets"
+          },
+          {
+            "team": "ORL",
+            "name": "Entente Orleanaise"
+          }
+        ],
+        "returning": [
+          {
+            "team": "LIE",
+            "name": "Lietuvos Rytas",
+            "last_season": 2007,
+            "name_then": "Lietuvos Rytas"
+          }
+        ],
+        "left": [
+          {
+            "team": "AVE",
+            "name": "Air Avellino"
+          },
+          {
+            "team": "BER",
+            "name": "Alba Berlin"
+          },
+          {
+            "team": "JOV",
+            "name": "DKV Joventut"
+          },
+          {
+            "team": "LEM",
+            "name": "Le Mans"
+          },
+          {
+            "team": "NAN",
+            "name": "SLUC Nancy"
+          },
+          {
+            "team": "NIO",
+            "name": "Panionios On Telecoms"
+          }
+        ],
+        "renamed": [
+          {
+            "team": "BAS",
+            "from": "Tau Ceramica",
+            "to": "Caja Laboral"
+          },
+          {
+            "team": "MIL",
+            "from": "AJ Milano",
+            "to": "Armani Jeans Milano"
+          },
+          {
+            "team": "PAN",
+            "from": "Panathinaikos Athens",
+            "to": "Panathinaikos"
+          },
+          {
+            "team": "PAR",
+            "from": "Partizan",
+            "to": "Partizan Belgrade"
+          },
+          {
+            "team": "ZAL",
+            "from": "Zalgiris",
+            "to": "Zalgiris Kaunas"
+          }
+        ]
+      },
+      "2010": {
+        "teams": 24,
+        "new": [
+          {
+            "team": "CHA",
+            "name": "Spirou Charleroi"
+          },
+          {
+            "team": "CHO",
+            "name": "Cholet Basket"
+          },
+          {
+            "team": "PAM",
+            "name": "Power Electronics Valencia"
+          }
+        ],
+        "returning": [
+          {
+            "team": "BAM",
+            "name": "Brose Baskets Bamberg",
+            "last_season": 2007,
+            "name_then": "Brose Baskets"
+          }
+        ],
+        "left": [
+          {
+            "team": "ASV",
+            "name": "Asvel Basket"
+          },
+          {
+            "team": "MAR",
+            "name": "Maroussi"
+          },
+          {
+            "team": "OLD",
+            "name": "EWE Baskets"
+          },
+          {
+            "team": "ORL",
+            "name": "Entente Orleanaise"
+          }
+        ],
+        "renamed": [
+          {
+            "team": "BAM",
+            "from": "Brose Baskets",
+            "to": "Brose Baskets Bamberg"
+          },
+          {
+            "team": "BAR",
+            "from": "Regal FC Barcelona",
+            "to": "Regal Barcelona"
+          },
+          {
+            "team": "BAS",
+            "from": "Caja Laboral",
+            "to": "Caja Laboral Vitoria"
+          },
+          {
+            "team": "CIB",
+            "from": "Cibona",
+            "to": "Cibona Zagreb"
+          },
+          {
+            "team": "IST",
+            "from": "Efes Pilsen",
+            "to": "Efes Pilsen Istanbul"
+          },
+          {
+            "team": "KHI",
+            "from": "Khimki",
+            "to": "BC Khimki Moscow Region"
+          },
+          {
+            "team": "LIE",
+            "from": "Lietuvos Rytas",
+            "to": "Lietuvos Rytas Vilnius"
+          },
+          {
+            "team": "LJU",
+            "from": "Union Olimpija",
+            "to": "Union Olimpija Ljubljana"
+          },
+          {
+            "team": "MAL",
+            "from": "Unicaja",
+            "to": "Unicaja Malaga"
+          },
+          {
+            "team": "PAN",
+            "from": "Panathinaikos",
+            "to": "Panathinaikos Athens"
+          },
+          {
+            "team": "PAR",
+            "from": "Partizan Belgrade",
+            "to": "Partizan mt:s Belgrade"
+          },
+          {
+            "team": "SOP",
+            "from": "Asseco Prokom",
+            "to": "Asseco Prokom Gdynia"
+          },
+          {
+            "team": "TEL",
+            "from": "Maccabi Electra",
+            "to": "Maccabi Electra Tel Aviv"
+          },
+          {
+            "team": "ULK",
+            "from": "Fenerbahce Ulker",
+            "to": "Fenerbahce Ulker Istanbul"
+          }
+        ]
+      },
+      "2011": {
+        "teams": 24,
+        "new": [
+          {
+            "team": "BIL",
+            "name": "Gescrap Bilbao Basket"
+          },
+          {
+            "team": "CTU",
+            "name": "Bennet Cantu"
+          },
+          {
+            "team": "GAL",
+            "name": "Galatasaray Medical Park"
+          },
+          {
+            "team": "UNK",
+            "name": "Unics Kazan"
+          },
+          {
+            "team": "ZAG",
+            "name": "Zagreb"
+          }
+        ],
+        "returning": [
+          {
+            "team": "NAN",
+            "name": "SLUC Nancy",
+            "last_season": 2008,
+            "name_then": "SLUC Nancy"
+          }
+        ],
+        "left": [
+          {
+            "team": "CHO",
+            "name": "Cholet Basket"
+          },
+          {
+            "team": "CIB",
+            "name": "Cibona Zagreb"
+          },
+          {
+            "team": "KHI",
+            "name": "BC Khimki Moscow Region"
+          },
+          {
+            "team": "LIE",
+            "name": "Lietuvos Rytas Vilnius"
+          },
+          {
+            "team": "PAM",
+            "name": "Power Electronics Valencia"
+          },
+          {
+            "team": "ROM",
+            "name": "Lottomatica Roma"
+          }
+        ],
+        "renamed": [
+          {
+            "team": "BAM",
+            "from": "Brose Baskets Bamberg",
+            "to": "Brose Baskets"
+          },
+          {
+            "team": "BAR",
+            "from": "Regal Barcelona",
+            "to": "FC Barcelona Regal"
+          },
+          {
+            "team": "BAS",
+            "from": "Caja Laboral Vitoria",
+            "to": "Caja Laboral"
+          },
+          {
+            "team": "CHA",
+            "from": "Spirou Charleroi",
+            "to": "Belgacom Spirou Charleroi"
+          },
+          {
+            "team": "IST",
+            "from": "Efes Pilsen Istanbul",
+            "to": "Anadolu Efes Istanbul"
+          },
+          {
+            "team": "MIL",
+            "from": "Armani Jeans Milano",
+            "to": "EA7 Emporio Armani"
+          },
+          {
+            "team": "ULK",
+            "from": "Fenerbahce Ulker Istanbul",
+            "to": "Fenerbahce Ulker"
+          }
+        ]
+      },
+      "2012": {
+        "teams": 24,
+        "new": [
+          {
+            "team": "BES",
+            "name": "Besiktas JK Istanbul"
+          },
+          {
+            "team": "CED",
+            "name": "Cedevita Zagreb"
+          },
+          {
+            "team": "CHL",
+            "name": "Elan Chalon-Sur-Saone"
+          }
+        ],
+        "returning": [
+          {
+            "team": "BER",
+            "name": "Alba Berlin",
+            "last_season": 2008,
+            "name_then": "Alba Berlin"
+          },
+          {
+            "team": "KHI",
+            "name": "Khimki Moscow Region",
+            "last_season": 2010,
+            "name_then": "BC Khimki Moscow Region"
+          },
+          {
+            "team": "LIE",
+            "name": "Lietuvos Rytas Vilnius",
+            "last_season": 2010,
+            "name_then": "Lietuvos Rytas Vilnius"
+          }
+        ],
+        "left": [
+          {
+            "team": "BIL",
+            "name": "Gescrap Bilbao Basket"
+          },
+          {
+            "team": "CHA",
+            "name": "Belgacom Spirou Charleroi"
+          },
+          {
+            "team": "GAL",
+            "name": "Galatasaray Medical Park"
+          },
+          {
+            "team": "NAN",
+            "name": "SLUC Nancy"
+          },
+          {
+            "team": "UNK",
+            "name": "Unics Kazan"
+          },
+          {
+            "team": "ZAG",
+            "name": "Zagreb"
+          }
+        ],
+        "renamed": [
+          {
+            "team": "BAM",
+            "from": "Brose Baskets",
+            "to": "Brose Baskets Bamberg"
+          },
+          {
+            "team": "BAS",
+            "from": "Caja Laboral",
+            "to": "Laboral Kutxa Vitoria"
+          },
+          {
+            "team": "CTU",
+            "from": "Bennet Cantu",
+            "to": "Mapooro Cantu"
+          },
+          {
+            "team": "KHI",
+            "from": "BC Khimki Moscow Region",
+            "to": "Khimki Moscow Region"
+          },
+          {
+            "team": "MIL",
+            "from": "EA7 Emporio Armani",
+            "to": "EA7 Emporio Armani Milan"
+          },
+          {
+            "team": "ULK",
+            "from": "Fenerbahce Ulker",
+            "to": "Fenerbahce Ulker Istanbul"
+          }
+        ]
+      },
+      "2013": {
+        "teams": 24,
+        "new": [
+          {
+            "team": "GSS",
+            "name": "Stelmet Zielona Gora"
+          },
+          {
+            "team": "MUN",
+            "name": "FC Bayern Munich"
+          },
+          {
+            "team": "NIK",
+            "name": "Budivelnik Kiev"
+          },
+          {
+            "team": "NTR",
+            "name": "JSF Nanterre"
+          },
+          {
+            "team": "RED",
+            "name": "Crvena Zvezda Telekom Belgrade"
+          },
+          {
+            "team": "STR",
+            "name": "Strasbourg"
+          },
+          {
+            "team": "TIV",
+            "name": "Lokomotiv Kuban Krasnodar"
+          }
+        ],
+        "returning": [
+          {
+            "team": "GAL",
+            "name": "Galatasaray Liv Hospital Istanbul",
+            "last_season": 2011,
+            "name_then": "Galatasaray Medical Park"
+          }
+        ],
+        "left": [
+          {
+            "team": "BER",
+            "name": "Alba Berlin"
+          },
+          {
+            "team": "BES",
+            "name": "Besiktas JK Istanbul"
+          },
+          {
+            "team": "CED",
+            "name": "Cedevita Zagreb"
+          },
+          {
+            "team": "CHL",
+            "name": "Elan Chalon-Sur-Saone"
+          },
+          {
+            "team": "CTU",
+            "name": "Mapooro Cantu"
+          },
+          {
+            "team": "KHI",
+            "name": "Khimki Moscow Region"
+          },
+          {
+            "team": "LJU",
+            "name": "Union Olimpija Ljubljana"
+          },
+          {
+            "team": "SOP",
+            "name": "Asseco Prokom Gdynia"
+          }
+        ],
+        "renamed": [
+          {
+            "team": "BAR",
+            "from": "FC Barcelona Regal",
+            "to": "FC Barcelona"
+          },
+          {
+            "team": "GAL",
+            "from": "Galatasaray Medical Park",
+            "to": "Galatasaray Liv Hospital Istanbul"
+          },
+          {
+            "team": "PAR",
+            "from": "Partizan mt:s Belgrade",
+            "to": "Partizan NIS Belgrade"
+          }
+        ]
+      },
+      "2014": {
+        "teams": 24,
+        "new": [
+          {
+            "team": "KLA",
+            "name": "Neptunas Klaipeda"
+          },
+          {
+            "team": "LMG",
+            "name": "Limoges CSP"
+          },
+          {
+            "team": "NOV",
+            "name": "Nizhny Novgorod"
+          },
+          {
+            "team": "SAS",
+            "name": "Dinamo Banco di Sardegna Sassari"
+          },
+          {
+            "team": "ZGO",
+            "name": "PGE Turow Zgorzelec"
+          }
+        ],
+        "returning": [
+          {
+            "team": "BER",
+            "name": "ALBA Berlin",
+            "last_season": 2012,
+            "name_then": "Alba Berlin"
+          },
+          {
+            "team": "CED",
+            "name": "Cedevita Zagreb",
+            "last_season": 2012,
+            "name_then": "Cedevita Zagreb"
+          },
+          {
+            "team": "PAM",
+            "name": "Valencia Basket",
+            "last_season": 2010,
+            "name_then": "Power Electronics Valencia"
+          },
+          {
+            "team": "UNK",
+            "name": "Unics Kazan",
+            "last_season": 2011,
+            "name_then": "Unics Kazan"
+          }
+        ],
+        "left": [
+          {
+            "team": "BAM",
+            "name": "Brose Baskets Bamberg"
+          },
+          {
+            "team": "GSS",
+            "name": "Stelmet Zielona Gora"
+          },
+          {
+            "team": "LIE",
+            "name": "Lietuvos Rytas Vilnius"
+          },
+          {
+            "team": "NIK",
+            "name": "Budivelnik Kiev"
+          },
+          {
+            "team": "NTR",
+            "name": "JSF Nanterre"
+          },
+          {
+            "team": "PAR",
+            "name": "Partizan NIS Belgrade"
+          },
+          {
+            "team": "SIE",
+            "name": "Montepaschi Siena"
+          },
+          {
+            "team": "STR",
+            "name": "Strasbourg"
+          },
+          {
+            "team": "TIV",
+            "name": "Lokomotiv Kuban Krasnodar"
+          }
+        ],
+        "renamed": [
+          {
+            "team": "BER",
+            "from": "Alba Berlin",
+            "to": "ALBA Berlin"
+          },
+          {
+            "team": "PAM",
+            "from": "Power Electronics Valencia",
+            "to": "Valencia Basket"
+          }
+        ]
+      },
+      "2015": {
+        "teams": 24,
+        "new": [
+          {
+            "team": "DAR",
+            "name": "Darussafaka Dogus Istanbul"
+          },
+          {
+            "team": "KSK",
+            "name": "Pinar Karsiyaka"
+          }
+        ],
+        "returning": [
+          {
+            "team": "BAM",
+            "name": "Brose Baskets Bamberg",
+            "last_season": 2013,
+            "name_then": "Brose Baskets Bamberg"
+          },
+          {
+            "team": "GSS",
+            "name": "Stelmet Zielona Gora",
+            "last_season": 2013,
+            "name_then": "Stelmet Zielona Gora"
+          },
+          {
+            "team": "KHI",
+            "name": "Khimki Moscow Region",
+            "last_season": 2012,
+            "name_then": "Khimki Moscow Region"
+          },
+          {
+            "team": "STR",
+            "name": "Strasbourg",
+            "last_season": 2013,
+            "name_then": "Strasbourg"
+          },
+          {
+            "team": "TIV",
+            "name": "Lokomotiv Kuban Krasnodar",
+            "last_season": 2013,
+            "name_then": "Lokomotiv Kuban Krasnodar"
+          }
+        ],
+        "left": [
+          {
+            "team": "BER",
+            "name": "ALBA Berlin"
+          },
+          {
+            "team": "GAL",
+            "name": "Galatasaray Liv Hospital Istanbul"
+          },
+          {
+            "team": "KLA",
+            "name": "Neptunas Klaipeda"
+          },
+          {
+            "team": "NOV",
+            "name": "Nizhny Novgorod"
+          },
+          {
+            "team": "PAM",
+            "name": "Valencia Basket"
+          },
+          {
+            "team": "UNK",
+            "name": "Unics Kazan"
+          },
+          {
+            "team": "ZGO",
+            "name": "PGE Turow Zgorzelec"
+          }
+        ],
+        "renamed": [
+          {
+            "team": "BAR",
+            "from": "FC Barcelona",
+            "to": "FC Barcelona Lassa"
+          },
+          {
+            "team": "BAS",
+            "from": "Laboral Kutxa Vitoria",
+            "to": "Laboral Kutxa Vitoria Gasteiz"
+          },
+          {
+            "team": "TEL",
+            "from": "Maccabi Electra Tel Aviv",
+            "to": "Maccabi FOX Tel Aviv"
+          },
+          {
+            "team": "ULK",
+            "from": "Fenerbahce Ulker Istanbul",
+            "to": "Fenerbahce Ulker"
+          }
+        ]
+      },
+      "2016": {
+        "teams": 16,
+        "new": [],
+        "returning": [
+          {
+            "team": "GAL",
+            "name": "Galatasaray Odeabank Istanbul",
+            "last_season": 2014,
+            "name_then": "Galatasaray Liv Hospital Istanbul"
+          },
+          {
+            "team": "UNK",
+            "name": "Unics Kazan",
+            "last_season": 2014,
+            "name_then": "Unics Kazan"
+          }
+        ],
+        "left": [
+          {
+            "team": "CED",
+            "name": "Cedevita Zagreb"
+          },
+          {
+            "team": "GSS",
+            "name": "Stelmet Zielona Gora"
+          },
+          {
+            "team": "KHI",
+            "name": "Khimki Moscow Region"
+          },
+          {
+            "team": "KSK",
+            "name": "Pinar Karsiyaka"
+          },
+          {
+            "team": "LMG",
+            "name": "Limoges CSP"
+          },
+          {
+            "team": "MAL",
+            "name": "Unicaja Malaga"
+          },
+          {
+            "team": "MUN",
+            "name": "FC Bayern Munich"
+          },
+          {
+            "team": "SAS",
+            "name": "Dinamo Banco di Sardegna Sassari"
+          },
+          {
+            "team": "STR",
+            "name": "Strasbourg"
+          },
+          {
+            "team": "TIV",
+            "name": "Lokomotiv Kuban Krasnodar"
+          }
+        ],
+        "renamed": [
+          {
+            "team": "BAM",
+            "from": "Brose Baskets Bamberg",
+            "to": "Brose Bamberg"
+          },
+          {
+            "team": "BAS",
+            "from": "Laboral Kutxa Vitoria Gasteiz",
+            "to": "Baskonia Vitoria Gasteiz"
+          },
+          {
+            "team": "GAL",
+            "from": "Galatasaray Liv Hospital Istanbul",
+            "to": "Galatasaray Odeabank Istanbul"
+          },
+          {
+            "team": "PAN",
+            "from": "Panathinaikos Athens",
+            "to": "Panathinaikos Superfoods Athens"
+          },
+          {
+            "team": "RED",
+            "from": "Crvena Zvezda Telekom Belgrade",
+            "to": "Crvena Zvezda mts Belgrade"
+          }
+        ]
+      },
+      "2017": {
+        "teams": 16,
+        "new": [],
+        "returning": [
+          {
+            "team": "KHI",
+            "name": "Khimki Moscow Region",
+            "last_season": 2015,
+            "name_then": "Khimki Moscow Region"
+          },
+          {
+            "team": "MAL",
+            "name": "Unicaja Malaga",
+            "last_season": 2015,
+            "name_then": "Unicaja Malaga"
+          },
+          {
+            "team": "PAM",
+            "name": "Valencia Basket",
+            "last_season": 2014,
+            "name_then": "Valencia Basket"
+          }
+        ],
+        "left": [
+          {
+            "team": "DAR",
+            "name": "Darussafaka Dogus Istanbul"
+          },
+          {
+            "team": "GAL",
+            "name": "Galatasaray Odeabank Istanbul"
+          },
+          {
+            "team": "UNK",
+            "name": "Unics Kazan"
+          }
+        ],
+        "renamed": [
+          {
+            "team": "BAS",
+            "from": "Baskonia Vitoria Gasteiz",
+            "to": "KIROLBET Baskonia Vitoria Gasteiz"
+          },
+          {
+            "team": "MIL",
+            "from": "EA7 Emporio Armani Milan",
+            "to": "AX Armani Exchange Olimpia Milan"
+          },
+          {
+            "team": "ULK",
+            "from": "Fenerbahce Ulker",
+            "to": "Fenerbahce Dogus Istanbul"
+          }
+        ]
+      },
+      "2018": {
+        "teams": 16,
+        "new": [
+          {
+            "team": "BUD",
+            "name": "Buducnost VOLI Pogdorica"
+          },
+          {
+            "team": "CAN",
+            "name": "Herbalife Gran Canaria"
+          }
+        ],
+        "returning": [
+          {
+            "team": "DAR",
+            "name": "Darussafaka Tekfen Istanbul",
+            "last_season": 2016,
+            "name_then": "Darussafaka Dogus Istanbul"
+          },
+          {
+            "team": "MUN",
+            "name": "FC Bayern Munich",
+            "last_season": 2015,
+            "name_then": "FC Bayern Munich"
+          }
+        ],
+        "left": [
+          {
+            "team": "BAM",
+            "name": "Brose Bamberg"
+          },
+          {
+            "team": "MAL",
+            "name": "Unicaja Malaga"
+          },
+          {
+            "team": "PAM",
+            "name": "Valencia Basket"
+          },
+          {
+            "team": "RED",
+            "name": "Crvena Zvezda mts Belgrade"
+          }
+        ],
+        "renamed": [
+          {
+            "team": "BAS",
+            "from": "KIROLBET Baskonia Vitoria Gasteiz",
+            "to": "KIROLBET Baskonia Vitoria-Gasteiz"
+          },
+          {
+            "team": "DAR",
+            "from": "Darussafaka Dogus Istanbul",
+            "to": "Darussafaka Tekfen Istanbul"
+          },
+          {
+            "team": "PAN",
+            "from": "Panathinaikos Superfoods Athens",
+            "to": "Panathinaikos OPAP Athens"
+          },
+          {
+            "team": "ULK",
+            "from": "Fenerbahce Dogus Istanbul",
+            "to": "Fenerbahce Beko Istanbul"
+          }
+        ]
+      },
+      "2019": {
+        "teams": 18,
+        "new": [
+          {
+            "team": "DYR",
+            "name": "Zenit St Petersburg"
+          }
+        ],
+        "returning": [
+          {
+            "team": "ASV",
+            "name": "LDLC ASVEL Villeurbanne",
+            "last_season": 2009,
+            "name_then": "Asvel Basket"
+          },
+          {
+            "team": "BER",
+            "name": "ALBA Berlin",
+            "last_season": 2014,
+            "name_then": "ALBA Berlin"
+          },
+          {
+            "team": "PAM",
+            "name": "Valencia Basket",
+            "last_season": 2017,
+            "name_then": "Valencia Basket"
+          },
+          {
+            "team": "RED",
+            "name": "Crvena Zvezda mts Belgrade",
+            "last_season": 2017,
+            "name_then": "Crvena Zvezda mts Belgrade"
+          }
+        ],
+        "left": [
+          {
+            "team": "BUD",
+            "name": "Buducnost VOLI Pogdorica"
+          },
+          {
+            "team": "CAN",
+            "name": "Herbalife Gran Canaria"
+          },
+          {
+            "team": "DAR",
+            "name": "Darussafaka Tekfen Istanbul"
+          }
+        ],
+        "renamed": [
+          {
+            "team": "ASV",
+            "from": "Asvel Basket",
+            "to": "LDLC ASVEL Villeurbanne"
+          },
+          {
+            "team": "BAR",
+            "from": "FC Barcelona Lassa",
+            "to": "FC Barcelona"
+          },
+          {
+            "team": "MIL",
+            "from": "AX Armani Exchange Olimpia Milan",
+            "to": "AX Armani Exchange Milan"
+          }
+        ]
+      },
+      "2020": {
+        "teams": 18,
+        "new": [],
+        "returning": [],
+        "left": [],
+        "renamed": [
+          {
+            "team": "BAS",
+            "from": "KIROLBET Baskonia Vitoria-Gasteiz",
+            "to": "TD Systems Baskonia Vitoria-Gasteiz"
+          },
+          {
+            "team": "TEL",
+            "from": "Maccabi FOX Tel Aviv",
+            "to": "Maccabi Playtika Tel Aviv"
+          }
+        ]
+      },
+      "2021": {
+        "teams": 18,
+        "new": [
+          {
+            "team": "MCO",
+            "name": "AS Monaco"
+          }
+        ],
+        "returning": [
+          {
+            "team": "UNK",
+            "name": "UNICS Kazan",
+            "last_season": 2016,
+            "name_then": "Unics Kazan"
+          }
+        ],
+        "left": [
+          {
+            "team": "KHI",
+            "name": "Khimki Moscow Region"
+          },
+          {
+            "team": "PAM",
+            "name": "Valencia Basket"
+          }
+        ],
+        "renamed": [
+          {
+            "team": "BAS",
+            "from": "TD Systems Baskonia Vitoria-Gasteiz",
+            "to": "Bitci Baskonia Vitoria-Gasteiz"
+          },
+          {
+            "team": "UNK",
+            "from": "Unics Kazan",
+            "to": "UNICS Kazan"
+          }
+        ]
+      },
+      "2022": {
+        "teams": 18,
+        "new": [],
+        "returning": [
+          {
+            "team": "PAM",
+            "name": "Valencia Basket",
+            "last_season": 2020,
+            "name_then": "Valencia Basket"
+          },
+          {
+            "team": "PAR",
+            "name": "Partizan Mozzart Bet Belgrade",
+            "last_season": 2013,
+            "name_then": "Partizan NIS Belgrade"
+          },
+          {
+            "team": "VIR",
+            "name": "Virtus Segafredo Bologna",
+            "last_season": 2007,
+            "name_then": "Virtus VidiVici"
+          }
+        ],
+        "left": [
+          {
+            "team": "CSK",
+            "name": "CSKA Moscow"
+          },
+          {
+            "team": "DYR",
+            "name": "Zenit St Petersburg"
+          },
+          {
+            "team": "UNK",
+            "name": "UNICS Kazan"
+          }
+        ],
+        "renamed": [
+          {
+            "team": "BAS",
+            "from": "Bitci Baskonia Vitoria-Gasteiz",
+            "to": "Cazoo Baskonia Vitoria-Gasteiz"
+          },
+          {
+            "team": "MIL",
+            "from": "AX Armani Exchange Milan",
+            "to": "EA7 Emporio Armani Milan"
+          },
+          {
+            "team": "PAN",
+            "from": "Panathinaikos OPAP Athens",
+            "to": "Panathinaikos Athens"
+          },
+          {
+            "team": "PAR",
+            "from": "Partizan NIS Belgrade",
+            "to": "Partizan Mozzart Bet Belgrade"
+          },
+          {
+            "team": "RED",
+            "from": "Crvena Zvezda mts Belgrade",
+            "to": "Crvena Zvezda Meridianbet Belgrade"
+          },
+          {
+            "team": "VIR",
+            "from": "Virtus VidiVici",
+            "to": "Virtus Segafredo Bologna"
+          }
+        ]
+      },
+      "2023": {
+        "teams": 18,
+        "new": [],
+        "returning": [],
+        "left": [],
+        "renamed": [
+          {
+            "team": "BAS",
+            "from": "Cazoo Baskonia Vitoria-Gasteiz",
+            "to": "Baskonia Vitoria-Gasteiz"
+          },
+          {
+            "team": "PAN",
+            "from": "Panathinaikos Athens",
+            "to": "Panathinaikos AKTOR Athens"
+          }
+        ]
+      },
+      "2024": {
+        "teams": 18,
+        "new": [
+          {
+            "team": "PRS",
+            "name": "Paris Basketball"
+          }
+        ],
+        "returning": [],
+        "left": [
+          {
+            "team": "PAM",
+            "name": "Valencia Basket"
+          }
+        ],
+        "renamed": []
+      },
+      "2025": {
+        "teams": 20,
+        "new": [
+          {
+            "team": "DUB",
+            "name": "Dubai Basketball"
+          },
+          {
+            "team": "HTA",
+            "name": "Hapoel IBI Tel Aviv"
+          }
+        ],
+        "returning": [
+          {
+            "team": "PAM",
+            "name": "Valencia Basket",
+            "last_season": 2023,
+            "name_then": "Valencia Basket"
+          }
+        ],
+        "left": [
+          {
+            "team": "BER",
+            "name": "ALBA Berlin"
+          }
+        ],
+        "renamed": [
+          {
+            "team": "BAS",
+            "from": "Baskonia Vitoria-Gasteiz",
+            "to": "Kosner Baskonia Vitoria-Gasteiz"
+          },
+          {
+            "team": "TEL",
+            "from": "Maccabi Playtika Tel Aviv",
+            "to": "Maccabi Rapyd Tel Aviv"
+          },
+          {
+            "team": "VIR",
+            "from": "Virtus Segafredo Bologna",
+            "to": "Virtus Bologna"
+          }
+        ]
+      },
+      "2026": {
+        "teams": 20,
+        "new": [],
+        "returning": [
+          {
+            "team": "BES",
+            "name": "Besiktas Istanbul",
+            "last_season": 2012,
+            "name_then": "Besiktas JK Istanbul"
+          }
+        ],
+        "left": [
+          {
+            "team": "MCO",
+            "name": "AS Monaco"
+          }
+        ],
+        "renamed": [
+          {
+            "team": "BES",
+            "from": "Besiktas JK Istanbul",
+            "to": "Besiktas Istanbul"
+          },
+          {
+            "team": "MIL",
+            "from": "EA7 Emporio Armani Milan",
+            "to": "Armani Olimpia Milan"
+          },
+          {
+            "team": "ULK",
+            "from": "Fenerbahce Beko Istanbul",
+            "to": "Fenerbahce Tarfin Istanbul"
+          }
+        ]
+      }
+    },
+    "review_name_changes": [
+      {
+        "season": 2009,
+        "team": "BAS",
+        "from": "Tau Ceramica",
+        "to": "Caja Laboral"
+      }
+    ]
+  },
+  "gbl": {
+    "seasons": {
+      "2018": {
+        "teams": 14,
+        "first_season_in_data": true
+      },
+      "2019": {
+        "teams": 14,
+        "new": [
+          {
+            "team": "00000011",
+            "name": "\u0397\u03a1\u0391\u039a\u039b\u0397\u03a3"
+          },
+          {
+            "team": "098B68C2",
+            "name": "\u039b\u0391\u03a1\u0399\u03a3\u0391"
+          },
+          {
+            "team": "4C2C8907",
+            "name": "\u0399\u03a9\u039d\u0399\u039a\u039f\u03a3 BASKET"
+          }
+        ],
+        "returning": [],
+        "left": [
+          {
+            "team": "00000002",
+            "name": "\u039f\u039b\u03a5\u039c\u03a0\u0399\u0391\u039a\u039f\u03a3"
+          },
+          {
+            "team": "367D6120",
+            "name": "\u03a7\u039f\u039b\u0391\u03a1\u0393\u039f\u03a3"
+          },
+          {
+            "team": "DD83ED41",
+            "name": "\u039a\u03a5\u039c\u0397"
+          }
+        ],
+        "renamed": []
+      },
+      "2020": {
+        "teams": 12,
+        "new": [
+          {
+            "team": "46130127",
+            "name": "\u039c\u0395\u03a3\u039f\u039b\u039f\u0393\u0393\u0399 BAXI"
+          }
+        ],
+        "returning": [],
+        "left": [
+          {
+            "team": "00000003",
+            "name": "\u03a0\u0391\u039d\u0399\u03a9\u039d\u0399\u039f\u03a3 COSMORAMA TRAVEL"
+          },
+          {
+            "team": "0000000E",
+            "name": "\u03a1\u0395\u0398\u03a5\u039c\u039d\u039f CRETAN KINGS"
+          },
+          {
+            "team": "EC35D4E7",
+            "name": "\u0397\u03a6\u0391\u0399\u03a3\u03a4\u039f\u03a3 \u039b\u0397\u039c\u039d\u039f\u03a5"
+          }
+        ],
+        "renamed": []
+      },
+      "2021": {
+        "teams": 13,
+        "new": [
+          {
+            "team": "00000004",
+            "name": "\u0391\u03a0\u039f\u039b\u039b\u03a9\u039d \u03a0. CARNA"
+          }
+        ],
+        "returning": [
+          {
+            "team": "00000002",
+            "name": "\u039f\u039b\u03a5\u039c\u03a0\u0399\u0391\u039a\u039f\u03a3",
+            "last_season": 2018,
+            "name_then": "\u039f\u039b\u03a5\u039c\u03a0\u0399\u0391\u039a\u039f\u03a3"
+          }
+        ],
+        "left": [
+          {
+            "team": "46130127",
+            "name": "\u039c\u0395\u03a3\u039f\u039b\u039f\u0393\u0393\u0399 BAXI"
+          }
+        ],
+        "renamed": []
+      },
+      "2022": {
+        "teams": 12,
+        "new": [
+          {
+            "team": "B742845D",
+            "name": "\u039a\u0391\u03a1\u0394\u0399\u03a4\u03a3\u0391 \u0399\u0391\u03a0\u03a9\u039d\u0399\u039a\u0397"
+          }
+        ],
+        "returning": [],
+        "left": [
+          {
+            "team": "00000011",
+            "name": "\u0397\u03a1\u0391\u039a\u039b\u0397\u03a3"
+          },
+          {
+            "team": "098B68C2",
+            "name": "\u039b\u0391\u03a1\u0399\u03a3\u0391"
+          }
+        ],
+        "renamed": []
+      },
+      "2023": {
+        "teams": 12,
+        "new": [
+          {
+            "team": "0000000F",
+            "name": "\u039c\u0391\u03a1\u039f\u03a5\u03a3\u0399"
+          }
+        ],
+        "returning": [],
+        "left": [
+          {
+            "team": "4C2C8907",
+            "name": "\u0399\u03a9\u039d\u0399\u039a\u039f\u03a3 BASKET"
+          }
+        ],
+        "renamed": []
+      },
+      "2024": {
+        "teams": 12,
+        "new": [],
+        "returning": [
+          {
+            "team": "00000003",
+            "name": "\u03a0\u0391\u039d\u0399\u03a9\u039d\u0399\u039f\u03a3 COSMORAMA TRAVEL",
+            "last_season": 2019,
+            "name_then": "\u03a0\u0391\u039d\u0399\u03a9\u039d\u0399\u039f\u03a3 COSMORAMA TRAVEL"
+          }
+        ],
+        "left": [
+          {
+            "team": "00000004",
+            "name": "\u0391\u03a0\u039f\u039b\u039b\u03a9\u039d \u03a0. CARNA"
+          }
+        ],
+        "renamed": []
+      },
+      "2025": {
+        "teams": 13,
+        "new": [
+          {
+            "team": "BB4B460F",
+            "name": "\u039c\u03a5\u039a\u039f\u039d\u039f\u03a3 Betsson BC"
+          }
+        ],
+        "returning": [
+          {
+            "team": "00000011",
+            "name": "\u0397\u03a1\u0391\u039a\u039b\u0397\u03a3",
+            "last_season": 2021,
+            "name_then": "\u0397\u03a1\u0391\u039a\u039b\u0397\u03a3"
+          }
+        ],
+        "left": [
+          {
+            "team": "F7D46144",
+            "name": "\u039b\u0391\u03a5\u03a1\u0399\u039f DHI"
+          }
+        ],
+        "renamed": []
+      },
+      "2026": {
+        "teams": 14,
+        "new": [
+          {
+            "team": "0041ADCB",
+            "name": "VIKOS FALCONS"
+          },
+          {
+            "team": "3CA10C07",
+            "name": "\u0394\u039f\u039e\u0391 \u039b\u0395\u03a5\u039a\u0391\u0394\u0391\u03a3"
+          }
+        ],
+        "returning": [],
+        "left": [
+          {
+            "team": "00000003",
+            "name": "\u03a0\u0391\u039d\u0399\u03a9\u039d\u0399\u039f\u03a3 COSMORAMA TRAVEL"
+          }
+        ],
+        "renamed": []
+      }
+    },
+    "review_name_changes": []
+  }
+}

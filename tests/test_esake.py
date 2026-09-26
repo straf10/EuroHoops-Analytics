@@ -12,7 +12,7 @@ from eurohoops.parse.esake import (
     parse_box_score,
     parse_results_page,
 )
-from eurohoops.parse.games import build_gbl_tables
+from eurohoops.parse.games import build_gbl_tables, build_gbl_team_seasons
 from tests.conftest import esake_fixture
 
 
@@ -145,6 +145,9 @@ def test_gbl_tables_from_real_pages() -> None:
     assert games["played"].all()
     assert games.loc[games["forfeit"], "game_id"].item() == "GBL2018_C9EC888D"
     assert teams.set_index("team").loc["0000000C", "name"] == "ΠΑΟΚ"
+    team_seasons = build_gbl_team_seasons(rounds)
+    assert set(team_seasons["season"]) == {2018}
+    assert sorted(team_seasons["team"]) == sorted(teams["team"])
 
 
 def test_box_score_reconciles_with_totals() -> None:

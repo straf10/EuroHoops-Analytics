@@ -1,6 +1,11 @@
 import pandas as pd
 
-from eurohoops.parse.games import build_games_table, build_teams_table, parse_schedule
+from eurohoops.parse.games import (
+    build_games_table,
+    build_team_seasons,
+    build_teams_table,
+    parse_schedule,
+)
 from tests.conftest import load_fixture
 
 
@@ -69,3 +74,12 @@ def test_teams_table_keeps_the_latest_name() -> None:
     teams = build_teams_table({2025: newer, 2024: older}).set_index("team")["name"]
     assert teams["BER"] == "New"
     assert teams["PAN"] == "Panathinaikos AKTOR Athens"
+
+
+def test_team_seasons_keep_each_seasons_name() -> None:
+    older = load_fixture("schedule_E2024.json")
+    newer = [{**older[0], "local": {**older[0]["local"], "club": {"code": "BER", "name": "New"}}}]
+    rows = build_team_seasons({2025: newer, 2024: older}).set_index(["season", "team"])["name"]
+    assert rows[2025, "BER"] == "New"
+    assert rows[2024, "BER"] != "New"
+    assert rows[2024, "PAN"] == "Panathinaikos AKTOR Athens"
