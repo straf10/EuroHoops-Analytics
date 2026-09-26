@@ -57,6 +57,9 @@ SHOT_VALUE = {
 MADE_CODES = frozenset({"2FGM", "3FGM", "LAYUPMD", "DUNK"})
 FREE_THROW = "FTM"
 REASONS = ("unparseable", "zero_coordinates", "label_geometry")
+# Set only on made shots from 2015-16 on (>= 99.8% of flagged shots are makes; never set before
+# 2013-14): scoring tags, not shot context. Kept in the table, never used as M2 features.
+OUTCOME_CODED_FLAGS = ("fastbreak", "second_chance", "points_off_turnover")
 QUARTER_MINUTES = 10
 OVERTIME_MINUTES = 5
 REGULATION_MINUTES = 40
@@ -281,6 +284,7 @@ class ShotTable:
     excluded: pd.DataFrame
     not_cached: list[str]
     actions: dict[int, dict[str, int]]  # season -> raw ID_ACTION -> rows (the feed vocabulary)
+    shooters: pd.DataFrame  # shooter id -> name (the most frequent spelling; display only)
 
 
 def _games(games: pd.DataFrame) -> Iterator[Game]:
@@ -304,6 +308,7 @@ def build_shot_table(raw_dir: Path, games: pd.DataFrame) -> ShotTable:
     excluded: list[dict[str, Any]] = []
     not_cached: list[str] = []
     actions: dict[int, Counter[str]] = {}
+    spellings: dict[str, Counter[str]] = {}
     for game in _games(games):
         path = raw_dir / "points" / f"E{game.season}" / f"{game.code}.json.gz"
         if not path.exists():
@@ -313,6 +318,11 @@ def build_shot_table(raw_dir: Path, games: pd.DataFrame) -> ShotTable:
         actions.setdefault(game.season, Counter()).update(
             str(row.get("ID_ACTION") or "").strip() for row in rows
         )
+        for row in rows:
+            name = str(row.get("PLAYER") or "").strip()
+            if name:
+                shooter = str(row.get("ID_PLAYER") or "").strip()
+                spellings.setdefault(shooter, Counter())[name] += 1
         shots, dropped = game_shots(rows, game)
         for shot in shots:
             shot |= {"competition": COMPETITION, "season": game.season, "game_id": game.game_id}
@@ -348,6 +358,13 @@ def build_shot_table(raw_dir: Path, games: pd.DataFrame) -> ShotTable:
         EXCLUDED_SCHEMA.validate(gone.reset_index(drop=True)),
         not_cached,
         {season: dict(sorted(counts.items())) for season, counts in sorted(actions.items())},
+        pd.DataFrame(
+            [
+                (shooter, min(c, key=lambda name: (-c[name], name)))
+                for shooter, c in sorted(spellings.items())
+            ],
+            columns=["shooter", "name"],
+        ),
     )
 
 
@@ -434,6 +451,16 @@ def shot_report(table: ShotTable, checks: pd.DataFrame) -> dict[str, Any]:
                 }
                 for reason in REASONS
             },
+        }
+        kept = table.shots[table.shots["season"] == season]
+        block["outcome_coded_flags"] = {
+            flag: {
+                "share_of_fga": round(float(kept[flag].mean()), 6),
+                "make_rate_when_set": round(float(kept.loc[kept[flag], "made"].mean()), 6)
+                if kept[flag].any()
+                else None,
+            }
+            for flag in OUTCOME_CODED_FLAGS
         }
         rec = checks[checks["season"] == season]
         if len(rec):

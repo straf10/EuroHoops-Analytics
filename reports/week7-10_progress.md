@@ -103,3 +103,37 @@ over player pairs (the unit of that correlation; recorded as a decision: F-g's g
 bootstrap does not apply across seasons). Split-half: Pearson r of raw shot-making on odd vs
 even games (by tip-off) in development player-seasons with ≥ 200 FGA, not Spearman-Brown
 corrected. Verdict per F-k.
+
+DECLARATION 87bb599
+
+## First M2 run was invalid: outcome leakage in three declared features (2026-09-26)
+Run: `backtest --model m2 --search` at 87bb599, 09:05Z-10:20Z (4,524 s for study + backtest
+together; the split was not logged). MLflow parent run b94decee1ad343dc97a9e441ae606c5b. The
+report was **not** committed; its numbers, kept here so nothing is hidden:
+- study best CV log loss 0.55304 (trial 50); spline best knots 8, L2 1e-5 (CV 0.55519)
+- validation log loss: spline 0.519354, spline_iso 0.518609, lgbm 0.515908, lgbm_iso 0.515932;
+  gate lgbm − spline_iso −0.00270 [−0.00346, −0.00199]; lgbm ECE 0.0098 but 4 bins outside
+  ±0.02 → calibrated False, gate FAILED.
+
+**Diagnosis.** In the validation reliability table ~6,000 shots had P(make) ≈ 0.999 and all
+went in, and the per-season CV log loss fell from 0.63 (2011-14) to 0.51 (2015+). Cause: the
+feed sets `FASTBREAK`, `SECOND_CHANCE` and `POINTS_OFF_TURNOVER` **only on made shots** from
+2015-16 on (99.8-100% of flagged shots are makes in every season 2015-2025; flags almost never
+set before 2014-15). They are scoring tags ("fast-break points", "second-chance points",
+"points off turnovers"), i.e. the outcome, not shot context. F-b listed them as features on
+the assumption they were context; that assumption is false. The fact is visible in the
+development seasons alone (2015-2022); it is now in `reports/shots.json`
+(`outcome_coded_flags`), `docs/data/shots.md` and a test.
+
+**Fix (not a choice made on validation numbers):** the three flags are removed from both
+model families (a guard raises if they return); the report's per-flag breakdowns become
+shot-context breakdowns (home, last 24 s of a period, overtime). Everything else in the
+declaration above stands. Because F4's features changed, the Optuna study is re-run (allowed:
+"runs only when F4 changes"). The re-run's validation numbers are the second look at
+validation; the only change between the two is the removal of the leaking features.
+Decision recorded for the user: this departs from the accepted F-b default.
+
+## Amended declaration (before the second run)
+Features (both families): distance, |angle|, `ZONE`, 2 vs 3, seconds left in the period,
+period (OT as one level), pre-shot margin, home, season (numeric). Variants, grids, search
+space, isotonic nesting, seeds and gate: unchanged from the declaration above.

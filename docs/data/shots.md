@@ -30,6 +30,15 @@ Distance bands (reporting and free throws): 2s `rim` < 1.5 m, `short` 1.5-3 m, `
 | Does the PBP tie a shooting foul to the shot? | **Only for and-ones.** PBP fouls are untyped (`CM` = any personal foul, `RV` = foul drawn), and a shooting foul on a missed shot leaves no shot row. A one-shot free-throw trip whose last field-goal row is a made field goal by the same team at the same clock is an and-one; its shot is found through `NUMBEROFPLAY` = the feed's `NUM_ANOT`. Two- and three-shot trips cannot be told apart from bonus free throws by type (a three-shot trip is a foul on a three, but without a location). | `test_and_ones_are_tied_to_their_made_shot_in_a_real_game` |
 | Share of (0, 0) shots and of 2/3 labels contradicting the geometry | (0, 0): 0.05-0.37% of FGA per validated season (0.13-0.53% in 2007-10). Labels contradicting the FIBA line by more than 0.15 m: 0.06-0.22% per validated season. 78 field goals carry the free-throw sentinel (−1, −1) and are excluded as unparseable. Every validated season excludes ≤ 0.53% of FGA in total (per season and reason in `reports/shots.json`). | `test_unusable_rows_are_excluded_with_a_reason`, `test_committed_report_meets_the_f1_thresholds` |
 
+## The context flags are outcome-coded (not features)
+`FASTBREAK`, `SECOND_CHANCE` and `POINTS_OFF_TURNOVER` are scoring tags: from 2015-16 on they
+are set only on made shots (99.8-100% of flagged shots are makes in every season 2015-2025;
+before 2014-15 they are almost never set). They stay in the table as the feed has them, but M2
+never uses them (`OUTCOME_CODED_FLAGS`); per-season shares and make rates are in
+`reports/shots.json` (`outcome_coded_flags`). Test:
+`test_the_feed_context_flags_are_outcome_coded`. Found in the first M2 run (see
+`reports/week7-10_progress.md`).
+
 ## Exclusions (`shots_excluded`, never silent)
 - `unparseable`: team not in the game, points inconsistent with the code, no score, no clock, no
   coordinates or the free-throw sentinel (−1, −1) on a field goal, unknown action.

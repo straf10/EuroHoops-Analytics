@@ -34,6 +34,20 @@
           "n": 0,
           "share": 0.0
         }
+      },
+      "outcome_coded_flags": {
+        "fastbreak": {
+          "share_of_fga": 0.0,
+          "make_rate_when_set": null
+        },
+        "second_chance": {
+          "share_of_fga": 0.0,
+          "make_rate_when_set": null
+        },
+        "points_off_turnover": {
+          "share_of_fga": 0.0,
+          "make_rate_when_set": null
+        }
       }
     },
     "2008": {
@@ -65,6 +79,20 @@
         "label_geometry": {
           "n": 0,
           "share": 0.0
+        }
+      },
+      "outcome_coded_flags": {
+        "fastbreak": {
+          "share_of_fga": 0.0,
+          "make_rate_when_set": null
+        },
+        "second_chance": {
+          "share_of_fga": 0.000276,
+          "make_rate_when_set": 1.0
+        },
+        "points_off_turnover": {
+          "share_of_fga": 0.000368,
+          "make_rate_when_set": 1.0
         }
       }
     },
@@ -98,6 +126,20 @@
           "n": 0,
           "share": 0.0
         }
+      },
+      "outcome_coded_flags": {
+        "fastbreak": {
+          "share_of_fga": 0.0,
+          "make_rate_when_set": null
+        },
+        "second_chance": {
+          "share_of_fga": 0.000281,
+          "make_rate_when_set": 1.0
+        },
+        "points_off_turnover": {
+          "share_of_fga": 0.000469,
+          "make_rate_when_set": 1.0
+        }
       }
     },
     "2010": {
@@ -130,6 +172,20 @@
           "n": 0,
           "share": 0.0
         }
+      },
+      "outcome_coded_flags": {
+        "fastbreak": {
+          "share_of_fga": 0.0,
+          "make_rate_when_set": null
+        },
+        "second_chance": {
+          "share_of_fga": 0.0,
+          "make_rate_when_set": null
+        },
+        "points_off_turnover": {
+          "share_of_fga": 0.0,
+          "make_rate_when_set": null
+        }
       }
     },
     "2011": {
@@ -161,6 +217,20 @@
         "label_geometry": {
           "n": 29,
           "share": 0.001295
+        }
+      },
+      "outcome_coded_flags": {
+        "fastbreak": {
+          "share_of_fga": 0.0,
+          "make_rate_when_set": null
+        },
+        "second_chance": {
+          "share_of_fga": 0.0,
+          "make_rate_when_set": null
+        },
+        "points_off_turnover": {
+          "share_of_fga": 0.0,
+          "make_rate_when_set": null
         }
       },
       "reconciliation": {
@@ -203,6 +273,20 @@
           "share": 0.001096
         }
       },
+      "outcome_coded_flags": {
+        "fastbreak": {
+          "share_of_fga": 0.0,
+          "make_rate_when_set": null
+        },
+        "second_chance": {
+          "share_of_fga": 0.0,
+          "make_rate_when_set": null
+        },
+        "points_off_turnover": {
+          "share_of_fga": 0.0,
+          "make_rate_when_set": null
+        }
+      },
       "reconciliation": {
         "team_games": 506,
         "with_box": 506,
@@ -241,6 +325,20 @@
         "label_geometry": {
           "n": 45,
           "share": 0.001476
+        }
+      },
+      "outcome_coded_flags": {
+        "fastbreak": {
+          "share_of_fga": 0.0,
+          "make_rate_when_set": null
+        },
+        "second_chance": {
+          "share_of_fga": 0.000198,
+          "make_rate_when_set": 1.0
+        },
+        "points_off_turnover": {
+          "share_of_fga": 6.6e-05,
+          "make_rate_when_set": 1.0
         }
       },
       "reconciliation": {
@@ -283,6 +381,20 @@
           "share": 0.000998
         }
       },
+      "outcome_coded_flags": {
+        "fastbreak": {
+          "share_of_fga": 6.5e-05,
+          "make_rate_when_set": 1.0
+        },
+        "second_chance": {
+          "share_of_fga": 0.000614,
+          "make_rate_when_set": 1.0
+        },
+        "points_off_turnover": {
+          "share_of_fga": 0.000937,
+          "make_rate_when_set": 1.0
+        }
+      },
       "reconciliation": {
         "team_games": 502,
         "with_box": 502,
@@ -318,6 +430,20 @@
         "label_geometry": {
           "n": 32,
           "share": 0.001053
+        }
+      },
+      "outcome_coded_flags": {
+        "fastbreak": {
+          "share_of_fga": 0.030062,
+          "make_rate_when_set": 1.0
+        },
+        "second_chance": {
+          "share_of_fga": 0.048706,
+          "make_rate_when_set": 0.997967
+        },
+        "points_off_turnover": {
+          "share_of_fga": 0.060454,
+          "make_rate_when_set": 0.999454
         }
       },
       "reconciliation": {
@@ -357,6 +483,20 @@
           "share": 0.001409
         }
       },
+      "outcome_coded_flags": {
+        "fastbreak": {
+          "share_of_fga": 0.041948,
+          "make_rate_when_set": 0.99925
+        },
+        "second_chance": {
+          "share_of_fga": 0.065973,
+          "make_rate_when_set": 0.997617
+        },
+        "points_off_turnover": {
+          "share_of_fga": 0.080658,
+          "make_rate_when_set": 0.998051
+        }
+      },
       "reconciliation": {
         "team_games": 518,
         "with_box": 518,
@@ -390,6 +530,20 @@
         "label_geometry": {
           "n": 50,
           "share": 0.001569
+        }
+      },
+      "outcome_coded_flags": {
+        "fastbreak": {
+          "share_of_fga": 0.04394,
+          "make_rate_when_set": 1.0
+        },
+        "second_chance": {
+          "share_of_fga": 0.067625,
+          "make_rate_when_set": 0.999535
+        },
+        "points_off_turnover": {
+          "share_of_fga": 0.083666,
+          "make_rate_when_set": 1.0
         }
       },
       "reconciliation": {
@@ -434,6 +588,20 @@
           "share": 0.000974
         }
       },
+      "outcome_coded_flags": {
+        "fastbreak": {
+          "share_of_fga": 0.046152,
+          "make_rate_when_set": 1.0
+        },
+        "second_chance": {
+          "share_of_fga": 0.06477,
+          "make_rate_when_set": 0.999027
+        },
+        "points_off_turnover": {
+          "share_of_fga": 0.084964,
+          "make_rate_when_set": 1.0
+        }
+      },
       "reconciliation": {
         "team_games": 520,
         "with_box": 518,
@@ -471,6 +639,20 @@
           "share": 0.001222
         }
       },
+      "outcome_coded_flags": {
+        "fastbreak": {
+          "share_of_fga": 0.047407,
+          "make_rate_when_set": 0.999321
+        },
+        "second_chance": {
+          "share_of_fga": 0.067762,
+          "make_rate_when_set": 0.999525
+        },
+        "points_off_turnover": {
+          "share_of_fga": 0.089501,
+          "make_rate_when_set": 1.0
+        }
+      },
       "reconciliation": {
         "team_games": 504,
         "with_box": 504,
@@ -504,6 +686,20 @@
         "label_geometry": {
           "n": 52,
           "share": 0.001318
+        }
+      },
+      "outcome_coded_flags": {
+        "fastbreak": {
+          "share_of_fga": 0.042961,
+          "make_rate_when_set": 0.999409
+        },
+        "second_chance": {
+          "share_of_fga": 0.064339,
+          "make_rate_when_set": 0.999605
+        },
+        "points_off_turnover": {
+          "share_of_fga": 0.093665,
+          "make_rate_when_set": 0.999458
         }
       },
       "reconciliation": {
@@ -541,6 +737,20 @@
           "share": 0.001658
         }
       },
+      "outcome_coded_flags": {
+        "fastbreak": {
+          "share_of_fga": 0.042126,
+          "make_rate_when_set": 1.0
+        },
+        "second_chance": {
+          "share_of_fga": 0.065474,
+          "make_rate_when_set": 1.0
+        },
+        "points_off_turnover": {
+          "share_of_fga": 0.087797,
+          "make_rate_when_set": 1.0
+        }
+      },
       "reconciliation": {
         "team_games": 598,
         "with_box": 598,
@@ -574,6 +784,20 @@
         "label_geometry": {
           "n": 72,
           "share": 0.001803
+        }
+      },
+      "outcome_coded_flags": {
+        "fastbreak": {
+          "share_of_fga": 0.043761,
+          "make_rate_when_set": 1.0
+        },
+        "second_chance": {
+          "share_of_fga": 0.066583,
+          "make_rate_when_set": 0.999623
+        },
+        "points_off_turnover": {
+          "share_of_fga": 0.086744,
+          "make_rate_when_set": 1.0
         }
       },
       "reconciliation": {
@@ -611,6 +835,20 @@
           "share": 0.002153
         }
       },
+      "outcome_coded_flags": {
+        "fastbreak": {
+          "share_of_fga": 0.047162,
+          "make_rate_when_set": 1.0
+        },
+        "second_chance": {
+          "share_of_fga": 0.067285,
+          "make_rate_when_set": 0.999639
+        },
+        "points_off_turnover": {
+          "share_of_fga": 0.085538,
+          "make_rate_when_set": 0.999716
+        }
+      },
       "reconciliation": {
         "team_games": 662,
         "with_box": 662,
@@ -646,6 +884,20 @@
           "share": 0.001083
         }
       },
+      "outcome_coded_flags": {
+        "fastbreak": {
+          "share_of_fga": 0.052086,
+          "make_rate_when_set": 0.99861
+        },
+        "second_chance": {
+          "share_of_fga": 0.067381,
+          "make_rate_when_set": 0.999642
+        },
+        "points_off_turnover": {
+          "share_of_fga": 0.085812,
+          "make_rate_when_set": 0.999157
+        }
+      },
       "reconciliation": {
         "team_games": 660,
         "with_box": 660,
@@ -679,6 +931,20 @@
         "label_geometry": {
           "n": 32,
           "share": 0.000618
+        }
+      },
+      "outcome_coded_flags": {
+        "fastbreak": {
+          "share_of_fga": 0.05425,
+          "make_rate_when_set": 0.999643
+        },
+        "second_chance": {
+          "share_of_fga": 0.068669,
+          "make_rate_when_set": 1.0
+        },
+        "points_off_turnover": {
+          "share_of_fga": 0.084404,
+          "make_rate_when_set": 0.999771
         }
       },
       "reconciliation": {

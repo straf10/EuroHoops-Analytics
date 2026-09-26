@@ -5,15 +5,17 @@ identity: quality is not skill, PLAN R9). xPTS = P(make) * shot value.
 
 Baseline design (F-c): a natural cubic spline in distance for each shot type (2s and 3s, knots
 at development quantiles of that type's distances), a 3-point indicator, and linear terms for
-|angle|, ``ZONE`` (levels with at least ``MIN_ZONE_SHOTS`` training shots), the three context
-flags, seconds left in the period, period (1-4, overtime as one level), the pre-shot margin
-(clipped at ±``MARGIN_CLIP``), home and season as a numeric trend.
+|angle|, ``ZONE`` (levels with at least ``MIN_ZONE_SHOTS`` training shots), seconds left in
+the period, period (1-4, overtime as one level), the pre-shot margin (clipped at
+±``MARGIN_CLIP``), home and season as a numeric trend. The feed's ``FASTBREAK``,
+``SECOND_CHANCE`` and ``POINTS_OFF_TURNOVER`` flags are *not* features: from 2015-16 they are
+set only on made shots (``OUTCOME_CODED_FLAGS``, docs/data/shots.md).
 
 Every non-intercept column is whitened on the training shots (centred, then multiplied by the
 inverse of the Cholesky factor of their covariance; columns constant on the training shots are
-dropped), a pure reparametrisation that makes the
-Newton steps well conditioned; the L2 penalty ``l2`` applies to the whitened coefficients, on
-the mean log-loss scale. The fit is penalised Newton-Raphson (IRLS), deterministic.
+dropped), a pure reparametrisation that makes the Newton steps well conditioned; the L2
+penalty ``l2`` applies to the whitened coefficients, on the mean log-loss scale. The fit is
+penalised Newton-Raphson (IRLS), deterministic.
 """
 
 from collections.abc import Callable
@@ -24,6 +26,7 @@ import numpy.typing as npt
 import pandas as pd
 
 from eurohoops.models.elo import FloatArray
+from eurohoops.parse.shot_table import OUTCOME_CODED_FLAGS
 
 MIN_ZONE_SHOTS = 1000
 MARGIN_CLIP = 40.0
@@ -87,9 +90,7 @@ def _raw_design(
         np.column_stack([(zone == z).astype(np.float64) for z in zones])
         if zones
         else np.empty((len(shots), 0)),
-        shots[["fastbreak", "second_chance", "points_off_turnover", "home"]].to_numpy(
-            dtype=np.float64
-        ),
+        shots[["home"]].to_numpy(dtype=np.float64),
         (shots["seconds_left"].to_numpy(dtype=np.float64) / 600.0)[:, None],
         np.column_stack([(period == p).astype(np.float64) for p in (2, 3, 4)]),
         (period >= 5).astype(np.float64)[:, None],
@@ -105,9 +106,6 @@ def _raw_design(
         "three",
         "angle",
         *(f"zone_{z}" for z in zones),
-        "fastbreak",
-        "second_chance",
-        "points_off_turnover",
         "home",
         "seconds_left",
         "period_2",
@@ -135,8 +133,8 @@ def make_spec(shots: pd.DataFrame, n_knots: int) -> SplineSpec:
     covariance = np.cov(raw - centre, rowvar=False, bias=True)
     whiten = np.linalg.inv(np.linalg.cholesky(covariance).T)
     names = tuple(n for n, k in zip(names, kept, strict=True) if k)
-    if has_identity_column(names):
-        raise ValueError(f"identity column in the M2 design: {names}")
+    if has_identity_column(names) or set(names) & set(OUTCOME_CODED_FLAGS):
+        raise ValueError(f"identity or outcome-coded column in the M2 design: {names}")
     return SplineSpec(knots_two, knots_three, zones, centre, whiten, names, kept)
 
 

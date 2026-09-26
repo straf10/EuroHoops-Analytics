@@ -205,6 +205,13 @@ class M2Seasons:
 M2_SEASONS = M2Seasons()
 FREE_THROWS_REPORT = Path("reports/free_throws.json")
 M2_REPORT = Path("reports/backtest_m2.json")
+M2_TEAMS_REPORT = Path("reports/m2_teams.json")
+M2_PLAYERS_REPORT = Path("reports/m2_players.json")
+M2_CHARTS_DIR = Path("docs/models/m2")
+# F8 subjects, named in reports/week7-10_progress.md before drawing: three teams (source codes),
+# and the three players with the most validation-season FGA.
+M2_CHART_TEAMS = ("PAN", "OLY", "MAD")
+M2_CHART_PLAYERS = 3
 GBL_PLAYER_BOX = Path("data/staging/gbl_player_box.parquet")
 GBL_TEAM_BOX = Path("data/staging/gbl_team_box.parquet")
 GBL_BOX_FILL = Path("data/staging/gbl_box_fill.parquet")

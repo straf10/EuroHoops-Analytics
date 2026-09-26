@@ -39,7 +39,7 @@ BASELINES = ("spline", "spline_iso")
 CHALLENGERS = ("lgbm", "lgbm_iso")
 BOOTSTRAP_RESAMPLES = 1000
 BOOTSTRAP_SEED = 20261001
-FLAGS = ("fastbreak", "second_chance", "points_off_turnover")
+END_OF_PERIOD_S = 24  # the last shot-clock of a period
 
 Predictor = Callable[[pd.DataFrame], FloatArray]
 Fitter = Callable[[pd.DataFrame], Predictor]
@@ -113,21 +113,31 @@ def _scores_only(p: FloatArray, y: FloatArray) -> dict[str, Any]:
     return {k: v for k, v in scores(p, y).items() if k != "reliability"}
 
 
+def contexts(shots: pd.DataFrame) -> dict[str, npt.NDArray[np.bool_]]:
+    """Shot-context splits for the breakdowns (the feed's fastbreak/second-chance/off-turnover
+    flags are outcome-coded, so they are not used): home, the last 24 s of a period, overtime."""
+    return {
+        "home": shots["home"].to_numpy(dtype=bool),
+        "end_of_period": shots["seconds_left"].to_numpy() <= END_OF_PERIOD_S,
+        "overtime": shots["period"].to_numpy() >= 5,
+    }
+
+
 def split_scores(p: FloatArray, shots: pd.DataFrame) -> dict[str, Any]:
     """Overall scores with reliability, per distance band and shot type (with reliability),
-    and per context flag."""
+    and per shot context."""
     y = _labels(shots)
     band = shots["band"].to_numpy()
     value = shots["value"].to_numpy()
-    flags = {}
-    for flag in FLAGS:
-        on = shots[flag].to_numpy(dtype=bool)
-        flags[flag] = {"on": _scores_only(p[on], y[on]), "off": _scores_only(p[~on], y[~on])}
+    flags = {
+        name: {"on": _scores_only(p[on], y[on]), "off": _scores_only(p[~on], y[~on])}
+        for name, on in contexts(shots).items()
+    }
     return {
         **scores(p, y),
         "by_band": {b: scores(p[band == b], y[band == b]) for b in BANDS},
         "by_type": {f"{v}pt": scores(p[value == v], y[value == v]) for v in (2, 3)},
-        "by_flag": flags,
+        "by_context": flags,
     }
 
 
@@ -159,10 +169,13 @@ def study_objective(
 
 
 def search(
-    shots: pd.DataFrame, development: Sequence[int], n_trials: int = N_TRIALS
+    shots: pd.DataFrame,
+    development: Sequence[int],
+    n_trials: int = N_TRIALS,
+    progress: Progress | None = None,
 ) -> dict[str, Any]:
     """Run the declared Optuna study; its trials and best parameters, JSON-ready."""
-    study = run_study(study_objective(shots, development), n_trials, STUDY_SEED)
+    study = run_study(study_objective(shots, development), n_trials, STUDY_SEED, progress)
     return {
         "sampler": "TPESampler",
         "seed": STUDY_SEED,
@@ -239,9 +252,8 @@ def gate(
         "by_band": {b: shots["band"].to_numpy() == b for b in BANDS},
         "by_type": {f"{v}pt": shots["value"].to_numpy() == v for v in (2, 3)},
     }
-    for flag in FLAGS:
-        on = shots[flag].to_numpy(dtype=bool)
-        groups[f"by_{flag}"] = {"on": on, "off": ~on}
+    for name, on in contexts(shots).items():
+        groups[f"by_{name}"] = {"on": on, "off": ~on}
     breakdown = {
         name: {key: _diff_ci(diff[mask], games[mask]) for key, mask in masks.items() if mask.any()}
         for name, masks in groups.items()

@@ -34,7 +34,7 @@ def labelled(n: int, seed: int, seasons: tuple[int, ...]) -> pd.DataFrame:
     shots["season"] = rng.choice(seasons, n)
     shots["game_id"] = [f"E{s}_{i % 40}" for i, s in enumerate(shots["season"])]
     shots["event"] = np.arange(n)
-    p = 1.0 / (1.0 + np.exp(-(0.9 - 0.25 * shots["distance"] + 0.3 * shots["fastbreak"])))
+    p = 1.0 / (1.0 + np.exp(-(0.9 - 0.25 * shots["distance"])))
     shots["made"] = rng.random(n) < p
     shots["band"] = np.where(shots["value"] == 3, "three", "rim")
     shots["validated_season"] = True
