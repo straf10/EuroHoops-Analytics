@@ -312,7 +312,8 @@ const description = "Up to five EuroLeague players side by side, a season each o
   }
   .count {
     margin-left: auto;
-    align-self: center;
+    align-self: flex-end;
+    line-height: 32px; /* on the controls' row, not between their labels and them */
     color: var(--muted);
     font-size: 0.8125rem;
   }
@@ -467,7 +468,7 @@ const description = "Up to five EuroLeague players side by side, a season each o
   }
   .h2h :global(td.num .cell) {
     display: inline-grid;
-    grid-template-columns: 8px 3.4em 2.4em;
+    grid-template-columns: 3.75rem 1.95rem; /* rem, so the larger tally figures share the slots */
     column-gap: 6px;
     align-items: baseline;
   }
@@ -488,9 +489,10 @@ const description = "Up to five EuroLeague players side by side, a season each o
     display: inline-block;
     width: 8px;
     height: 8px;
-    align-self: center;
+    margin-right: 6px;
     border-radius: 50%;
     background: var(--data-1);
+    vertical-align: 0.05em;
   }
   .h2h :global(td.muted) {
     color: var(--muted);
@@ -503,7 +505,10 @@ const description = "Up to five EuroLeague players side by side, a season each o
   }
   .h2h :global(.tally td) {
     font-size: 1rem;
-    font-weight: 600;
+    font-weight: 500;
+  }
+  .h2h :global(.tally td.lead) {
+    font-weight: 700;
   }
   .h2h :global(.tally tr > *) {
     padding-block: 12px;

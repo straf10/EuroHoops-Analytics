@@ -148,13 +148,21 @@ const pages = [
       const nav = document.querySelector<HTMLElement>(".links");
       const here = nav?.querySelector<HTMLElement>('[aria-current="page"]');
       if (nav && here && nav.scrollWidth > nav.clientWidth) {
-        const end = here.getBoundingClientRect().right - nav.getBoundingClientRect().left;
-        if (end > nav.clientWidth - 32) nav.scrollLeft = end - nav.clientWidth + 32;
+        // Land on a word boundary: the first link that still leaves the current one clear of the fade.
+        const left = nav.getBoundingClientRect().left;
+        const gap = parseFloat(getComputedStyle(nav).columnGap) || 0;
+        const end = here.getBoundingClientRect().right - left;
+        const first = [...nav.children].find((a) => end - (a.getBoundingClientRect().left - left) <= nav.clientWidth - 32);
+        if (!first) nav.scrollLeft = nav.scrollWidth; // too narrow for both fades: show the row's end
+        else if (first !== nav.firstElementChild) nav.scrollLeft = first.getBoundingClientRect().left - left - gap;
       }
-      // The edge fade says there is more; at the end of the row there is not.
-      const navEnd = () => nav?.classList.toggle("at-end", nav.scrollLeft + nav.clientWidth >= nav.scrollWidth - 1);
-      nav?.addEventListener("scroll", navEnd, { passive: true });
-      navEnd();
+      // The edge fades say there is more on that side; they lift at the row's ends.
+      const navEdges = () => {
+        nav?.classList.toggle("at-start", nav.scrollLeft <= 1);
+        nav?.classList.toggle("at-end", nav.scrollLeft + nav.clientWidth >= nav.scrollWidth - 1);
+      };
+      nav?.addEventListener("scroll", navEdges, { passive: true });
+      navEdges();
 
       // Competition switch memory.
       document.querySelectorAll<HTMLInputElement>('input[name="comp"]').forEach((r) =>
@@ -369,9 +377,15 @@ const pages = [
       scrollbar-width: none;
       overscroll-behavior-x: contain;
       padding-block: 8px;
+      mask-image: linear-gradient(to right, transparent, #000 14px, #000 calc(100% - 24px), transparent);
+    }
+    .links.at-start {
       mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
     }
     .links.at-end {
+      mask-image: linear-gradient(to right, transparent, #000 14px);
+    }
+    .links.at-start.at-end {
       mask-image: none;
     }
     .links::-webkit-scrollbar {
