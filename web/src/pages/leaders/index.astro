@@ -1,0 +1,635 @@
+---
+import caret from "@phosphor-icons/core/assets/bold/caret-down-bold.svg?raw";
+import Base from "../../layouts/Base.astro";
+import { court } from "../../lib/court";
+import {
+  DEFAULT_VIEW,
+  MODES,
+  SCOPES,
+  STATS,
+  benchHtml,
+  board,
+  caption,
+  compareHref,
+  entries,
+  fiveHtml,
+  fiveLinesHtml,
+  floorNote,
+  title,
+  type View,
+} from "../../lib/leaders";
+import { BY_KEY } from "../../lib/players";
+import { defaultSeason, leaderPool, meta, teamIndex } from "../../lib/stats";
+import "../../styles/stats.css";
+
+const m = await meta();
+const base = import.meta.env.BASE_URL;
+const first = m ? defaultSeason(m) : null;
+const view: View = { ...DEFAULT_VIEW, season: first?.season ?? 0 };
+const pool = first ? await leaderPool(first.season) : null;
+const b = pool ? board(entries(pool), view, pool.most) : null;
+const seasons = m ? [...m.seasons].reverse() : [];
+const clubs = await teamIndex();
+const cfg = {
+  base,
+  defaultSeason: first?.season ?? 0,
+  seasons: seasons.map((s) => s.season),
+  clubs: Object.fromEntries(clubs.map((c) => [c.code, { name: c.name, seasons: c.seasons }])),
+};
+const description =
+  "The EuroLeague's leaders since 2007-08 on the floor as jersey backs: a season, whole careers or the best single seasons, for the league or one club.";
+---
+
+<Base title="Leaders" description={description} current="leaders">
+  <section class="wrap head" aria-labelledby="leaders-title">
+    <h1 id="leaders-title">Leaders</h1>
+    <p>
+      The top five on any measure stand on the floor, the next fifteen sit on the bench. Pick a club
+      to see its roster for a season, its career leaders or its best single seasons.
+    </p>
+  </section>
+
+  {
+    !m || !pool || !b ? (
+      <section class="wrap">
+        <p class="empty-state">
+          The stats data has not been exported yet. Run <code>eurohoops export-stats</code> and rebuild.
+        </p>
+      </section>
+    ) : (
+      <section class="wrap" id="leaders" data-cfg={JSON.stringify(cfg)}>
+        <form class="filters" id="filters" aria-label="Filters">
+          <fieldset class="field">
+            <legend>Scope</legend>
+            <div class="seg">
+              {SCOPES.map((s) => (
+                <>
+                  <input type="radio" name="scope" id={`s-${s.key}`} value={s.key} checked={s.key === view.scope} />
+                  <label for={`s-${s.key}`}>{s.label}</label>
+                </>
+              ))}
+            </div>
+          </fieldset>
+
+          <label class="field" id="season-field">
+            <span>Season</span>
+            <span class="select">
+              <select name="season">
+                {seasons.map((s) => (
+                  <option value={s.season} selected={s.season === view.season}>
+                    {s.label}
+                    {s.live ? " (live)" : ""}
+                  </option>
+                ))}
+              </select>
+              <span class="caret" set:html={caret} />
+            </span>
+          </label>
+
+          <label class="field">
+            <span>Measure</span>
+            <span class="select">
+              <select name="stat">
+                {STATS.map((k) => (
+                  <option value={k} selected={k === view.stat}>
+                    {BY_KEY[k].name}
+                  </option>
+                ))}
+              </select>
+              <span class="caret" set:html={caret} />
+            </span>
+          </label>
+
+          <fieldset class="field">
+            <legend>Rate</legend>
+            <div class="seg">
+              {MODES.map((r) => (
+                <>
+                  <input type="radio" name="mode" id={`m-${r.key}`} value={r.key} checked={r.key === view.mode} />
+                  <label for={`m-${r.key}`}>{r.label}</label>
+                </>
+              ))}
+            </div>
+          </fieldset>
+
+          <label class="field">
+            <span>Club</span>
+            <span class="select">
+              <select name="club">
+                <option value="">Whole league</option>
+                {clubs
+                  .filter((c) => c.seasons.includes(view.season))
+                  .map((c) => (
+                    <option value={c.code}>
+                      {c.code} · {c.name}
+                    </option>
+                  ))}
+              </select>
+              <span class="caret" set:html={caret} />
+            </span>
+          </label>
+        </form>
+
+        <div class="lineup busy-fade">
+          <figure class="floor-box" aria-labelledby="board-title">
+            <figcaption class="board-head">
+              <h2 id="board-title">{title(view)}</h2>
+              <p id="floor-note">{floorNote(view, pool.most)}</p>
+            </figcaption>
+            <div class="floor">
+              <Fragment set:html={court("", "Half court")} />
+              <ol class="five" id="five" aria-label="On court" set:html={fiveHtml(b, view, base)} />
+              <p class="empty-floor" id="empty-floor" hidden>No player qualifies here yet.</p>
+            </div>
+            <ol class="five-lines" id="five-lines" aria-label="The five, full lines" set:html={fiveLinesHtml(b, view, base)} />
+            <p class="court-note">
+              <span id="court-caption">{caption(b)}</span>
+              <a class="ink-link" id="compare-link" href={compareHref(b, view, base)}>Compare these five</a>
+            </p>
+          </figure>
+
+          <section class="bench-box" aria-labelledby="bench-title">
+            <h3 id="bench-title">Bench</h3>
+            <ol class="bench" id="bench" set:html={benchHtml(b, view, base)} />
+          </section>
+        </div>
+      </section>
+    )
+  }
+</Base>
+
+<script>
+  import {
+    benchHtml,
+    board,
+    caption,
+    careers,
+    compareHref,
+    entries,
+    fiveHtml,
+    fiveLinesHtml,
+    floorNote,
+    fromQuery,
+    title,
+    toQuery,
+    type Entry,
+    type Pool,
+    type View,
+  } from "../../lib/leaders";
+
+  const host = document.getElementById("leaders");
+  if (host) {
+    const cfg = JSON.parse(host.dataset.cfg ?? "{}") as {
+      base: string;
+      defaultSeason: number;
+      seasons: number[];
+      clubs: Record<string, { name: string; seasons: number[] }>;
+    };
+    const root = cfg.base.replace(/\/$/, "");
+    const form = document.getElementById("filters") as HTMLFormElement;
+    const $ = (id: string) => document.getElementById(id) as HTMLElement;
+    const cache = new Map<string, Promise<Pool>>();
+    const load = (path: string) => {
+      if (!cache.has(path)) {
+        cache.set(
+          path,
+          fetch(`${root}/data/leaders/${path}.json`).then((r) => {
+            if (!r.ok) throw new Error(`${path}: ${r.status}`);
+            return r.json();
+          }),
+        );
+      }
+      return cache.get(path)!;
+    };
+    const reduced = matchMedia("(prefers-reduced-motion: reduce)");
+
+    let view: View = fromQuery(location.search, cfg.seasons, cfg.defaultSeason, Object.keys(cfg.clubs));
+
+    const clubOptions = () => {
+      const select = form.elements.namedItem("club") as HTMLSelectElement;
+      const codes = Object.keys(cfg.clubs)
+        .filter((c) => view.scope !== "season" || cfg.clubs[c].seasons.includes(view.season))
+        .sort();
+      if (view.club && !codes.includes(view.club)) view = { ...view, club: "" };
+      select.replaceChildren(
+        new Option("Whole league", ""),
+        ...codes.map((c) => new Option(`${c} · ${cfg.clubs[c].name}`, c)),
+      );
+      select.value = view.club;
+    };
+    const syncForm = () => {
+      for (const k of ["scope", "season", "stat", "mode"] as const) {
+        const el = form.elements.namedItem(k) as RadioNodeList | HTMLSelectElement;
+        el.value = String(view[k]);
+      }
+      $("season-field").hidden = view.scope !== "season";
+      clubOptions();
+    };
+
+    const lines = async (): Promise<{ list: Entry[]; most: Record<string, number> }> => {
+      if (!view.club) {
+        const pool = await load(view.scope === "season" ? String(view.season) : view.scope);
+        return { list: entries(pool), most: pool.most };
+      }
+      const pool = await load(`club/${view.club.toLowerCase()}`);
+      const all = entries(pool);
+      if (view.scope === "season") return { list: all.filter((e) => e.season === view.season), most: pool.most };
+      return { list: view.scope === "career" ? careers(all) : all, most: pool.most };
+    };
+
+    // The bench reorders in place: each row slides from where it was (200ms), new rows fade in.
+    let settled = false; // the first paint (a link with filters) never animates
+    const flip = (list: HTMLElement, html: string) => {
+      const before = new Map([...list.children].map((li) => [(li as HTMLElement).dataset.key, li.getBoundingClientRect().top]));
+      list.innerHTML = html;
+      if (reduced.matches || !settled) return;
+      for (const li of list.children as HTMLCollectionOf<HTMLElement>) {
+        const was = before.get(li.dataset.key);
+        const dy = was === undefined ? null : was - li.getBoundingClientRect().top;
+        if (dy === null) li.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: "ease-out" });
+        else if (dy) li.animate([{ transform: `translateY(${dy}px)` }, { transform: "none" }], { duration: 200, easing: "cubic-bezier(0.23, 1, 0.32, 1)" });
+      }
+    };
+
+    const paint = (list: Entry[], most: Record<string, number>) => {
+      const b = board(list, view, most);
+      $("board-title").textContent = title(view, cfg.clubs[view.club]?.name);
+      $("floor-note").textContent = floorNote(view, most);
+      const five = $("five");
+      const same = [...five.children].map((li) => (li as HTMLElement).dataset.key).join() === b.five.map((r) => r.e.key).join();
+      five.innerHTML = fiveHtml(b, view, cfg.base);
+      if (!same && settled && !reduced.matches) {
+        five.classList.remove("swap");
+        void five.offsetWidth; // restart the animation
+        five.classList.add("swap");
+      }
+      $("five-lines").innerHTML = fiveLinesHtml(b, view, cfg.base);
+      $("empty-floor").hidden = b.five.length > 0;
+      $("court-caption").textContent = caption(b);
+      const link = $("compare-link") as HTMLAnchorElement;
+      link.hidden = b.five.length < 2;
+      link.href = compareHref(b, view, cfg.base);
+      flip($("bench"), benchHtml(b, view, cfg.base));
+      $("bench-title").textContent = b.lineup ? "Bench" : "Bench, ranks 6 to 20";
+      history.replaceState(null, "", location.pathname + toQuery(view, cfg.defaultSeason));
+      settled = true;
+    };
+
+    let pending = 0;
+    const update = async () => {
+      const ticket = ++pending;
+      host.setAttribute("aria-busy", "true");
+      try {
+        const { list, most } = await lines();
+        if (ticket === pending) paint(list, most);
+      } catch {
+        $("floor-note").textContent = "Could not load these players. Reload the page to try again.";
+      } finally {
+        if (ticket === pending) host.removeAttribute("aria-busy");
+      }
+    };
+
+    host.addEventListener("input", (e) => {
+      const el = e.target as HTMLInputElement;
+      if (el.form !== form) return;
+      const key = el.name as keyof View;
+      view = { ...view, [key]: key === "season" ? Number(el.value) : el.value } as View;
+      if (key === "scope" || key === "season") syncForm();
+      update();
+    });
+    form.addEventListener("submit", (e) => e.preventDefault());
+
+    syncForm();
+    if (location.search) update();
+    else settled = true;
+  }
+</script>
+
+<style>
+  .head p {
+    margin-top: 10px;
+    max-width: 64ch;
+    color: var(--ink-2);
+  }
+  .filters {
+    margin: 32px 0 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--rule);
+  }
+  [hidden] {
+    display: none !important;
+  }
+
+  .lineup {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    gap: 56px;
+    align-items: start;
+  }
+  figure {
+    margin: 0;
+    min-width: 0;
+  }
+  .board-head {
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--rule-strong);
+    margin-bottom: 18px;
+  }
+  h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+  }
+  .board-head p {
+    margin-top: 6px;
+    color: var(--muted);
+    font-size: 0.8125rem;
+  }
+
+  /* The floor: the shared court drawing with five shirts placed over it. */
+  .floor {
+    position: relative;
+    container: floor / inline-size;
+  }
+  .floor :global(svg.court) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .five {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .empty-floor {
+    position: absolute;
+    inset: 40% 0 auto;
+    text-align: center;
+    color: var(--muted);
+  }
+  .five :global(.slot) {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    width: 21%;
+    transform: translateX(-50%);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    text-align: center;
+    gap: 1px;
+  }
+  .five.swap :global(.slot) {
+    animation: rise 200ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  }
+  .five.swap :global(.slot:nth-child(2)),
+  .five.swap :global(.slot:nth-child(3)) {
+    animation-delay: 30ms;
+  }
+  .five.swap :global(.slot:nth-child(4)),
+  .five.swap :global(.slot:nth-child(5)) {
+    animation-delay: 60ms;
+  }
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translate(-50%, 6px);
+    }
+  }
+  .five :global(.shirt-link) {
+    display: block;
+    width: 44%;
+    margin-bottom: 4px;
+  }
+  .five :global(.shirt-link svg) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  :global(.shirt-edge) {
+    stroke: var(--rule-strong);
+    stroke-width: 1.2;
+  }
+  :global(svg.shirt text) {
+    font-family: var(--font);
+  }
+  /* The text block wears the floor's colour so court lines never run through it. */
+  .five :global(.tag) {
+    display: grid;
+    justify-items: center;
+    gap: 1px;
+    max-width: 100%;
+    padding: 2px 6px 3px;
+    border-radius: 6px;
+    background: var(--surface);
+  }
+  .five :global(.who) {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+    max-width: 100%;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+  .five :global(.who a) {
+    color: var(--ink);
+    text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .five :global(.rk) {
+    color: var(--muted);
+    font-weight: 500;
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .five :global(.meta) {
+    white-space: nowrap;
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .five :global(.big) {
+    margin-top: 2px;
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+  .five :global(.big small) {
+    margin-left: 4px;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--muted);
+  }
+  :global(.big.muted),
+  :global(.val.muted) {
+    color: var(--muted);
+    font-weight: 400;
+  }
+  :global(.line) {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-2);
+  }
+  :global(.line .st) {
+    display: grid;
+    justify-items: center;
+    line-height: 1.2;
+  }
+  :global(.line small) {
+    font-size: 0.625rem;
+    font-weight: 500;
+    color: var(--muted);
+  }
+  :global(.line .on) {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .five :global(.who a:hover),
+    .bench :global(.nm a:hover),
+    .five-lines :global(.nm a:hover) {
+      text-decoration: underline;
+      text-decoration-color: var(--rule-strong);
+      text-underline-offset: 3px;
+    }
+  }
+  .five-lines {
+    display: none;
+  }
+  .court-note {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px 24px;
+    margin-top: 14px;
+    color: var(--muted);
+    font-size: 0.8125rem;
+  }
+  .court-note span {
+    max-width: 62ch;
+  }
+
+  /* Under 620px of floor the shirts keep only name and value; the full lines move below. */
+  @container floor (max-width: 620px) {
+    .five :global(.line),
+    .five :global(.meta),
+    .five :global(.who) {
+      display: none;
+    }
+    .five :global(.tag) {
+      padding: 0 4px;
+    }
+    .five :global(.big) {
+      margin-top: 0;
+      font-size: 0.875rem;
+    }
+    .five :global(.big small) {
+      font-size: 0.625rem;
+      margin-left: 2px;
+    }
+  }
+
+  /* Bench */
+  .bench-box h3 {
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--rule-strong);
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .bench,
+  .five-lines {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .bench :global(li) {
+    display: grid;
+    grid-template-columns: 1.75rem 30px minmax(0, 1fr) 3.5rem;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .bench :global(.rk) {
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+  .bench :global(svg.shirt) {
+    display: block;
+  }
+  :global(.nm) {
+    display: grid;
+    min-width: 0;
+    font-size: 0.8125rem;
+    line-height: 1.3;
+  }
+  :global(.nm a) {
+    color: var(--ink);
+    font-weight: 500;
+    text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  :global(.nm small) {
+    color: var(--muted);
+    font-size: 0.6875rem;
+    font-variant-numeric: tabular-nums;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .bench :global(.val) {
+    text-align: right;
+    font-size: 0.875rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (max-width: 980px) {
+    .lineup {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 40px;
+    }
+  }
+  @media (max-width: 620px) {
+    .five-lines {
+      display: grid;
+      margin-top: 16px;
+      border-top: 1px solid var(--rule);
+    }
+    .five-lines :global(li) {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      column-gap: 10px;
+      row-gap: 4px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--rule);
+    }
+    .five-lines :global(.rk) {
+      grid-row: span 2;
+      color: var(--muted);
+      font-size: 0.75rem;
+      font-variant-numeric: tabular-nums;
+    }
+    .five-lines :global(.line) {
+      grid-column: -2;
+      margin-top: 0;
+      gap: 14px;
+    }
+  }
+</style>

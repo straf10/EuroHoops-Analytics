@@ -29,7 +29,7 @@ function courtLines(): string {
   ].join("");
 }
 
-const court = (layer: string, label: string) =>
+export const court = (layer: string, label: string) =>
   `<svg class="court" viewBox="${VIEWBOX}" role="img" aria-label="${esc(label)}"><rect class="floor" x="-7.5" y="0" width="15" height="${toY(DEPTH)}"/>${courtLines()}${layer}</svg>`;
 
 function hexPath(cx: number, cy: number, r: number): string {

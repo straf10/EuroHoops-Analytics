@@ -52,6 +52,7 @@ const seasonOptions = (list: typeof seasons, chosen: number) =>
         ))}
       </span>
       <span>{seasonCount}, {span}</span>
+      <a href={`${base}/compare/?p=${data.slug}:${latest.season}`}>Compare with others</a>
     </p>
     <p class="lede">{lede}</p>
     {

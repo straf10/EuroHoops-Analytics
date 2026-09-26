@@ -1,0 +1,499 @@
+---
+import plus from "@phosphor-icons/core/assets/regular/user-plus.svg?raw";
+import x from "@phosphor-icons/core/assets/regular/x.svg?raw";
+import Base from "../../layouts/Base.astro";
+import { MAX, RATES } from "../../lib/compare";
+import { entries, rank } from "../../lib/leaders";
+import { leaderPool, meta } from "../../lib/stats";
+import "../../styles/stats.css";
+
+const m = await meta();
+const base = import.meta.env.BASE_URL;
+const root = base.replace(/\/$/, "");
+// Starting points for an empty page: the five career leaders on PIR and on points.
+const career = m ? await leaderPool("career") : null;
+const tops = (stat: string) =>
+  career
+    ? rank(entries(career), { scope: "career", season: 0, stat, mode: "game", club: "" }, career.most)
+        .slice(0, 5)
+        .map((r) => r.e)
+    : [];
+const starts = [
+  { label: "The five best careers on PIR", five: tops("pir") },
+  { label: "The five best career scorers", five: tops("pts") },
+];
+const cfg = { base, xIcon: x };
+const description = "Up to five EuroLeague players side by side, a season each or whole careers, measure by measure.";
+---
+
+<Base title="Compare" description={description} current="compare">
+  <section class="wrap head" aria-labelledby="compare-title">
+    <h1 id="compare-title">Compare</h1>
+    <p>
+      Up to five players side by side, each in one season or over his whole career. Every measure is
+      a row; the blue dot marks who leads it among the players compared.
+    </p>
+  </section>
+
+  {
+    !m ? (
+      <section class="wrap">
+        <p class="empty-state">
+          The stats data has not been exported yet. Run <code>eurohoops export-stats</code> and rebuild.
+        </p>
+      </section>
+    ) : (
+      <section class="wrap" id="compare" data-cfg={JSON.stringify(cfg)}>
+        <form class="filters" id="filters" aria-label="Players and options">
+          <label class="field grow">
+            <span>Add a player</span>
+            <span class="search">
+              <span class="glass" set:html={plus} />
+              <input
+                type="search"
+                name="add"
+                id="add"
+                list="names"
+                placeholder="Type a name"
+                autocomplete="off"
+                spellcheck="false"
+              />
+              <datalist id="names" />
+            </span>
+          </label>
+
+          <fieldset class="field">
+            <legend>Scope</legend>
+            <div class="seg">
+              <input type="radio" name="scope" id="c-season" value="season" checked />
+              <label for="c-season">Season</label>
+              <input type="radio" name="scope" id="c-career" value="career" />
+              <label for="c-career">Career</label>
+            </div>
+          </fieldset>
+
+          <fieldset class="field">
+            <legend>Rate</legend>
+            <div class="seg">
+              {RATES.map((r) => (
+                <>
+                  <input type="radio" name="rate" id={`r-${r.key}`} value={r.key} checked={r.key === "game"} />
+                  <label for={`r-${r.key}`}>{r.label}</label>
+                </>
+              ))}
+            </div>
+          </fieldset>
+          <p class="count" id="status" aria-live="polite">Up to {MAX} players.</p>
+        </form>
+
+        <div class="empty" id="empty">
+          <p>Add a player by name, or start from one of these:</p>
+          <ul>
+            {starts.map((s) => (
+              <li>
+                <a class="ink-link" href={`${root}/compare/?scope=career&p=${s.five.map((e) => e.slug).join(",")}`}>
+                  {s.label}
+                </a>
+                <span>{s.five.map((e) => e.name).join(", ")}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div class="scroll busy-fade" id="board" hidden>
+          <table class="grid h2h">
+            <caption class="sr-only">Players compared measure by measure</caption>
+            <thead id="heads" />
+          </table>
+        </div>
+        <p class="note" id="note" hidden>
+          Career numbers add up every EuroLeague season since 2007-08. Percentages below their attempt
+          floor are muted and never lead. Fewer turnovers lead their row. A shirt shows the club and
+          number of that season; a career shows the club and number with the most games.
+        </p>
+      </section>
+    )
+  }
+</Base>
+
+<script>
+  import { bodyHtml, column, fromQuery, grid, headHtml, MAX, toQuery, type Card, type CRate, type Pick, type Scope } from "../../lib/compare";
+
+  const host = document.getElementById("compare");
+  if (host) {
+    const cfg = JSON.parse(host.dataset.cfg ?? "{}") as { base: string; xIcon: string };
+    const root = cfg.base.replace(/\/$/, "");
+    const form = document.getElementById("filters") as HTMLFormElement;
+    const input = document.getElementById("add") as HTMLInputElement;
+    const $ = (id: string) => document.getElementById(id) as HTMLElement;
+    const cards = new Map<string, Promise<Card | null>>();
+    const card = (slug: string) => {
+      if (!cards.has(slug)) cards.set(slug, fetch(`${root}/data/cards/${slug}.json`).then((r) => (r.ok ? r.json() : null)));
+      return cards.get(slug)!;
+    };
+    let names: Map<string, string> | null = null;
+    const loadNames = async () => {
+      if (names) return names;
+      const rows = (await fetch(`${root}/data/names.json`).then((r) => r.json())) as [string, string, number, number][];
+      const span = (a: number, b: number) => (a === b ? `${a}-${String((a + 1) % 100).padStart(2, "0")}` : `${a} to ${b + 1}`);
+      names = new Map(rows.map(([slug, name, a, b]) => [`${name} (${span(a, b)})`, slug]));
+      $("names").replaceChildren(...[...names.keys()].map((k) => new Option(k)));
+      return names;
+    };
+
+    let { picks, scope, rate } = fromQuery(location.search);
+    let shown: { slug: string; season: number }[] = [];
+
+    const syncForm = () => {
+      (form.elements.namedItem("scope") as RadioNodeList).value = scope;
+      (form.elements.namedItem("rate") as RadioNodeList).value = rate;
+      const full = picks.length >= MAX;
+      input.disabled = full;
+      input.placeholder = full ? "Five players: remove one to add another" : "Type a name";
+    };
+
+    let pending = 0;
+    const paint = async () => {
+      const ticket = ++pending;
+      host.setAttribute("aria-busy", "true");
+      try {
+        const loaded = await Promise.all(picks.map((p) => card(p.slug)));
+        if (ticket !== pending) return;
+        const found = picks.map((p, i) => ({ p, c: loaded[i] })).filter((x): x is { p: Pick; c: Card } => !!x.c);
+        const cols = found.map(({ p, c }) => column(c, scope, p.season));
+        if (scope === "career") {
+          // One career per player.
+          const seen = new Set<string>();
+          for (let i = cols.length - 1; i >= 0; i--) if (seen.has(cols[i].card.slug)) cols.splice(i, 1);
+          else seen.add(cols[i].card.slug);
+        }
+        picks = cols.map((c) => ({ slug: c.card.slug, season: scope === "season" ? c.season : 0 }));
+        const g = grid(cols, rate);
+        $("heads").innerHTML = headHtml(cols, scope, cfg.base, cfg.xIcon);
+        const table = $("heads").parentElement!;
+        table.querySelectorAll("tbody").forEach((t) => t.remove());
+        table.insertAdjacentHTML("beforeend", bodyHtml(g, cols));
+        table.style.setProperty("--cols", String(cols.length));
+        $("board").hidden = cols.length === 0;
+        $("note").hidden = cols.length === 0;
+        $("empty").hidden = cols.length > 0;
+        const missing = found.length < loaded.length ? " A player in the link was not found." : "";
+        $("status").textContent =
+          (cols.length === 0 ? `Up to ${MAX} players.` : cols.length === 1 ? "Add another player to compare." : `${cols.length} of ${MAX} players.`) + missing;
+        // The leader dots arrive where they now belong.
+        if (!matchMedia("(prefers-reduced-motion: reduce)").matches && shown.length)
+          table.querySelectorAll<HTMLElement>(".lead-dot").forEach((d) => d.animate([{ transform: "scale(0.4)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 160, easing: "ease-out" }));
+        shown = picks;
+        syncForm();
+        history.replaceState(null, "", location.pathname + toQuery(picks, scope, rate));
+      } catch {
+        $("status").textContent = "Could not load these players. Reload the page to try again.";
+      } finally {
+        if (ticket === pending) host.removeAttribute("aria-busy");
+      }
+    };
+
+    const add = async () => {
+      const n = await loadNames();
+      const slug = n.get(input.value);
+      if (!slug || picks.length >= MAX) return;
+      const c = await card(slug);
+      if (!c) return;
+      if (scope === "career" && picks.some((p) => p.slug === slug)) {
+        input.value = "";
+        return;
+      }
+      picks = [...picks, { slug, season: c.seasons[c.seasons.length - 1].season }];
+      input.value = "";
+      await paint();
+      input.focus();
+    };
+
+    input.addEventListener("focus", () => void loadNames(), { once: true });
+    input.addEventListener("change", add);
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      add();
+    });
+    form.addEventListener("input", (e) => {
+      const el = e.target as HTMLInputElement;
+      if (el.name === "scope") scope = el.value as Scope;
+      else if (el.name === "rate") rate = el.value as CRate;
+      else return;
+      paint();
+    });
+    $("board").addEventListener("change", (e) => {
+      const el = e.target as HTMLSelectElement;
+      if (el.dataset.col === undefined) return;
+      const i = Number(el.dataset.col);
+      picks = picks.map((p, j) => (j === i ? { ...p, season: Number(el.value) } : p));
+      paint().then(() => ($("board").querySelector(`select[data-col="${i}"]`) as HTMLElement | null)?.focus());
+    });
+    $("board").addEventListener("click", (e) => {
+      const b = (e.target as Element).closest<HTMLButtonElement>("button[data-drop]");
+      if (!b) return;
+      picks = picks.filter((_, j) => j !== Number(b.dataset.drop));
+      paint().then(() => input.focus());
+    });
+
+    syncForm();
+    if (picks.length) paint();
+  }
+</script>
+
+<style>
+  .head p {
+    margin-top: 10px;
+    max-width: 64ch;
+    color: var(--ink-2);
+  }
+  .filters {
+    margin: 32px 0 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--rule);
+  }
+  [hidden] {
+    display: none !important;
+  }
+  .grow {
+    flex: 1 1 200px;
+    max-width: 340px;
+  }
+  .search {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .search :global(svg) {
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    transform: translateY(-50%);
+    width: 15px;
+    height: 15px;
+    fill: var(--ink-2);
+    pointer-events: none;
+  }
+  input[type="search"] {
+    appearance: none;
+    width: 100%;
+    height: 32px;
+    padding: 0 10px 0 32px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--rule-strong);
+    color: var(--ink);
+    font: 500 0.8125rem/1 var(--font);
+    transition: box-shadow 150ms ease;
+  }
+  input[type="search"]::placeholder {
+    color: var(--muted);
+  }
+  input[type="search"]::-webkit-search-cancel-button {
+    display: none;
+  }
+  input[type="search"]:disabled {
+    background: var(--sunk);
+    box-shadow: inset 0 0 0 1px var(--rule);
+    cursor: not-allowed;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    input[type="search"]:not(:disabled):hover {
+      box-shadow: inset 0 0 0 1px var(--ink-2);
+    }
+  }
+  input[type="search"]:focus-visible {
+    outline: 2px solid var(--data-1);
+    outline-offset: 1px;
+  }
+  .count {
+    margin-left: auto;
+    align-self: center;
+    color: var(--muted);
+    font-size: 0.8125rem;
+  }
+
+  .empty {
+    color: var(--ink-2);
+  }
+  .empty ul {
+    margin: 14px 0 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--rule);
+  }
+  .empty li {
+    display: grid;
+    gap: 2px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .empty li span {
+    color: var(--muted);
+    font-size: 0.8125rem;
+  }
+
+  /* The grid: measure names stick on the left; each player owns an equal column. */
+  .h2h {
+    table-layout: fixed;
+    width: 100%;
+    min-width: calc(8.5rem + var(--cols, 2) * 9rem);
+  }
+  .h2h :global(td.corner),
+  .h2h :global(tbody th) {
+    width: 8.5rem;
+  }
+  .h2h :global(thead th.card) {
+    position: relative;
+    padding: 0 8px 14px;
+    text-align: center;
+    vertical-align: bottom;
+    border-bottom: 1px solid var(--rule-strong);
+    font-weight: 400;
+  }
+  .h2h :global(thead td.corner) {
+    border-bottom: 1px solid var(--rule-strong);
+  }
+  .h2h :global(th.card svg.shirt) {
+    display: block;
+    margin: 0 auto 8px;
+  }
+  .h2h :global(.shirt-edge) {
+    stroke: var(--rule-strong);
+    stroke-width: 1.2;
+  }
+  .h2h :global(svg.shirt text) {
+    font-family: var(--font);
+  }
+  .h2h :global(th.card .nm) {
+    display: block;
+    color: var(--ink);
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.25;
+    text-decoration: none;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .h2h :global(th.card .nm:hover) {
+      text-decoration: underline;
+      text-decoration-color: var(--rule-strong);
+      text-underline-offset: 3px;
+    }
+  }
+  .h2h :global(th.card .club),
+  .h2h :global(th.card .when) {
+    display: block;
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .h2h :global(.select.mini) {
+    justify-content: center;
+    margin-top: 6px;
+  }
+  .h2h :global(.select.mini select) {
+    height: 28px;
+    max-width: 100%;
+    padding: 0 10px;
+    font-size: 0.75rem;
+    text-align: center;
+  }
+  .h2h :global(.drop) {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--ink-2);
+    font-size: 15px;
+    cursor: pointer;
+    transition:
+      background-color 150ms ease,
+      color 150ms ease,
+      transform 140ms ease-out;
+  }
+  .h2h :global(.drop:active) {
+    transform: scale(0.94);
+  }
+  .h2h :global(.drop:focus-visible) {
+    outline: 2px solid var(--data-1);
+    outline-offset: 1px;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .h2h :global(.drop:hover) {
+      background: var(--sunk);
+      color: var(--ink);
+    }
+  }
+  .h2h :global(.drop svg) {
+    width: 1em;
+    height: 1em;
+    fill: currentColor;
+  }
+
+  .h2h :global(tbody th) {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--page);
+    text-align: left;
+    font-weight: 500;
+  }
+  .h2h :global(tbody th span[data-tip]) {
+    cursor: help;
+    text-decoration: underline dotted var(--rule-strong);
+    text-underline-offset: 3px;
+  }
+  .h2h :global(tr.grp th) {
+    padding-top: 22px;
+    color: var(--ink);
+    font-weight: 600;
+    border-bottom: 1px solid var(--rule-strong);
+  }
+  .h2h :global(td.num) {
+    position: relative;
+    text-align: center;
+    color: var(--ink);
+  }
+  .h2h :global(td.num small) {
+    margin-left: 6px;
+    color: var(--muted);
+    font-size: 0.6875rem;
+  }
+  .h2h :global(td.lead) {
+    font-weight: 600;
+  }
+  .h2h :global(.lead-dot) {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin-right: 6px;
+    border-radius: 50%;
+    background: var(--data-1);
+    vertical-align: 0.05em;
+  }
+  .h2h :global(td.muted) {
+    color: var(--muted);
+  }
+  .h2h :global(.tally th small) {
+    margin-left: 6px;
+    color: var(--muted);
+    font-size: 0.6875rem;
+    font-weight: 400;
+  }
+  .h2h :global(.tally td) {
+    font-size: 1rem;
+    font-weight: 600;
+  }
+  .h2h :global(.tally tr > *) {
+    padding-block: 12px;
+    border-bottom: 1px solid var(--rule-strong);
+  }
+</style>

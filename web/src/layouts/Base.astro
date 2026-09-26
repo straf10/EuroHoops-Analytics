@@ -9,7 +9,7 @@ interface Props {
   title?: string;
   description: string;
   /** Which top-bar page is current. */
-  current?: "players" | "teams" | "shots" | "forecasts";
+  current?: "players" | "leaders" | "compare" | "teams" | "shots" | "forecasts";
   /** Show the EuroLeague / Greek League switch in the top bar. */
   compSwitch?: boolean;
   updated?: string;
@@ -21,6 +21,8 @@ const home = import.meta.env.BASE_URL;
 const root = home.replace(/\/$/, "");
 const pages = [
   { key: "players", href: `${root}/players/`, label: "Players" },
+  { key: "leaders", href: `${root}/leaders/`, label: "Leaders" },
+  { key: "compare", href: `${root}/compare/`, label: "Compare" },
   { key: "teams", href: `${root}/teams/`, label: "Teams" },
   { key: "shots", href: `${root}/shots/`, label: "Shots" },
   { key: "forecasts", href: `${root}/`, label: "Forecasts" },
@@ -348,8 +350,17 @@ const pages = [
     .bar-inner {
       gap: 16px;
     }
+    /* Six links do not fit a phone: the row scrolls sideways, the page never does. */
     .links {
       gap: 14px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      overscroll-behavior-x: contain;
+      padding-block: 8px;
+      mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+    }
+    .links::-webkit-scrollbar {
+      display: none;
     }
     .wordmark span {
       display: none;

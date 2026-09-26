@@ -2,6 +2,7 @@
 // Every number is a raw total; lib/players.ts derives the rates.
 
 import type { Attempts } from "./shots";
+import { careers, failsFloor, LEADER_FIELDS, type Entry, type Pool, type Wire } from "./leaders";
 
 export type Cell = [q: number, r: number, att: number, made: number, pts: number];
 export type Bands = Record<string, [att: number, made: number]>;
@@ -393,4 +394,123 @@ export async function explorerData(year: number): Promise<Attempts | null> {
     team: raw.team,
     opp: raw.opp,
   };
+}
+
+// ---- Leaders and Compare --------------------------------------------------------------------
+
+type SplitRow = [id: string, season: number, team: string, dorsal: string, totals: number[]];
+
+let splitCache: Promise<{ fields: string[]; lines: Entry[] }> | null = null;
+
+/** Every player-season-club line (all player fields), oldest season first per player. */
+function splitLines() {
+  splitCache ??= (async () => {
+    const raw = await load<{ fields: string[]; rows: SplitRow[] }>("splits.json");
+    if (!raw) return { fields: [], lines: [] };
+    const who = new Map((await playerIndex()).map((p) => [p.id, p]));
+    const lines = raw.rows.flatMap(([id, year, team, dorsal, values]) => {
+      const p = who.get(id);
+      if (!p) return [];
+      const t: Record<string, number> = {};
+      raw.fields.forEach((f, i) => (t[f] = values[i]));
+      return [{ key: `${p.slug}:${year}:${team}`, slug: p.slug, name: p.name, team, dorsal, season: year, first: year, last: year, t }];
+    });
+    return { fields: raw.fields, lines };
+  })();
+  return splitCache;
+}
+
+/** A player's clubs in one season -> one line: summed, in the shirt of the club he ended with. */
+function seasonLines(lines: Entry[]): Entry[] {
+  const by = new Map<string, Entry>();
+  for (const e of lines) {
+    const k = `${e.slug}:${e.season}`;
+    const had = by.get(k);
+    if (!had) {
+      by.set(k, { ...e, key: k, t: { ...e.t } });
+      continue;
+    }
+    for (const [f, v] of Object.entries(e.t)) had.t[f] = (had.t[f] ?? 0) + v;
+    had.team = e.team;
+    had.dorsal = e.dorsal;
+  }
+  return [...by.values()];
+}
+
+let mostCache: Promise<Record<string, number>> | null = null;
+const mostGames = () =>
+  (mostCache ??= splitLines().then(({ lines }) => {
+    const most: Record<string, number> = {};
+    for (const e of seasonLines(lines)) most[e.season] = Math.max(most[e.season] ?? 0, e.t.gp);
+    return most;
+  }));
+
+const wire = (e: Entry, fields: string[]): Wire => [e.slug, e.name, e.team, e.dorsal, e.season, e.first, e.last, fields.map((f) => e.t[f] ?? 0)];
+
+/** "career", "best" or a season: the lines the Leaders page ranks. */
+export async function leaderPool(key: "career" | "best" | number): Promise<Pool> {
+  const { lines } = await splitLines();
+  const most = await mostGames();
+  let rows: Entry[];
+  if (key === "career") rows = careers(lines).filter((e) => e.t.gp >= 20); // a handful of games never leads
+  else if (key === "best") {
+    const view = { scope: "best", season: 0, stat: "pts", mode: "game", club: "" } as const;
+    rows = seasonLines(lines).filter((e) => !failsFloor(e, view, most));
+  } else rows = seasonLines(lines.filter((e) => e.season === key));
+  return { fields: LEADER_FIELDS, most, rows: rows.map((e) => wire(e, LEADER_FIELDS)) };
+}
+
+/** One club's lines, season by season (the page sums them for its career view). */
+export async function clubPool(code: string): Promise<Pool> {
+  const { lines } = await splitLines();
+  return { fields: LEADER_FIELDS, most: await mostGames(), rows: lines.filter((e) => e.team === code).map((e) => wire(e, LEADER_FIELDS)) };
+}
+
+export const clubCodes = async () => [...new Set((await splitLines()).lines.map((e) => e.team))].sort();
+
+export interface CardSeason {
+  season: number;
+  team: string; // the club he ended the season with
+  teams: string[];
+  dorsal: string;
+  totals: number[];
+}
+
+export interface CardData {
+  slug: string;
+  name: string;
+  fields: string[];
+  seasons: CardSeason[];
+  career: { team: string; dorsal: string; first: number; last: number; totals: number[] };
+}
+
+let cardCache: Promise<Map<string, Entry[]>> | null = null;
+
+/** One player's seasons and career in the compact shape Compare fetches. */
+export async function cardData(slug: string): Promise<CardData | null> {
+  const { fields, lines } = await splitLines();
+  cardCache ??= Promise.resolve(
+    lines.reduce((m, e) => m.set(e.slug, [...(m.get(e.slug) ?? []), e]), new Map<string, Entry[]>()),
+  );
+  const own = (await cardCache).get(slug);
+  if (!own?.length) return null;
+  const c = careers(own)[0];
+  return {
+    slug,
+    name: c.name,
+    fields,
+    seasons: seasonLines(own).map((e) => ({
+      season: e.season,
+      team: e.team,
+      teams: [...new Set(own.filter((o) => o.season === e.season).map((o) => o.team))],
+      dorsal: e.dorsal,
+      totals: fields.map((f) => e.t[f] ?? 0),
+    })),
+    career: { team: c.team, dorsal: c.dorsal, first: c.first, last: c.last, totals: fields.map((f) => c.t[f] ?? 0) },
+  };
+}
+
+/** [slug, name, first season, last season] for every player: Compare's search. */
+export async function nameIndex(): Promise<[string, string, number, number][]> {
+  return (await playerIndex()).map((p) => [p.slug, p.name, Math.min(...p.seasons), Math.max(...p.seasons)]);
 }

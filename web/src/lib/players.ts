@@ -22,7 +22,7 @@ export interface View {
 
 type Totals = Record<string, number>;
 
-interface Measure {
+export interface Measure {
   key: string;
   head: string; // column head
   name: string; // chart title and tooltip, e.g. "Points"
@@ -197,7 +197,7 @@ function totalsOf(fields: string[], values: number[]): Totals {
   return t;
 }
 
-function rated(m: Measure, t: Totals, rate: Rate): number | null {
+export function rated(m: Measure, t: Totals, rate: Rate): number | null {
   const raw = m.value(t);
   if (raw === null || m.kind !== "count") return raw;
   if (rate === "game") return t.gp ? raw / t.gp : null;
