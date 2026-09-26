@@ -14,6 +14,7 @@ STINT_REPORT = Path("reports/stint_validation.json")
 POSSESSION_REPORT = Path("reports/possessions.json")
 STINTS_MART_REPORT = Path("reports/stints_mart.json")
 TEAM_CONTINUITY_REPORT = Path("reports/team_continuity.json")
+SHOTS_REPORT = Path("reports/shots.json")
 SITE_DATA = Path("web/src/data/site.json")  # read by the Astro build in web/
 
 
@@ -189,6 +190,20 @@ GBL = Competition(
 )
 
 COMPETITIONS = {c.name: c for c in (EUROLEAGUE, GBL)}
+
+
+@dataclass(frozen=True)
+class M2Seasons:
+    """Shot model M2 (F-a): leave-one-season-out CV on development, then validation, then test
+    (scored once, after the verdict). 2007-10 shots are kept in the table and never used."""
+
+    development: tuple[int, ...] = _seasons(2011, 2022)
+    validation: tuple[int, ...] = (2023,)
+    test: tuple[int, ...] = (2024, 2025)
+
+
+M2_SEASONS = M2Seasons()
+FREE_THROWS_REPORT = Path("reports/free_throws.json")
 GBL_PLAYER_BOX = Path("data/staging/gbl_player_box.parquet")
 GBL_TEAM_BOX = Path("data/staging/gbl_team_box.parquet")
 GBL_BOX_FILL = Path("data/staging/gbl_box_fill.parquet")

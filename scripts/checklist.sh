@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The phase checklist, top to bottom (first used as the weeks 5-7 §6 run). Prints PASS/FAIL per
+# The phase checklist, top to bottom (weeks 5-7 §6 items 1-20, weeks 7-10 items 21-30). Prints PASS/FAIL per
 # item; the exit code is the number of FAILs. Run from anywhere: `bash scripts/checklist.sh`.
 #
 #   BASE      git ref the predictions and the stint sample are compared with (default origin/main)
@@ -93,4 +93,6 @@ skip 20 "screenshots" || {
     && uv run --with playwright python "$CHECKS/screenshots.py" "$SCRATCH/web/site" reports/screenshots)
   res $?
 }
+skip 21 "F1 shots" || { item "21 F1 shot reconciliation, exclusion shares, two builds identical"; bash "$CHECKS/shots.sh"; res $?; }
+skip 22 "F2 free throws" || { item "22 F2 FT reconciliation per season (LOSO rates)"; bash "$CHECKS/free_throws.sh"; res $?; }
 echo; echo "FAILS: $fails (end $(date -u +%H:%MZ))"; exit "$fails"

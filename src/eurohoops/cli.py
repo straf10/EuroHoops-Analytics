@@ -15,6 +15,7 @@ from eurohoops.config import (
     BOX_INVARIANTS_REPORT,
     COMPETITIONS,
     EUROLEAGUE,
+    FREE_THROWS_REPORT,
     GBL,
     GBL_BOX_FILL,
     GBL_BOX_GAPS,
@@ -22,11 +23,13 @@ from eurohoops.config import (
     GBL_PLAYER_BOX,
     GBL_TEAM_BOX,
     LIVE_SEASON,
+    M2_SEASONS,
     MART_PATH,
     ODDS_CALLS,
     ODDS_RAW_DIR,
     ODDS_TEAMS,
     POSSESSION_REPORT,
+    SHOTS_REPORT,
     SITE_DATA,
     SQL_DIR,
     STINT_REPORT,
@@ -52,6 +55,7 @@ from eurohoops.marts import (
 from eurohoops.odds import OddsApiError, OddsPaths, api_key, record_odds
 from eurohoops.parse.box import build_box_tables
 from eurohoops.parse.continuity import continuity_report
+from eurohoops.parse.free_throws import build_ft_team_games, ft_report
 from eurohoops.parse.games import (
     build_games_table,
     build_gbl_tables,
@@ -62,6 +66,7 @@ from eurohoops.parse.games import (
 )
 from eurohoops.parse.gbl_pbp import build_pbp_table
 from eurohoops.parse.possession_report import possession_report
+from eurohoops.parse.shot_table import build_shot_table, reconcile, shot_report
 from eurohoops.parse.stints import validate_sample
 from eurohoops.parse.stints_mart import build_stints_mart, mart_report
 from eurohoops.parse.team_box import TEAM_GAMES_SCHEMA, build_team_games
@@ -308,6 +313,46 @@ def stints(
         f"{report['games']} games: all checks {report['all_checks_pass_rate']:.0%} ({rates}); "
         f"wrote {STINT_REPORT}"
     )
+
+
+@app.command()
+def shots() -> None:
+    """Build the ``shots`` and ``shots_excluded`` marts (EuroLeague, from the raw shot cache) and
+    write reports/shots.json: exclusions per season and the feed-vs-box reconciliation.
+
+    Local only, like ``possessions``: the daily workflow never runs it (M2 has no live use)."""
+    games = read_games(MART_PATH, EUROLEAGUE.name)
+    table = build_shot_table(EUROLEAGUE.raw_dir, games)
+    write_tables(MART_PATH, {"shots": table.shots, "shots_excluded": table.excluded})
+    report = shot_report(table, reconcile(table, EUROLEAGUE.raw_dir, games))
+    _write_json(SHOTS_REPORT, report)
+    typer.echo(
+        f"{report['shots']} shots, {report['excluded']} excluded; feed = box for "
+        f"{report['reconciliation_match_rate_validated']:.2%} of 2011+ team-games; "
+        f"wrote {SHOTS_REPORT}"
+    )
+
+
+@app.command(name="free-throws")
+def free_throws() -> None:
+    """Build ``ft_team_games`` (FT trips and points per team-game from EuroLeague play-by-play,
+    and-ones tied to their shot) and write reports/free_throws.json (needs ``eurohoops shots``)."""
+    shots_table = read_table(MART_PATH, "shots")
+    excluded = read_table(MART_PATH, "shots_excluded")
+    if shots_table is None or excluded is None:
+        log.error("no shots in the marts; run: eurohoops shots")
+        raise typer.Exit(code=1)
+    table = build_ft_team_games(EUROLEAGUE.raw_dir, shots_table, excluded)
+    write_tables(MART_PATH, {"ft_team_games": table})
+    report = ft_report(table, M2_SEASONS.development, M2_SEASONS.validation)
+    _write_json(FREE_THROWS_REPORT, report)
+    for season, block in report["seasons"].items():
+        typer.echo(
+            f"{season} {block['split']}: FT points {block['ft_points_per_team_game']:.2f}, "
+            f"expected {block['expected_per_team_game']:.2f}, gap {block['mean_gap']:+.3f} "
+            f"({'within' if block['within_tolerance'] else 'OUTSIDE'} ±{block['tolerance']})"
+        )
+    typer.echo(f"wrote {FREE_THROWS_REPORT}")
 
 
 @app.command()

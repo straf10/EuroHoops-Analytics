@@ -1,0 +1,698 @@
+{
+  "first_validated_season": 2011,
+  "last_season": 2025,
+  "label_tolerance_m": 0.15,
+  "shots": 612424,
+  "excluded": 1795,
+  "not_cached": [],
+  "reconciliation_match_rate_validated": 0.999882,
+  "seasons": {
+    "2007": {
+      "validated": false,
+      "actions": {
+        "2FGA": 7209,
+        "2FGAB": 1133,
+        "2FGM": 9182,
+        "3FGA": 6099,
+        "3FGAB": 95,
+        "3FGM": 3491,
+        "FTM": 6771
+      },
+      "fga": 27209,
+      "kept": 27171,
+      "excluded_share": 0.001397,
+      "excluded_by_reason": {
+        "unparseable": {
+          "n": 3,
+          "share": 0.00011
+        },
+        "zero_coordinates": {
+          "n": 35,
+          "share": 0.001286
+        },
+        "label_geometry": {
+          "n": 0,
+          "share": 0.0
+        }
+      }
+    },
+    "2008": {
+      "validated": false,
+      "actions": {
+        "2FGA": 2146,
+        "2FGAB": 59,
+        "2FGM": 1334,
+        "3FGA": 4941,
+        "3FGAB": 53,
+        "3FGM": 2749,
+        "DUNK": 892,
+        "FTM": 5729,
+        "LAYUPATT": 4607,
+        "LAYUPMD": 5099
+      },
+      "fga": 21880,
+      "kept": 21764,
+      "excluded_share": 0.005302,
+      "excluded_by_reason": {
+        "unparseable": {
+          "n": 1,
+          "share": 4.6e-05
+        },
+        "zero_coordinates": {
+          "n": 115,
+          "share": 0.005256
+        },
+        "label_geometry": {
+          "n": 0,
+          "share": 0.0
+        }
+      }
+    },
+    "2009": {
+      "validated": false,
+      "actions": {
+        "2FGA": 2892,
+        "2FGAB": 229,
+        "2FGM": 1918,
+        "3FGA": 5035,
+        "3FGAB": 60,
+        "3FGM": 2778,
+        "DUNK": 880,
+        "FTM": 5771,
+        "LAYUPATT": 3288,
+        "LAYUPMD": 4336
+      },
+      "fga": 21416,
+      "kept": 21327,
+      "excluded_share": 0.004156,
+      "excluded_by_reason": {
+        "unparseable": {
+          "n": 2,
+          "share": 9.3e-05
+        },
+        "zero_coordinates": {
+          "n": 87,
+          "share": 0.004062
+        },
+        "label_geometry": {
+          "n": 0,
+          "share": 0.0
+        }
+      }
+    },
+    "2010": {
+      "validated": false,
+      "actions": {
+        "2FGA": 3604,
+        "2FGAB": 200,
+        "2FGM": 2193,
+        "3FGA": 4779,
+        "3FGAB": 63,
+        "3FGM": 2445,
+        "DUNK": 795,
+        "FTM": 5490,
+        "LAYUPATT": 3590,
+        "LAYUPMD": 4633
+      },
+      "fga": 22302,
+      "kept": 22241,
+      "excluded_share": 0.002735,
+      "excluded_by_reason": {
+        "unparseable": {
+          "n": 2,
+          "share": 9e-05
+        },
+        "zero_coordinates": {
+          "n": 59,
+          "share": 0.002646
+        },
+        "label_geometry": {
+          "n": 0,
+          "share": 0.0
+        }
+      }
+    },
+    "2011": {
+      "validated": true,
+      "actions": {
+        "2FGA": 4305,
+        "2FGAB": 338,
+        "2FGM": 2770,
+        "3FGA": 4782,
+        "3FGAB": 40,
+        "3FGM": 2510,
+        "DUNK": 798,
+        "FTM": 5351,
+        "LAYUPATT": 2825,
+        "LAYUPMD": 4019
+      },
+      "fga": 22387,
+      "kept": 22269,
+      "excluded_share": 0.005271,
+      "excluded_by_reason": {
+        "unparseable": {
+          "n": 6,
+          "share": 0.000268
+        },
+        "zero_coordinates": {
+          "n": 83,
+          "share": 0.003708
+        },
+        "label_geometry": {
+          "n": 29,
+          "share": 0.001295
+        }
+      },
+      "reconciliation": {
+        "team_games": 376,
+        "with_box": 376,
+        "match": 376,
+        "match_rate": 1.0,
+        "mismatches": [],
+        "no_box": []
+      }
+    },
+    "2012": {
+      "validated": true,
+      "actions": {
+        "2FGA": 5071,
+        "2FGAB": 391,
+        "2FGM": 3370,
+        "3FGA": 6631,
+        "3FGAB": 60,
+        "3FGM": 3698,
+        "DUNK": 1129,
+        "FTM": 6690,
+        "LAYUPATT": 4202,
+        "LAYUPMD": 5564
+      },
+      "fga": 30116,
+      "kept": 30001,
+      "excluded_share": 0.003819,
+      "excluded_by_reason": {
+        "unparseable": {
+          "n": 6,
+          "share": 0.000199
+        },
+        "zero_coordinates": {
+          "n": 76,
+          "share": 0.002524
+        },
+        "label_geometry": {
+          "n": 33,
+          "share": 0.001096
+        }
+      },
+      "reconciliation": {
+        "team_games": 506,
+        "with_box": 506,
+        "match": 506,
+        "match_rate": 1.0,
+        "mismatches": [],
+        "no_box": []
+      }
+    },
+    "2013": {
+      "validated": true,
+      "actions": {
+        "2FGA": 5272,
+        "2FGAB": 474,
+        "2FGM": 3670,
+        "3FGA": 6756,
+        "3FGAB": 77,
+        "3FGM": 3811,
+        "DUNK": 1280,
+        "FTM": 6370,
+        "LAYUPATT": 3881,
+        "LAYUPMD": 5272
+      },
+      "fga": 30493,
+      "kept": 30368,
+      "excluded_share": 0.004099,
+      "excluded_by_reason": {
+        "unparseable": {
+          "n": 2,
+          "share": 6.6e-05
+        },
+        "zero_coordinates": {
+          "n": 78,
+          "share": 0.002558
+        },
+        "label_geometry": {
+          "n": 45,
+          "share": 0.001476
+        }
+      },
+      "reconciliation": {
+        "team_games": 506,
+        "with_box": 506,
+        "match": 506,
+        "match_rate": 1.0,
+        "mismatches": [],
+        "no_box": []
+      }
+    },
+    "2014": {
+      "validated": true,
+      "actions": {
+        "2FGA": 5583,
+        "2FGAB": 485,
+        "2FGM": 3690,
+        "3FGA": 7158,
+        "3FGAB": 76,
+        "3FGM": 3970,
+        "DUNK": 1305,
+        "FTM": 6870,
+        "LAYUPATT": 3636,
+        "LAYUPMD": 5162
+      },
+      "fga": 31065,
+      "kept": 30954,
+      "excluded_share": 0.003573,
+      "excluded_by_reason": {
+        "unparseable": {
+          "n": 6,
+          "share": 0.000193
+        },
+        "zero_coordinates": {
+          "n": 74,
+          "share": 0.002382
+        },
+        "label_geometry": {
+          "n": 31,
+          "share": 0.000998
+        }
+      },
+      "reconciliation": {
+        "team_games": 502,
+        "with_box": 502,
+        "match": 502,
+        "match_rate": 1.0,
+        "mismatches": [],
+        "no_box": []
+      }
+    },
+    "2015": {
+      "validated": true,
+      "actions": {
+        "2FGA": 7991,
+        "2FGAB": 1283,
+        "2FGM": 9819,
+        "3FGA": 7193,
+        "3FGAB": 70,
+        "3FGM": 4047,
+        "FTM": 6853
+      },
+      "fga": 30403,
+      "kept": 30304,
+      "excluded_share": 0.003256,
+      "excluded_by_reason": {
+        "unparseable": {
+          "n": 5,
+          "share": 0.000164
+        },
+        "zero_coordinates": {
+          "n": 62,
+          "share": 0.002039
+        },
+        "label_geometry": {
+          "n": 32,
+          "share": 0.001053
+        }
+      },
+      "reconciliation": {
+        "team_games": 500,
+        "with_box": 500,
+        "match": 500,
+        "match_rate": 1.0,
+        "mismatches": [],
+        "no_box": []
+      }
+    },
+    "2016": {
+      "validated": true,
+      "actions": {
+        "2FGA": 8434,
+        "2FGAB": 1305,
+        "2FGM": 10436,
+        "3FGA": 7295,
+        "3FGAB": 93,
+        "3FGM": 4365,
+        "FTM": 6998
+      },
+      "fga": 31928,
+      "kept": 31801,
+      "excluded_share": 0.003978,
+      "excluded_by_reason": {
+        "unparseable": {
+          "n": 4,
+          "share": 0.000125
+        },
+        "zero_coordinates": {
+          "n": 78,
+          "share": 0.002443
+        },
+        "label_geometry": {
+          "n": 45,
+          "share": 0.001409
+        }
+      },
+      "reconciliation": {
+        "team_games": 518,
+        "with_box": 518,
+        "match": 518,
+        "match_rate": 1.0,
+        "mismatches": [],
+        "no_box": []
+      }
+    },
+    "2017": {
+      "validated": true,
+      "actions": {
+        "2FGA": 9445,
+        "2FGM": 10572,
+        "3FGA": 7407,
+        "3FGM": 4452,
+        "FTM": 7545
+      },
+      "fga": 31876,
+      "kept": 31793,
+      "excluded_share": 0.002604,
+      "excluded_by_reason": {
+        "unparseable": {
+          "n": 2,
+          "share": 6.3e-05
+        },
+        "zero_coordinates": {
+          "n": 31,
+          "share": 0.000973
+        },
+        "label_geometry": {
+          "n": 50,
+          "share": 0.001569
+        }
+      },
+      "reconciliation": {
+        "team_games": 520,
+        "with_box": 520,
+        "match": 519,
+        "match_rate": 0.998077,
+        "mismatches": [
+          {
+            "game_id": "E2017_14",
+            "team": "KHI",
+            "fga_feed_minus_box": 15,
+            "fg_points_feed_minus_box": 18
+          }
+        ],
+        "no_box": []
+      }
+    },
+    "2018": {
+      "validated": true,
+      "actions": {
+        "2FGA": 9195,
+        "2FGM": 10669,
+        "3FGA": 7533,
+        "3FGM": 4423,
+        "FTM": 7096
+      },
+      "fga": 31820,
+      "kept": 31743,
+      "excluded_share": 0.00242,
+      "excluded_by_reason": {
+        "unparseable": {
+          "n": 2,
+          "share": 6.3e-05
+        },
+        "zero_coordinates": {
+          "n": 44,
+          "share": 0.001383
+        },
+        "label_geometry": {
+          "n": 31,
+          "share": 0.000974
+        }
+      },
+      "reconciliation": {
+        "team_games": 520,
+        "with_box": 518,
+        "match": 518,
+        "match_rate": 1.0,
+        "mismatches": [],
+        "no_box": [
+          "E2018_21"
+        ]
+      }
+    },
+    "2019": {
+      "validated": true,
+      "actions": {
+        "2FGA": 8770,
+        "2FGM": 9861,
+        "3FGA": 7819,
+        "3FGM": 4658,
+        "FTM": 6899
+      },
+      "fga": 31108,
+      "kept": 31050,
+      "excluded_share": 0.001864,
+      "excluded_by_reason": {
+        "unparseable": {
+          "n": 5,
+          "share": 0.000161
+        },
+        "zero_coordinates": {
+          "n": 15,
+          "share": 0.000482
+        },
+        "label_geometry": {
+          "n": 38,
+          "share": 0.001222
+        }
+      },
+      "reconciliation": {
+        "team_games": 504,
+        "with_box": 504,
+        "match": 504,
+        "match_rate": 1.0,
+        "mismatches": [],
+        "no_box": []
+      }
+    },
+    "2020": {
+      "validated": true,
+      "actions": {
+        "2FGA": 11066,
+        "2FGM": 12771,
+        "3FGA": 9716,
+        "3FGM": 5912,
+        "FTM": 8791
+      },
+      "fga": 39465,
+      "kept": 39385,
+      "excluded_share": 0.002027,
+      "excluded_by_reason": {
+        "unparseable": {
+          "n": 7,
+          "share": 0.000177
+        },
+        "zero_coordinates": {
+          "n": 21,
+          "share": 0.000532
+        },
+        "label_geometry": {
+          "n": 52,
+          "share": 0.001318
+        }
+      },
+      "reconciliation": {
+        "team_games": 656,
+        "with_box": 656,
+        "match": 656,
+        "match_rate": 1.0,
+        "mismatches": [],
+        "no_box": []
+      }
+    },
+    "2021": {
+      "validated": true,
+      "actions": {
+        "2FGA": 10114,
+        "2FGM": 11624,
+        "3FGA": 9307,
+        "3FGM": 5153,
+        "FTM": 7357
+      },
+      "fga": 36198,
+      "kept": 36106,
+      "excluded_share": 0.002542,
+      "excluded_by_reason": {
+        "unparseable": {
+          "n": 6,
+          "share": 0.000166
+        },
+        "zero_coordinates": {
+          "n": 26,
+          "share": 0.000718
+        },
+        "label_geometry": {
+          "n": 60,
+          "share": 0.001658
+        }
+      },
+      "reconciliation": {
+        "team_games": 598,
+        "with_box": 598,
+        "match": 598,
+        "match_rate": 1.0,
+        "mismatches": [],
+        "no_box": []
+      }
+    },
+    "2022": {
+      "validated": true,
+      "actions": {
+        "2FGA": 10667,
+        "2FGM": 12831,
+        "3FGA": 10497,
+        "3FGM": 5944,
+        "FTM": 9470
+      },
+      "fga": 39939,
+      "kept": 39830,
+      "excluded_share": 0.002729,
+      "excluded_by_reason": {
+        "unparseable": {
+          "n": 8,
+          "share": 0.0002
+        },
+        "zero_coordinates": {
+          "n": 29,
+          "share": 0.000726
+        },
+        "label_geometry": {
+          "n": 72,
+          "share": 0.001803
+        }
+      },
+      "reconciliation": {
+        "team_games": 656,
+        "with_box": 656,
+        "match": 656,
+        "match_rate": 1.0,
+        "mismatches": [],
+        "no_box": []
+      }
+    },
+    "2023": {
+      "validated": true,
+      "actions": {
+        "2FGA": 11151,
+        "2FGM": 13400,
+        "3FGA": 10651,
+        "3FGM": 6129,
+        "FTM": 8828
+      },
+      "fga": 41331,
+      "kept": 41198,
+      "excluded_share": 0.003218,
+      "excluded_by_reason": {
+        "unparseable": {
+          "n": 12,
+          "share": 0.00029
+        },
+        "zero_coordinates": {
+          "n": 32,
+          "share": 0.000774
+        },
+        "label_geometry": {
+          "n": 89,
+          "share": 0.002153
+        }
+      },
+      "reconciliation": {
+        "team_games": 662,
+        "with_box": 662,
+        "match": 662,
+        "match_rate": 1.0,
+        "mismatches": [],
+        "no_box": []
+      }
+    },
+    "2024": {
+      "validated": true,
+      "actions": {
+        "2FGA": 10832,
+        "2FGM": 13556,
+        "3FGA": 10942,
+        "3FGM": 6203,
+        "FTM": 9660
+      },
+      "fga": 41533,
+      "kept": 41451,
+      "excluded_share": 0.001974,
+      "excluded_by_reason": {
+        "unparseable": {
+          "n": 9,
+          "share": 0.000217
+        },
+        "zero_coordinates": {
+          "n": 28,
+          "share": 0.000674
+        },
+        "label_geometry": {
+          "n": 45,
+          "share": 0.001083
+        }
+      },
+      "reconciliation": {
+        "team_games": 660,
+        "with_box": 660,
+        "match": 660,
+        "match_rate": 1.0,
+        "mismatches": [],
+        "no_box": []
+      }
+    },
+    "2025": {
+      "validated": true,
+      "actions": {
+        "2FGA": 13493,
+        "2FGM": 16853,
+        "3FGA": 13721,
+        "3FGM": 7683,
+        "FTM": 12387
+      },
+      "fga": 51750,
+      "kept": 51668,
+      "excluded_share": 0.001585,
+      "excluded_by_reason": {
+        "unparseable": {
+          "n": 5,
+          "share": 9.7e-05
+        },
+        "zero_coordinates": {
+          "n": 45,
+          "share": 0.00087
+        },
+        "label_geometry": {
+          "n": 32,
+          "share": 0.000618
+        }
+      },
+      "reconciliation": {
+        "team_games": 804,
+        "with_box": 804,
+        "match": 804,
+        "match_rate": 1.0,
+        "mismatches": [],
+        "no_box": []
+      }
+    }
+  },
+  "table_sha256": {
+    "shots": "f02e93d50418aaee9c934d8d73d0f0dc9d650ea885d5b5e01d20b7cedffe19ee",
+    "shots_excluded": "1d5a696def51feda1dd7bfeb26ed20947311642d5930546a3f0509aa6937c089"
+  }
+}
