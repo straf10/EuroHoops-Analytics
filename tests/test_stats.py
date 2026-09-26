@@ -319,7 +319,7 @@ def test_features_and_match() -> None:
     assert match(np.array([0.0]))[0] == 100.0
 
 
-def test_twins_add_up_and_skip_their_own_seasons(inputs: Inputs) -> None:
+def test_twins_add_up_and_are_always_other_players(inputs: Inputs) -> None:
     frame = _player_frame(inputs)
     twins = twins_payload(
         frame, inputs.shots.table, inputs.codes, min_pool_att=20, min_window_att=5
@@ -338,9 +338,7 @@ def test_twins_add_up_and_skip_their_own_seasons(inputs: Inputs) -> None:
             assert sum(w["counts"][: len(ZONES)]) >= 5
             scores = [m for _, m in w["twins"]]
             assert scores == sorted(scores, reverse=True) and all(0 < m <= 100 for m in scores)
-            for i, _ in w["twins"]:
-                twin = twins["pool"][i]
-                assert not (twin[0] == pid and w["from"] <= twin[1] <= w["to"])
+            assert all(twins["pool"][i][0] != pid for i, _ in w["twins"])
         season = windows.get("season")
         if season and (pid, season["to"]) in by_key:
             assert season["counts"] == by_key[(pid, season["to"])][4]

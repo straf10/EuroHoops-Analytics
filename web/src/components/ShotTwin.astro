@@ -32,8 +32,7 @@ const rateTop = axisTop(every.flatMap((p) => p.rates.map((r) => r ?? 0)));
 const span = (w: TwinWindow) => (w.from === w.to ? w.from : `${w.from} to ${w.to}`);
 const windowLine = (w: TwinWindow) =>
   `${w.key === "season" ? w.from : `${WINDOW_NAMES[w.key][0]} games, ${span(w)}`} · ${prof(w.counts).att} shots`;
-const twinLine = (t: TwinSeason) =>
-  `${t.label} · ${t.club} · ${t.games} games${t.own ? " · his own season" : ""}`;
+const twinLine = (t: TwinSeason) => `${t.label} · ${t.club} · ${t.games} games`;
 const him = start ? prof(start.counts) : null;
 const first = start?.twins[0];
 const twin = first ? prof(first.counts) : null;
@@ -56,7 +55,7 @@ const payload = data && {
         twins: w.twins.map((t) => ({
           name: t.name,
           href: t.slug ? playerHref(base, t.slug) : "",
-          short: `${t.label} · ${t.team}${t.own ? " · his own" : ""}`,
+          short: `${t.label} · ${t.team}`,
           line: twinLine(t),
           approx: !t.validated,
           match: Math.round(t.match),
@@ -116,7 +115,6 @@ const payload = data && {
                 <span class="who">{t.name}</span>
                 <span class="what">
                   {t.label} · {t.team}
-                  {t.own ? " · his own" : ""}
                 </span>
                 <span class="match">
                   <b>{Math.round(t.match)}</b> match
@@ -235,7 +233,7 @@ const payload = data && {
           Match weighs where he shoots (60%), how well against the league (25%) and his three-point and
           free-throw rates (15%) against every player-season with {data!.minPool} or more located shots
           ({data!.pool.toLocaleString("en-GB")} of them). 100 is an identical profile; two seasons picked at
-          random score about 37. A window never matches the seasons its own games come from. Shares run
+          random score about 37. Twins are always other players. Shares run
           to {Math.round(100 * zoneTop)}% at the bar's full length; left and right are as drawn on the shot
           chart.
         </p>

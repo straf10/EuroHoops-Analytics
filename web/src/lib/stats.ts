@@ -247,7 +247,6 @@ export interface TwinSeason {
   club: string;
   games: number;
   validated: boolean;
-  own: boolean; // one of his own other seasons
   match: number;
   counts: Counts;
 }
@@ -307,7 +306,6 @@ export async function twinData(id: string): Promise<TwinData | null> {
               club: m.teams[team] ?? team,
               games,
               validated: labels.get(season)?.coords_validated ?? true,
-              own: pid === id,
               match,
               counts,
             };
