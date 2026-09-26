@@ -70,4 +70,17 @@ validation).
 **Limit (measured):** league FT points per team-game move from season to season by far more
 than the ±0.1 target (development sd ≈ 0.71: 12.30 in 2021-22 to 14.51 in 2017-18), and rates
 fitted on other seasons cannot know a season's level. The LOSO gaps are in
-`reports/free_throws.json`; only 2018-19, 2019-20 and 2020-21 fall within ±0.1.
+`reports/free_throws.json`; only 2018-19, 2019-20 and 2020-21 fall within ±0.1. That level
+check is kept as a limitation ("season level, not gated").
+
+**The F2 check since 2026-09-26 (user decision): within-season shares.** Per held-out season,
+each band's share of the and-one FT points and each team's share of the league's per-game FT
+points, expected vs actual, within 2 × the game-level bootstrap SE (1,000 resamples); band
+flags gate by a count rule (at most the 95th percentile a right model produces: 7 of 78).
+**Result: FAILED** (checklist item 22). 12 of 78 band checks are flagged, and the team check
+fails in every season: expected team shares barely vary (sd about a third of the actual
+shares') and do not track the actual ones (r from −0.42 to 0.30). Cause: FT trips and FGA
+compete for possessions (a shooting foul on a miss ends a possession without an FGA), so teams
+that take more FGA do not draw more free throws (2017-18: r = −0.44 between a team's FT points
+and FGA per game), while the model's "other trips per FGA" assumes they do. A team-level model
+(trips per possession, a team's foul drawing) would be needed; not built here.
