@@ -166,6 +166,8 @@ A near-neutral ground with three data inks: the model's blue, a neutral gray for
 
 **The Ink Text Rule.** Text never wears a data colour. A value beside a blue dot is set in ink; identity comes from the mark beside it.
 
+**The Club-Colour Exception.** The one deliberate exception to Colour-Is-Data, approved by the owner for Leaders and Compare: jersey backs wear their club's two colours (body and trim). The colours live in `lib/jersey.ts` (`CLUB_COLOURS`, one curated pair per display code, a club's usual colours across 2007-2026), apart from the chart palette and never used as a token. They paint the shirt only: never a bar, dot, text, rule or background. The surname and number flip between the two page inks (#111110 or #fcfcfb), whichever contrasts more with the body; every pair clears 4.5:1 for that ink. A Rule Strong hairline outlines every shirt so a white or black shirt holds its edge on paper and night alike. No crests, sponsor marks, stripes or copies of real kits: one generic sleeveless cut for every club. Shirt red never sits beside a below-average red mark: Leaders and Compare carry no red data marks.
+
 **The Validated Order Rule.** Chart colours come from the validated order (blue, then gray, then red) and are re-checked with the dataviz validator against both surfaces before any new series joins them. A fourth series folds into "Other" or small multiples.
 
 ## Typography
@@ -216,7 +218,7 @@ Gentle, small radii. Controls and buttons are 8px, their inner selected segment 
 - **Outcome chips:** full pills with ink text, a Phosphor check or cross icon, and a 10% wash of the icon's colour: blue for a hit, red for a miss. "Not scored" is a muted chip on Sunk with a hairline ring and links to the footnote.
 
 ### Navigation
-- **Top bar:** 56px, sticky, paper at 88% with a saturating blur and a bottom hairline. Wordmark (a blue ring and "EuroHoops"), site links (Players, Teams, Shots, Forecasts) in soft ink with the current page in ink at 550 weight, then the competition switch (forecast pages only), theme toggle and GitHub icon on the right. Under 560px the wordmark keeps only its ring.
+- **Top bar:** 56px, sticky, paper at 88% with a saturating blur and a bottom hairline. Wordmark (a blue ring and "EuroHoops"), site links (Players, Leaders, Compare, Teams, Shots, Forecasts) in soft ink with the current page in ink at 550 weight, then the competition switch (forecast pages only), theme toggle and GitHub icon on the right. Under 560px the wordmark keeps only its ring and the link row scrolls sideways inside the bar (no scrollbar, a 24px fade at its end); the page itself never scrolls sideways.
 - **Segmented control:** a Sunk track with a hairline ring; the selected option is filled ink with paper text. Built on radio inputs so it works without JavaScript; labels shorten ("GBL") under 480px.
 
 ### Tooltip
@@ -253,6 +255,15 @@ The explorer's filters are bar charts. Each facet (Quarter, Distance, Play) is a
 ### Rating ladder
 Ranked rows: rank, code, name, a bare rail with a dashed league-average line, a stem from average to the team's dot (blue above, red below), the rating, and the season change with a blue or red caret beside muted figures. No filled track behind the rail.
 
+### Jersey back (Leaders and Compare)
+A fantasy-style shirt seen from behind, drawn in SVG (`jerseySvg` in `lib/jersey.ts`): one sleeveless cut in a 100 × 112 box, the club's body colour, trim bands at the neck, armholes and hem, the surname across the shoulders (squeezed to fit when longer than nine letters) and the number large below it, both Geist in the flipped ink. A season shows the number and club he ended that season with; a career shows the club and number with the most games. Sizes: 72px on the court, 64px heading a Compare column, 30px on a bench row. Decorative (`aria-hidden`) wherever the name sits beside it in text. Never a photo or a likeness.
+
+### Court lineup (Leaders signature)
+The shared half court (Axis hairlines on Chart Surface) with five shirts placed over it: the top five by rank, first at the point, second and third on the wings, fourth and fifth on the blocks. For a club's season it is the roster's five who started most, ordered by their share of assists against rebounds (the data has no positions), and the caption says so. Each slot is shirt, rank and name, club and season, the ranked value large in ink semibold with its head, then the card line (PTS REB AST TS% PIR, the sorted one in ink semibold, the rest soft ink). The text block wears the Chart Surface colour so court lines never run through it. Beside the court (below it under 980px) the bench: ranks 6 to 20, or the rest of the roster, as rows of rank, 30px shirt, name over club · season · games · minutes, and the value; values under a floor are muted with the reason in a tooltip. Under 620px of floor the shirts keep only the value and the five full lines list below the court. On a change of scope, measure, rate or club the five shirts fade and rise 6px into place (200ms, 30ms steps from the point outward) and the bench rows slide to their new order (200ms); a page opened from a link paints without motion.
+
+### Head-to-head grid (Compare signature)
+Up to five players, each a season (a select in the column head lists every season with its club) or a career. A table: the measure column sticks on the left; each player owns an equal column headed by a 64px shirt, name (links to the player page), club, the season select, and a quiet remove button. Under the heads a Rows led tally ("of 22"), then groups (Playing time, Scoring, Playmaking, Rebounding, Defence, Overall) on strong rules. Each cell is the value in ink and its place among the compared in muted small text; the row's leader gets an 8px Model Blue dot and semibold ink. Fewer turnovers lead their row; a percentage under its attempt floor is muted and never leads. The only colour on the grid is that dot. On a change the dots pop into their new cells (160ms). Below 5 × 9rem plus the measure column the table scrolls inside its box. Empty state: the search, plus two ready-made fives (career PIR leaders, career scorers).
+
 ### Charts
 Plot areas sit on Chart Surface with 1px solid gridlines in Rule; reference lines (the calibration diagonal) are dashed soft ink. Lines are 2px with round joins, dots carry a 2px paper ring, a legend appears for two or more series and end labels name the last values. Every chart has a text caption and a screen-reader table.
 
@@ -265,7 +276,7 @@ Plot areas sit on Chart Surface with 1px solid gridlines in Rule; reference line
 - **Do** gate hover effects behind a fine-pointer media query.
 
 ### Don't:
-- **Don't** add team logos, player photos or club colours; none are licensed.
+- **Don't** add team logos, crests or player photos; none are licensed. Club colours appear only on jersey backs (the Club-Colour Exception), never on data or text.
 - **Don't** present odds, stakes or "picks"; this is a model benchmark, not betting advice.
 - **Don't** reintroduce a themed metaphor (clipboard, board, ticket, terminal) or a handwriting face.
 - **Don't** put a filled background track behind a bar or rating rail.
