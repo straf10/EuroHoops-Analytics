@@ -26,3 +26,8 @@ FIRST VIEWPORT: Slim single-line top bar (wordmark, sections, competition switch
 FORM: Category standard played straight (the user's exit from the direction round, after two re-rolls), seed key fa463703. Signature interaction: every forecast bar grows out of even odds (50%) to its call when its panel appears, on load and on each competition switch (320 ms ease-out, 40 ms stagger; panels fade in over 200 ms); on the stats pages, switching per-mode or season retargets every bar and number in one 200 ms ease-out transition. Hover or focus on any mark shows a precise tooltip.
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+
+## Adaptations recorded at the finish review (2026-09-27)
+
+- Hero subtext runs to three lines on desktop, not one. Kept as written: it is factual product copy, and copy is replaced only with the owner's word. Open for the owner to shorten.
+- Split bar: the away share is always the same Baseline Gray (no dimming for the underdog); the favourite is carried by its ink semibold percentage.
