@@ -67,6 +67,9 @@ from eurohoops.parse.stints_mart import build_stints_mart, mart_report
 from eurohoops.parse.team_box import TEAM_GAMES_SCHEMA, build_team_games
 from eurohoops.predict import LatePredictionError, predict_upcoming
 from eurohoops.publish import DISPLAY_CODES, Section, site_data
+from eurohoops.stats.box import build_box_games
+from eurohoops.stats.export import STATS_DIR, Inputs, build_payloads, load_cached_games, write_stats
+from eurohoops.stats.shots import build_shots
 
 app = typer.Typer(no_args_is_help=True, add_completion=False)
 log = logging.getLogger("eurohoops")
@@ -480,3 +483,38 @@ def publish() -> None:
     ]
     _write_json(SITE_DATA, site_data(sections, utc_now()))
     typer.echo(f"wrote {SITE_DATA}")
+
+
+@app.command("export-stats")
+def export_stats(
+    from_cache: Annotated[
+        bool,
+        typer.Option(help="Read games from the cached schedules instead of the marts (no DuckDB)"),
+    ] = False,
+    raw_dir: Annotated[Path, typer.Option(help="EuroLeague raw cache")] = EUROLEAGUE.raw_dir,
+    out: Annotated[Path, typer.Option(help="Where the stats JSON goes")] = STATS_DIR,
+) -> None:
+    """Write the EuroLeague stats-site data (players, teams, game logs, shot hex bins)."""
+    if from_cache:
+        games, teams = load_cached_games(raw_dir)
+    else:
+        games, teams = (
+            read_games(MART_PATH, EUROLEAGUE.name),
+            read_teams(MART_PATH, EUROLEAGUE.name),
+        )
+    inputs = Inputs(
+        games=games,
+        names=dict(teams.itertuples(index=False)),
+        box=build_box_games(raw_dir, games),
+        shots=build_shots(raw_dir, games),
+        codes=DISPLAY_CODES[EUROLEAGUE.name],
+        live_season=LIVE_SEASON,
+    )
+    files = build_payloads(inputs, utc_now())
+    write_stats(out, files)
+    seasons = files["meta.json"]["seasons"]
+    typer.echo(
+        f"wrote {len(files)} files to {out}: {len(seasons)} seasons, "
+        f"{len(files['players.json']['players'])} players, "
+        f"{len(inputs.box.missing)} played games without a box score"
+    )
