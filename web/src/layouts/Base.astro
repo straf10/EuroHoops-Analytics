@@ -9,7 +9,7 @@ interface Props {
   title?: string;
   description: string;
   /** Which top-bar page is current. */
-  current?: "players" | "forecasts";
+  current?: "players" | "teams" | "shots" | "forecasts";
   /** Show the EuroLeague / Greek League switch in the top bar. */
   compSwitch?: boolean;
   updated?: string;
@@ -21,6 +21,8 @@ const home = import.meta.env.BASE_URL;
 const root = home.replace(/\/$/, "");
 const pages = [
   { key: "players", href: `${root}/players/`, label: "Players" },
+  { key: "teams", href: `${root}/teams/`, label: "Teams" },
+  { key: "shots", href: `${root}/shots/`, label: "Shots" },
   { key: "forecasts", href: `${root}/`, label: "Forecasts" },
 ] as const;
 ---

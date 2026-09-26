@@ -21,6 +21,12 @@
   --data-2: #8f8d86; /* neutral series: baselines, away share */
   --data-neg: #e34948;
   --data-neg-wash: rgb(227 73 72 / 0.1);
+  /* frequency ramp, fewest to most (dataviz blue 250-650, validated --ordinal) */
+  --freq-1: #86b6ef;
+  --freq-2: #5598e7;
+  --freq-3: #2a78d6;
+  --freq-4: #1c5cab;
+  --freq-5: #104281;
 
   --font: "Geist Variable", "Segoe UI", system-ui, sans-serif;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
@@ -48,6 +54,11 @@
     --data-2: #6a6862;
     --data-neg: #e66767;
     --data-neg-wash: rgb(230 103 103 / 0.14);
+    --freq-1: #184f95;
+    --freq-2: #256abf;
+    --freq-3: #3987e5;
+    --freq-4: #6da7ec;
+    --freq-5: #9ec5f4;
   }
 }
 :root[data-theme="dark"] {
@@ -67,6 +78,11 @@
   --data-2: #6a6862;
   --data-neg: #e66767;
   --data-neg-wash: rgb(230 103 103 / 0.14);
+  --freq-1: #184f95;
+  --freq-2: #256abf;
+  --freq-3: #3987e5;
+  --freq-4: #6da7ec;
+  --freq-5: #9ec5f4;
 }
 
 *,

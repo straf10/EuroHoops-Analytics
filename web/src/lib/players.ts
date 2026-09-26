@@ -252,6 +252,8 @@ export function format(m: Measure, v: number | null): string {
 const esc = (s: string) =>
   s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] ?? c);
 
+export const teamHref = (base: string, code: string, season?: number) =>
+  `${base.replace(/\/$/, "")}/teams/${code.toLowerCase()}/${season ? `?season=${season}` : ""}`;
 export const playerHref = (base: string, slug: string) => `${base.replace(/\/$/, "")}/players/${slug}/`;
 
 export function measureTitle(view: View): string {
@@ -353,7 +355,7 @@ export function bodyHtml(ls: Line[], view: View, base: string): string {
           return `<td class="${cls}"${tip}>${format(m, v)}</td>`;
         })
         .join("");
-      return `<tr><td class="c-rk">${l.ranked ? rank : ""}</td><th scope="row" class="c-nm"><a href="${playerHref(base, l.row.slug)}">${esc(l.row.name)}</a><span class="tm">${esc(l.row.teams.join(" · "))}</span></th>${cells}</tr>`;
+      return `<tr><td class="c-rk">${l.ranked ? rank : ""}</td><th scope="row" class="c-nm"><a href="${playerHref(base, l.row.slug)}">${esc(l.row.name)}</a><span class="tm">${l.row.teams.map((t) => `<a href="${teamHref(base, t, view.season)}">${esc(t)}</a>`).join(" · ")}</span></th>${cells}</tr>`;
     })
     .join("");
 }
