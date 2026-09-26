@@ -4,6 +4,8 @@ Layout (every number a raw total; the site derives per-game, per-36 and per-100 
 
 - ``meta.json``: seasons with their coverage, field lists, distance bands, hex size, team names.
 - ``players.json``: every player once (id, display name, URL slug, seasons played).
+- ``splits.json``: one row per player, season and club (the number he wore most there and his
+  totals), for career, best-season and club views.
 - ``seasons/{season}/players.json``: one row per player-season: totals for the season and for
   his last 5/10/20 games (a window is left out when he played no more games than it holds),
   and attempts/makes per distance band.
@@ -144,6 +146,24 @@ def _players_payload(
         )
     rows.sort(key=lambda r: (-r["totals"]["season"][PLAYER_FIELDS.index("pts")], r["id"]))
     return {"season": season, "fields": list(PLAYER_FIELDS), "bands": list(BANDS), "players": rows}
+
+
+def _splits_payload(frame: pd.DataFrame, inputs: Inputs) -> dict[str, Any]:
+    """One row per player, season and club: the number he wore most there, and his totals."""
+    rows: list[list[Any]] = []
+    for (pid, season, team), lines in frame.groupby(["player_id", "season", "team"], sort=False):
+        worn = lines["dorsal"].value_counts(sort=False)  # first-worn order breaks ties
+        rows.append(
+            [
+                str(pid),
+                int(str(season)),
+                inputs.codes.get(str(team), str(team)),
+                str(worn.idxmax()),
+                _row(lines[list(PLAYER_FIELDS)].to_numpy(dtype=float).sum(axis=0)),
+            ]
+        )
+    rows.sort(key=lambda r: (r[0], r[1]))  # stable: clubs stay in the order he joined them
+    return {"fields": list(PLAYER_FIELDS), "rows": rows}
 
 
 def _teams_payload(
@@ -322,6 +342,7 @@ def build_payloads(inputs: Inputs, now: datetime) -> dict[str, dict[str, Any]]:
             key=lambda p: (p["slug"], p["id"]),
         )
     }
+    files["splits.json"] = _splits_payload(frame, inputs)
     codes = sorted(set(inputs.box.teams["team"]))
     files["meta.json"] = {
         "generated_at": now.strftime("%Y-%m-%dT%H:%MZ"),
