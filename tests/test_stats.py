@@ -207,6 +207,22 @@ def test_payload_windows_and_bands(files: dict[str, dict[str, Any]]) -> None:
     assert tops == sorted(tops, reverse=True)
 
 
+def test_splits_add_up_to_the_season_rows(files: dict[str, dict[str, Any]]) -> None:
+    splits = files["splits.json"]
+    assert splits["fields"] == list(PLAYER_FIELDS)
+    seasons = {s["season"] for s in files["meta.json"]["seasons"]}
+    for season in seasons:
+        rows = [r for r in splits["rows"] if r[1] == season]
+        for player in files[f"seasons/{season}/players.json"]["players"]:
+            own = [r for r in rows if r[0] == player["id"]]
+            assert [r[2] for r in own] == player["teams"]  # clubs in the order he joined them
+            summed = [round(sum(r[4][i] for r in own), 1) for i in range(len(PLAYER_FIELDS))]
+            # possessions are rounded to 0.1 in each split and in the season row
+            assert summed == pytest.approx(player["totals"]["season"], abs=0.1 * len(own))
+            assert all(r[3] for r in own) or not player["dorsal"]
+    assert {r[2] for r in splits["rows"]} <= set(files["meta.json"]["teams"])
+
+
 def test_payload_uses_display_codes_and_flags_early_coordinates(
     files: dict[str, dict[str, Any]],
 ) -> None:
