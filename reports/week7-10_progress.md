@@ -205,3 +205,6 @@ iteration 4 | F6 team shot quality + F7 player shot-making + F8 charts | fast ga
   After each revert: 5/5 pass. Guards in the same tests prove the edits move what they should.
 - (F10) Model card test catches an edited table value (0.633267 -> 0.633268: 2 tests failed; reverted, 3 pass).
 iteration 5 | F9 MLflow + leakage, F10 model card | leakage 5/5 (+3 deliberate breaks shown); card test 3/3 (+ mutation shown) | green | see F10 commit
+
+- (iteration 6) **Stopped final run** (13:19Z-16:50Z): CPU contention from two `astro dev` servers (UI worktree) made numpy/BLAS threads spin; M1 backtest 3,298 s vs 224 s quiet, item 13 FAIL on runtime, item 15 cut off by the stop. Servers stopped with the user's approval; restarted on a quiet machine.
+- (iteration 6) **Number-preserving speed-up:** LightGBM `zone_code` built with a vectorised map instead of a per-shot Python loop (0.51 s -> 0.02 s per call, ~1,100 calls per backtest); codes verified identical on all development shots, item 24 checks the report is byte-identical.
