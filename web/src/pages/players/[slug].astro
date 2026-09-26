@@ -6,7 +6,8 @@ import Base from "../../layouts/Base.astro";
 import "../../styles/stats.css";
 import { teamHref as linkTeam } from "../../lib/players";
 import { SEASON_COLS, bandsHtml, logHtml, perGame, shotChart, totalsOf, ts, type Totals } from "../../lib/player";
-import { meta, playerData, playerIndex, type PlayerIndexRow } from "../../lib/stats";
+import { meta, playerData, playerIndex, twinData, type PlayerIndexRow } from "../../lib/stats";
+import ShotTwin from "../../components/ShotTwin.astro";
 
 export async function getStaticPaths() {
   return (await playerIndex()).map((p) => ({ params: { slug: p.slug }, props: { p } }));
@@ -15,6 +16,7 @@ export async function getStaticPaths() {
 const { p } = Astro.props as { p: PlayerIndexRow };
 const m = (await meta())!;
 const data = await playerData(p);
+const twins = await twinData(p.id);
 const seasons = data.seasons;
 const latest = seasons[seasons.length - 1];
 const withShots = seasons.filter((s) => s.hex.length > 0);
@@ -203,6 +205,8 @@ const seasonOptions = (list: typeof seasons, chosen: number) =>
       )
     }
   </section>
+
+  <ShotTwin data={twins} name={data.name} base={base} />
 
   <section class="wrap band" id="log" aria-labelledby="log-title">
     <header class="sec-head split">

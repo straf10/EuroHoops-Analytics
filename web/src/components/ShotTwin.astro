@@ -1,0 +1,656 @@
+---
+// Shot Profile Twin: his last 5/10/20 games or latest season mirrored against the five closest
+// EuroLeague player-seasons since 2007-08 (twins.json, stats/twins.py). Rendered for the default
+// window and first twin; the script swaps twin and window in place.
+import up from "@phosphor-icons/core/assets/fill/caret-up-fill.svg?raw";
+import down from "@phosphor-icons/core/assets/fill/caret-down-fill.svg?raw";
+import { BAND_LABELS } from "../lib/player";
+import { playerHref } from "../lib/players";
+import type { TwinData, TwinSeason, TwinWindow } from "../lib/stats";
+import { RATE_LABELS, ZONE_LABELS, axisTop, fgHtml, profile, rateText, shareText } from "../lib/twin";
+
+interface Props {
+  data: TwinData | null;
+  name: string;
+  base: string;
+}
+const { data, name, base } = Astro.props;
+
+const WINDOW_NAMES: Record<string, [string, string]> = {
+  last5: ["Last 5", "his last 5 games"],
+  last10: ["Last 10", "his last 10 games"],
+  last20: ["Last 20", "his last 20 games"],
+  season: ["Season", "his latest full season"],
+};
+const windows = data?.windows ?? [];
+const start = windows.find((w) => w.key === "last10") ?? windows[0];
+const prof = (counts: number[]) => profile(data!.fields, data!.zones, data!.bands, counts);
+const every = windows.flatMap((w) => [prof(w.counts), ...w.twins.map((t) => prof(t.counts))]);
+const zoneTop = axisTop(every.flatMap((p) => p.zones));
+const rateTop = axisTop(every.flatMap((p) => p.rates.map((r) => r ?? 0)));
+
+const span = (w: TwinWindow) => (w.from === w.to ? w.from : `${w.from} to ${w.to}`);
+const windowLine = (w: TwinWindow) =>
+  `${w.key === "season" ? w.from : `${WINDOW_NAMES[w.key][0]} games, ${span(w)}`} · ${prof(w.counts).att} shots`;
+const twinLine = (t: TwinSeason) =>
+  `${t.label} · ${t.club} · ${t.games} games${t.own ? " · his own season" : ""}`;
+const him = start ? prof(start.counts) : null;
+const first = start?.twins[0];
+const twin = first ? prof(first.counts) : null;
+const width = (x: number, top: number) => `--s:${Math.min(1, x / top).toFixed(4)}`;
+const surname = name.split(" ").slice(-1)[0];
+
+// Everything the switch needs, trimmed to what it reads.
+const payload = data && {
+  fields: data.fields,
+  zones: data.zones,
+  bands: data.bands,
+  zoneTop,
+  rateTop,
+  windows: Object.fromEntries(
+    windows.map((w) => [
+      w.key,
+      {
+        line: windowLine(w),
+        counts: w.counts,
+        twins: w.twins.map((t) => ({
+          name: t.name,
+          href: t.slug ? playerHref(base, t.slug) : "",
+          short: `${t.label} · ${t.team}${t.own ? " · his own" : ""}`,
+          line: twinLine(t),
+          approx: !t.validated,
+          match: Math.round(t.match),
+          counts: t.counts,
+        })),
+      },
+    ]),
+  ),
+};
+---
+
+<section class="wrap band" id="twin" aria-labelledby="twin-title">
+  <header class="sec-head split">
+    <div>
+      <h2 id="twin-title">Shot twins</h2>
+      <p>
+        The EuroLeague player-seasons since 2007-08 that shot most like {surname}: where from, how well
+        against the league, and how often from three and the line.
+      </p>
+    </div>
+    {
+      start && (
+        <fieldset class="seg" aria-label="Games matched">
+          {Object.entries(WINDOW_NAMES).map(([key, [label, about]]) => {
+            const w = windows.find((x) => x.key === key);
+            return (
+              <>
+                <input
+                  type="radio"
+                  name="twin-window"
+                  id={`tw-${key}`}
+                  value={key}
+                  checked={w === start}
+                  disabled={!w}
+                />
+                <label for={`tw-${key}`} data-tip={w ? `Match ${about}` : "Too few shots or games to match"}>
+                  {key === "season" && w ? w.from : label}
+                </label>
+              </>
+            );
+          })}
+        </fieldset>
+      )
+    }
+  </header>
+
+  {
+    start && him && first && twin ? (
+      <div class="twin" data-twin={JSON.stringify(payload)}>
+        <fieldset class="picks">
+          <legend class="sr-only">Twin to compare</legend>
+          {start.twins.map((t, i) => (
+            <>
+              <input type="radio" name="twin-pick" id={`tp-${i}`} value={i} checked={i === 0} />
+              <label for={`tp-${i}`}>
+                <span class="rank">{i + 1}</span>
+                <span class="who">{t.name}</span>
+                <span class="what">
+                  {t.label} · {t.team}
+                  {t.own ? " · his own" : ""}
+                </span>
+                <span class="match">
+                  <b>{Math.round(t.match)}</b> match
+                </span>
+              </label>
+            </>
+          ))}
+        </fieldset>
+
+        <table class="mirror">
+          <caption class="sr-only">
+            {name} against the chosen twin: share of shots by court zone, FG% against the league by
+            distance, and shooting style
+          </caption>
+          <colgroup>
+            <col class="side" />
+            <col class="staff" />
+            <col class="side" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th scope="col" class="who l">
+                <span class="name">
+                  {name.split(" ").slice(0, -1).join(" ")}{" "}
+                  <span class="nw">{surname}<i class="swatch him" aria-hidden="true" /></span>
+                </span>
+                <span class="sub" data-f="window">{windowLine(start)}</span>
+              </th>
+              <td class="staff" />
+              <th scope="col" class="who r">
+                <span class="name">
+                  <i class="swatch twin" aria-hidden="true" />
+                  <a class="ink-link" data-f="twin-link" href={first.slug ? playerHref(base, first.slug) : undefined}>{first.name}</a>
+                </span>
+                <span class="sub" data-f="twin-line">{twinLine(first)}</span>
+                <span class="sub approx" data-f="approx" hidden={first.validated}>
+                  Shot locations before 2011-12 are approximate
+                </span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="grp">
+              <th colspan="3" scope="colgroup">
+                Where they shoot <span>share of located shots by zone</span>
+              </th>
+            </tr>
+            {data!.zones.map((z, i) => (
+              <tr class="bar-row">
+                <td class="l" data-z={i}>
+                  <span class="mark him" style={width(him.zones[i], zoneTop)}>
+                    <i class="bar" aria-hidden="true" />
+                    <span class="v">{shareText(him.zones[i])}</span>
+                  </span>
+                </td>
+                <th scope="row" class="staff" data-tip={ZONE_LABELS[z][2]} tabindex="0">
+                  <span class="long">{ZONE_LABELS[z][0]}</span>
+                  <span class="short">{ZONE_LABELS[z][1]}</span>
+                </th>
+                <td class="r" data-z={i}>
+                  <span class="mark twin" style={width(twin.zones[i], zoneTop)}>
+                    <i class="bar" aria-hidden="true" />
+                    <span class="v">{shareText(twin.zones[i])}</span>
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+          <tbody>
+            <tr class="grp">
+              <th colspan="3" scope="colgroup">
+                How well <span>FG% and points above the league from the same spots</span>
+              </th>
+            </tr>
+            {data!.bands.map((b, i) => (
+              <tr class="fg-row">
+                <td class="l" data-b={i} set:html={fgHtml(him.bands[i], up, down)} />
+                <th scope="row" class="staff" data-tip={BAND_LABELS[b][1]} tabindex="0">
+                  <span class="long">{BAND_LABELS[b][0]}</span>
+                  <span class="short">{BAND_LABELS[b][0]}</span>
+                </th>
+                <td class="r" data-b={i} set:html={fgHtml(twin.bands[i], up, down)} />
+              </tr>
+            ))}
+          </tbody>
+          <tbody>
+            <tr class="grp">
+              <th colspan="3" scope="colgroup">
+                Style <span>attempts per field-goal attempt</span>
+              </th>
+            </tr>
+            {RATE_LABELS.map(([label, about], i) => (
+              <tr class="bar-row">
+                <td class="l" data-r={i}>
+                  <span class="mark him" style={width(him.rates[i] ?? 0, rateTop)}>
+                    <i class="bar" aria-hidden="true" />
+                    <span class="v">{rateText(him.rates[i])}</span>
+                  </span>
+                </td>
+                <th scope="row" class="staff" data-tip={about} tabindex="0">
+                  <span class="long">{label}</span>
+                  <span class="short">{label}</span>
+                </th>
+                <td class="r" data-r={i}>
+                  <span class="mark twin" style={width(twin.rates[i] ?? 0, rateTop)}>
+                    <i class="bar" aria-hidden="true" />
+                    <span class="v">{rateText(twin.rates[i])}</span>
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <p class="note">
+          Match weighs where he shoots (60%), how well against the league (25%) and his three-point and
+          free-throw rates (15%) against every player-season with {data!.minPool} or more located shots
+          ({data!.pool.toLocaleString("en-GB")} of them). 100 is an identical profile; two seasons picked at
+          random score about 37. A window never matches the seasons its own games come from. Shares run
+          to {Math.round(100 * zoneTop)}% at the bar's full length; left and right are as drawn on the shot
+          chart.
+        </p>
+      </div>
+    ) : (
+      <p class="note">
+        Too few located shots to match: a window needs 25, and twins come from seasons with 150 or more.
+      </p>
+    )
+  }
+</section>
+
+<script>
+  import up from "@phosphor-icons/core/assets/fill/caret-up-fill.svg?raw";
+  import down from "@phosphor-icons/core/assets/fill/caret-down-fill.svg?raw";
+  import { fgHtml, profile, rateText, shareText, type Profile } from "../lib/twin";
+
+  interface Twin {
+    name: string;
+    href: string;
+    short: string;
+    line: string;
+    approx: boolean;
+    match: number;
+    counts: number[];
+  }
+  interface Payload {
+    fields: string[];
+    zones: string[];
+    bands: string[];
+    zoneTop: number;
+    rateTop: number;
+    windows: Record<string, { line: string; counts: number[]; twins: Twin[] }>;
+  }
+
+  const root = document.querySelector<HTMLElement>("#twin .twin");
+  if (root) {
+    const data = JSON.parse(root.dataset.twin!) as Payload;
+    const section = root.closest("section")!;
+    const prof = (counts: number[]) => profile(data.fields, data.zones, data.bands, counts);
+    const field = (name: string) => root.querySelector<HTMLElement>(`[data-f="${name}"]`)!;
+    const scale = (x: number, top: number) => Math.min(1, x / top).toFixed(4);
+    let win = (section.querySelector<HTMLInputElement>('input[name="twin-window"]:checked') ?? { value: "" }).value;
+
+    function side(key: "l" | "r", p: Profile) {
+      root!.querySelectorAll<HTMLElement>(`td.${key}[data-z]`).forEach((td) => {
+        const i = Number(td.dataset.z);
+        td.querySelector<HTMLElement>(".mark")!.style.setProperty("--s", scale(p.zones[i], data.zoneTop));
+        td.querySelector<HTMLElement>(".v")!.textContent = shareText(p.zones[i]);
+      });
+      root!.querySelectorAll<HTMLElement>(`td.${key}[data-b]`).forEach((td) => {
+        td.innerHTML = fgHtml(p.bands[Number(td.dataset.b)], up, down);
+      });
+      root!.querySelectorAll<HTMLElement>(`td.${key}[data-r]`).forEach((td) => {
+        const rate = p.rates[Number(td.dataset.r)];
+        td.querySelector<HTMLElement>(".mark")!.style.setProperty("--s", scale(rate ?? 0, data.rateTop));
+        td.querySelector<HTMLElement>(".v")!.textContent = rateText(rate);
+      });
+    }
+
+    function showTwin(i: number) {
+      const t = data.windows[win].twins[i];
+      const link = field("twin-link") as HTMLAnchorElement;
+      link.textContent = t.name;
+      if (t.href) link.href = t.href;
+      else link.removeAttribute("href");
+      field("twin-line").textContent = t.line;
+      field("approx").hidden = !t.approx;
+      side("r", prof(t.counts));
+    }
+
+    function showWindow(key: string) {
+      win = key;
+      const w = data.windows[key];
+      field("window").textContent = w.line;
+      side("l", prof(w.counts));
+      root!.querySelectorAll<HTMLInputElement>('input[name="twin-pick"]').forEach((input, i) => {
+        const t = w.twins[i];
+        const label = input.nextElementSibling as HTMLElement;
+        input.hidden = label.hidden = !t;
+        input.checked = i === 0;
+        if (!t) return;
+        label.querySelector(".who")!.textContent = t.name;
+        label.querySelector(".what")!.textContent = t.short;
+        label.querySelector(".match b")!.textContent = String(t.match);
+      });
+      showTwin(0);
+    }
+
+    section.addEventListener("change", (e) => {
+      const input = e.target as HTMLInputElement;
+      if (input.name === "twin-window") showWindow(input.value);
+      else if (input.name === "twin-pick") showTwin(Number(input.value));
+    });
+  }
+</script>
+
+<style>
+  .twin {
+    --staff: 10.5rem;
+  }
+  [hidden] {
+    display: none !important;
+  }
+
+  /* The five twins: one row of choices; ink rule on top marks the chosen one. */
+  .picks {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    margin: 0 0 28px;
+    padding: 0;
+    border: 0;
+  }
+  .picks input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .picks label {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 10px;
+    row-gap: 2px;
+    padding: 12px 14px 14px 0;
+    box-shadow: inset 0 1px 0 var(--rule);
+    cursor: pointer;
+    transition: box-shadow 180ms var(--ease-out);
+  }
+  .picks label + input + label {
+    padding-left: 14px;
+  }
+  .picks .rank {
+    grid-row: 1 / span 3;
+    color: var(--muted);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.5;
+  }
+  .picks .who {
+    overflow: hidden;
+    color: var(--ink-2);
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .picks .what {
+    color: var(--muted);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .picks .match {
+    margin-top: 6px;
+    color: var(--muted);
+    font-size: 0.8125rem;
+  }
+  .picks .match b {
+    margin-right: 3px;
+    color: var(--ink);
+    font-size: 1.25rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+  .picks input:checked + label {
+    box-shadow: inset 0 2px 0 var(--ink);
+  }
+  .picks input:checked + label .who {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .picks input:focus-visible + label {
+    outline: 2px solid var(--data-1);
+    outline-offset: -2px;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .picks input:not(:checked) + label:hover {
+      box-shadow: inset 0 2px 0 var(--rule-strong);
+    }
+    .picks input:not(:checked) + label:hover .who {
+      color: var(--ink);
+    }
+  }
+
+  /* The mirror staff: him left in blue, the twin right in gray, zones down the middle. */
+  .mirror {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-variant-numeric: tabular-nums;
+  }
+  .mirror col.staff {
+    width: var(--staff);
+  }
+  .mirror thead th {
+    padding: 0 0 14px;
+    vertical-align: bottom;
+    font-weight: 400;
+  }
+  .who.l {
+    padding-right: 16px;
+    text-align: right;
+  }
+  .who.r {
+    padding-left: 16px;
+    text-align: left;
+  }
+  .who .name {
+    display: block;
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .who .sub {
+    display: block;
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: 0.8125rem;
+  }
+  .swatch {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin: 0 8px 0 0;
+    border-radius: 2px;
+    vertical-align: 0;
+  }
+  .who.l .swatch {
+    margin: 0 0 0 8px;
+  }
+  .who .nw {
+    white-space: nowrap;
+  }
+  .swatch.him {
+    background: var(--data-1);
+  }
+  .swatch.twin {
+    background: var(--data-2);
+  }
+
+  .grp th {
+    padding: 22px 0 8px;
+    border-bottom: 1px solid var(--rule-strong);
+    color: var(--ink);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-align: left;
+  }
+  .grp th span {
+    margin-left: 8px;
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+  tbody:first-of-type .grp th {
+    padding-top: 0;
+  }
+
+  .mirror tbody :is(td, th.staff) {
+    height: 26px;
+    padding: 0;
+    font-size: 0.8125rem;
+  }
+  .mirror th.staff {
+    padding: 0 10px;
+    color: var(--ink-2);
+    font-weight: 500;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .mirror th.staff .short {
+    display: none;
+  }
+  /* the staff edges: axis hairlines the bars grow from */
+  .mirror tbody td.l {
+    box-shadow: inset -1px 0 0 var(--axis);
+  }
+  .mirror tbody td.r {
+    box-shadow: inset 1px 0 0 var(--axis);
+  }
+  /* A bar and its figure slide out from the staff as one mark; the cell clips it at the axis. */
+  .bar-row td {
+    overflow: hidden;
+  }
+  .mark {
+    position: relative;
+    display: block;
+    width: calc(100% - 3.5em);
+    height: 10px;
+    transition: transform 200ms var(--ease-out);
+  }
+  td.r .mark {
+    transform: translateX(calc((var(--s) - 1) * 100%));
+  }
+  td.l .mark {
+    margin-left: auto;
+    transform: translateX(calc((1 - var(--s)) * 100%));
+  }
+  .bar {
+    display: block;
+    height: 100%;
+  }
+  .mark.him .bar {
+    border-radius: 4px 0 0 4px;
+    background: var(--data-1);
+  }
+  .mark.twin .bar {
+    border-radius: 0 4px 4px 0;
+    background: var(--data-2);
+  }
+  .mark .v {
+    position: absolute;
+    top: 50%;
+    color: var(--ink);
+    line-height: 1;
+    white-space: nowrap;
+    transform: translateY(-50%);
+  }
+  td.l .v {
+    right: 100%;
+    padding-right: 6px;
+  }
+  td.r .v {
+    left: 100%;
+    padding-left: 6px;
+  }
+  .fg-row td {
+    color: var(--ink);
+  }
+  .mirror tbody .fg-row td.l {
+    padding-right: 10px;
+    text-align: right;
+  }
+  .mirror tbody .fg-row td.r {
+    padding-left: 10px;
+  }
+  .fg-row :global(.d) {
+    display: inline-block;
+    min-width: 4.4em;
+    color: var(--muted);
+  }
+  .fg-row td.l :global(.d) {
+    margin-right: 10px;
+    text-align: right;
+  }
+  .mirror tbody .fg-row td.l {
+    direction: rtl; /* mirror: points above the league sit outside the FG% */
+  }
+  .fg-row td.l :global(*) {
+    direction: ltr;
+  }
+  .fg-row td.r :global(.d) {
+    margin-left: 10px;
+  }
+  .fg-row :global(.none) {
+    color: var(--muted);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mark,
+    .picks label {
+      transition: none;
+    }
+  }
+
+  @media (max-width: 820px) {
+    .picks {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .picks label,
+    .picks label + input + label {
+      grid-template-columns: 1.4em minmax(0, 1fr) auto;
+      align-items: baseline;
+      padding: 10px 0;
+    }
+    .picks .rank {
+      grid-row: 1 / span 2;
+    }
+    .picks .match {
+      grid-column: 3;
+      grid-row: 1 / span 2;
+      margin: 0;
+    }
+  }
+  @media (max-width: 560px) {
+    .twin {
+      --staff: 6.4rem;
+    }
+    .mirror th.staff .long {
+      display: none;
+    }
+    .mirror th.staff .short {
+      display: inline;
+    }
+    .mirror th.staff {
+      padding: 0 6px;
+      font-size: 0.75rem;
+    }
+    .who.l {
+      padding-right: 8px;
+    }
+    .who.r {
+      padding-left: 8px;
+    }
+    .fg-row :global(.d) {
+      min-width: 0;
+    }
+    .mirror tbody .fg-row td.l {
+      padding-right: 6px;
+    }
+    .mirror tbody .fg-row td.r {
+      padding-left: 6px;
+    }
+    .fg-row td.l :global(.d) {
+      margin-right: 6px;
+    }
+    .fg-row td.r :global(.d) {
+      margin-left: 6px;
+    }
+  }
+</style>

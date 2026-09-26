@@ -223,6 +223,100 @@ export async function playerData(p: PlayerIndexRow): Promise<PlayerData> {
   return { id: p.id, name: p.name, slug: p.slug, seasons };
 }
 
+// ---- Shot Profile Twin ----------------------------------------------------------------------
+
+type Counts = number[]; // twins.json count_fields
+
+interface TwinsFile {
+  zones: string[];
+  bands: string[];
+  count_fields: string[];
+  windows: string[];
+  min_pool_att: number;
+  min_window_att: number;
+  pool: [id: string, season: number, team: string, games: number, counts: Counts][];
+  players: Record<string, Record<string, { from: number; to: number; games: number; counts: Counts; twins: [number, number][] }>>;
+}
+
+export interface TwinSeason {
+  name: string;
+  slug: string;
+  season: number;
+  label: string;
+  team: string;
+  club: string;
+  games: number;
+  validated: boolean;
+  own: boolean; // one of his own other seasons
+  match: number;
+  counts: Counts;
+}
+
+export interface TwinWindow {
+  key: string; // last5, last10, last20, season
+  from: string; // season labels
+  to: string;
+  games: number;
+  counts: Counts;
+  twins: TwinSeason[];
+}
+
+export interface TwinData {
+  fields: string[];
+  zones: string[];
+  bands: string[];
+  pool: number;
+  minPool: number;
+  windows: TwinWindow[]; // in twins.json order; windows he has too few shots for are absent
+}
+
+/** His windows and their five closest player-seasons, names and labels resolved. */
+export async function twinData(id: string): Promise<TwinData | null> {
+  const file = await load<TwinsFile>("twins.json");
+  const mine = file?.players[id];
+  if (!file || !mine) return null;
+  const m = (await meta())!;
+  const labels = new Map(m.seasons.map((s) => [s.season, s]));
+  const people = new Map((await playerIndex()).map((p) => [p.id, p]));
+  const label = (year: number) => labels.get(year)?.label ?? String(year);
+  return {
+    fields: file.count_fields,
+    zones: file.zones,
+    bands: file.bands,
+    pool: file.pool.length,
+    minPool: file.min_pool_att,
+    windows: file.windows
+      .filter((key) => mine[key])
+      .map((key) => {
+        const w = mine[key];
+        return {
+          key,
+          from: label(w.from),
+          to: label(w.to),
+          games: w.games,
+          counts: w.counts,
+          twins: w.twins.map(([i, match]) => {
+            const [pid, season, team, games, counts] = file.pool[i];
+            const who = people.get(pid);
+            return {
+              name: who?.name ?? pid,
+              slug: who?.slug ?? "",
+              season,
+              label: label(season),
+              team,
+              club: m.teams[team] ?? team,
+              games,
+              validated: labels.get(season)?.coords_validated ?? true,
+              own: pid === id,
+              match,
+              counts,
+            };
+          }),
+        };
+      }),
+  };
+}
+
 // ---- Team pages ---------------------------------------------------------------------------
 
 export interface TeamIndexRow {
