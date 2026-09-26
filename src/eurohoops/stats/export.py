@@ -63,9 +63,10 @@ def load_cached_games(raw_dir: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
 
 
 def display_name(raw: str) -> str:
-    """``"DE COLO, NANDO"`` -> ``"Nando De Colo"``; ``Mc`` and ``O'`` keep their capitals."""
+    """``"DE COLO, NANDO"`` -> ``"Nando De Colo"``; ``Mc``, ``O'``, ``II``-``IV`` stay capital."""
     last, _, first = raw.partition(",")
     name = " ".join(part.strip() for part in (first, last) if part.strip()).title()
+    name = re.sub(r"\b(Ii|Iii|Iv)\b", lambda m: m.group(1).upper(), name)
     return re.sub(r"\bMc([a-z])", lambda m: "Mc" + m.group(1).upper(), name)
 
 
