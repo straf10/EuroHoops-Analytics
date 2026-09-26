@@ -12,7 +12,7 @@ cross seasons) into ``COUNT_FIELDS``, and reads three feature groups from the co
 Features are standardised over the pool (player-seasons with at least ``MIN_POOL_ATT`` located
 attempts). The distance is the ``WEIGHTS``-weighted mean squared difference per group, and a
 twin's match is ``100 exp(-d^2 / 2)``: about 37 for two random pool rows, 100 for identical.
-A window never matches the seasons its own games come from; his other seasons can.
+A twin is always another player: a window never matches any of the player's own seasons.
 """
 
 from collections.abc import Mapping
@@ -168,7 +168,9 @@ def twins_payload(
     team = seasons["team"].agg(lambda t: t.value_counts(sort=True).index[0])
     totals = totals[totals[count_cols[:N_ZONES]].sum(axis=1) >= min_pool_att]
     pool_keys = [(str(p), int(str(s))) for p, s in totals.index]
-    pool_at = {k: i for i, k in enumerate(pool_keys)}
+    own_rows: dict[str, list[int]] = {}
+    for i, (p, _) in enumerate(pool_keys):
+        own_rows.setdefault(p, []).append(i)
     pool_counts = totals.to_numpy()
     pool_feats = features(pool_counts)
     if pool_keys:
@@ -183,8 +185,7 @@ def twins_payload(
         if counts[:N_ZONES].sum() < min_window_att or not pool_keys:
             return None
         dist = distances((features(counts[None, :])[0] - mean) / std, pool_z)
-        own = [pool_at[(pid, s)] for s in {int(s) for s in rows["season"]} if (pid, s) in pool_at]
-        dist[own] = np.inf  # a window never matches the seasons its own games come from
+        dist[own_rows.get(pid, [])] = np.inf  # a twin is always another player
         order = [int(i) for i in np.argsort(dist, kind="stable")[:TOP] if np.isfinite(dist[i])]
         return {
             "from": int(rows["season"].iloc[0]),

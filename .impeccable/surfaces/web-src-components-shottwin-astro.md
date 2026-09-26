@@ -9,7 +9,7 @@ related_targets: ["web/src/pages/players/[slug].astro"]
 
 Mode: Operate. Audience: fans and recruiters on a player page. Job: see which EuroLeague player-seasons since 2007-08 shot most like this player over his last 5, 10 or 20 games or his latest season, and exactly where the match holds or breaks. Constraints: data from `twins.json` (stats exporter, `stats/twins.py`), precomputed per window; pool is player-seasons with 150+ located attempts; a window never matches the seasons its own games come from; pre-2011-12 twins carry the approximate-coordinates flag.
 
-User decisions (2026-09-27): windows 5/10/20 + season; profile = where (14 zones) + how well (FG% by band against the league) + 3PA and FT rate; pool = all seasons, 150+ FGA, his other seasons count and are marked; top 5 twins as a section on the player page.
+User decisions (2026-09-27): windows 5/10/20 + season; profile = where (14 zones) + how well (FG% by band against the league) + 3PA and FT rate; pool = all seasons, 150+ FGA, never his own seasons; top 5 twins as a section on the player page.
 
 ## Direction contract
 
