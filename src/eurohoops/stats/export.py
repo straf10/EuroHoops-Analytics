@@ -73,10 +73,14 @@ def load_cached_games(raw_dir: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
 
 
 def display_name(raw: str) -> str:
-    """``"DE COLO, NANDO"`` -> ``"Nando De Colo"``; ``Mc``, ``O'``, ``II``-``IV`` stay capital."""
+    """``"DE COLO, NANDO"`` -> ``"Nando De Colo"``; ``Mc``, ``O'``, ``II``-``IV`` stay capital.
+
+    Two-letter words without a vowel are initials (``TJ``, ``DJ``, ``KC``), bar ``Jr`` and ``Mc``.
+    """
     last, _, first = raw.partition(",")
     name = " ".join(part.strip() for part in (first, last) if part.strip()).title()
     name = re.sub(r"\b(Ii|Iii|Iv)\b", lambda m: m.group(1).upper(), name)
+    name = re.sub(r"\b(?!Jr\b|Mc\b)[^\W\daeiouy]{2}\b", lambda m: m[0].upper(), name, flags=re.I)
     return re.sub(r"\bMc([a-z])", lambda m: "Mc" + m.group(1).upper(), name)
 
 

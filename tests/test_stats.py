@@ -136,6 +136,10 @@ def test_names_and_slugs() -> None:
     assert display_name("TEODOSIC") == "Teodosic"
     assert display_name("WALKER IV, LONNIE") == "Lonnie Walker IV"
     assert display_name("IVANOV, IVO") == "Ivo Ivanov"
+    assert display_name("SHORTS, TJ") == "TJ Shorts"
+    assert display_name("MACON JR, DARYL") == "Daryl Macon Jr"
+    assert display_name("MC LEOD, KEITH") == "Keith Mc Leod"
+    assert display_name("TY, SY") == "Sy Ty"
     assert slugify("Nikola Mirotić") == "nikola-mirotic"
     assert player_slugs({"P1": "John Smith", "P2": "John Smith", "P3": "Ana Ivić"}) == {
         "P1": "john-smith-p1",
