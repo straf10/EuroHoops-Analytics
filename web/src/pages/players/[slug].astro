@@ -1,0 +1,618 @@
+---
+import caret from "@phosphor-icons/core/assets/bold/caret-down-bold.svg?raw";
+import up from "@phosphor-icons/core/assets/fill/caret-up-fill.svg?raw";
+import down from "@phosphor-icons/core/assets/fill/caret-down-fill.svg?raw";
+import Base from "../../layouts/Base.astro";
+import { SEASON_COLS, bandsHtml, logHtml, perGame, shotChart, totalsOf, ts, type Totals } from "../../lib/player";
+import { meta, playerData, playerIndex, type PlayerIndexRow } from "../../lib/stats";
+
+export async function getStaticPaths() {
+  return (await playerIndex()).map((p) => ({ params: { slug: p.slug }, props: { p } }));
+}
+
+const { p } = Astro.props as { p: PlayerIndexRow };
+const m = (await meta())!;
+const data = await playerData(p);
+const seasons = data.seasons;
+const latest = seasons[seasons.length - 1];
+const withShots = seasons.filter((s) => s.hex.length > 0);
+const shotSeason = withShots[withShots.length - 1];
+const radius = m.hex_radius_m;
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+const rows = seasons.map((s) => ({ s, t: totalsOf(s.fields, s.totals) }));
+const career: Totals = {};
+for (const { t } of rows) for (const [k, v] of Object.entries(t)) career[k] = (career[k] ?? 0) + v;
+const clubs = [...new Set(seasons.flatMap((s) => s.teams))];
+const lt = rows[rows.length - 1].t;
+const span =
+  seasons.length === 1 ? seasons[0].label : `${seasons[0].label} to ${latest.label}`;
+const seasonCount = `${seasons.length} EuroLeague season${seasons.length === 1 ? "" : "s"}`;
+const reb = perGame(lt, lt.oreb + lt.dreb);
+const lede = `In ${latest.label}: ${perGame(lt, lt.pts)} points, ${reb} rebounds and ${perGame(lt, lt.ast)} assists a game over ${lt.gp} game${lt.gp === 1 ? "" : "s"}, on ${ts(lt)}% true shooting.`;
+const description = `${data.name}: EuroLeague season-by-season stats, shot chart and game log, ${span}.`;
+const seasonOptions = (list: typeof seasons, chosen: number) =>
+  [...list].reverse().map((s) => ({ value: s.season, label: s.label, selected: s.season === chosen }));
+---
+
+<Base title={data.name} description={description} current="players">
+  <header class="wrap head">
+    <h1>{data.name}</h1>
+    <p class="facts">
+      {latest.dorsal && <span>#{latest.dorsal}</span>}
+      <span>{latest.teams.map((t) => m.teams[t] ?? t).join(", ")}</span>
+      <span>{seasonCount}, {span}</span>
+    </p>
+    <p class="lede">{lede}</p>
+    {clubs.length > 1 && <p class="clubs">EuroLeague clubs: {clubs.join(", ")}</p>}
+  </header>
+
+  <section class="wrap band" aria-labelledby="seasons-title">
+    <header class="sec-head">
+      <h2 id="seasons-title">Season by season</h2>
+      <p>Per game. The career line adds up every season's totals.</p>
+    </header>
+    <div class="scroll">
+      <table class="grid seasons">
+        <thead>
+          <tr>
+            <th scope="col">Season</th>
+            <th scope="col">Team</th>
+            {SEASON_COLS.map((c) => (
+              <th scope="col" class="num">
+                <span data-tip={`<b>${c.head}</b><br>${c.about}`} tabindex="0">{c.head}</span>
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {[...rows].reverse().map(({ s, t }) => (
+            <tr>
+              <th scope="row">{s.label}</th>
+              <td class="team">{s.teams.join(" · ")}</td>
+              {SEASON_COLS.map((c) => <td class="num">{c.cell(t)}</td>)}
+            </tr>
+          ))}
+        </tbody>
+        {rows.length > 1 && (
+          <tfoot>
+            <tr>
+              <th scope="row">Career</th>
+              <td class="team" />
+              {SEASON_COLS.map((c) => <td class="num">{c.cell(career)}</td>)}
+            </tr>
+          </tfoot>
+        )}
+      </table>
+    </div>
+  </section>
+
+  <section class="wrap band" id="shots" aria-labelledby="shots-title" data-slug={data.slug} data-base={base} data-radius={radius}>
+    <header class="sec-head split">
+      <div>
+        <h2 id="shots-title">Shot profile</h2>
+        <p>Where his shots come from and how he makes them, against the league from the same spot.</p>
+      </div>
+      {
+        withShots.length > 1 && (
+          <label class="pick">
+            <span class="sr-only">Season</span>
+            <span class="select">
+              <select data-view="shots">
+                {seasonOptions(withShots, shotSeason.season).map((o) => (
+                  <option value={o.value} selected={o.selected}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+              <span class="caret" set:html={caret} />
+            </span>
+          </label>
+        )
+      }
+    </header>
+    {
+      shotSeason ? (
+        <div class="shots">
+          <figure class="chart-box">
+            <div id="court" set:html={shotChart(shotSeason, radius)} />
+            <figcaption class="key">
+              <span class="scale" aria-hidden="true">
+                <i class="t-2" />
+                <i class="t-1" />
+                <i class="t0" />
+                <i class="t1" />
+                <i class="t2" />
+              </span>
+              <span>Colour: his FG% against the league's from that spot, below to above</span>
+              <span class="sizes" aria-hidden="true">
+                <i class="s1" />
+                <i class="s2" />
+                <i class="s3" />
+              </span>
+              <span>Size: how often he shot from there</span>
+              <span class="caveat" id="caveat" hidden={shotSeason.validated}>
+                Shot locations before 2011-12 do not line up with the court; read this season as
+                approximate.
+              </span>
+            </figcaption>
+          </figure>
+          <div class="bands">
+            <table class="grid">
+              <caption class="sr-only">Shots by distance against the league</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Distance</th>
+                  <th scope="col" class="num">Shots</th>
+                  <th scope="col" class="num">Share</th>
+                  <th scope="col" class="num">League</th>
+                  <th scope="col" class="num">FG%</th>
+                  <th scope="col" class="num">League</th>
+                  <th scope="col" class="num">
+                    <span data-tip="His FG% minus the league's, in points, from 10 attempts up" tabindex="0">
+                      Diff
+                    </span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="bands" set:html={bandsHtml(shotSeason, up, down)} />
+            </table>
+            <p class="note">
+              Distances are from the basket. Share is the part of his field-goal attempts from each
+              distance; the league columns are every EuroLeague shot that season.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <p class="note">No located shots for this player.</p>
+      )
+    }
+  </section>
+
+  <section class="wrap band" id="log" aria-labelledby="log-title">
+    <header class="sec-head split">
+      <div>
+        <h2 id="log-title">Game log</h2>
+        <p>Every EuroLeague game he played, newest first.</p>
+      </div>
+      {
+        seasons.length > 1 && (
+          <label class="pick">
+            <span class="sr-only">Season</span>
+            <span class="select">
+              <select data-view="log">
+                {seasonOptions(seasons, latest.season).map((o) => (
+                  <option value={o.value} selected={o.selected}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+              <span class="caret" set:html={caret} />
+            </span>
+          </label>
+        )
+      }
+    </header>
+    <div class="scroll">
+      <table class="grid log">
+        <thead>
+          <tr>
+            <th scope="col">Date</th>
+            <th scope="col">Opponent</th>
+            <th scope="col">Result</th>
+            <th scope="col" class="num">MIN</th>
+            <th scope="col" class="num">PTS</th>
+            <th scope="col" class="num">REB</th>
+            <th scope="col" class="num">AST</th>
+            <th scope="col" class="num">STL</th>
+            <th scope="col" class="num">BLK</th>
+            <th scope="col" class="num">TOV</th>
+            <th scope="col" class="num">FG</th>
+            <th scope="col" class="num">3P</th>
+            <th scope="col" class="num">FT</th>
+            <th scope="col" class="num">PIR</th>
+            <th scope="col" class="num">+/-</th>
+          </tr>
+        </thead>
+        <tbody id="log-body" set:html={logHtml(latest)} />
+      </table>
+    </div>
+  </section>
+</Base>
+
+<script>
+  import up from "@phosphor-icons/core/assets/fill/caret-up-fill.svg?raw";
+  import down from "@phosphor-icons/core/assets/fill/caret-down-fill.svg?raw";
+  import { bandsHtml, logHtml, shotChart } from "../../lib/player";
+  import type { PlayerData } from "../../lib/stats";
+
+  const shots = document.getElementById("shots");
+  if (shots) {
+    const { slug, base, radius } = shots.dataset;
+    let data: Promise<PlayerData> | null = null;
+    const load = () =>
+      (data ??= fetch(`${base}/data/player/${slug}.json`).then((r) => {
+        if (!r.ok) throw new Error(String(r.status));
+        return r.json();
+      }));
+
+    document.addEventListener("change", async (e) => {
+      const select = e.target as HTMLSelectElement;
+      const target = select.dataset.view;
+      if (!target) return;
+      const section = select.closest("section") as HTMLElement;
+      section.setAttribute("aria-busy", "true");
+      try {
+        const s = (await load()).seasons.find((x) => x.season === Number(select.value));
+        if (!s) return;
+        if (target === "shots") {
+          document.getElementById("court")!.innerHTML = shotChart(s, Number(radius));
+          document.getElementById("bands")!.innerHTML = bandsHtml(s, up, down);
+          document.getElementById("caveat")!.hidden = s.validated;
+        } else {
+          document.getElementById("log-body")!.innerHTML = logHtml(s);
+        }
+      } catch {
+        select.setCustomValidity("Could not load this season");
+        select.reportValidity();
+      } finally {
+        section.removeAttribute("aria-busy");
+      }
+    });
+  }
+</script>
+
+<style>
+  .head {
+    padding-top: 56px;
+  }
+  h1 {
+    font-size: 2.25rem;
+    font-weight: 620;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+  }
+  .facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 18px;
+    margin-top: 12px;
+    color: var(--ink-2);
+    font-size: 0.9375rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .lede {
+    margin-top: 16px;
+    max-width: 62ch;
+    font-size: 1.125rem;
+    line-height: 1.45;
+    letter-spacing: -0.005em;
+  }
+  .clubs {
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 0.8125rem;
+  }
+
+  .band {
+    padding-top: 72px;
+  }
+  .sec-head {
+    margin-bottom: 20px;
+  }
+  .sec-head p {
+    margin-top: 6px;
+    color: var(--ink-2);
+    max-width: 64ch;
+  }
+  .split {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .select {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  select {
+    appearance: none;
+    height: 32px;
+    padding: 0 30px 0 10px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--rule-strong);
+    color: var(--ink);
+    font: 500 0.8125rem/1 var(--font);
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+    transition: box-shadow 150ms ease;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    select:hover {
+      box-shadow: inset 0 0 0 1px var(--ink-2);
+    }
+  }
+  select:focus-visible {
+    outline: 2px solid var(--data-1);
+    outline-offset: 1px;
+  }
+  .caret {
+    position: absolute;
+    right: 10px;
+    display: grid;
+    pointer-events: none;
+    color: var(--ink-2);
+    font-size: 11px;
+  }
+  .caret :global(svg) {
+    width: 1em;
+    height: 1em;
+    fill: currentColor;
+  }
+  :global(section[aria-busy]) :is(.shots, .scroll) {
+    opacity: 0.6;
+    transition: opacity 150ms ease 150ms;
+  }
+
+  /* Tables */
+  .scroll {
+    overflow-x: auto;
+  }
+  .grid {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8125rem;
+  }
+  .grid :global(:is(th, td)) {
+    padding: 8px 0 8px 12px;
+    border-bottom: 1px solid var(--rule);
+    white-space: nowrap;
+    text-align: left;
+  }
+  .grid :global(:is(th, td):first-child) {
+    padding-left: 0;
+  }
+  .grid thead th {
+    padding-top: 0;
+    border-bottom-color: var(--rule-strong);
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--muted);
+  }
+  .grid :global(.num) {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .grid :global(tbody th) {
+    font-weight: 500;
+  }
+  .grid :global(td.num) {
+    color: var(--ink-2);
+  }
+  .grid tfoot :is(th, td) {
+    border-top: 1px solid var(--rule-strong);
+    border-bottom: 0;
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .team {
+    color: var(--muted);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .grid tbody :global(tr:hover) :is(:global(td), :global(th)) {
+      background: var(--sunk);
+    }
+  }
+
+  /* Shot profile: court (5) beside the distance table (7) */
+  .shots {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: 48px;
+    align-items: start;
+  }
+  .chart-box {
+    margin: 0;
+  }
+  #court :global(.court) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  #court :global(.floor) {
+    fill: var(--surface);
+  }
+  #court :global(.line) {
+    fill: none;
+    stroke: var(--axis);
+    stroke-width: 0.045;
+  }
+  #court :global(.rim) {
+    fill: none;
+    stroke: var(--ink-2);
+    stroke-width: 0.06;
+  }
+  #court :global(.cells path),
+  .scale i {
+    stroke: var(--surface);
+    stroke-width: 0.04;
+  }
+  #court :global(.t-2),
+  .scale .t-2 {
+    fill: var(--data-neg);
+    background: var(--data-neg);
+  }
+  #court :global(.t-1),
+  .scale .t-1 {
+    fill: color-mix(in srgb, var(--data-neg) 50%, var(--surface));
+    background: color-mix(in srgb, var(--data-neg) 50%, var(--surface));
+  }
+  #court :global(.t0),
+  .scale .t0 {
+    fill: var(--data-2);
+    background: var(--data-2);
+  }
+  #court :global(.t1),
+  .scale .t1 {
+    fill: color-mix(in srgb, var(--data-1) 50%, var(--surface));
+    background: color-mix(in srgb, var(--data-1) 50%, var(--surface));
+  }
+  #court :global(.t2),
+  .scale .t2 {
+    fill: var(--data-1);
+    background: var(--data-1);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    #court :global(.cells path:hover) {
+      stroke: var(--ink);
+      stroke-width: 0.06;
+    }
+  }
+  .key {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 6px 10px;
+    align-items: center;
+    margin-top: 14px;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+  .scale {
+    display: flex;
+    gap: 2px;
+  }
+  .scale i {
+    width: 14px;
+    height: 10px;
+  }
+  .scale i:first-child {
+    border-radius: 3px 0 0 3px;
+  }
+  .scale i:last-child {
+    border-radius: 0 3px 3px 0;
+  }
+  .sizes {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .sizes i {
+    background: var(--data-2);
+    clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  }
+  .sizes .s1 {
+    width: 6px;
+    height: 7px;
+  }
+  .sizes .s2 {
+    width: 10px;
+    height: 11px;
+  }
+  .sizes .s3 {
+    width: 14px;
+    height: 16px;
+  }
+  .caveat {
+    grid-column: 1 / -1;
+    margin-top: 4px;
+    color: var(--ink-2);
+  }
+  .bands :global(th small) {
+    display: block;
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-weight: 400;
+  }
+  .bands :global(td.muted) {
+    color: var(--muted);
+  }
+  .bands :global(td.diff) {
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .bands :global(.car) {
+    display: inline-grid;
+    vertical-align: -0.1em;
+    margin-right: 4px;
+    font-size: 10px;
+  }
+  .bands :global(.car svg) {
+    width: 1em;
+    height: 1em;
+    fill: currentColor;
+  }
+  .bands :global(.car.up) {
+    color: var(--data-1);
+  }
+  .bands :global(.car.down) {
+    color: var(--data-neg);
+  }
+  .note {
+    margin-top: 14px;
+    color: var(--muted);
+    font-size: 0.8125rem;
+    max-width: 70ch;
+  }
+
+  /* Game log */
+  .log :global(.at) {
+    display: inline-block;
+    width: 1.6em;
+    color: var(--muted);
+  }
+  .log :global(.wl) {
+    display: inline-block;
+    width: 1.1em;
+    font-weight: 600;
+  }
+  .log :global(.wl.l) {
+    color: var(--muted);
+  }
+  .log :global(td.res) {
+    font-variant-numeric: tabular-nums;
+  }
+  .log :global(td.strong) {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .log :global(td.date) {
+    color: var(--ink-2);
+    font-variant-numeric: tabular-nums;
+  }
+  .log :global(tr.empty td) {
+    padding: 24px 0;
+    color: var(--ink-2);
+  }
+
+  @media (max-width: 980px) {
+    .shots {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 32px;
+    }
+    .chart-box {
+      max-width: 560px;
+    }
+  }
+  @media (max-width: 560px) {
+    .head {
+      padding-top: 36px;
+    }
+    h1 {
+      font-size: 1.875rem;
+    }
+    .lede {
+      font-size: 1rem;
+    }
+    .band {
+      padding-top: 56px;
+    }
+    .split {
+      flex-direction: column;
+      align-items: start;
+    }
+  }
+</style>
