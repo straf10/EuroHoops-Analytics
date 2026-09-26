@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-26T12:33:12+00:00",
+  "generatedAt": "2026-09-26T14:09:41+00:00",
   "title": "Design System: EuroHoops Analytics",
   "extensions": {
     "colorMeta": {
@@ -536,7 +536,7 @@
     "dos": [
       "**Do** keep every forecast beside the home-win baseline wherever a metric appears.",
       "**Do** carry outcome with an icon and a word as well as colour (\"Hit\", \"Miss\", \"Not scored\").",
-      "**Do** animate only a change of data: bars growing from even odds, panels fading in after a competition switch (200ms). Everything collapses to instant under reduced motion.",
+      "**Do** animate only a change of data: bars growing from even odds, panels fading in after a competition switch (200ms), ranked dots sliding when the measure changes. Everything collapses to instant under reduced motion.",
       "**Do** gate hover effects behind a fine-pointer media query."
     ],
     "donts": [

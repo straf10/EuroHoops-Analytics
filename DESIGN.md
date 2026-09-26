@@ -206,7 +206,7 @@ Gentle, small radii. Controls and buttons are 8px, their inner selected segment 
 - **Outcome chips:** full pills with ink text, a Phosphor check or cross icon, and a 10% wash of the icon's colour: blue for a hit, red for a miss. "Not scored" is a muted chip on Sunk with a hairline ring and links to the footnote.
 
 ### Navigation
-- **Top bar:** 56px, sticky, paper at 88% with a saturating blur and a bottom hairline. Wordmark (a blue ring and "EuroHoops"), section links in soft ink that darken on hover, then the competition switch, theme toggle and GitHub icon on the right. Section links drop below 900px.
+- **Top bar:** 56px, sticky, paper at 88% with a saturating blur and a bottom hairline. Wordmark (a blue ring and "EuroHoops"), site links (Players, Forecasts) in soft ink with the current page in ink at 550 weight, then the competition switch (forecast pages only), theme toggle and GitHub icon on the right. Under 560px the wordmark keeps only its ring.
 - **Segmented control:** a Sunk track with a hairline ring; the selected option is filled ink with paper text. Built on radio inputs so it works without JavaScript; labels shorten ("GBL") under 480px.
 
 ### Tooltip
@@ -214,6 +214,18 @@ Ink fill, paper text, 6px radius, soft drop shadow, max 260px. Opens after 120ms
 
 ### Forecast split bar (signature)
 One row per upcoming game: tip-off time, away code, a 10px split bar, home code, expected margin. The bar is the away share in Baseline Gray meeting the home share in Model Blue at P(home), with a 2px gap, 4px outer ends and a thin even-odds tick standing proud at 50%. The favourite's percentage is ink and semibold; the other is muted. On load and on each competition switch every bar grows out of even odds to its call (320ms ease-out, 40ms stagger).
+
+### Filters
+One row above the content, separated from it by a hairline: small muted labels over the controls. Selects and the search field are 32px, 8px radius, Chart Surface fill with a Rule Strong inner ring that darkens to soft ink on hover, a Phosphor caret or magnifier in soft ink. Choices with two to four options are segmented controls. The row wraps; nothing hides.
+
+### Sortable table
+Dense rows (0.8125rem, tabular) with hairline rules and a sticky header on the page colour. Every numeric head is a button with a tooltip naming the measure; the sorted column's head carries a 2px ink underline and its cells go ink and semibold. Values that fail a qualifying floor stay visible but muted, with the floor in a tooltip. The name column sticks on horizontal scroll.
+
+### Ranked dot chart (Players signature)
+The top 25 on the sorted measure as a Cleveland dot plot: rank, name, a dotted guide per row, a blue 10px dot with a paper ring, the value in ink. Vertical gridlines at nice ticks and a dashed Baseline Gray line for the average of the players ranked. Rows are fixed slots: a change of measure, window or rate slides each dot to its new position (200ms ease-out) while names and values swap; nothing animates on load.
+
+### Shot chart
+Half court drawn in Axis hairlines on Chart Surface, basket at the top. Pointy-top hexagons of 0.5 m: size by how often the player shot from the cell, colour by his FG% there against the league's from the same cell, shrunk toward the league on small samples, in five diverging steps (red, light red, Baseline Gray, light blue, blue; the light steps mix the hue half into the surface). A key for colour and size sits under the chart, beside a distance-band table with share and FG% against the league and a caret for differences of 2.5 points or more.
 
 ### Rating ladder
 Ranked rows: rank, code, name, a bare rail with a dashed league-average line, a stem from average to the team's dot (blue above, red below), the rating, and the season change with a blue or red caret beside muted figures. No filled track behind the rail.
@@ -226,7 +238,7 @@ Plot areas sit on Chart Surface with 1px solid gridlines in Rule; reference line
 ### Do:
 - **Do** keep every forecast beside the home-win baseline wherever a metric appears.
 - **Do** carry outcome with an icon and a word as well as colour ("Hit", "Miss", "Not scored").
-- **Do** animate only a change of data: bars growing from even odds, panels fading in after a competition switch (200ms). Everything collapses to instant under reduced motion.
+- **Do** animate only a change of data: bars growing from even odds, panels fading in after a competition switch (200ms), ranked dots sliding when the measure changes. Everything collapses to instant under reduced motion.
 - **Do** gate hover effects behind a fine-pointer media query.
 
 ### Don't:

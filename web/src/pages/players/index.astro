@@ -1,0 +1,787 @@
+---
+import caret from "@phosphor-icons/core/assets/bold/caret-down-bold.svg?raw";
+import search from "@phosphor-icons/core/assets/regular/magnifying-glass.svg?raw";
+import Base from "../../layouts/Base.astro";
+import {
+  DEFAULT_VIEW,
+  MIN_MINUTES,
+  RATES,
+  WINDOWS,
+  bodyHtml,
+  chart,
+  chartHtml,
+  gridHtml,
+  headHtml,
+  lines,
+  ticksHtml,
+  type View,
+} from "../../lib/players";
+import { defaultSeason, meta, season } from "../../lib/stats";
+
+const m = await meta();
+const base = import.meta.env.BASE_URL;
+const first = m ? defaultSeason(m) : null;
+const data = first ? await season(first.season, "players") : null;
+const view: View = { ...DEFAULT_VIEW, season: first?.season ?? 0 };
+const ls = data ? lines(data, view) : [];
+const c = chart(ls, view);
+const teams = data ? [...new Set(data.players.flatMap((p) => p.teams))].sort() : [];
+const seasons = m ? [...m.seasons].reverse() : [];
+const early = seasons.filter((s) => !s.coords_validated).map((s) => s.label);
+const cfg = {
+  base,
+  defaultSeason: first?.season ?? 0,
+  seasons: seasons.map((s) => s.season),
+  teamNames: m?.teams ?? {},
+};
+const description =
+  "Every EuroLeague player since 2007-08, ranked on any measure: season or last 5, 10 or 20 games, per game, per 36 or per 100 possessions.";
+---
+
+<Base title="Players" description={description} current="players">
+  <section class="wrap head" aria-labelledby="players-title">
+    <h1 id="players-title">Players</h1>
+    <p>
+      Every EuroLeague player since 2007-08. Pick a season and a measure; the chart ranks the
+      league on it and the table lists everyone. Click any column to rank by it.
+    </p>
+  </section>
+
+  {
+    !m || !data ? (
+      <section class="wrap">
+        <p class="empty-state">
+          The stats data has not been exported yet. Run <code>eurohoops export-stats</code> and
+          rebuild.
+        </p>
+      </section>
+    ) : (
+      <section class="wrap" id="players" data-cfg={JSON.stringify(cfg)}>
+        <form class="filters" id="filters" aria-label="Filters">
+          <label class="field">
+            <span>Season</span>
+            <span class="select">
+              <select name="season">
+                {seasons.map((s) => (
+                  <option value={s.season} selected={s.season === view.season}>
+                    {s.label}
+                    {s.live ? " (live)" : ""}
+                  </option>
+                ))}
+              </select>
+              <span class="caret" set:html={caret} />
+            </span>
+          </label>
+
+          <fieldset class="field">
+            <legend>Games</legend>
+            <div class="seg">
+              {WINDOWS.map((w) => (
+                <>
+                  <input type="radio" name="window" id={`w-${w.key}`} value={w.key} checked={w.key === view.window} />
+                  <label for={`w-${w.key}`}>{w.label}</label>
+                </>
+              ))}
+            </div>
+          </fieldset>
+
+          <fieldset class="field">
+            <legend>Rate</legend>
+            <div class="seg">
+              {RATES.map((r) => (
+                <>
+                  <input type="radio" name="rate" id={`r-${r.key}`} value={r.key} checked={r.key === view.rate} />
+                  <label for={`r-${r.key}`}>{r.label}</label>
+                </>
+              ))}
+            </div>
+          </fieldset>
+
+          <label class="field">
+            <span>Team</span>
+            <span class="select">
+              <select name="team">
+                <option value="">All teams</option>
+                {teams.map((t) => (
+                  <option value={t}>{t} · {m.teams[t] ?? t}</option>
+                ))}
+              </select>
+              <span class="caret" set:html={caret} />
+            </span>
+          </label>
+
+          <label class="field">
+            <span>Minutes</span>
+            <span class="select">
+              <select name="minMin">
+                {MIN_MINUTES.map((n) => (
+                  <option value={n} selected={n === view.minMin}>
+                    {n === 0 ? "Any" : `${n}+ a game`}
+                  </option>
+                ))}
+              </select>
+              <span class="caret" set:html={caret} />
+            </span>
+          </label>
+
+          <label class="field grow">
+            <span>Search</span>
+            <span class="search">
+              <span class="glass" set:html={search} />
+              <input type="search" name="q" placeholder="Player name" autocomplete="off" spellcheck="false" />
+            </span>
+          </label>
+        </form>
+
+        <div class="board">
+          <figure class="rank" aria-labelledby="rank-title">
+            <figcaption>
+              <h2 id="rank-title">{c.title}</h2>
+              <p class="legend" id="rank-legend">
+                <i class="k-dot" aria-hidden="true" />
+                Player
+                <i class="k-avg" aria-hidden="true" />
+                <span id="avg-text">
+                  {c.avg ? `Average of the ${c.avg.n} players ranked, ${c.avg.text}` : "No players ranked"}
+                </span>
+              </p>
+            </figcaption>
+            <div class="plot">
+              <span class="ticks" id="ticks" aria-hidden="true" set:html={ticksHtml(c)} />
+              <span class="gridlines" id="gridlines" aria-hidden="true" set:html={gridHtml(c)} />
+              <ol class="rows" id="rows" style={`--avg:${c.avg?.x.toFixed(2) ?? -10}`} set:html={chartHtml(c, base)} />
+            </div>
+          </figure>
+
+          <div class="list">
+            <div class="list-tools">
+              <fieldset class="seg" aria-label="Columns">
+                <input type="radio" name="set" id="set-box" value="box" form="filters" checked />
+                <label for="set-box">Box score</label>
+                <input type="radio" name="set" id="set-shooting" value="shooting" form="filters" />
+                <label for="set-shooting">Shooting</label>
+              </fieldset>
+              <p class="count" id="count" aria-live="polite">
+                {ls.length} players
+              </p>
+            </div>
+            <div class="scroll">
+              <table id="table">
+                <caption class="sr-only">
+                  Players, sorted by the chosen measure
+                </caption>
+                <thead id="thead" set:html={headHtml(view)} />
+                <tbody id="tbody" set:html={bodyHtml(ls, view, base)} />
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <p class="note">
+          Qualifying players average at least the chosen minutes and, over a full season, played a
+          quarter of the most games anyone did. Shooting percentages rank only players with enough
+          attempts (hover a muted value to see the floor). Per 100 uses possessions estimated from
+          the box score while he was on court.
+          {early.length > 0 && ` Shot locations for ${early[early.length - 1]} to ${early[0]} are approximate.`}
+        </p>
+      </section>
+    )
+  }
+</Base>
+
+<script>
+  import {
+    CHART_ROWS,
+    chart,
+    bodyHtml,
+    fromQuery,
+    gridHtml,
+    headHtml,
+    lines,
+    ticksHtml,
+    toQuery,
+    type View,
+  } from "../../lib/players";
+  import type { SeasonPlayers } from "../../lib/stats";
+
+  const host = document.getElementById("players");
+  if (host) {
+    const cfg = JSON.parse(host.dataset.cfg ?? "{}") as {
+      base: string;
+      defaultSeason: number;
+      seasons: number[];
+      teamNames: Record<string, string>;
+    };
+    const form = document.getElementById("filters") as HTMLFormElement;
+    const rows = document.getElementById("rows") as HTMLOListElement;
+    const slots = [...rows.children] as HTMLLIElement[];
+    const $ = (id: string) => document.getElementById(id) as HTMLElement;
+    const cache = new Map<number, Promise<SeasonPlayers>>();
+    const root = cfg.base.replace(/\/$/, "");
+    const loadSeason = (s: number) => {
+      if (!cache.has(s)) {
+        cache.set(
+          s,
+          fetch(`${root}/data/players/${s}.json`).then((r) => {
+            if (!r.ok) throw new Error(`season ${s}: ${r.status}`);
+            return r.json();
+          }),
+        );
+      }
+      return cache.get(s)!;
+    };
+
+    let view: View = fromQuery(location.search, cfg.seasons, cfg.defaultSeason);
+    let shownSeason = cfg.defaultSeason;
+
+    const setField = (name: string, value: string) => {
+      const el = form.elements.namedItem(name);
+      if (el instanceof RadioNodeList) el.value = value;
+      else if (el instanceof HTMLSelectElement || el instanceof HTMLInputElement) el.value = value;
+    };
+    const syncForm = () => {
+      for (const [k, v] of Object.entries(view)) if (k !== "sort" && k !== "dir") setField(k, String(v));
+    };
+
+    const teamOptions = (data: SeasonPlayers) => {
+      const select = form.elements.namedItem("team") as HTMLSelectElement;
+      const teams = [...new Set(data.players.flatMap((p) => p.teams))].sort();
+      if (view.team && !teams.includes(view.team)) view.team = "";
+      select.replaceChildren(
+        new Option("All teams", ""),
+        ...teams.map((t) => new Option(`${t} · ${cfg.teamNames[t] ?? t}`, t)),
+      );
+      select.value = view.team;
+    };
+
+    const paint = (data: SeasonPlayers) => {
+      const ls = lines(data, view);
+      const c = chart(ls, view);
+      $("rank-title").textContent = c.title;
+      $("avg-text").textContent = c.avg ? `Average of the ${c.avg.n} players ranked, ${c.avg.text}` : "No players ranked";
+      $("ticks").innerHTML = ticksHtml(c);
+      $("gridlines").innerHTML = gridHtml(c);
+      rows.style.setProperty("--avg", c.avg ? c.avg.x.toFixed(2) : "-10");
+      // Retarget the 25 slots in place: dots slide, names and values swap.
+      for (let i = 0; i < CHART_ROWS; i++) {
+        const slot = slots[i];
+        const s = c.rows[i];
+        slot.hidden = !s;
+        if (!s) continue;
+        const { row } = s.line;
+        slot.style.setProperty("--x", s.x.toFixed(2));
+        const name = slot.querySelector(".nm") as HTMLAnchorElement;
+        name.textContent = row.name;
+        name.href = `${root}/players/${row.slug}/`;
+        (slot.querySelector(".val") as HTMLElement).textContent = s.text;
+        const tip = `<b>${row.name}</b> ${row.teams.join(", ")}<br>${c.title.split(": ")[1]}: ${s.text}`;
+        (slot.querySelector(".track") as HTMLElement).dataset.tip = tip;
+      }
+      $("thead").innerHTML = headHtml(view);
+      $("tbody").innerHTML = bodyHtml(ls, view, cfg.base);
+      $("count").textContent = `${ls.length} player${ls.length === 1 ? "" : "s"}`;
+      history.replaceState(null, "", location.pathname + toQuery(view, cfg.defaultSeason));
+    };
+
+    let pending = 0;
+    const update = async () => {
+      const ticket = ++pending;
+      host.setAttribute("aria-busy", "true");
+      try {
+        const data = await loadSeason(view.season);
+        if (ticket !== pending) return;
+        if (view.season !== shownSeason) {
+          teamOptions(data);
+          shownSeason = view.season;
+        }
+        paint(data);
+      } catch {
+        $("count").textContent = "Could not load this season. Reload the page to try again.";
+      } finally {
+        if (ticket === pending) host.removeAttribute("aria-busy");
+      }
+    };
+
+    let typing = 0;
+    host.addEventListener("input", (e) => {
+      const el = e.target as HTMLInputElement;
+      if (el.form !== form) return;
+      const key = el.name as keyof View;
+      const value = el.value;
+      if (key === "season" || key === "minMin") view = { ...view, [key]: Number(value) };
+      else view = { ...view, [key]: value } as View;
+      clearTimeout(typing);
+      if (key === "q") typing = window.setTimeout(update, 120);
+      else update();
+    });
+    form.addEventListener("submit", (e) => e.preventDefault());
+
+    $("thead").addEventListener("click", (e) => {
+      const button = (e.target as Element).closest<HTMLButtonElement>("button[data-sort]");
+      if (!button) return;
+      const key = button.dataset.sort!;
+      view = { ...view, sort: key, dir: view.sort === key && view.dir === "desc" ? "asc" : "desc" };
+      update().then(() => ($("thead").querySelector(`[data-sort="${key}"]`) as HTMLElement)?.focus());
+    });
+
+    syncForm();
+    if (location.search) update();
+    // Warm the shown season so the first change is instant.
+    else requestIdleCallback?.(() => loadSeason(view.season));
+  }
+</script>
+
+<style>
+  .head {
+    padding-top: 56px;
+  }
+  h1 {
+    font-size: 2.25rem;
+    font-weight: 620;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+  }
+  .head p {
+    margin-top: 10px;
+    max-width: 64ch;
+    color: var(--ink-2);
+  }
+
+  /* Filters: one row, controls in ink, never colour. */
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 14px 20px;
+    margin: 32px 0 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .field {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+  }
+  .field > span:first-child,
+  .field legend {
+    padding: 0;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--muted);
+  }
+  .field legend {
+    margin-bottom: 6px;
+  }
+  .grow {
+    flex: 1 1 120px;
+    max-width: 260px;
+  }
+  .select,
+  .search {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  select,
+  input[type="search"] {
+    appearance: none;
+    height: 32px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--rule-strong);
+    color: var(--ink);
+    font: 500 0.8125rem/1 var(--font);
+    font-variant-numeric: tabular-nums;
+    transition: box-shadow 150ms ease;
+  }
+  select {
+    max-width: 12rem;
+    padding: 0 30px 0 10px;
+    cursor: pointer;
+    text-overflow: ellipsis;
+  }
+  input[type="search"] {
+    width: 100%;
+    padding: 0 10px 0 32px;
+  }
+  input[type="search"]::placeholder {
+    color: var(--muted);
+  }
+  input[type="search"]::-webkit-search-cancel-button {
+    display: none;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    select:hover,
+    input[type="search"]:hover {
+      box-shadow: inset 0 0 0 1px var(--ink-2);
+    }
+  }
+  select:focus-visible,
+  input[type="search"]:focus-visible {
+    outline: 2px solid var(--data-1);
+    outline-offset: 1px;
+  }
+  .caret,
+  .glass {
+    position: absolute;
+    display: grid;
+    pointer-events: none;
+    color: var(--ink-2);
+  }
+  .caret {
+    right: 10px;
+    font-size: 11px;
+  }
+  .glass {
+    left: 10px;
+    font-size: 15px;
+  }
+  .caret :global(svg),
+  .glass :global(svg) {
+    width: 1em;
+    height: 1em;
+    fill: currentColor;
+  }
+
+  /* Board: ranked chart (5) beside the table (7), one viewport tall. */
+  .board {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: 48px;
+    align-items: start;
+  }
+  :global(#players[aria-busy]) .board {
+    opacity: 0.6;
+    transition: opacity 150ms ease 150ms;
+  }
+
+  .rank {
+    margin: 0;
+  }
+  figcaption {
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--rule-strong);
+  }
+  figcaption h2 {
+    font-size: 1rem;
+    letter-spacing: -0.01em;
+  }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 6px;
+    margin-top: 6px;
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .k-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--data-1);
+  }
+  .k-avg {
+    width: 0;
+    height: 12px;
+    margin-left: 10px;
+    border-left: 1.5px dashed var(--data-2);
+  }
+
+  /* One grid for the axis, the gridlines and every row (rows are subgrids), so they line up. */
+  .plot {
+    display: grid;
+    grid-template-columns: 1.6rem minmax(0, 8.5rem) minmax(0, 1fr) 3.2rem;
+    grid-template-rows: 30px auto;
+    column-gap: 10px;
+  }
+  .ticks,
+  .gridlines {
+    position: relative;
+    grid-column: 3;
+  }
+  .ticks {
+    grid-row: 1;
+  }
+  .gridlines {
+    grid-row: 2;
+  }
+  .ticks :global(span) {
+    position: absolute;
+    bottom: 6px;
+    left: calc(var(--x) * 1%);
+    translate: -50% 0;
+    font-size: 11px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .gridlines :global(i) {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(var(--x) * 1%);
+    border-left: 1px solid var(--rule);
+  }
+  .rows {
+    position: relative;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: grid;
+    grid-template-columns: subgrid;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .rows :global(.slot) {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: subgrid;
+    align-items: center;
+  }
+  .rows :global(.slot) {
+    height: 27px;
+    font-size: 0.8125rem;
+    border-radius: 4px;
+  }
+  .rows :global(.slot[hidden]) {
+    display: none;
+  }
+  .rows :global(.rk) {
+    color: var(--muted);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .rows :global(.nm) {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .rows :global(.val) {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .rows :global(.track) {
+    position: relative;
+    height: 100%;
+    outline: none;
+  }
+  /* guide line, then the dashed average at --avg (set on the list) */
+  .rows :global(.track)::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    border-top: 1px dotted var(--rule-strong);
+  }
+  .rows :global(.track)::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-left: 1.5px dashed var(--data-2);
+    transform: translateX(calc(var(--avg) * 1%));
+    transition: transform 200ms var(--ease-out);
+  }
+  .rows :global(.pos) {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    transform: translateX(calc(var(--x) * 1%));
+    transition: transform 200ms var(--ease-out);
+  }
+  .rows :global(.dot) {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 10px;
+    height: 10px;
+    margin: -5px 0 0 -5px;
+    border-radius: 50%;
+    background: var(--data-1);
+    box-shadow: 0 0 0 2px var(--page);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .rows :global(.slot:hover) {
+      background: var(--sunk);
+    }
+    .rows :global(.slot:hover .nm) {
+      text-decoration: underline;
+      text-decoration-color: var(--rule-strong);
+    }
+  }
+
+  /* Table */
+  .list-tools {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--rule-strong);
+  }
+  .count {
+    color: var(--muted);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .scroll {
+    max-height: calc(100dvh - 150px);
+    min-height: 420px;
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.8125rem;
+  }
+  thead :global(th) {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--page);
+    border-bottom: 1px solid var(--rule);
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--muted);
+    text-align: left;
+    padding: 0;
+    white-space: nowrap;
+  }
+  thead :global(th.c-nm) {
+    padding: 8px 12px 8px 0;
+    z-index: 3;
+    left: 0;
+  }
+  thead :global(button) {
+    width: 100%;
+    padding: 8px 0 8px 10px;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: right;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  thead :global(th.on) {
+    color: var(--ink);
+    font-weight: 600;
+    box-shadow: inset 0 -2px 0 var(--ink);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    thead :global(button:hover) {
+      color: var(--ink);
+    }
+    tbody :global(tr:hover) :global(td),
+    tbody :global(tr:hover) :global(th) {
+      background: var(--sunk);
+    }
+  }
+  tbody :global(td),
+  tbody :global(th) {
+    padding: 7px 0 7px 10px;
+    border-bottom: 1px solid var(--rule);
+    background: var(--page);
+    white-space: nowrap;
+  }
+  tbody :global(td.num) {
+    text-align: right;
+    color: var(--ink-2);
+    font-variant-numeric: tabular-nums;
+  }
+  tbody :global(td.on) {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  tbody :global(td.short) {
+    color: var(--muted);
+    font-weight: 400;
+  }
+  :global(.c-rk) {
+    width: 2rem;
+    padding-left: 0 !important;
+    color: var(--muted);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  tbody :global(th.c-nm) {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    padding-right: 12px;
+    text-align: left;
+    font-weight: 500;
+    min-width: 11rem;
+  }
+  tbody :global(th.c-nm a) {
+    text-decoration: none;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    tbody :global(th.c-nm a:hover) {
+      text-decoration: underline;
+      text-decoration-color: var(--rule-strong);
+    }
+  }
+  tbody :global(.tm) {
+    margin-left: 8px;
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-weight: 400;
+  }
+  tbody :global(tr.empty td) {
+    padding: 28px 0;
+    color: var(--ink-2);
+    white-space: normal;
+  }
+
+  .note {
+    margin-top: 20px;
+    max-width: 90ch;
+    color: var(--muted);
+    font-size: 0.8125rem;
+  }
+  .empty-state {
+    margin-top: 32px;
+    color: var(--ink-2);
+  }
+
+  @media (max-width: 1080px) {
+    .board {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 40px;
+    }
+    .rank {
+      max-width: 640px;
+    }
+    .scroll {
+      max-height: none;
+      min-height: 0;
+    }
+  }
+  @media (max-width: 560px) {
+    .head {
+      padding-top: 36px;
+    }
+    h1 {
+      font-size: 1.875rem;
+    }
+    .plot {
+      grid-template-columns: 1.4rem minmax(0, 6.5rem) minmax(0, 1fr) 2.8rem;
+      column-gap: 8px;
+    }
+    .grow {
+      max-width: none;
+      flex-basis: 100%;
+    }
+  }
+</style>

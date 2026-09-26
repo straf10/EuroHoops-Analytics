@@ -8,16 +8,21 @@ import moon from "@phosphor-icons/core/assets/regular/moon.svg?raw";
 interface Props {
   title?: string;
   description: string;
-  /** In-page sections for the top bar, until the stats pages ship. */
-  sections?: { href: string; label: string }[];
+  /** Which top-bar page is current. */
+  current?: "players" | "forecasts";
   /** Show the EuroLeague / Greek League switch in the top bar. */
   compSwitch?: boolean;
   updated?: string;
 }
-const { title, description, sections = [], compSwitch = false, updated } = Astro.props;
+const { title, description, current, compSwitch = false, updated } = Astro.props;
 const REPO = "https://github.com/straf10/EuroHoops-Analytics";
 const fullTitle = title ? `${title} · EuroHoops` : "EuroHoops Analytics";
 const home = import.meta.env.BASE_URL;
+const root = home.replace(/\/$/, "");
+const pages = [
+  { key: "players", href: `${root}/players/`, label: "Players" },
+  { key: "forecasts", href: `${root}/`, label: "Forecasts" },
+] as const;
 ---
 
 <!doctype html>
@@ -63,15 +68,15 @@ const home = import.meta.env.BASE_URL;
           <span>EuroHoops</span>
         </a>
 
-        {
-          sections.length > 0 && (
-            <nav class="links" aria-label="Sections">
-              {sections.map((s) => (
-                <a href={s.href}>{s.label}</a>
-              ))}
-            </nav>
-          )
-        }
+        <nav class="links" aria-label="Site">
+          {
+            pages.map((p) => (
+              <a href={p.href} aria-current={current === p.key ? "page" : undefined}>
+                {p.label}
+              </a>
+            ))
+          }
+        </nav>
 
         <div class="tools">
           {
@@ -258,6 +263,10 @@ const home = import.meta.env.BASE_URL;
     white-space: nowrap;
     transition: color 150ms ease;
   }
+  .links a[aria-current="page"] {
+    color: var(--ink);
+    font-weight: 550;
+  }
   @media (hover: hover) and (pointer: fine) {
     .links a:hover {
       color: var(--ink);
@@ -270,47 +279,8 @@ const home = import.meta.env.BASE_URL;
     margin-left: auto;
   }
 
-  /* Segmented control: ink fill marks the choice, never colour. */
-  .seg {
-    display: inline-flex;
-    margin: 0 6px 0 0;
-    padding: 2px;
-    border: 0;
-    border-radius: 8px;
-    background: var(--sunk);
-    box-shadow: inset 0 0 0 1px var(--rule);
-  }
-  .seg input {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
-  }
-  .seg label {
-    padding: 4px 11px;
-    border-radius: 6px;
-    font-size: 0.8125rem;
-    font-weight: 500;
-    color: var(--ink-2);
-    cursor: pointer;
-    user-select: none;
-    transition:
-      background-color 180ms var(--ease-out),
-      color 180ms var(--ease-out),
-      transform 140ms ease-out;
-  }
-  .seg label:active {
-    transform: scale(0.97);
-  }
-  .seg input:checked + label {
-    background: var(--ink);
-    color: var(--on-ink);
-  }
-  .seg input:focus-visible + label {
-    outline: 2px solid var(--data-1);
-    outline-offset: 1px;
-  }
-  .seg .short {
-    display: none;
+  .tools .seg {
+    margin-right: 6px;
   }
 
   .icon-btn {
@@ -372,18 +342,18 @@ const home = import.meta.env.BASE_URL;
     margin-left: auto;
   }
 
-  @media (max-width: 900px) {
+  @media (max-width: 560px) {
+    .bar-inner {
+      gap: 16px;
+    }
     .links {
+      gap: 14px;
+    }
+    .wordmark span {
       display: none;
     }
   }
   @media (max-width: 480px) {
-    .seg .long {
-      display: none;
-    }
-    .seg .short {
-      display: inline;
-    }
     .foot-inner a {
       margin-left: 0;
     }
