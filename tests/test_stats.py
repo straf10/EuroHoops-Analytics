@@ -25,6 +25,7 @@ from eurohoops.stats.box import build_box_games, game_lines, seconds
 from eurohoops.stats.export import (
     PLAYER_FIELDS,
     Inputs,
+    _player_frame,
     build_payloads,
     display_name,
     load_cached_games,
@@ -44,6 +45,15 @@ from eurohoops.stats.shots import (
     hex_cells,
     hexbins,
     period,
+)
+from eurohoops.stats.twins import (
+    COUNT_FIELDS,
+    ZONES,
+    distances,
+    features,
+    match,
+    shot_zones,
+    twins_payload,
 )
 from tests.conftest import FIXTURES
 
@@ -272,6 +282,68 @@ def test_attempts_decode_to_the_shot_bins_and_bands(files: dict[str, dict[str, A
     assert {b: [int(n), int(m)] for b, (n, m) in counts.iterrows()} == {
         b: v for b, v in teams["league"]["bands"].items() if v[0]
     }
+
+
+def test_shot_zones_split_bands_by_side_and_corner() -> None:
+    shots = pd.DataFrame(
+        {
+            "x": [0.2, -2.0, 0.0, 2.0, -6.8, 6.8, 0.5, 0.0],
+            "y": [0.1, 0.5, 4.0, 0.3, 0.5, 0.5, 7.0, 9.0],
+            "band": ["rim", "short", "mid", "short", "three", "three", "three", "deep3"],
+        }
+    )
+    assert list(shot_zones(shots)) == [
+        "rim",
+        "short_l",
+        "mid_c",
+        "short_r",
+        "corner3_l",
+        "corner3_r",
+        "three_c",
+        "deep3",
+    ]
+
+
+def test_features_and_match() -> None:
+    counts = np.zeros((2, len(COUNT_FIELDS)))
+    counts[0, [ZONES.index("rim"), ZONES.index("three_c")]] = [30, 10]
+    counts[0, COUNT_FIELDS.index("made_rim")] = 20
+    counts[0, COUNT_FIELDS.index("exp_rim")] = 20  # makes exactly what the league expects
+    counts[0, [COUNT_FIELDS.index(f) for f in ("fga", "fg3a", "fta")]] = [40, 10, 20]
+    feats = features(counts)
+    assert np.allclose((feats[0, : len(ZONES)] ** 2).sum(), 1.0)
+    assert np.allclose(feats[0, len(ZONES) : len(ZONES) + len(BANDS)], 0.0)
+    assert np.allclose(feats[0, -2:], [0.25, 0.5])
+    assert np.allclose(feats[1], 0.0)  # no attempts: every feature 0, no division by zero
+    assert distances(feats[0], feats[:1])[0] == 0.0
+    assert match(np.array([0.0]))[0] == 100.0
+
+
+def test_twins_add_up_and_skip_their_own_seasons(inputs: Inputs) -> None:
+    frame = _player_frame(inputs)
+    twins = twins_payload(
+        frame, inputs.shots.table, inputs.codes, min_pool_att=20, min_window_att=5
+    )
+    assert twins["pool"] and twins["players"]
+    by_key = {(r[0], r[1]): r for r in twins["pool"]}
+    table = inputs.shots.table
+    for (pid, season), row in by_key.items():
+        taken = table[(table["player_id"] == pid) & (table["season"] == season)]
+        assert sum(row[4][: len(ZONES)]) == len(taken) >= 20
+        made = [row[4][COUNT_FIELDS.index(f"made_{b}")] for b in BANDS]
+        assert made == [int(taken.loc[taken["band"] == b, "made"].sum()) for b in BANDS]
+    for pid, windows in twins["players"].items():
+        assert set(windows) <= set(twins["windows"])
+        for w in windows.values():
+            assert sum(w["counts"][: len(ZONES)]) >= 5
+            scores = [m for _, m in w["twins"]]
+            assert scores == sorted(scores, reverse=True) and all(0 < m <= 100 for m in scores)
+            for i, _ in w["twins"]:
+                twin = twins["pool"][i]
+                assert not (twin[0] == pid and w["from"] <= twin[1] <= w["to"])
+        season = windows.get("season")
+        if season and (pid, season["to"]) in by_key:
+            assert season["counts"] == by_key[(pid, season["to"])][4]
 
 
 def test_write_stats_replaces_old_seasons(tmp_path: Path) -> None:
