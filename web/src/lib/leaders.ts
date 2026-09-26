@@ -216,13 +216,15 @@ function games(e: Entry): string {
   return `${e.t.gp} games · ${min} min`;
 }
 
-/** Slot anchors on the court drawing, in % of its width and height (point, wings, blocks). */
+/** Slot anchors on the closed court drawing, in % of its width and height (point, wings, blocks).
+ *  Wings sit beyond the arc on the 45° lines and the point well above the halfway line, so no
+ *  court line reaches a player's text. */
 export const SLOTS: [number, number][] = [
-  [50, 65.6],
-  [14.9, 38.1],
-  [85.1, 38.1],
-  [35.7, 18.6],
-  [64.3, 18.6],
+  [50, 56],
+  [13.6, 51],
+  [86.4, 51],
+  [35.7, 14.6],
+  [64.3, 14.6],
 ];
 
 export function fiveHtml(b: Board, view: View, base: string): string {
@@ -274,6 +276,12 @@ export function fiveLinesHtml(b: Board, view: View, base: string): string {
         `<li>${b.lineup ? "" : `<span class="rk">${r.rank}</span>`}<span class="nm"><a href="${playerHref(base, r.e.slug)}">${esc(r.e.name)}</a><small>${esc(r.e.team)} · ${when(r.e)} · ${games(r.e)}</small></span><span class="line">${statLine(r.e, view)}</span></li>`,
     )
     .join("");
+}
+
+/** The bench's one-line note, so its head matches the court's (title, note, rule). */
+export function benchNote(b: Board): string {
+  if (!b.bench.length) return "Nobody else qualifies.";
+  return b.lineup ? "The rest of the roster, ranked." : `Ranks 6 to ${5 + b.bench.length}.`;
 }
 
 export function caption(b: Board): string {

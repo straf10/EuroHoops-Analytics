@@ -433,6 +433,13 @@ const bandHead = [
     display: inline;
     margin-left: 6px;
   }
+  /* On a phone the distance goes under the band name, as on the player page, so Diff stays in view. */
+  @media (max-width: 560px) {
+    .bands :global(th small) {
+      display: block;
+      margin-left: 0;
+    }
+  }
   .roster :global(tr.empty td) {
     padding: 24px 0;
     color: var(--ink-2);

@@ -73,7 +73,7 @@ export const FACETS: { key: Facet; title: string; options: [value: string, label
 export const VIEWS: [ViewKind, string, string][] = [
   ["freq", "Frequency", "Freq."],
   ["fg", "FG% vs league", "FG%"],
-  ["dots", "Attempts", "Shots"],
+  ["dots", "Attempts", "Att."],
 ];
 
 export const defaultState = (season: number): State => ({
@@ -347,6 +347,9 @@ export function totalsHtml(r: Result): string {
   const ppsMine = r.att ? (r.pts / r.att).toFixed(2) : "–";
   const ppsLeague = r.leagueAtt ? (r.leaguePts / r.leagueAtt).toFixed(2) : "–";
   const of = r.isLeague ? "every shot" : "league";
+  // The whole league with nothing filtered is its own comparison: say so once, not three times.
+  if (r.isLeague && !r.makesOnly && r.att === r.leagueAtt)
+    return `<div><dt>Attempts</dt><dd>${count(r.att)}</dd><dd class="lg">every located shot</dd></div><div><dt>FG%</dt><dd>${pct(r.made, r.att)}</dd><dd class="lg">&nbsp;</dd></div><div><dt>Points per shot</dt><dd>${ppsMine}</dd><dd class="lg">&nbsp;</dd></div>`;
   if (r.makesOnly)
     return `<div><dt>Made shots</dt><dd>${count(r.att)}</dd><dd class="lg">of ${count(r.leagueAtt)}</dd></div><div><dt>FG%</dt><dd>–</dd><dd class="lg">made shots only</dd></div><div><dt>Points per make</dt><dd>${ppsMine}</dd><dd class="lg">${of} ${ppsLeague}</dd></div>`;
   return `<div><dt>Attempts</dt><dd>${count(r.att)}</dd><dd class="lg">of ${count(r.leagueAtt)}</dd></div><div><dt>FG%</dt><dd>${pct(r.made, r.att)}</dd><dd class="lg">${of} ${pct(r.leagueMade, r.leagueAtt)}</dd></div><div><dt>Points per shot</dt><dd>${ppsMine}</dd><dd class="lg">${of} ${ppsLeague}</dd></div>`;

@@ -21,12 +21,13 @@ const tables = m
     )
   : [];
 const clubs = await teamIndex();
+// The third field marks columns a phone sheds, so Net (the ranking) stays in view.
 const COLS = [
-  ["W–L", "Wins and losses"],
-  ["ORtg", "Points scored per 100 possessions"],
-  ["DRtg", "Points allowed per 100 opponent possessions"],
-  ["Net", "Offensive minus defensive rating"],
-  ["Pace", "Possessions per 40 minutes"],
+  ["W–L", "Wins and losses", ""],
+  ["ORtg", "Points scored per 100 possessions", "wide"],
+  ["DRtg", "Points allowed per 100 opponent possessions", "wide"],
+  ["Net", "Offensive minus defensive rating", ""],
+  ["Pace", "Possessions per 40 minutes", "wide"],
 ];
 ---
 
@@ -68,8 +69,8 @@ const COLS = [
                 <tr>
                   <th scope="col" class="num">#</th>
                   <th scope="col">Club</th>
-                  {COLS.map(([h, about]) => (
-                    <th scope="col" class="num">
+                  {COLS.map(([h, about, wide]) => (
+                    <th scope="col" class:list={["num", wide]}>
                       <span data-tip={`<b>${h}</b><br>${about}`} tabindex="0">
                         {h}
                       </span>
@@ -90,10 +91,10 @@ const COLS = [
                     <td class="num">
                       {t.w}–{t.l}
                     </td>
-                    <td class="num">{f.ortg.toFixed(1)}</td>
-                    <td class="num">{f.drtg.toFixed(1)}</td>
+                    <td class="num wide">{f.ortg.toFixed(1)}</td>
+                    <td class="num wide">{f.drtg.toFixed(1)}</td>
                     <td class="num strong">{signed(f.net)}</td>
-                    <td class="num">{f.pace.toFixed(1)}</td>
+                    <td class="num wide">{f.pace.toFixed(1)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -180,6 +181,15 @@ const COLS = [
   .all a:focus-visible {
     outline: 2px solid var(--data-1);
     outline-offset: 2px;
+  }
+  @media (max-width: 560px) {
+    .wide {
+      display: none;
+    }
+    /* Long club names wrap so Net, the ranking, stays on screen. */
+    .clubs tbody th {
+      white-space: normal;
+    }
   }
   @media (hover: hover) and (pointer: fine) {
     .all a:hover .nm {

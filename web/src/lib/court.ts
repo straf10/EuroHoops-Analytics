@@ -11,26 +11,36 @@ export type HexCell = [q: number, r: number, att: number, made: number, league: 
 const SQRT3 = Math.sqrt(3);
 const BASELINE = 1.575;
 export const DEPTH = 9.3; // metres from the basket shown; deeper heaves are left off the chart
+const MIDCOURT = 14 - BASELINE; // metres from the basket to the halfway line
 const toY = (y: number) => y + BASELINE;
 
-const VIEWBOX = `-7.7 -0.2 15.4 ${(DEPTH + BASELINE + 0.4).toFixed(2)}`;
-
-function courtLines(): string {
+function courtLines(depth: number, closed: boolean): string {
   const arcY = Math.sqrt(6.75 ** 2 - 6.6 ** 2); // where the corner lines meet the arc
   const ft = 5.8 - BASELINE;
   return [
-    `<path class="line" d="M-7.5 ${toY(DEPTH)}V0H7.5V${toY(DEPTH)}"/>`,
+    closed
+      ? `<path class="line" d="M-7.5 0H7.5V${toY(depth)}H-7.5Z"/><path class="line" d="M-1.8 ${toY(depth)}A1.8 1.8 0 0 1 1.8 ${toY(depth)}"/>`
+      : `<path class="line" d="M-7.5 ${toY(depth)}V0H7.5V${toY(depth)}"/>`,
     `<path class="line" d="M-2.45 0V${toY(ft)}H2.45V0"/>`,
     `<path class="line" d="M-1.8 ${toY(ft)}A1.8 1.8 0 0 0 1.8 ${toY(ft)}"/>`,
     `<path class="line" d="M-6.6 0V${toY(arcY)}A6.75 6.75 0 0 0 6.6 ${toY(arcY)}V0"/>`,
     `<path class="line" d="M-1.25 ${toY(0)}A1.25 1.25 0 0 0 1.25 ${toY(0)}"/>`,
-    `<path class="line" d="M-0.9 ${toY(-0.375)}H0.9"/>`,
-    `<circle class="rim" cx="0" cy="${toY(0)}" r="0.225"/>`,
   ].join("");
 }
 
-export const court = (layer: string, label: string) =>
-  `<svg class="court" viewBox="${VIEWBOX}" role="img" aria-label="${esc(label)}"><rect class="floor" x="-7.5" y="0" width="15" height="${toY(DEPTH)}"/>${courtLines()}${layer}</svg>`;
+// Backboard and rim sit above the marks, so the basket stays legible under the busiest cells.
+const BASKET = `<path class="line" d="M-0.9 ${toY(-0.375)}H0.9"/><circle class="rim" cx="0" cy="${toY(0)}" r="0.225"/>`;
+
+/** The court with a mark layer clipped to the floor. `closed` draws it to the halfway line. */
+export const court = (layer: string, label: string, closed = false) => {
+  const depth = closed ? MIDCOURT : DEPTH;
+  const h = toY(depth).toFixed(3);
+  const marks = layer ? `<svg x="-7.5" y="0" width="15" height="${h}" viewBox="-7.5 0 15 ${h}">${layer}</svg>` : "";
+  return (
+    `<svg class="court" viewBox="-7.7 -0.2 15.4 ${(toY(depth) + 0.4).toFixed(2)}" role="img" aria-label="${esc(label)}">` +
+    `<rect class="floor" x="-7.5" y="0" width="15" height="${h}"/>${courtLines(depth, closed)}${marks}${BASKET}</svg>`
+  );
+};
 
 function hexPath(cx: number, cy: number, r: number): string {
   const pts: string[] = [];

@@ -33,7 +33,7 @@ const columns = [ratings.slice(0, half), ratings.slice(half)];
         </li>
         {col.map((r, i) => (
           <li
-            class:list={{ below: r.rating < 1500 }}
+            class:list={{ below: Math.round(r.rating) < 1500, even: Math.round(r.rating) === 1500 }}
             style={`--x:${pos(r.rating).toFixed(1)};--s:${Math.min(pos(r.rating), pos(1500)).toFixed(1)};--w:${Math.abs(pos(r.rating) - pos(1500)).toFixed(1)}`}
             tabindex="0"
             data-tip={`<b>${r.name}</b><br>Elo ${r.rating.toFixed(0)}, ${signed(r.change, 0)} since the season started`}
@@ -62,7 +62,7 @@ const columns = [ratings.slice(0, half), ratings.slice(half)];
   }
 </div>
 <p class="note" data-comp={comp.key}>
-  Elo rating; 1500 is an average team, marked by the dashed line. Blue sits above average, red below.
+  Elo rating; 1500 is an average team, marked by the dashed line. Blue sits above average, red below, gray on it.
 </p>
 
 <style>
@@ -78,7 +78,7 @@ const columns = [ratings.slice(0, half), ratings.slice(half)];
   }
   .ladder li {
     display: grid;
-    grid-template-columns: minmax(0, 1.3fr) minmax(80px, 1fr) 3rem 3.4rem;
+    grid-template-columns: minmax(0, 1fr) minmax(80px, 1.4fr) 3rem 3.4rem;
     align-items: center;
     gap: 14px;
     min-height: 42px;
@@ -162,6 +162,10 @@ const columns = [ratings.slice(0, half), ratings.slice(half)];
   .below .rail::after,
   .below .dot {
     background: var(--data-neg);
+  }
+  /* Exactly average is neither pole. */
+  .even .dot {
+    background: var(--data-2);
   }
   .dot {
     position: absolute;

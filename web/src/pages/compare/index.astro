@@ -149,7 +149,7 @@ const description = "Up to five EuroLeague players side by side, a season each o
       (form.elements.namedItem("rate") as RadioNodeList).value = rate;
       const full = picks.length >= MAX;
       input.disabled = full;
-      input.placeholder = full ? "Five players: remove one to add another" : "Type a name";
+      input.placeholder = full ? "Remove one to add more" : "Type a name";
     };
 
     let pending = 0;
@@ -406,7 +406,7 @@ const description = "Up to five EuroLeague players side by side, a season each o
   .h2h :global(.drop) {
     position: absolute;
     top: 0;
-    right: 0;
+    left: calc(50% + 36px); /* beside its shirt (64px, centred), not the column's far corner */
     display: grid;
     place-items: center;
     width: 28px;
@@ -465,10 +465,21 @@ const description = "Up to five EuroLeague players side by side, a season each o
     text-align: center;
     color: var(--ink);
   }
+  .h2h :global(td.num .cell) {
+    display: inline-grid;
+    grid-template-columns: 8px 3.4em 2.4em;
+    column-gap: 6px;
+    align-items: baseline;
+  }
+  .h2h :global(td.num .v) {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
   .h2h :global(td.num small) {
-    margin-left: 6px;
+    text-align: left;
     color: var(--muted);
     font-size: 0.6875rem;
+    font-weight: 400;
   }
   .h2h :global(td.lead) {
     font-weight: 600;
@@ -477,16 +488,15 @@ const description = "Up to five EuroLeague players side by side, a season each o
     display: inline-block;
     width: 8px;
     height: 8px;
-    margin-right: 6px;
+    align-self: center;
     border-radius: 50%;
     background: var(--data-1);
-    vertical-align: 0.05em;
   }
   .h2h :global(td.muted) {
     color: var(--muted);
   }
   .h2h :global(.tally th small) {
-    margin-left: 6px;
+    display: block;
     color: var(--muted);
     font-size: 0.6875rem;
     font-weight: 400;

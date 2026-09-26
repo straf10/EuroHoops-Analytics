@@ -226,7 +226,6 @@ const rounds = [...new Set(games.map((g) => g.round))];
     flex: 0 0 calc((100 - var(--p)) * 1%);
     background: var(--data-2);
     border-radius: 4px 0 0 4px;
-    opacity: 0.55;
   }
   .seg-home {
     flex: 1 1 auto;
@@ -237,9 +236,6 @@ const rounds = [...new Set(games.map((g) => g.round))];
   .game:has(.team.home.fav) .ph {
     color: var(--ink);
     font-weight: 600;
-  }
-  .game:has(.team.away.fav) .seg-away {
-    opacity: 1;
   }
 
   .margin {
