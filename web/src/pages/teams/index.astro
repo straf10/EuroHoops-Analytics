@@ -1,0 +1,190 @@
+---
+import caret from "@phosphor-icons/core/assets/bold/caret-down-bold.svg?raw";
+import Base from "../../layouts/Base.astro";
+import "../../styles/stats.css";
+import { teamHref } from "../../lib/players";
+import { defaultSeason, meta, season, teamIndex } from "../../lib/stats";
+import { factors, signed } from "../../lib/team";
+
+const m = await meta();
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const open = m ? defaultSeason(m).season : 0;
+const tables = m
+  ? await Promise.all(
+      [...m.seasons].reverse().map(async (s) => {
+        const data = await season(s.season, "teams");
+        const rows = data.teams
+          .map((t) => ({ t, f: factors(data.fields, t.totals, t.opp) }))
+          .sort((a, b) => b.f.net - a.f.net);
+        return { s, rows };
+      }),
+    )
+  : [];
+const clubs = await teamIndex();
+const COLS = [
+  ["W–L", "Wins and losses"],
+  ["ORtg", "Points scored per 100 possessions"],
+  ["DRtg", "Points allowed per 100 opponent possessions"],
+  ["Net", "Offensive minus defensive rating"],
+  ["Pace", "Possessions per 40 minutes"],
+];
+---
+
+<Base title="Teams" description="Every EuroLeague club since 2007-08: record, ratings and pace by season." current="teams">
+  <header class="wrap head">
+    <h1>Teams</h1>
+    <p class="lede">Every club of a EuroLeague season, ranked by net rating: points scored minus points allowed per 100 possessions.</p>
+  </header>
+
+  {
+    !m ? (
+      <section class="wrap band">
+        <p class="note">No stats exported yet. Run eurohoops export-stats and rebuild.</p>
+      </section>
+    ) : (
+      <section class="wrap band" aria-labelledby="table-title">
+        <header class="sec-head split">
+          <h2 id="table-title">By net rating</h2>
+          <label class="field">
+            <span>Season</span>
+            <span class="select">
+              <select id="season">
+                {tables.map(({ s }) => (
+                  <option value={s.season} selected={s.season === open}>
+                    {s.label}
+                    {s.live ? " (live)" : ""}
+                  </option>
+                ))}
+              </select>
+              <span class="caret" set:html={caret} />
+            </span>
+          </label>
+        </header>
+        {tables.map(({ s, rows }) => (
+          <div class="scroll" data-season={s.season} hidden={s.season !== open}>
+            <table class="grid clubs">
+              <caption class="sr-only">{s.label} clubs by net rating</caption>
+              <thead>
+                <tr>
+                  <th scope="col" class="num">#</th>
+                  <th scope="col">Club</th>
+                  {COLS.map(([h, about]) => (
+                    <th scope="col" class="num">
+                      <span data-tip={`<b>${h}</b><br>${about}`} tabindex="0">
+                        {h}
+                      </span>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map(({ t, f }, i) => (
+                  <tr>
+                    <td class="num muted">{i + 1}</td>
+                    <th scope="row">
+                      <a href={teamHref(base, t.code, s.season === open ? undefined : s.season)}>
+                        <span class="code">{t.code}</span>
+                        {t.name}
+                      </a>
+                    </th>
+                    <td class="num">
+                      {t.w}–{t.l}
+                    </td>
+                    <td class="num">{f.ortg.toFixed(1)}</td>
+                    <td class="num">{f.drtg.toFixed(1)}</td>
+                    <td class="num strong">{signed(f.net)}</td>
+                    <td class="num">{f.pace.toFixed(1)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ))}
+      </section>
+    )
+  }
+
+  {
+    clubs.length > 0 && (
+      <section class="wrap band" aria-labelledby="all-title">
+        <header class="sec-head">
+          <h2 id="all-title">Every club since 2007-08</h2>
+          <p>{clubs.length} clubs, with the number of EuroLeague seasons each played.</p>
+        </header>
+        <ul class="all">
+          {clubs.map((c) => (
+            <li>
+              <a href={teamHref(base, c.code)}>
+                <span class="code">{c.code}</span>
+                <span class="nm">{c.name}</span>
+                <span class="n">{c.seasons.length}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+</Base>
+
+<script>
+  const select = document.getElementById("season") as HTMLSelectElement | null;
+  select?.addEventListener("change", () => {
+    for (const box of document.querySelectorAll<HTMLElement>("[data-season]")) box.hidden = box.dataset.season !== select.value;
+  });
+</script>
+
+<style>
+  .code {
+    display: inline-block;
+    width: 3.25em;
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+  .clubs td.strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .all {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+    gap: 0 40px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .all a {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--rule);
+    color: var(--ink);
+    font-size: 0.875rem;
+    text-decoration: none;
+  }
+  .all .nm {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .all .n {
+    color: var(--muted);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .all a:focus-visible {
+    outline: 2px solid var(--data-1);
+    outline-offset: 2px;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .all a:hover .nm {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+  }
+</style>

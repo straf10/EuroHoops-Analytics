@@ -1,6 +1,8 @@
 // Stats-site data written by `eurohoops export-stats` into src/data/stats (build time only).
 // Every number is a raw total; lib/players.ts derives the rates.
 
+import type { Attempts } from "./shots";
+
 export type Cell = [q: number, r: number, att: number, made: number, pts: number];
 export type Bands = Record<string, [att: number, made: number]>;
 
@@ -218,4 +220,177 @@ export async function playerData(p: PlayerIndexRow): Promise<PlayerData> {
     });
   }
   return { id: p.id, name: p.name, slug: p.slug, seasons };
+}
+
+// ---- Team pages ---------------------------------------------------------------------------
+
+export interface TeamIndexRow {
+  code: string;
+  name: string; // the latest name
+  seasons: number[];
+}
+
+/** Every club that played a EuroLeague season, by display code (oldest season first). */
+export async function teamIndex(): Promise<TeamIndexRow[]> {
+  const m = await meta();
+  if (!m) return [];
+  const clubs = new Map<string, TeamIndexRow>();
+  for (const s of m.seasons) {
+    for (const t of (await season(s.season, "teams")).teams) {
+      const row = clubs.get(t.code) ?? { code: t.code, name: t.name, seasons: [] };
+      row.name = t.name;
+      row.seasons.push(s.season);
+      clubs.set(t.code, row);
+    }
+  }
+  return [...clubs.values()].sort((a, b) => a.code.localeCompare(b.code));
+}
+
+export interface ClubLine {
+  code: string;
+  name: string;
+  w: number;
+  l: number;
+  totals: number[];
+  opp: number[];
+}
+
+export interface RosterLine {
+  id: string;
+  name: string;
+  slug: string;
+  dorsal: string;
+  /** summed game-log lines for this club: gp, gs, then the log's number fields */
+  totals: number[];
+}
+
+export interface TeamSeason {
+  code: string;
+  season: number;
+  label: string;
+  validated: boolean;
+  name: string;
+  w: number;
+  l: number;
+  fields: string[];
+  totals: number[];
+  opp: number[];
+  league: number[];
+  /** every club that season, for the rank strips */
+  clubs: ClubLine[];
+  bands: Bands;
+  bandsAllowed: Bands;
+  leagueBands: Bands;
+  taken: [number, number, number, number, number][];
+  allowed: [number, number, number, number, number][];
+  rosterFields: string[];
+  roster: RosterLine[];
+}
+
+const withLeague = (cells: Cell[], lg: Map<string, [number, number]>) =>
+  cells.map(([q, r, att, made]): [number, number, number, number, number] => {
+    const [la, lm] = lg.get(`${q},${r}`) ?? [0, 0];
+    return [q, r, att, made, la ? Math.round((1000 * lm) / la) : -1];
+  });
+
+/** Everything one team page shows for one season. */
+export async function teamSeason(code: string, year: number): Promise<TeamSeason | null> {
+  const m = (await meta())!;
+  const [teams, shots, games, players, cells] = await Promise.all([
+    season(year, "teams"),
+    season(year, "shots"),
+    season(year, "games"),
+    season(year, "players"),
+    league(year),
+  ]);
+  const row = teams.teams.find((t) => t.code === code);
+  if (!row) return null;
+  const info = m.seasons.find((s) => s.season === year);
+  const numbers = games.log_fields.filter((f) => f !== "game_id" && f !== "team" && f !== "starter");
+  const at = (f: string) => games.log_fields.indexOf(f);
+  const people = new Map(players.players.map((p) => [p.id, p]));
+  const roster: RosterLine[] = [];
+  for (const [id, log] of Object.entries(games.logs)) {
+    const lines = log.filter((line) => line[at("team")] === code);
+    if (!lines.length) continue;
+    const sums = numbers.map((f) => lines.reduce((a, line) => a + Number(line[at(f)]), 0));
+    const gs = lines.reduce((a, line) => a + Number(line[at("starter")]), 0);
+    const p = people.get(id);
+    roster.push({
+      id,
+      name: p?.name ?? id,
+      slug: p?.slug ?? "",
+      dorsal: p?.dorsal ?? "",
+      totals: [lines.length, gs, ...sums],
+    });
+  }
+  const sec = 2 + numbers.indexOf("sec");
+  roster.sort((a, b) => b.totals[sec] - a.totals[sec]);
+  const hex = shots.teams[code] ?? { taken: [], allowed: [] };
+  return {
+    code,
+    season: year,
+    label: info?.label ?? String(year),
+    validated: info?.coords_validated ?? true,
+    name: row.name,
+    w: row.w,
+    l: row.l,
+    fields: teams.fields,
+    totals: row.totals,
+    opp: row.opp,
+    league: teams.league.totals,
+    clubs: teams.teams.map(({ code, name, w, l, totals, opp }) => ({ code, name, w, l, totals, opp })),
+    bands: row.bands,
+    bandsAllowed: row.bands_allowed,
+    leagueBands: teams.league.bands,
+    taken: withLeague(hex.taken, cells),
+    allowed: withLeague(hex.allowed, cells),
+    rosterFields: ["gp", "gs", ...numbers],
+    roster,
+  };
+}
+
+// ---- Shots explorer -----------------------------------------------------------------------
+
+interface RawAttempts {
+  season: number;
+  bits: Attempts["bits"];
+  players: string[];
+  teams: string[];
+  x: number[];
+  y: number[];
+  flags: number[];
+  player: number[];
+  team: number[];
+  opp: number[];
+}
+
+/** One season's attempts with the names the explorer's pickers need. */
+export async function explorerData(year: number): Promise<Attempts | null> {
+  const raw = await load<RawAttempts>(`seasons/${year}/attempts.json`);
+  if (!raw) return null;
+  const m = (await meta())!;
+  const [players, teams] = await Promise.all([season(year, "players"), season(year, "teams")]);
+  const info = m.seasons.find((s) => s.season === year);
+  const people = new Map(players.players.map((p) => [p.id, p]));
+  const clubs = new Map(teams.teams.map((t) => [t.code, t.name]));
+  return {
+    season: year,
+    label: info?.label ?? String(year),
+    validated: info?.coords_validated ?? true,
+    radius: m.hex_radius_m,
+    bits: raw.bits,
+    bands: m.bands,
+    teams: raw.teams.map((c) => [c, clubs.get(c) ?? m.teams[c] ?? c]),
+    players: raw.players.map((id) => {
+      const p = people.get(id);
+      return [id, p?.name ?? id, p?.slug ?? "", p?.teams[p.teams.length - 1] ?? ""];
+    }),
+    x: raw.x,
+    y: raw.y,
+    flags: raw.flags,
+    player: raw.player,
+    team: raw.team,
+    opp: raw.opp,
+  };
 }

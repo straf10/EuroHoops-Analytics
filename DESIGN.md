@@ -25,6 +25,16 @@ colors:
   night-model-blue: "#3987e5"
   night-baseline-gray: "#6a6862"
   night-against-red: "#e66767"
+  freq-1: "#86b6ef"
+  freq-2: "#5598e7"
+  freq-3: "#2a78d6"
+  freq-4: "#1c5cab"
+  freq-5: "#104281"
+  night-freq-1: "#184f95"
+  night-freq-2: "#256abf"
+  night-freq-3: "#3987e5"
+  night-freq-4: "#6da7ec"
+  night-freq-5: "#9ec5f4"
 typography:
   display:
     fontFamily: "Geist Variable, Segoe UI, system-ui, sans-serif"
@@ -206,7 +216,7 @@ Gentle, small radii. Controls and buttons are 8px, their inner selected segment 
 - **Outcome chips:** full pills with ink text, a Phosphor check or cross icon, and a 10% wash of the icon's colour: blue for a hit, red for a miss. "Not scored" is a muted chip on Sunk with a hairline ring and links to the footnote.
 
 ### Navigation
-- **Top bar:** 56px, sticky, paper at 88% with a saturating blur and a bottom hairline. Wordmark (a blue ring and "EuroHoops"), site links (Players, Forecasts) in soft ink with the current page in ink at 550 weight, then the competition switch (forecast pages only), theme toggle and GitHub icon on the right. Under 560px the wordmark keeps only its ring.
+- **Top bar:** 56px, sticky, paper at 88% with a saturating blur and a bottom hairline. Wordmark (a blue ring and "EuroHoops"), site links (Players, Teams, Shots, Forecasts) in soft ink with the current page in ink at 550 weight, then the competition switch (forecast pages only), theme toggle and GitHub icon on the right. Under 560px the wordmark keeps only its ring.
 - **Segmented control:** a Sunk track with a hairline ring; the selected option is filled ink with paper text. Built on radio inputs so it works without JavaScript; labels shorten ("GBL") under 480px.
 
 ### Tooltip
@@ -226,6 +236,19 @@ The top 25 on the sorted measure as a Cleveland dot plot: rank, name, a dotted g
 
 ### Shot chart
 Half court drawn in Axis hairlines on Chart Surface, basket at the top. Pointy-top hexagons of 0.5 m: size by how often the player shot from the cell, colour by his FG% there against the league's from the same cell, shrunk toward the league on small samples, in five diverging steps (red, light red, Baseline Gray, light blue, blue; the light steps mix the hue half into the surface). A key for colour and size sits under the chart, beside a distance-band table with share and FG% against the league and a caret for differences of 2.5 points or more.
+
+Shared by the player, team and Shots pages (`lib/court.ts`, `styles/stats.css`), in three layers:
+- **FG% against the league** (above). On a team's **Allowed** chart the scale flips, so blue always means good for that club: blue where opponents shoot worse than the league. Its key is drawn in the flipped order.
+- **Frequency** (Shots explorer): the same hexes, coloured by how often the cell was used in five steps of one blue ramp (tokens `freq-1` to `freq-5`, validated as an ordinal ramp in both themes; on night the ramp brightens toward "most").
+- **Attempts**: one mark per shot, a filled Model Blue dot for a make and a hollow Against Red ring for a miss, so shape carries the outcome too.
+
+Seasons before 2011-12 carry a one-line caveat under the chart; they are never hidden.
+
+### Rank strips (Team signature)
+One row per rating or four factor, in two columns (Offense, Defense) under a Title on a strong rule: the measure's name (tooltip gives the formula), the club's value in ink semibold, its rank ("3rd of 18", counted from the best, so lower wins for turnover rate and the defensive measures), then a bare rail with every other club as an 8px Baseline Gray dot with a page ring, a dashed Baseline Gray league-average tick, and this club as a 12px Model Blue dot with a 2px page ring. Each gray dot links to that club's page for the same season. On a season switch the blue dot slides to its new place (200ms ease-out) while the gray field redraws. Under 560px the rail drops below the name, value and rank.
+
+### Facet bars (Shots signature)
+The explorer's filters are bar charts. Each facet (Quarter, Distance, Play) is a head on a strong rule and one button row per option: label, a 10px bar with a 4px rounded end whose width is the option's attempts, the attempts, FG% and the difference from the comparison. A kept option's bar is Model Blue, a filtered-out one Baseline Gray; a chosen option's label goes ink semibold. Each facet counts the shots the other facets keep, so it shows what a click would give; bars resize in place (200ms). The comparison is the league with the same filters, or every league shot when the subject is the league. The play-by-play marks fastbreaks and second chances on made shots only (from 2015-16), so the Play facet counts makes and its share; it filters only in the Frequency and Attempts views and is disabled with a one-line reason otherwise. Above the facets, a three-figure totals line (attempts, FG%, points per shot, each over its comparison in muted text); below them, an ink Clear filters button that goes quiet (Sunk, muted) when nothing is filtered.
 
 ### Rating ladder
 Ranked rows: rank, code, name, a bare rail with a dashed league-average line, a stem from average to the team's dot (blue above, red below), the rating, and the season change with a blue or red caret beside muted figures. No filled track behind the rail.

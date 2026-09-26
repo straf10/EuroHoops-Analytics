@@ -1,0 +1,465 @@
+---
+import caret from "@phosphor-icons/core/assets/bold/caret-down-bold.svg?raw";
+import up from "@phosphor-icons/core/assets/fill/caret-up-fill.svg?raw";
+import down from "@phosphor-icons/core/assets/fill/caret-down-fill.svg?raw";
+import Base from "../../layouts/Base.astro";
+import "../../styles/stats.css";
+import { SEASON_COLS } from "../../lib/player";
+import { defaultSeason, meta, teamIndex, teamSeason, type TeamIndexRow } from "../../lib/stats";
+import { DEFENSE, OFFENSE, facts, rosterHtml, stripHtml, strips, teamBands, teamCharts } from "../../lib/team";
+
+export async function getStaticPaths() {
+  return (await teamIndex()).map((t) => ({ params: { code: t.code.toLowerCase() }, props: { club: t } }));
+}
+
+const { club } = Astro.props as { club: TeamIndexRow };
+const m = (await meta())!;
+const open = defaultSeason(m).season;
+const year = [...club.seasons].reverse().find((s) => s <= open) ?? club.seasons[club.seasons.length - 1];
+const t = (await teamSeason(club.code, year))!;
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const radius = m.hex_radius_m;
+const f = facts(t);
+const charts = teamCharts(t, radius);
+const bands = teamBands(t, up, down);
+const labels = new Map(m.seasons.map((s) => [s.season, s.label]));
+const count = `${club.seasons.length} EuroLeague season${club.seasons.length === 1 ? "" : "s"}`;
+const description = `${club.name}: EuroLeague record, ratings, four factors, shot charts and roster, ${count}.`;
+const bandHead = [
+  ["Shots", ""],
+  ["Share", ""],
+  ["League", "League share of attempts from this distance"],
+  ["FG%", ""],
+  ["League", "League FG% from this distance"],
+  ["Diff", "FG% minus the league's, in points, from 10 attempts up"],
+];
+---
+
+<Base title={club.name} description={description} current="teams">
+  <script is:inline define:vars={{ shown: String(t.season) }}>
+    // A link to another season: hide the season's numbers until they arrive, so they never flash.
+    const asked = new URLSearchParams(location.search).get("season");
+    if (asked && asked !== shown) document.documentElement.classList.add("season-pending");
+  </script>
+  <header
+    class="wrap head team-head"
+    id="team"
+    data-code={t.code.toLowerCase()}
+    data-base={base}
+    data-radius={radius}
+    data-year={t.season}
+  >
+    <div>
+      <h1 id="t-name">{t.name}</h1>
+      <p class="facts seasonal">
+        <span><b id="t-record">{f.record}</b> <span id="t-label">{t.label}</span></span>
+        <span>Net rating <b id="t-net">{f.net}</b></span>
+        <span>Pace <b id="t-pace">{f.pace}</b></span>
+        <span>{count}</span>
+      </p>
+      <p class="lede seasonal" id="t-lede">{f.lede}</p>
+    </div>
+    {
+      club.seasons.length > 1 && (
+        <label class="field">
+          <span>Season</span>
+          <span class="select">
+            <select id="season" aria-controls="ranks shots roster">
+              {[...club.seasons].reverse().map((s) => (
+                <option value={s} selected={s === t.season}>
+                  {labels.get(s) ?? s}
+                </option>
+              ))}
+            </select>
+            <span class="caret" set:html={caret} />
+          </span>
+        </label>
+      )
+    }
+  </header>
+
+  <section class="wrap band" id="ranks" aria-labelledby="ranks-title">
+    <header class="sec-head">
+      <h2 id="ranks-title">Where they rank</h2>
+      <p>
+        Every club that season is a gray dot, <span class="k-me" aria-hidden="true"></span>
+        <span id="t-code">{t.code}</span> is blue and the dashed line is the league average. Select a dot to
+        open that club.
+      </p>
+    </header>
+    <div class="ranks busy-fade seasonal">
+      <div class="side" id="offense">
+        <h3>Offense</h3>
+        <Fragment set:html={strips(t, OFFENSE, base).map(stripHtml).join("")} />
+      </div>
+      <div class="side" id="defense">
+        <h3>Defense</h3>
+        <Fragment set:html={strips(t, DEFENSE, base).map(stripHtml).join("")} />
+      </div>
+    </div>
+    <p class="note">
+      Ratings are points per 100 possessions. Ranks count from the best: for turnover rate, defensive rating
+      and the opponent measures, lower is better.
+    </p>
+  </section>
+
+  <section class="wrap band" id="shots" aria-labelledby="shots-title">
+    <header class="sec-head split">
+      <div>
+        <h2 id="shots-title">Shots taken and allowed</h2>
+        <p>Where the club shot from and where it let opponents shoot, against the league from the same spot.</p>
+      </div>
+      <a class="ink-link" id="explore" href={`${base}/shots/?season=${t.season}&team=${t.code}&view=fg`}>
+        Open in the Shots explorer
+      </a>
+    </header>
+    <p class="caveat-line" id="caveat" hidden={t.validated}>
+      Shot locations before 2011-12 do not line up with the court; read this season as approximate.
+    </p>
+    <div class="pair busy-fade seasonal">
+      {
+        (["taken", "allowed"] as const).map((side) => (
+          <div class="half">
+            <figure class="chart-box">
+              <figcaption class="half-title">
+                <h3>{side === "taken" ? "Taken" : "Allowed"}</h3>
+              </figcaption>
+              <div id={`court-${side}`} set:html={charts[side]} />
+              <p class="key">
+                {side === "taken" ? (
+                  <>
+                    <span class="scale" aria-hidden="true">
+                      <i class="t-2" />
+                      <i class="t-1" />
+                      <i class="t0" />
+                      <i class="t1" />
+                      <i class="t2" />
+                    </span>
+                    <span>Colour: FG% against the league's from that spot, below to above</span>
+                  </>
+                ) : (
+                  <>
+                    <span class="scale" aria-hidden="true">
+                      <i class="t2" />
+                      <i class="t1" />
+                      <i class="t0" />
+                      <i class="t-1" />
+                      <i class="t-2" />
+                    </span>
+                    <span>Colour: opponents' FG% against the league's, below to above</span>
+                  </>
+                )}
+                <span class="sizes" aria-hidden="true">
+                  <i class="s1" />
+                  <i class="s2" />
+                  <i class="s3" />
+                </span>
+                <span>Size: how often {side === "taken" ? "the club" : "opponents"} shot from there</span>
+              </p>
+            </figure>
+            <div class="scroll">
+              <table class="grid bands">
+                <caption class="sr-only">
+                  {side === "taken" ? "Shots taken" : "Shots allowed"} by distance against the league
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Distance</th>
+                    {bandHead.map(([h, about]) => (
+                      <th scope="col" class="num">
+                        {about ? (
+                          <span data-tip={about} tabindex="0">
+                            {h}
+                          </span>
+                        ) : (
+                          h
+                        )}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody id={`bands-${side}`} set:html={bands[side]} />
+              </table>
+            </div>
+          </div>
+        ))
+      }
+    </div>
+    <p class="note">
+      A blue caret on Allowed means opponents shot worse than the league from that distance. Cells shrink toward
+      the league on small samples.
+    </p>
+  </section>
+
+  <section class="wrap band" id="roster" aria-labelledby="roster-title">
+    <header class="sec-head">
+      <h2 id="roster-title">Roster</h2>
+      <p>Everyone who played for the club that season, by minutes. Per game, for this club only.</p>
+    </header>
+    <div class="scroll busy-fade seasonal">
+      <table class="grid roster">
+        <thead>
+          <tr>
+            <th scope="col" class="num">#</th>
+            <th scope="col">Player</th>
+            {SEASON_COLS.map((c) => (
+              <th scope="col" class="num">
+                <span data-tip={`<b>${c.head}</b><br>${c.about}`} tabindex="0">{c.head}</span>
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody id="roster-body" set:html={rosterHtml(t, base)} />
+      </table>
+    </div>
+  </section>
+</Base>
+
+<script>
+  import up from "@phosphor-icons/core/assets/fill/caret-up-fill.svg?raw";
+  import down from "@phosphor-icons/core/assets/fill/caret-down-fill.svg?raw";
+  import type { TeamSeason } from "../../lib/stats";
+  import { DEFENSE, OFFENSE, facts, rosterHtml, strips, teamBands, teamCharts } from "../../lib/team";
+
+  const head = document.getElementById("team");
+  const select = document.getElementById("season") as HTMLSelectElement | null;
+  if (head && select) {
+    const { code, base, radius, year } = head.dataset;
+    const cache = new Map<string, Promise<TeamSeason>>();
+    const get = (s: string) => {
+      if (!cache.has(s))
+        cache.set(
+          s,
+          fetch(`${base}/data/team/${code}/${s}.json`).then((r) => {
+            if (!r.ok) throw new Error(String(r.status));
+            return r.json();
+          }),
+        );
+      return cache.get(s)!;
+    };
+    const text = (id: string, value: string) => (document.getElementById(id)!.textContent = value);
+
+    // Patch the strips in place so the club's blue dot slides to its new place (the signature).
+    function patchStrips(root: HTMLElement, list: ReturnType<typeof strips>) {
+      for (const s of list) {
+        const row = root.querySelector<HTMLElement>(`.strip[data-key="${s.key}"]`)!;
+        row.querySelector(".s-val")!.textContent = s.value;
+        row.querySelector(".s-rank")!.textContent = s.rank;
+        row.querySelector(".s-field")!.innerHTML = s.field;
+        const me = row.querySelector<HTMLElement>(".s-me")!;
+        me.style.left = `${s.me.toFixed(2)}%`;
+        me.dataset.tip = s.tip;
+      }
+    }
+
+    async function show(s: string, push: boolean) {
+      const root = document.documentElement;
+      root.setAttribute("aria-busy", "true");
+      try {
+        const t = await get(s);
+        const f = facts(t);
+        text("t-name", t.name);
+        text("t-record", f.record);
+        text("t-label", t.label);
+        text("t-net", f.net);
+        text("t-pace", f.pace);
+        text("t-lede", f.lede);
+        text("t-code", t.code);
+        patchStrips(document.getElementById("offense")!, strips(t, OFFENSE, base!));
+        patchStrips(document.getElementById("defense")!, strips(t, DEFENSE, base!));
+        const charts = teamCharts(t, Number(radius));
+        const bands = teamBands(t, up, down);
+        for (const side of ["taken", "allowed"] as const) {
+          document.getElementById(`court-${side}`)!.innerHTML = charts[side];
+          document.getElementById(`bands-${side}`)!.innerHTML = bands[side];
+        }
+        document.getElementById("caveat")!.hidden = t.validated;
+        (document.getElementById("explore") as HTMLAnchorElement).search = `?season=${t.season}&team=${t.code}&view=fg`;
+        document.getElementById("roster-body")!.innerHTML = rosterHtml(t, base!);
+        select!.value = s;
+        document.title = `${t.name} · EuroHoops`;
+        if (push) {
+          const url = new URL(location.href);
+          if (s === year) url.searchParams.delete("season");
+          else url.searchParams.set("season", s);
+          history.replaceState(null, "", url);
+        }
+      } catch {
+        select!.setCustomValidity("Could not load this season");
+        select!.reportValidity();
+      } finally {
+        root.removeAttribute("aria-busy");
+        root.classList.remove("season-pending");
+      }
+    }
+
+    select.addEventListener("change", () => show(select.value, true));
+    const asked = new URLSearchParams(location.search).get("season");
+    if (asked && asked !== year) {
+      if ([...select.options].some((o) => o.value === asked)) show(asked, false);
+      else document.documentElement.classList.remove("season-pending");
+    }
+  }
+</script>
+
+<style>
+  :global(.season-pending) .seasonal {
+    visibility: hidden;
+  }
+  .team-head {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 24px;
+  }
+  .facts b {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  /* Rank strips: Offense (6) beside Defense (6) */
+  .ranks {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 56px;
+  }
+  h3 {
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--rule-strong);
+    font-size: 1rem;
+    font-weight: 600;
+  }
+  .k-me {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin-right: 2px;
+    border-radius: 50%;
+    background: var(--data-1);
+    vertical-align: -0.05em;
+  }
+  .side :global(.strip) {
+    display: grid;
+    grid-template-columns: minmax(0, 10.5rem) 3.25rem 3.75rem minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    min-height: 48px;
+    border-bottom: 1px solid var(--rule);
+    font-size: 0.8125rem;
+  }
+  .side :global(.s-name) {
+    color: var(--ink-2);
+  }
+  .side :global(.s-val) {
+    text-align: right;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .side :global(.s-rank) {
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .side :global(.s-track) {
+    position: relative;
+    height: 24px;
+  }
+  .side :global(.s-track)::before {
+    content: "";
+    position: absolute;
+    inset: 50% 0 auto;
+    border-top: 1px solid var(--rule);
+  }
+  .side :global(:is(.s-dot, .s-me, .s-avg)) {
+    position: absolute;
+    top: 50%;
+    translate: -50% -50%;
+  }
+  .side :global(.s-avg) {
+    height: 18px;
+    border-left: 1px dashed var(--data-2);
+  }
+  .side :global(.s-dot) {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--data-2);
+    box-shadow: 0 0 0 1.5px var(--page);
+    transition: scale 150ms var(--ease-out);
+  }
+  .side :global(.s-dot:focus-visible) {
+    outline: 2px solid var(--data-1);
+    outline-offset: 2px;
+  }
+  .side :global(.s-me) {
+    z-index: 1;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--data-1);
+    box-shadow: 0 0 0 2px var(--page);
+    transition: left 200ms var(--ease-out);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .side :global(.s-dot:hover) {
+      scale: 1.35;
+      box-shadow:
+        0 0 0 1.5px var(--page),
+        0 0 0 2.5px var(--ink-2);
+    }
+  }
+
+  /* Shots: two courts, each over its band table */
+  .pair {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 56px;
+    align-items: start;
+  }
+  .half {
+    display: grid;
+    gap: 24px;
+  }
+  .half-title h3 {
+    margin-bottom: 14px;
+  }
+  .caveat-line {
+    margin: -4px 0 20px;
+    color: var(--ink-2);
+    font-size: 0.8125rem;
+  }
+  .bands :global(th small) {
+    display: inline;
+    margin-left: 6px;
+  }
+  .roster :global(tr.empty td) {
+    padding: 24px 0;
+    color: var(--ink-2);
+  }
+
+  @media (max-width: 980px) {
+    .pair,
+    .ranks {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 48px;
+    }
+    .chart-box {
+      max-width: 560px;
+    }
+  }
+  @media (max-width: 560px) {
+    .team-head {
+      flex-direction: column;
+      align-items: start;
+    }
+    .side :global(.strip) {
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      gap: 2px 12px;
+      padding: 8px 0 4px;
+    }
+    .side :global(.s-track) {
+      grid-column: 1 / -1;
+    }
+  }
+</style>
