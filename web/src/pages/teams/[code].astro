@@ -356,7 +356,7 @@ const bandHead = [
     font-variant-numeric: tabular-nums;
   }
   .side :global(.s-rank) {
-    color: var(--muted);
+    color: var(--ink-2);
     font-size: 0.75rem;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
@@ -385,7 +385,7 @@ const bandHead = [
     height: 8px;
     border-radius: 50%;
     background: var(--data-2);
-    box-shadow: 0 0 0 1.5px var(--page);
+    box-shadow: 0 0 0 0.75px var(--page); /* thin, so dense clusters read as dots, not crescents */
     transition: scale 150ms var(--ease-out);
   }
   .side :global(.s-dot:focus-visible) {
@@ -405,8 +405,8 @@ const bandHead = [
     .side :global(.s-dot:hover) {
       scale: 1.35;
       box-shadow:
-        0 0 0 1.5px var(--page),
-        0 0 0 2.5px var(--ink-2);
+        0 0 0 0.75px var(--page),
+        0 0 0 1.75px var(--ink-2);
     }
   }
 
