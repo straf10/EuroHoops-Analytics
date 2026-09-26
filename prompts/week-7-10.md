@@ -7,7 +7,7 @@ You are building the **weeks 7–10 deliverables** of `PLAN.md` (read §2 R9–R
 
 **Exit gate (PLAN §8, row 7–10).** All four must hold:
 1. **Calibrated:** the chosen M2 meets F-f on validation (ECE ≤ 0.010 and every reliability bin with ≥ 500 shots within ±0.02).
-2. **Beats the baseline:** its validation log loss is below the spline baseline's, with the game-level bootstrap CI (F-g) reported. **If it does not, that is an accepted outcome:** the spline model becomes M2, and the report shows every variant, where the challenger loses (distance bands, 2s vs 3s, context flags) and a hypothesis. Hiding or re-running until it wins is not accepted.
+2. **Beats the baseline:** its validation log loss (5-seed mean, F-l) is below the spline baseline's, with the game-level bootstrap CI (F-g) reported. **If it does not, that is an accepted outcome:** the spline model becomes M2, and the report shows every variant, where the challenger loses (distance bands, 2s vs 3s, context flags) and a hypothesis. Hiding or re-running until it wins is not accepted.
 3. **Stability decided:** the F7 rule (F-k) has been applied and its verdict recorded.
 4. **One clean run:** every check in §6 passes in one consecutive run.
 
@@ -30,7 +30,7 @@ Guards:
 - **Same failure three times** (same check, same error): stop patching. Write the diagnosis in the progress file, re-read the relevant code and data, then fix the cause.
 - **External blocker** (a source down or refusing, quota exhausted): mark the check `BLOCKED` and save the evidence in the progress file, then carry on with the other deliverables. Never report a blocked check as passed.
 - **Iteration budget: 35.** If iteration 35 ends without the stop condition, stop anyway. Write the final report with status `INCOMPLETE`, list each red check with its last error, and say what you would try next.
-- **Runtime budget:** `eurohoops backtest --model m2` (LOSO CV + validation, reusing the stored Optuna result) must finish in < 20 min locally; the Optuna study (`--search`) runs only when F4 changes and must finish in < 2 h. Record both times in the progress file. Over budget is a red check.
+- **Runtime budget:** `eurohoops backtest --model m2` (LOSO CV + validation, reusing the stored Optuna result) must finish in < 40 min locally (5 seeds, F-l); the Optuna study (`--search`) runs only when F4 changes and must finish in < 2 h. Record both times in the progress file. Over budget is a red check.
 - **Test seasons after a bug:** if you find a bug after the test seasons were scored, fix it, re-score, and record in the progress file what changed, both numbers, and why. The test result is then labelled "re-scored after a fix". Never pick between versions on test numbers.
 - **Resumability:** the progress file and the commits are your memory. A usage-limit account switch or a restart can interrupt you at any time. After any interruption, start again at loop step 1.
 
@@ -48,6 +48,7 @@ Guards:
 | F-i | Outputs and the site | **Marts tables `shots` and `shot_xpts`, reports JSON, a model card and static PNG shot charts in `docs/models/m2/`. No site change (PLAN §9: UI only after week 16 except predictions + performance). M2 feeds no live prediction.** |
 | F-j | Dependencies | **`lightgbm`, `optuna` and `matplotlib` in the dev group (like MLflow): M2 is a local, monthly job, not part of the daily workflow. The daily workflow and CI keep working with `--no-dev`.** |
 | F-k | Stability rule for showing shot-making (decided before F7 runs) | **Shot-making is "stable enough to show" only if its year-to-year correlation (players with ≥ 200 FGA in consecutive seasons, development seasons) has a 90% CI lower bound ≥ 0.20 and the split-half correlation is ≥ 0.30. Otherwise the card says "not stable enough" and the player table stays in the report only.** |
+| F-l | Seed robustness (not repeated LOSO: its folds are fixed, a repeat gives identical numbers) | **The chosen LightGBM is refit with 5 seeds (20261001–20261005; row and feature subsampling on, as tuned). Report the mean and sd of LOSO CV and validation log loss across seeds. The gate uses the 5-seed mean prediction's log loss; the verdict also states whether any single seed would flip it. The Optuna study is not repeated per seed.** |
 
 ## 1. Hard constraints (all weeks 0–7 constraints still apply)
 - **Scope = this file only.** No RAPM, no player impact beyond shot-making, no league translation, no GBL shot model (the GBL has no coordinates), no site pages, no live use of M2. Build nothing "for later".
@@ -103,6 +104,7 @@ Guards:
 ### F4: LightGBM challenger, calibration and the Optuna search
 - LightGBM with the declared Optuna study (F-d); isotonic calibration on out-of-fold predictions (never on the fold being scored).
 - Determinism: Optuna `TPESampler(seed=20261001)`, `n_jobs=1`; LightGBM `deterministic=True`, `force_row_wise=True`, fixed `num_threads` and `seed`. The study runs only with `backtest --model m2 --search`; otherwise the stored best parameters are used.
+- Seed check (F-l): refit the chosen configuration with the 5 declared seeds; store per-seed and mean metrics in the report.
 - **Done when:** a 5-trial study on a 2-season subset run twice gives identical trial values and best parameters (a test); the full study's trials are in MLflow and its best parameters in the report JSON.
 
 ### F5: Evaluation, gate and test
