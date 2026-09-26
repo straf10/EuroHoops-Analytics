@@ -206,3 +206,15 @@ LEVEL_RUN 327d0a3
 iteration 1 | G1 flags dropped for good + outcome-coding audit (item 32) | tests/test_feature_audit.py (6), fast gate 1-6, 14, 19, 32 (green after a format fix), items 23/28/29 tests | green; full §6 pending (see sequencing) | 62b9526
 iteration 2 | G2 F2 share checks (code 1b09043 before the run) | tests/test_free_throws.py 11 (3-SE planted errors fail), item 22 real run, card test | item 22 FAIL (12/78 band flags > 7; team r below bar in 13/13) - diagnosed, not tuned; card updated | 8cc5640
 iteration 3 | G3 runtime (profile, class A: LightGBM+spline pool, LOSO reuse, zone codes once) + G5 level variants | before 2,921 s, after-1 2,743 s, after-2 2,774 s (UI server ~1.6 cores); weeks 7-10 bytes identical each time; level leakage tests; card test | G3 under budget; G5 lgbm_level misses F-f (post-hoc) | 5328d64
+
+## Stopped by the user (2026-09-27, ~21:45Z): resume here
+The user stopped all runs for the day. The G4 demo (item 24 with a temporary 1 s budget) was
+killed during its first backtest and reverted (`limit=3600`; tree clean; report untouched).
+State:
+- G1 done. G2 done, item 22 FAILS (diagnosed, not tuned). G3 done (under budget, bytes
+  identical). G4 code done; **demo not shown**. G5 done (lgbm_level misses F-f, post-hoc);
+  leakage breaks shown.
+- **Not done:** G4 demo; the full §6 checklist in one run (items 1-32); the closeout
+  `reports/week7-10b_closeout.md`; G1/G2 marked done only after that full run.
+- Next session: decide with the user whether to run the full checklist (~3 h; its item 24 runs
+  both backtests and prints all three G4 lines) or close out from the per-item evidence here.
