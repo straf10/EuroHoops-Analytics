@@ -1,0 +1,194 @@
+{
+  "method": "ratio-of-totals rates; development seasons leave-one-season-out",
+  "fouls_tied_to_shots": "and-ones only (a one-shot trip after the same team's made field goal at the same clock); other trips are team-level",
+  "development": [
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022
+  ],
+  "validation": [
+    2023
+  ],
+  "rates_development": {
+    "and_one_trips_per_fga": {
+      "rim": 0.06182,
+      "short": 0.037188,
+      "mid": 0.010745,
+      "long2": 0.002932,
+      "three": 0.003181,
+      "deep3": 0.001655
+    },
+    "points_per_and_one_trip": 0.734941,
+    "other_trips_per_fga": 0.135567,
+    "points_per_other_trip": 1.510174
+  },
+  "season_ft_points_sd_development": 0.6642,
+  "seasons": {
+    "2011": {
+      "split": "development",
+      "team_games": 376,
+      "ft_points_per_team_game": 14.2314,
+      "expected_per_team_game": 13.2606,
+      "mean_gap": 0.9708,
+      "tolerance": 0.1,
+      "within_tolerance": false,
+      "trips_per_fga": 0.176218,
+      "points_per_trip": 1.356401,
+      "and_one_share_of_trips": 0.112041
+    },
+    "2012": {
+      "split": "development",
+      "team_games": 506,
+      "ft_points_per_team_game": 13.2213,
+      "expected_per_team_game": 13.3499,
+      "mean_gap": -0.1285,
+      "tolerance": 0.1,
+      "within_tolerance": false,
+      "trips_per_fga": 0.165228,
+      "points_per_trip": 1.344453,
+      "and_one_share_of_trips": 0.11877
+    },
+    "2013": {
+      "split": "development",
+      "team_games": 506,
+      "ft_points_per_team_game": 12.5889,
+      "expected_per_team_game": 13.5428,
+      "mean_gap": -0.9538,
+      "tolerance": 0.1,
+      "within_tolerance": false,
+      "trips_per_fga": 0.156462,
+      "points_per_trip": 1.33515,
+      "and_one_share_of_trips": 0.131
+    },
+    "2014": {
+      "split": "development",
+      "team_games": 502,
+      "ft_points_per_team_game": 13.6853,
+      "expected_per_team_game": 13.8088,
+      "mean_gap": -0.1236,
+      "tolerance": 0.1,
+      "within_tolerance": false,
+      "trips_per_fga": 0.165653,
+      "points_per_trip": 1.335017,
+      "and_one_share_of_trips": 0.135251
+    },
+    "2015": {
+      "split": "development",
+      "team_games": 500,
+      "ft_points_per_team_game": 13.706,
+      "expected_per_team_game": 13.503,
+      "mean_gap": 0.203,
+      "tolerance": 0.1,
+      "within_tolerance": false,
+      "trips_per_fga": 0.164852,
+      "points_per_trip": 1.367318,
+      "and_one_share_of_trips": 0.131883
+    },
+    "2016": {
+      "split": "development",
+      "team_games": 518,
+      "ft_points_per_team_game": 13.5097,
+      "expected_per_team_game": 13.7424,
+      "mean_gap": -0.2328,
+      "tolerance": 0.1,
+      "within_tolerance": false,
+      "trips_per_fga": 0.157385,
+      "points_per_trip": 1.392637,
+      "and_one_share_of_trips": 0.16398
+    },
+    "2017": {
+      "split": "development",
+      "team_games": 520,
+      "ft_points_per_team_game": 14.5096,
+      "expected_per_team_game": 13.6202,
+      "mean_gap": 0.8894,
+      "tolerance": 0.1,
+      "within_tolerance": false,
+      "trips_per_fga": 0.169846,
+      "points_per_trip": 1.393609,
+      "and_one_share_of_trips": 0.166605
+    },
+    "2018": {
+      "split": "development",
+      "team_games": 518,
+      "ft_points_per_team_game": 13.6988,
+      "expected_per_team_game": 13.7097,
+      "mean_gap": -0.0109,
+      "tolerance": 0.1,
+      "within_tolerance": true,
+      "trips_per_fga": 0.158265,
+      "points_per_trip": 1.409055,
+      "and_one_share_of_trips": 0.156275
+    },
+    "2019": {
+      "split": "development",
+      "team_games": 504,
+      "ft_points_per_team_game": 13.6885,
+      "expected_per_team_game": 13.7884,
+      "mean_gap": -0.0999,
+      "tolerance": 0.1,
+      "within_tolerance": true,
+      "trips_per_fga": 0.155266,
+      "points_per_trip": 1.428364,
+      "and_one_share_of_trips": 0.16087
+    },
+    "2020": {
+      "split": "development",
+      "team_games": 656,
+      "ft_points_per_team_game": 13.4009,
+      "expected_per_team_game": 13.4153,
+      "mean_gap": -0.0143,
+      "tolerance": 0.1,
+      "within_tolerance": true,
+      "trips_per_fga": 0.153782,
+      "points_per_trip": 1.448509,
+      "and_one_share_of_trips": 0.185863
+    },
+    "2021": {
+      "split": "development",
+      "team_games": 598,
+      "ft_points_per_team_game": 12.3027,
+      "expected_per_team_game": 13.5788,
+      "mean_gap": -1.2762,
+      "tolerance": 0.1,
+      "within_tolerance": false,
+      "trips_per_fga": 0.144373,
+      "points_per_trip": 1.407769,
+      "and_one_share_of_trips": 0.190968
+    },
+    "2022": {
+      "split": "development",
+      "team_games": 656,
+      "ft_points_per_team_game": 14.436,
+      "expected_per_team_game": 13.4834,
+      "mean_gap": 0.9526,
+      "tolerance": 0.1,
+      "within_tolerance": false,
+      "trips_per_fga": 0.166479,
+      "points_per_trip": 1.424274,
+      "and_one_share_of_trips": 0.185141
+    },
+    "2023": {
+      "split": "validation",
+      "team_games": 662,
+      "ft_points_per_team_game": 13.3353,
+      "expected_per_team_game": 13.9349,
+      "mean_gap": -0.5995,
+      "tolerance": 0.2,
+      "within_tolerance": false,
+      "trips_per_fga": 0.152113,
+      "points_per_trip": 1.404167,
+      "and_one_share_of_trips": 0.188643
+    }
+  },
+  "all_within_tolerance": false
+}
