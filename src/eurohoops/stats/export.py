@@ -11,6 +11,9 @@ Layout (every number a raw total; the site derives per-game, per-36 and per-100 
 - ``seasons/{season}/games.json``: the games and every player's game log.
 - ``seasons/{season}/shots.json``: hex bins for the league, each team (taken and allowed) and
   each player.
+- ``seasons/{season}/attempts.json``: every located attempt (court centimetres, packed flags for
+  make, value, fastbreak, second chance, band and period, player and team indices) for the
+  Shots explorer's filters.
 
 Team codes are the source codes up to here; ``codes`` renames them for display (DISPLAY_CODES).
 """
@@ -41,6 +44,8 @@ PLAYER_FIELDS = ("gp", "gs", "sec", *STATS, "pm", "poss", "game_sec", *TEAM_TOTA
 TEAM_FIELDS = ("gp", *STATS, "poss", "game_sec")
 LOG_FIELDS = ("game_id", "team", "starter", "sec", *STATS, "pm")
 GAME_FIELDS = ("date", "round", "phase", "home", "away", "home_score", "away_score")
+# attempts.json ``flags``: bit -> meaning (``band`` takes three bits, ``period`` the rest)
+ATTEMPT_BITS = {"made": 0, "three": 1, "fastbreak": 2, "second_chance": 3, "band": 4, "period": 7}
 
 
 @dataclass(frozen=True)
@@ -226,6 +231,46 @@ def _shots_payload(season: int, shots: pd.DataFrame, inputs: Inputs) -> dict[str
     }
 
 
+def attempt_flags(shots: pd.DataFrame) -> pd.Series:
+    """Each shot packed into one integer (``ATTEMPT_BITS``), so the explorer can filter it."""
+    parts = {
+        "made": shots["made"],
+        "three": shots["value"] == 3,
+        "fastbreak": shots["fastbreak"],
+        "second_chance": shots["second_chance"],
+        "band": shots["band"].map({b: i for i, b in enumerate(BANDS)}),
+        "period": shots["period"],
+    }
+    packed = pd.Series(0, index=shots.index, dtype="int64")
+    for name, values in parts.items():
+        packed += values.astype("int64") * 2 ** ATTEMPT_BITS[name]
+    return packed
+
+
+def _attempts_payload(season: int, shots: pd.DataFrame, inputs: Inputs) -> dict[str, Any]:
+    """Every located attempt as parallel columns: coordinates in centimetres, flags, indices."""
+    players = sorted(set(shots["player_id"]))
+    teams = sorted({inputs.codes.get(t, t) for t in (*shots["team"], *shots["opponent"])})
+    player_at = {p: i for i, p in enumerate(players)}
+    team_at = {t: i for i, t in enumerate(teams)}
+
+    def team_index(codes: pd.Series) -> list[int]:
+        return [team_at[inputs.codes.get(t, t)] for t in codes]
+
+    return {
+        "season": season,
+        "bits": ATTEMPT_BITS,
+        "players": players,
+        "teams": teams,
+        "x": [int(v) for v in (shots["x"] * 100).round()],
+        "y": [int(v) for v in (shots["y"] * 100).round()],
+        "flags": [int(v) for v in attempt_flags(shots)],
+        "player": [player_at[p] for p in shots["player_id"]],
+        "team": team_index(shots["team"]),
+        "opp": team_index(shots["opponent"]),
+    }
+
+
 def build_payloads(inputs: Inputs, now: datetime) -> dict[str, dict[str, Any]]:
     """Relative path -> JSON payload of every file in the stats directory."""
     frame = _player_frame(inputs)
@@ -246,6 +291,7 @@ def build_payloads(inputs: Inputs, now: datetime) -> dict[str, dict[str, Any]]:
         )
         files[f"{base}/games.json"] = _games_payload(season, lines, games, inputs)
         files[f"{base}/shots.json"] = _shots_payload(season, shots, inputs)
+        files[f"{base}/attempts.json"] = _attempts_payload(season, shots, inputs)
         cover = coverage.get(season)
         seasons.append(
             {
