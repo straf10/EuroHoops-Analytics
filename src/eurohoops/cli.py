@@ -67,7 +67,7 @@ from eurohoops.marts import (
 from eurohoops.odds import OddsApiError, OddsPaths, api_key, record_odds
 from eurohoops.parse.box import build_box_tables
 from eurohoops.parse.continuity import continuity_report
-from eurohoops.parse.free_throws import build_ft_team_games, ft_report
+from eurohoops.parse.free_throws import LEVEL_CHECK, build_ft_team_games, ft_report
 from eurohoops.parse.games import (
     build_games_table,
     build_gbl_tables,
@@ -363,12 +363,25 @@ def free_throws() -> None:
     report = ft_report(table, M2_SEASONS.development, M2_SEASONS.validation)
     _write_json(FREE_THROWS_REPORT, report)
     for season, block in report["seasons"].items():
+        shares = block["shares"]
+        bands_out = [b for b, v in shares["bands"].items() if not v["within_tolerance"]]
+        teams = shares["teams"]
         typer.echo(
-            f"{season} {block['split']}: FT points {block['ft_points_per_team_game']:.2f}, "
-            f"expected {block['expected_per_team_game']:.2f}, gap {block['mean_gap']:+.3f} "
-            f"({'within' if block['within_tolerance'] else 'OUTSIDE'} ±{block['tolerance']})"
+            f"{season} {block['split']}: teams {'PASS' if shares['teams_pass'] else 'FAIL'}, "
+            f"bands outside 2 SE: {bands_out or 'none'} (team mean |gap| "
+            f"{teams['mean_abs_share_gap']:.5f} <= {teams['mean_abs_tolerance']:.5f}: "
+            f"{teams['mean_abs_within_tolerance']}; r {teams['pearson_r']:.3f} >= "
+            f"{teams['r_tolerance']:.3f}: {teams['r_within_tolerance']}) | {LEVEL_CHECK}: FT "
+            f"points {block['ft_points_per_team_game']:.2f}, expected "
+            f"{block['expected_per_team_game']:.2f}, gap {block['mean_gap']:+.3f}"
         )
-    typer.echo(f"wrote {FREE_THROWS_REPORT}")
+    gate = report["share_check"]
+    typer.echo(
+        f"band flags {gate['band_flags']} of {gate['band_checks']} (allowed "
+        f"{gate['band_flags_allowed']}); team checks pass every season: "
+        f"{gate['team_checks_pass_every_season']}; F2 share gate "
+        f"{'PASSED' if gate['passed'] else 'FAILED'}; wrote {FREE_THROWS_REPORT}"
+    )
 
 
 @app.command()
