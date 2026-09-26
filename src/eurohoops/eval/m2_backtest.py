@@ -16,6 +16,7 @@ wins, else the spline baseline) must meet F-f.
 
 import hashlib
 import json
+import time
 from collections.abc import Callable, Sequence
 from itertools import combinations
 from typing import Any
@@ -67,12 +68,15 @@ class Folds:
         pairs: bool,
         later: pd.DataFrame,
     ) -> None:
+        clock = time.perf_counter()
         season = shots["season"].to_numpy()
         self.index = {s: np.flatnonzero(season == s) for s in development}
         self.oof = np.full(len(shots), np.nan)
         for s in development:
             train = shots.iloc[np.flatnonzero(np.isin(season, development) & (season != s))]
             self.oof[self.index[s]] = fit(train)(shots.iloc[self.index[s]])
+        self.seconds = {"loso": time.perf_counter() - clock}
+        clock = time.perf_counter()
         self.pair: dict[tuple[int, int], FloatArray] = {}  # (left out s, t) -> preds on t
         if pairs:
             for s, t in combinations(development, 2):
@@ -80,11 +84,17 @@ class Folds:
                 model = fit(shots.iloc[np.flatnonzero(keep)])
                 self.pair[(s, t)] = model(shots.iloc[self.index[t]])
                 self.pair[(t, s)] = model(shots.iloc[self.index[s]])
+        self.seconds["pairs"] = time.perf_counter() - clock
+        clock = time.perf_counter()
         self.later = (
             fit(shots.iloc[np.flatnonzero(np.isin(season, development))])(later)
             if len(later)
             else np.empty(0)
         )
+        self.seconds["later"] = time.perf_counter() - clock
+
+    def timing(self) -> str:
+        return ", ".join(f"{k} {v:.0f} s" for k, v in self.seconds.items())
 
 
 def mean_folds(folds: Sequence[Folds]) -> Folds:
@@ -94,6 +104,7 @@ def mean_folds(folds: Sequence[Folds]) -> Folds:
     out.oof = np.mean([f.oof for f in folds], axis=0)
     out.pair = {k: np.mean([f.pair[k] for f in folds], axis=0) for k in folds[0].pair}
     out.later = np.mean([f.later for f in folds], axis=0)
+    out.seconds = {}
     return out
 
 
@@ -281,48 +292,50 @@ def gate(
     }
 
 
-def run_m2_backtest(
-    shots: pd.DataFrame,
-    seasons: M2Seasons,
-    study: dict[str, Any],
-    score_test: bool,
-    progress: Progress,
-) -> tuple[dict[str, Any], pd.DataFrame]:
-    """The report and the chosen M2's out-of-fold P(make) per shot (development LOSO,
-    validation, and test when scored). ``study`` is the stored Optuna result."""
-    used = shots[shots["validated_season"]]
-    dev = used[used["season"].isin(seasons.development)].reset_index(drop=True)
-    coded = outcome_coded_levels(dev)
-    if coded:
-        raise ValueError(f"outcome-coded M2 feature levels on development shots: {coded}")
-    later_seasons = [*seasons.validation, *(seasons.test if score_test else ())]
-    later = used[used["season"].isin(later_seasons)].reset_index(drop=True)
-    y_dev, y_later = _labels(dev), _labels(later)
-    val = later["season"].isin(seasons.validation).to_numpy()
-    params = study["best_params"]
+class Lap:
+    """Wall time of each backtest phase, reported as ``TIMING <phase>: <s> s`` progress lines."""
 
+    def __init__(self, progress: Progress) -> None:
+        self.progress = progress
+        self.clock = time.perf_counter()
+
+    def __call__(self, label: str) -> None:
+        now = time.perf_counter()
+        self.progress(f"TIMING {label}: {now - self.clock:.1f} s")
+        self.clock = now
+
+
+def spline_search(
+    dev: pd.DataFrame,
+    later: pd.DataFrame,
+    development: Sequence[int],
+    progress: Progress,
+    lap: Lap,
+) -> tuple[list[dict[str, Any]], dict[str, Any], Folds]:
+    """The declared knots x L2 grid by pooled LOSO CV log loss (ties: fewer knots, smaller
+    L2), then the chosen configuration's folds with the leave-two-out pairs."""
+    y_dev = _labels(dev)
     grid = []
     for n_knots in SPLINE_KNOTS:
         for l2 in SPLINE_L2:
-            folds = Folds(dev, seasons.development, spline_fitter(n_knots, l2), False, later[:0])
+            folds = Folds(dev, development, spline_fitter(n_knots, l2), False, later[:0])
             grid.append({"knots": n_knots, "l2": l2, "cv_log_loss": _r(cv_log_loss(folds, y_dev))})
             progress(f"spline knots {n_knots} l2 {l2}: CV log loss {grid[-1]['cv_log_loss']}")
+            lap(f"spline grid knots {n_knots} l2 {l2} (12 LOSO fits)")
     best = min(grid, key=lambda g: (g["cv_log_loss"], g["knots"], g["l2"]))
     spline = Folds(
-        dev, seasons.development, spline_fitter(int(best["knots"]), float(best["l2"])), True, later
+        dev, development, spline_fitter(int(best["knots"]), float(best["l2"])), True, later
     )
     progress(f"spline knots {best['knots']} l2 {best['l2']}: leave-two-out fits done")
-    seeds: dict[int, Folds] = {}
-    for seed in SEEDS:
-        seeds[seed] = Folds(dev, seasons.development, gbm_fitter(params, seed), True, later)
-        progress(f"lgbm seed {seed}: done")
-    gbm = mean_folds(list(seeds.values()))
+    lap(f"spline chosen ({spline.timing()})")
+    return grid, best, spline
 
-    oof: dict[str, FloatArray] = {"spline": spline.oof, "lgbm": gbm.oof}
-    held: dict[str, FloatArray] = {"spline": spline.later, "lgbm": gbm.later}
-    oof["spline_iso"], held["spline_iso"] = calibrate(spline, y_dev)
-    oof["lgbm_iso"], held["lgbm_iso"] = calibrate(gbm, y_dev)
 
+def seed_robustness(
+    seeds: dict[int, Folds], y_dev: FloatArray, y_later: FloatArray, val: npt.NDArray[np.bool_]
+) -> tuple[dict[str, dict[int, FloatArray]], dict[str, Any]]:
+    """F-l: each seed's held-out predictions (raw and isotonic) and its CV and validation log
+    loss, with the mean and sd over seeds."""
     seed_held: dict[str, dict[int, FloatArray]] = {"lgbm": {}, "lgbm_iso": {}}
     per_seed: dict[str, Any] = {}
     for seed, folds in seeds.items():
@@ -341,13 +354,53 @@ def run_m2_backtest(
     summary = {
         variant: {
             key: {
-                "mean_of_seeds": _r(np.mean([per_seed[str(s)][variant][key] for s in SEEDS])),
-                "sd": _r(np.std([per_seed[str(s)][variant][key] for s in SEEDS], ddof=1)),
+                "mean_of_seeds": _r(np.mean([per_seed[str(s)][variant][key] for s in seeds])),
+                "sd": _r(np.std([per_seed[str(s)][variant][key] for s in seeds], ddof=1)),
             }
             for key in ("cv_log_loss", "validation_log_loss")
         }
         for variant in CHALLENGERS
     }
+    return seed_held, {"seeds": list(seeds), "per_seed": per_seed, "summary": summary}
+
+
+def run_m2_backtest(
+    shots: pd.DataFrame,
+    seasons: M2Seasons,
+    study: dict[str, Any],
+    score_test: bool,
+    progress: Progress,
+) -> tuple[dict[str, Any], pd.DataFrame]:
+    """The report and the chosen M2's out-of-fold P(make) per shot (development LOSO,
+    validation, and test when scored). ``study`` is the stored Optuna result."""
+    lap = Lap(progress)
+    used = shots[shots["validated_season"]]
+    dev = used[used["season"].isin(seasons.development)].reset_index(drop=True)
+    coded = outcome_coded_levels(dev)
+    if coded:
+        raise ValueError(f"outcome-coded M2 feature levels on development shots: {coded}")
+    lap("split + outcome-coding audit")
+    later_seasons = [*seasons.validation, *(seasons.test if score_test else ())]
+    later = used[used["season"].isin(later_seasons)].reset_index(drop=True)
+    y_dev, y_later = _labels(dev), _labels(later)
+    val = later["season"].isin(seasons.validation).to_numpy()
+    params = study["best_params"]
+
+    grid, best, spline = spline_search(dev, later, seasons.development, progress, lap)
+    seeds: dict[int, Folds] = {}
+    for seed in SEEDS:
+        seeds[seed] = Folds(dev, seasons.development, gbm_fitter(params, seed), True, later)
+        progress(f"lgbm seed {seed}: done")
+        lap(f"lgbm seed {seed} ({seeds[seed].timing()})")
+    gbm = mean_folds(list(seeds.values()))
+
+    oof: dict[str, FloatArray] = {"spline": spline.oof, "lgbm": gbm.oof}
+    held: dict[str, FloatArray] = {"spline": spline.later, "lgbm": gbm.later}
+    oof["spline_iso"], held["spline_iso"] = calibrate(spline, y_dev)
+    oof["lgbm_iso"], held["lgbm_iso"] = calibrate(gbm, y_dev)
+    lap("isotonic calibration, spline + lgbm seed mean")
+    seed_held, robustness = seed_robustness(seeds, y_dev, y_later, val)
+    lap("per-seed isotonic calibration and scores")
 
     variants: dict[str, Any] = {}
     for variant in VARIANTS:
@@ -361,6 +414,7 @@ def run_m2_backtest(
             "validation": split_scores(held[variant][val], later[val]),
             "test": split_scores(held[variant][~val], later[~val]) if score_test else None,
         }
+    lap("variant scores (overall, bands, types, contexts)")
     verdict = gate(
         variants,
         "validation",
@@ -368,6 +422,7 @@ def run_m2_backtest(
         {v: {s: p[val] for s, p in seed_held[v].items()} for v in CHALLENGERS},
         later[val],
     )
+    lap("gate on validation (bootstraps)")
     test_gate = (
         gate(
             variants,
@@ -379,6 +434,7 @@ def run_m2_backtest(
         if score_test
         else None
     )
+    lap("gate on test (bootstraps)")
     chosen = verdict["chosen"]
     keys = ["game_id", "event", "season"]
     xpts = pd.concat(
@@ -402,10 +458,11 @@ def run_m2_backtest(
         "spline_chosen": {"knots": best["knots"], "l2": best["l2"]},
         "optuna_study": study,
         "lightgbm_params": params,
-        "seed_robustness": {"seeds": list(SEEDS), "per_seed": per_seed, "summary": summary},
+        "seed_robustness": robustness,
         "variants": variants,
         "gate": verdict,
         "test_scored": score_test,
         "test_gate": test_gate,
     }
+    lap("xPTS table + report (data hash)")
     return report, xpts
