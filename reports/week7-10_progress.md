@@ -181,3 +181,20 @@ Every development and validation number is identical to the verdict report (chec
   ECE +0.000633 [−0.003120, +0.003892]; no seed flips. lgbm test ECE 0.012626 → not
   calibrated on test either. Same verdict as validation: beats the baseline, fails F-f.
 iteration 3 | F3 spline, F4 LightGBM + Optuna, F5 evaluation/gate/test | fast gate 1-6, 14, 19 before each commit; F3/F4 tests; study 3508 s; backtest 2951 s (RED > 2400 s) | declared → invalid run (leak) → amended declaration afbc08e → verdict 84308f9 (FAILED: not calibrated) → test run | see TEST line
+TEST 6b2a5c1
+
+## F8 chart subjects (named before drawing, 2026-09-26)
+Validation season 2023-24, xPTS from the development-fitted chosen M2 (lgbm). Teams (source
+codes): PAN, OLY, MAD (shown as PAO, OLY, RMB where `DISPLAY_CODES` renames them). Players: the
+three with the most 2023-24 FGA in the shot table: P011948 HOWARD, MARKUS (589), P005985
+JAMES, MIKE (541), P012774 NUNN, KENDRICK (471).
+Charts, each opened with the Read tool after the redraw (titles on two lines, grey hex edges so
+a white "as expected" hexagon is visible; the first draw clipped long titles and hid white hexes):
+- xpts_surface_2023.png: court lines in place (arc, corners, key, restricted area); legend and title readable; sequential scale (not a residual chart); rim ≈ 1.8, threes ≈ 1.1-1.3, long 2s ≈ 0.7.
+- team_PAO_2023.png: lines in place; readable; scale centred at 0 (TwoSlopeNorm ±0.6); +2.9 per 100.
+- team_OLY_2023.png: lines in place; readable; centred at 0; −1.6 per 100.
+- team_RMB_2023.png: lines in place; readable; centred at 0; +7.9 per 100.
+- player_P011948_2023.png (Howard): lines in place; readable; centred at 0; sparse (≥ 5 shots per hexagon); +13.7 per 100.
+- player_P005985_2023.png (James): lines in place; readable; centred at 0; +5.1 per 100.
+- player_P012774_2023.png (Nunn): lines in place; readable; centred at 0; few hexagons reach 5 shots; +2.7 per 100.
+iteration 4 | F6 team shot quality + F7 player shot-making + F8 charts | fast gate 1-6 (385 tests, 95.6%); F6 calibration in the large RED (ratio 0.977-1.020, 5/12 development seasons within 0.5%); F7 verdict "stable enough to show" (y2y r 0.396 [0.311, 0.481], split-half 0.315) = F-k rule (test); F8 7 charts opened and logged | see F6-F8 commit

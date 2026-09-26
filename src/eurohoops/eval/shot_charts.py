@@ -18,6 +18,7 @@ HEX_GRID = 26
 MIN_SHOTS_PER_HEX = 5
 LINE_COLOUR = "#333333"
 LINE_WIDTH = 1.2
+HEX_EDGE = "#9a9a9a"  # so a white (as-expected) hexagon is visible against empty court
 EXTENT = (-court.SIDELINE_X_M, court.SIDELINE_X_M, court.BASELINE_Y_M, 9.5)
 
 
@@ -125,7 +126,8 @@ def xpts_surface(shots: pd.DataFrame, title: str, path: Path) -> None:
         extent=EXTENT,
         mincnt=MIN_SHOTS_PER_HEX,
         cmap="viridis",
-        linewidths=0.2,
+        linewidths=0.3,
+        edgecolors=HEX_EDGE,
     )
     draw_court(ax)
     bar = fig.colorbar(hexes, ax=ax, shrink=0.8)
@@ -155,7 +157,8 @@ def residual_chart(shots: pd.DataFrame, title: str, path: Path, limit: float = 0
         mincnt=MIN_SHOTS_PER_HEX,
         cmap="RdBu_r",
         norm=TwoSlopeNorm(vcenter=0.0, vmin=-limit, vmax=limit),
-        linewidths=0.2,
+        linewidths=0.3,
+        edgecolors=HEX_EDGE,
     )
     draw_court(ax)
     bar = fig.colorbar(hexes, ax=ax, shrink=0.8)

@@ -555,7 +555,7 @@ def shot_charts() -> None:
     label = f"{season}-{(season + 1) % 100:02d}"
     xpts_surface(
         scored,
-        f"EuroLeague {label}: expected points per shot (M2, out of sample)",
+        f"EuroLeague {label}\nexpected points per shot (M2, out of sample)",
         M2_CHARTS_DIR / f"xpts_surface_{season}.png",
     )
     names = dict(zip(shooters["shooter"], shooters["name"], strict=True))
@@ -563,14 +563,14 @@ def shot_charts() -> None:
         shown = DISPLAY_CODES[EUROLEAGUE.name].get(team, team)
         residual_chart(
             scored[scored["team"] == team],
-            f"{shown} {label}: actual minus expected points per shot",
+            f"{shown} {label}\nactual minus expected points per shot",
             M2_CHARTS_DIR / f"team_{shown}_{season}.png",
         )
     top = scored["shooter"].value_counts().sort_index().sort_values(ascending=False, kind="stable")
     for shooter in top.index[:M2_CHART_PLAYERS]:
         residual_chart(
             scored[scored["shooter"] == shooter],
-            f"{names.get(shooter, shooter)} {label}: actual minus expected points per shot",
+            f"{names.get(shooter, shooter)} {label}\nactual minus expected points per shot",
             M2_CHARTS_DIR / f"player_{shooter}_{season}.png",
         )
         typer.echo(f"player {shooter} {names.get(shooter, '')}: {top[shooter]} FGA")
