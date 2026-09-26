@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# The phase checklist, top to bottom (weeks 5-7 §6 items 1-20, weeks 7-10 items 21-30). Prints PASS/FAIL per
+# The phase checklist, top to bottom (weeks 5-7 §6 items 1-20, weeks 7-10 items 21-30, weeks
+# 7-10b items 31-32). Prints PASS/FAIL per
 # item; the exit code is the number of FAILs. Run from anywhere: `bash scripts/checklist.sh`.
 #
 #   BASE      git ref the predictions and the stint sample are compared with (default origin/main)
@@ -107,4 +108,9 @@ skip 29 "F10 model card" || {
   res "${PIPESTATUS[0]}"
 }
 skip 30 "no-dev build + predict" || { item "30 uv sync --no-dev, then build + predict"; bash "$CHECKS/no_dev.sh"; res $?; }
+skip 32 "G1 outcome coding" || {
+  item "32 G1 no outcome-coded M2 feature level (both builders, development shots)"
+  uv run python "$CHECKS/m2_outcome_coding.py"
+  res $?
+}
 echo; echo "FAILS: $fails (end $(date -u +%H:%MZ))"; exit "$fails"

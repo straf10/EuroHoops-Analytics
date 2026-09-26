@@ -27,6 +27,7 @@ import pandas as pd
 from eurohoops.config import M2Seasons
 from eurohoops.eval.shot_metrics import calibrated, cluster_bootstrap, ece, scores, shot_log_loss
 from eurohoops.models.elo import FloatArray
+from eurohoops.models.feature_audit import outcome_coded_levels
 from eurohoops.models.xpts import fit_isotonic, fit_spline
 from eurohoops.models.xpts_gbm import N_TRIALS, STUDY_SEED, fit_gbm, run_study
 from eurohoops.parse.shot_table import BANDS
@@ -291,6 +292,9 @@ def run_m2_backtest(
     validation, and test when scored). ``study`` is the stored Optuna result."""
     used = shots[shots["validated_season"]]
     dev = used[used["season"].isin(seasons.development)].reset_index(drop=True)
+    coded = outcome_coded_levels(dev)
+    if coded:
+        raise ValueError(f"outcome-coded M2 feature levels on development shots: {coded}")
     later_seasons = [*seasons.validation, *(seasons.test if score_test else ())]
     later = used[used["season"].isin(later_seasons)].reset_index(drop=True)
     y_dev, y_later = _labels(dev), _labels(later)

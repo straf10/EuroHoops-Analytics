@@ -39,6 +39,13 @@ never uses them (`OUTCOME_CODED_FLAGS`); per-season shares and make rates are in
 `test_the_feed_context_flags_are_outcome_coded`. Found in the first M2 run (see
 `reports/week7-10_progress.md`).
 
+**Dropped for good** (user decision, 2026-09-26; F-b amended in `prompts/week-7-10.md`). Two
+guards keep them, and anything like them, out of M2: a name guard in both feature builders, and
+a data audit (`models/feature_audit.py`, checklist item 32, also run at the start of every M2
+backtest) that fails if any flag or level of either builder has a make rate ≥ 0.99 or ≤ 0.01
+among ≥ 100 development shots where it is set. On the development shots the closest levels are
+real geometry: zone A (at the rim) 0.938 and zone J (beyond half court) 0.026.
+
 ## Exclusions (`shots_excluded`, never silent)
 - `unparseable`: team not in the game, points inconsistent with the code, no score, no clock, no
   coordinates or the free-throw sentinel (−1, −1) on a field goal, unknown action.

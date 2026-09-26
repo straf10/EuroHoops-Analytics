@@ -73,7 +73,7 @@ class SplineSpec:
     kept: npt.NDArray[np.bool_]  # raw columns that vary on the training shots
 
 
-def _raw_design(
+def raw_design(
     shots: pd.DataFrame, knots_two: FloatArray, knots_three: FloatArray, zones: tuple[str, ...]
 ) -> tuple[FloatArray, tuple[str, ...]]:
     distance = shots["distance"].to_numpy(dtype=np.float64)
@@ -126,7 +126,7 @@ def make_spec(shots: pd.DataFrame, n_knots: int) -> SplineSpec:
     zones = tuple(sorted(str(z) for z, n in counts.items() if n >= MIN_ZONE_SHOTS))[1:]
     knots_two = spline_knots(distance[~three], n_knots)
     knots_three = spline_knots(distance[three], n_knots)
-    raw, names = _raw_design(shots, knots_two, knots_three, zones)
+    raw, names = raw_design(shots, knots_two, knots_three, zones)
     kept = raw.std(axis=0) > CONSTANT_SD  # e.g. season when training on a single season
     raw = raw[:, kept]
     centre = raw.mean(axis=0)
@@ -140,7 +140,7 @@ def make_spec(shots: pd.DataFrame, n_knots: int) -> SplineSpec:
 
 def design(shots: pd.DataFrame, spec: SplineSpec) -> FloatArray:
     """Whitened design matrix with a leading intercept column."""
-    raw, _ = _raw_design(shots, spec.knots_two, spec.knots_three, spec.zones)
+    raw, _ = raw_design(shots, spec.knots_two, spec.knots_three, spec.zones)
     white = (raw[:, spec.kept] - spec.centre) @ spec.whiten
     return np.column_stack([np.ones(len(shots)), white])
 
