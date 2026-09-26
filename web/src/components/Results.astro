@@ -1,227 +1,281 @@
 ---
+import check from "@phosphor-icons/core/assets/bold/check-bold.svg?raw";
+import cross from "@phosphor-icons/core/assets/bold/x-bold.svg?raw";
 import type { Competition } from "../lib/format";
-import { athensDay, call, pct } from "../lib/format";
+import { athensDay, athensTime, call, pct } from "../lib/format";
 
 interface Props {
   comp: Competition;
 }
 const { comp } = Astro.props;
 const results = comp.results;
+const hits = results.filter((r) => r.hit && r.provable).length;
+const scored = results.filter((r) => r.provable).length;
 ---
 
 <div class="results" data-comp={comp.key}>
   {
     results.length > 0 ? (
-      <div class="scroll">
-        <table>
-          <caption class="sr-only">
-            {comp.title}: latest finished games against the pre-registered call
-          </caption>
-          <thead>
-            <tr>
-              <th scope="col">Date</th>
-              <th scope="col">Home</th>
-              <th scope="col" class="num">Score</th>
-              <th scope="col">Away</th>
-              <th scope="col">Model's call</th>
-            </tr>
-          </thead>
-          <tbody>
-            {results.map((r) => {
-              const c = call(r);
-              const homeWon = r.home_score > r.away_score;
-              return (
-                <tr id={`r-${r.game_id}`}>
-                  <td class="date">{athensDay(r.tipoff_utc)}</td>
-                  <td class:list={["team", { won: homeWon }]}>
-                    <b>{r.home.code}</b>
-                    <span class="name">{r.home.name}</span>
-                  </td>
-                  <td class="num score">
-                    {r.home_score}
-                    <span class="dash">-</span>
-                    {r.away_score}
-                  </td>
-                  <td class:list={["team", { won: !homeWon }]}>
-                    <b>{r.away.code}</b>
-                    <span class="name">{r.away.name}</span>
-                  </td>
-                  <td class="call">
-                    <span class:list={["mark", r.hit ? "hit" : "miss"]}>
-                      <span class="hand">
-                        {c.team.code} {pct(c.p)}
-                      </span>
-                      <svg viewBox="0 0 120 44" preserveAspectRatio="none" aria-hidden="true">
-                        {r.hit ? (
-                          <path pathLength="1" d="M62 5C28 3 5 11 5 23c0 11 22 17 55 16 33-1 56-8 55-19C114 9 88 3 52 6" />
-                        ) : (
-                          <path pathLength="1" d="M6 30C38 22 80 17 114 13" />
-                        )}
-                      </svg>
-                    </span>
-                    <span class="verdict">{r.hit ? "hit" : "miss"}</span>
-                    {!r.provable && (
-                      <a class="star" href="#not-provable" aria-label="Not scored, see note">
-                        *
-                      </a>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      <>
+        <p class="tally">
+          <b>{hits}</b> of <b>{scored}</b> favourites won in the latest {results.length} games.
+        </p>
+        <div class="scroll">
+          <table>
+            <caption class="sr-only">
+              {comp.title}: latest finished games against the pre-registered call
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col" class="w-date">
+                  Date
+                </th>
+                <th scope="col" class="r">
+                  Home
+                </th>
+                <th scope="col" class="c w-score">
+                  Score
+                </th>
+                <th scope="col">Away</th>
+                <th scope="col" class="w-call">
+                  Logged call
+                </th>
+                <th scope="col" class="w-result">
+                  Result
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {results.map((r) => {
+                const c = call(r);
+                const homeWon = r.home_score > r.away_score;
+                return (
+                  <tr id={`r-${r.game_id}`}>
+                    <td class="date">{athensDay(r.tipoff_utc)}</td>
+                    <td class:list={["team r", { won: homeWon }]}>
+                      <span class="name">{r.home.name}</span>
+                      <b>{r.home.code}</b>
+                    </td>
+                    <td class="c score">
+                      <span class:list={{ won: homeWon }}>{r.home_score}</span>
+                      <span class="dash">-</span>
+                      <span class:list={{ won: !homeWon }}>{r.away_score}</span>
+                    </td>
+                    <td class:list={["team", { won: !homeWon }]}>
+                      <b>{r.away.code}</b>
+                      <span class="name">{r.away.name}</span>
+                    </td>
+                    <td
+                      class="call"
+                      data-tip={`Logged ${athensDay(r.predicted_at_utc)}, ${athensTime(r.predicted_at_utc)} Athens<br>Tip-off ${athensDay(r.tipoff_utc)}, ${athensTime(r.tipoff_utc)}`}
+                    >
+                      {c.team.code} <span>{pct(c.p)}</span>
+                    </td>
+                    <td class="verdict">
+                      {r.provable ? (
+                        <span class:list={["pill", r.hit ? "hit" : "miss"]}>
+                          <span class="icon" set:html={r.hit ? check : cross} />
+                          {r.hit ? "Hit" : "Miss"}
+                        </span>
+                      ) : (
+                        <a class="pill unscored" href={`#not-provable-${comp.key}`}>
+                          Not scored
+                        </a>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </>
     ) : (
-      <p class="none hand">No logged {comp.title} game has finished yet.</p>
+      <p class="none">No logged {comp.title} game has finished yet.</p>
     )
   }
   {
     comp.scorecard.not_provable > 0 && (
-      <p class="footnote" id="not-provable">
-        * Shown but not scored: {comp.scorecard.not_provable} game
+      <p class="footnote" id={`not-provable-${comp.key}`}>
+        Not scored: {comp.scorecard.not_provable} game
         {comp.scorecard.not_provable > 1 ? "s" : ""} whose prediction was stamped before tip-off but
-        reached the public log only after it.
+        reached the public log only after it. They are shown, never counted.
       </p>
     )
   }
 </div>
 
 <style>
+  .tally {
+    color: var(--ink-2);
+    font-size: 0.9375rem;
+    margin-bottom: 16px;
+  }
+  .tally b {
+    color: var(--ink);
+    font-weight: 600;
+  }
   .scroll {
     overflow-x: auto;
-    margin-inline: -4px;
-    padding-inline: 4px;
   }
+  /* The table takes its natural width, so no slack column opens up between Date and Home. */
   table {
-    width: 100%;
+    width: auto;
+    min-width: 640px;
     border-collapse: collapse;
-    min-width: 520px;
+    font-size: 0.875rem;
+  }
+  /* Fixed widths for the short columns; the two team columns share the rest. */
+  .team {
+    min-width: 13rem;
+  }
+  .w-date {
+    width: 7rem;
+  }
+  .w-score {
+    width: 6rem;
+  }
+  .w-call {
+    width: 7.5rem;
+  }
+  .w-result {
+    width: 7rem;
   }
   th {
     text-align: left;
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: var(--ink-2);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    padding: 0 10px 10px 0;
-    border-bottom: 2px solid var(--ink);
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--muted);
+    padding: 0 12px 10px 0;
+    border-bottom: 1px solid var(--rule-strong);
+    white-space: nowrap;
   }
   td {
-    padding: 12px 10px 12px 0;
+    padding: 11px 12px 11px 0;
+    border-bottom: 1px solid var(--rule);
     vertical-align: middle;
+    white-space: nowrap;
   }
-  tbody tr + tr td {
-    border-top: 1px solid var(--line);
+  tbody tr {
+    transition: background-color 120ms ease;
   }
-  .num {
+  @media (hover: hover) and (pointer: fine) {
+    tbody tr:hover {
+      background: var(--sunk);
+    }
+  }
+  .r {
+    text-align: right;
+  }
+  .c {
     text-align: center;
   }
   .date {
+    color: var(--muted);
+  }
+  .team {
     color: var(--ink-2);
-    white-space: nowrap;
-    font-size: 0.92rem;
   }
   .team b {
-    font-family: var(--display);
-    font-weight: 700;
-    font-size: 1.1rem;
-    letter-spacing: 0.02em;
-    margin-right: 8px;
+    font-weight: 500;
+    margin-inline: 8px 0;
+  }
+  .team.r b {
+    margin-inline: 8px 0;
+  }
+  .team:not(.r) b {
+    margin-inline: 0 8px;
   }
   .team .name {
-    color: var(--ink-2);
-    font-size: 0.9rem;
+    color: var(--muted);
   }
+  .team.won,
   .team.won b {
-    font-weight: 900;
+    color: var(--ink);
+    font-weight: 600;
   }
   .score {
-    font-family: var(--display);
-    font-weight: 800;
-    font-size: 1.35rem;
-    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+  }
+  .score .won {
+    color: var(--ink);
+    font-weight: 600;
   }
   .dash {
-    color: var(--ink-2);
-    margin-inline: 4px;
+    margin-inline: 6px;
+    color: var(--rule-strong);
   }
   .call {
-    white-space: nowrap;
+    font-weight: 500;
+    cursor: default;
   }
-  .mark {
-    position: relative;
-    display: inline-block;
-    padding: 4px 12px;
-  }
-  .mark .hand {
-    font-size: 1.2rem;
-  }
-  .mark svg {
-    position: absolute;
-    inset: -3px -4px;
-    width: calc(100% + 8px);
-    height: calc(100% + 6px);
-    overflow: visible;
-    fill: none;
-    stroke: var(--red);
-    stroke-width: 2.6;
-    stroke-linecap: round;
-  }
-  .verdict {
-    color: var(--red);
-    font-size: 0.8rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    margin-left: 6px;
-  }
-  .star {
-    color: var(--red);
-    font-weight: 700;
-    text-decoration: none;
+  .call span {
+    color: var(--muted);
+    font-weight: 400;
     margin-left: 4px;
   }
-
-  @media (prefers-reduced-motion: no-preference) {
-    .mark path {
-      stroke-dasharray: 1;
-      stroke-dashoffset: 0;
-      animation: draw 520ms var(--ease-out) both;
-      animation-timeline: view();
-      animation-range: entry 20% cover 35%;
-    }
-    @keyframes draw {
-      from {
-        stroke-dashoffset: 1;
-      }
-    }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 9px 2px 7px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-decoration: none;
   }
-
+  .pill .icon {
+    display: inline-grid;
+    font-size: 11px;
+  }
+  /* Text stays ink; the icon and wash carry the outcome (blue: the call held, red: it did not). */
+  .hit {
+    color: var(--ink);
+    background: var(--data-1-wash);
+  }
+  .hit .icon {
+    color: var(--data-1);
+  }
+  .miss {
+    color: var(--ink);
+    background: var(--data-neg-wash);
+  }
+  .miss .icon {
+    color: var(--data-neg);
+  }
+  .unscored {
+    color: var(--muted);
+    background: var(--sunk);
+    box-shadow: inset 0 0 0 1px var(--rule);
+  }
+  .footnote,
   .none {
-    font-size: 1.5rem;
-    padding: 24px 0;
-  }
-  .footnote {
     margin-top: 14px;
-    color: var(--ink-2);
-    font-size: 0.88rem;
+    color: var(--muted);
+    font-size: 0.8125rem;
     max-width: 70ch;
   }
-
-  @media (max-width: 480px) {
-    .date,
-    th:first-child {
-      display: none;
-    }
-  }
-  @media (max-width: 640px) {
+  @media (max-width: 720px) {
     .team .name {
       display: none;
     }
     table {
       min-width: 0;
+    }
+  }
+  /* On phones the verdict must stay in view: drop the date, keep teams, score, call, result. */
+  @media (max-width: 560px) {
+    th:first-child,
+    .date {
+      display: none;
+    }
+    th,
+    td {
+      padding-right: 8px;
+    }
+    .dash {
+      margin-inline: 3px;
     }
   }
 </style>
