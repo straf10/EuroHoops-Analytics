@@ -50,6 +50,8 @@ Guards:
 | F-k | Stability rule for showing shot-making (decided before F7 runs) | **Shot-making is "stable enough to show" only if its year-to-year correlation (players with ≥ 200 FGA in consecutive seasons, development seasons) has a 90% CI lower bound ≥ 0.20 and the split-half correlation is ≥ 0.30. Otherwise the card says "not stable enough" and the player table stays in the report only.** |
 | F-l | Seed robustness (not repeated LOSO: its folds are fixed, a repeat gives identical numbers) | **The chosen LightGBM is refit with 5 seeds (20261001–20261005; row and feature subsampling on, as tuned). Report the mean and sd of LOSO CV and validation log loss across seeds. The gate uses the 5-seed mean prediction's log loss; the verdict also states whether any single seed would flip it. The Optuna study is not repeated per seed.** |
 
+Answered by the user, 2026-09-26: all defaults (F-a to F-l).
+
 ## 1. Hard constraints (all weeks 0–7 constraints still apply)
 - **Scope = this file only.** No RAPM, no player impact beyond shot-making, no league translation, no GBL shot model (the GBL has no coordinates), no site pages, no live use of M2. Build nothing "for later".
 - **The live logs are sacred.** Existing rows in `predictions/*.csv` and `odds/*.csv` stay byte-identical; `git diff origin/main -- predictions/ odds/` shows only added lines. No `model_version` of Elo or M1 changes.
