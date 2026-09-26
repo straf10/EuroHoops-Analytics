@@ -180,29 +180,35 @@ def twins_payload(
         mean, std = np.zeros(pool_feats.shape[1]), np.ones(pool_feats.shape[1])
     pool_z = (pool_feats - mean) / std
 
-    def window(pid: str, rows: pd.DataFrame) -> dict[str, Any] | None:
-        counts = rows[count_cols].to_numpy().sum(axis=0)
+    # plain arrays from here: pandas indexing per player was most of the export's time
+    values = games[count_cols].to_numpy(float)
+    game_seasons = games["season"].to_numpy(int)
+    located = values[:, :N_ZONES].sum(axis=1)
+
+    def window(pid: str, rows: np.ndarray[Any, Any]) -> dict[str, Any] | None:
+        counts = values[rows].sum(axis=0)
         if counts[:N_ZONES].sum() < min_window_att or not pool_keys:
             return None
         dist = distances((features(counts[None, :])[0] - mean) / std, pool_z)
         dist[own_rows.get(pid, [])] = np.inf  # a twin is always another player
         order = [int(i) for i in np.argsort(dist, kind="stable")[:TOP] if np.isfinite(dist[i])]
         return {
-            "from": int(rows["season"].iloc[0]),
-            "to": int(rows["season"].iloc[-1]),
+            "from": int(game_seasons[rows[0]]),
+            "to": int(game_seasons[rows[-1]]),
             "games": len(rows),
             "counts": _round(counts),
             "twins": [[i, round(float(match(dist[i])), 1)] for i in order],
         }
 
     players: dict[str, dict[str, Any]] = {}
-    for key, rows in games.groupby("player_id", sort=True):
-        pid = str(key)
-        spans = {f"last{n}": rows.tail(n) for n in WINDOW_GAMES if len(rows) > n}
-        located = rows.groupby("season")[count_cols[:N_ZONES]].sum().sum(axis=1)
-        enough = located.index[located >= min_window_att]
+    by_player = {str(k): np.asarray(v) for k, v in games.groupby("player_id").indices.items()}
+    for pid in sorted(by_player):
+        rows = by_player[pid]
+        spans = {f"last{n}": rows[-n:] for n in WINDOW_GAMES if len(rows) > n}
+        own_seasons, at = np.unique(game_seasons[rows], return_inverse=True)
+        enough = own_seasons[np.bincount(at, weights=located[rows]) >= min_window_att]
         if len(enough):  # his latest season with enough attempts (a new one starts small)
-            spans["season"] = rows[rows["season"] == enough[-1]]
+            spans["season"] = rows[game_seasons[rows] == enough[-1]]
         found = {name: window(pid, span) for name, span in spans.items()}
         if any(found.values()):
             players[pid] = {name: w for name, w in found.items() if w is not None}
