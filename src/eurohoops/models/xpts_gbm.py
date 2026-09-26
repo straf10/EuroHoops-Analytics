@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 
 from eurohoops.models.elo import FloatArray
@@ -44,15 +45,22 @@ STUDY_SEED = 20261001
 N_TRIALS = 60
 
 
+def zone_codes(shots: pd.DataFrame) -> npt.NDArray[np.int64]:
+    codes = shots["zone"].astype(str).map(ZONE_CODES).fillna(-1)
+    return np.asarray(codes.astype(np.int64), dtype=np.int64)
+
+
 def features(shots: pd.DataFrame) -> pd.DataFrame:
     """The challenger's feature frame (F-b without the outcome-coded flags): no identity column;
-    period caps at 5 (OT)."""
-    zone = shots["zone"].astype(str)
+    period caps at 5 (OT). A ``zone_code`` column already on ``shots`` (``zone_codes``, added
+    once per backtest) is used as is, which saves the string map on every fit."""
     return pd.DataFrame(
         {
             "distance": shots["distance"].to_numpy(dtype=np.float64),
             "angle": shots["angle"].to_numpy(dtype=np.float64),
-            "zone_code": zone.map(ZONE_CODES).fillna(-1).astype(np.int64).to_numpy(),
+            "zone_code": shots["zone_code"].to_numpy(dtype=np.int64)
+            if "zone_code" in shots
+            else zone_codes(shots),
             "three": (shots["value"].to_numpy() == 3).astype(np.float64),
             "seconds_left": shots["seconds_left"].to_numpy(dtype=np.float64),
             "period": np.minimum(shots["period"].to_numpy(), 5).astype(np.float64),
