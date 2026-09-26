@@ -24,3 +24,9 @@ FIRST VIEWPORT: heading and one-line explainer; one filter row (season, window, 
 FORM: Metric ranking, position 3 of 6 on the ranked list, seed key 0fc47d09. Signature interaction: changing measure, window or rate slides every dot to its new position in one 200 ms ease-out transition while names and values update in place; nothing animates on load.
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+
+## Adaptations recorded at the finish review (2026-09-27)
+
+- Owner decision (2026-09-27, recommendations accepted): the explainer is one line, "Every EuroLeague player since 2007-08, ranked on any measure. Click a column to re-rank."
+- Owner decision (2026-09-27, recommendations accepted, on "Players: chart and table rows don't line up. Leave it."): the chart keeps its 27px slots and the table its 34px rows.
+- Owner decision (2026-09-26/27): desktop table in its own scroll box with a foot fade and palette scrollbar; phones list the first 50 rows, then "Show all N players". Phones label every other axis tick.

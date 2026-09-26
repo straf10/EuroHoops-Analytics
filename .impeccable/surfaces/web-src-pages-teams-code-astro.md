@@ -22,3 +22,7 @@ FIRST VIEWPORT: club name and one fact line (record, net rating, pace) with the 
 FORM: Where they rank, position 3 of 7 on the ranked list, seed key 30ddfd3b. Signature interaction: on a season switch the club's blue dot slides to its new place on every strip (200 ms ease-out) while the gray field redraws; every other club's dot is a link to its page.
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+
+## Adaptations recorded at the finish review (2026-09-27)
+
+- Owner decision (2026-09-27, recommendations accepted): the gray dots' page ring is thinned to 0.75px so dense clusters read as dots; the rank ("3rd of 20") is in soft ink, a step above the labels.
