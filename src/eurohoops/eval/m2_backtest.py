@@ -18,6 +18,8 @@ import hashlib
 import json
 import time
 from collections.abc import Callable, Sequence
+from concurrent.futures import ProcessPoolExecutor
+from dataclasses import dataclass
 from itertools import combinations
 from typing import Any
 
@@ -26,9 +28,17 @@ import numpy.typing as npt
 import pandas as pd
 
 from eurohoops.config import M2Seasons
-from eurohoops.eval.shot_metrics import calibrated, cluster_bootstrap, ece, scores, shot_log_loss
+from eurohoops.eval.shot_metrics import (
+    calibrated,
+    cluster_bootstrap,
+    ece,
+    ece_diff_bootstrap,
+    scores,
+    shot_log_loss,
+)
 from eurohoops.models.elo import FloatArray
 from eurohoops.models.feature_audit import outcome_coded_levels
+from eurohoops.models.season_level import level_predictions
 from eurohoops.models.xpts import fit_isotonic, fit_spline
 from eurohoops.models.xpts_gbm import N_TRIALS, STUDY_SEED, fit_gbm, run_study
 from eurohoops.parse.shot_table import BANDS
@@ -56,9 +66,78 @@ def _r(value: float) -> float:
     return round(float(value), 6)
 
 
+LATER = -1  # target "the later seasons" in a fit job
+FIT_WORKERS = 2  # LightGBM fits in parallel processes of NUM_THREADS each (12 logical cores)
+Job = tuple[tuple[int, ...], tuple[int, ...]]  # (seasons left out, seasons / LATER predicted)
+
+
+def fold_jobs(development: Sequence[int], pairs: bool, has_later: bool) -> list[Job]:
+    """Every fit of a Folds: LOSO, then the leave-two-out pairs, then the development fit."""
+    jobs: list[Job] = [((s,), (s,)) for s in development]
+    if pairs:
+        jobs += [((s, t), (t, s)) for s, t in combinations(development, 2)]
+    if has_later:
+        jobs.append(((), (LATER,)))
+    return jobs
+
+
+def run_job(
+    fit: Fitter, shots: pd.DataFrame, later: pd.DataFrame, development: Sequence[int], job: Job
+) -> list[FloatArray]:
+    """Fit on the development seasons without ``job[0]``; predict each target of ``job[1]``."""
+    season = shots["season"].to_numpy()
+    keep = np.isin(season, development)
+    for s in job[0]:
+        keep &= season != s
+    model = fit(shots.iloc[np.flatnonzero(keep)])
+    return [
+        model(later) if t == LATER else model(shots.iloc[np.flatnonzero(season == t)])
+        for t in job[1]
+    ]
+
+
+_WORKER: dict[str, Any] = {}
+
+
+def _init_worker(shots: pd.DataFrame, later: pd.DataFrame, development: tuple[int, ...]) -> None:
+    _WORKER.update(shots=shots, later=later, development=development)
+
+
+def _worker_job(task: tuple[Fitter, Job]) -> list[FloatArray]:
+    fit, job = task
+    return run_job(fit, _WORKER["shots"], _WORKER["later"], _WORKER["development"], job)
+
+
+class FitPool:
+    """Worker processes that hold the development and later shots once and run fit jobs.
+
+    LightGBM with ``deterministic=True`` and a fixed ``num_threads`` gives byte-identical
+    predictions whether fits run one at a time or in parallel processes (verified,
+    reports/week7-10b_progress.md; ``test_parallel_fits_equal_sequential_fits``), so this is a
+    number-preserving speed-up."""
+
+    def __init__(
+        self, shots: pd.DataFrame, later: pd.DataFrame, development: Sequence[int], workers: int
+    ) -> None:
+        self.shots, self.later = shots, later
+        self.executor = ProcessPoolExecutor(
+            workers, initializer=_init_worker, initargs=(shots, later, tuple(development))
+        )
+
+    def run(self, fit: Fitter, jobs: Sequence[Job]) -> list[list[FloatArray]]:
+        return list(self.executor.map(_worker_job, [(fit, job) for job in jobs]))
+
+    def __enter__(self) -> "FitPool":
+        return self
+
+    def __exit__(self, *_: object) -> None:
+        self.executor.shutdown()
+
+
 class Folds:
     """Out-of-fold predictions of one fitter: LOSO on development, leave-two-out pairs for the
-    nested isotonic fit, and a development-wide fit for the later splits."""
+    nested isotonic fit, and a development-wide fit for the later splits. With a ``pool`` the
+    fits run in its worker processes (same jobs, same results)."""
 
     def __init__(
         self,
@@ -67,34 +146,34 @@ class Folds:
         fit: Fitter,
         pairs: bool,
         later: pd.DataFrame,
+        *,
+        pool: FitPool | None = None,
     ) -> None:
         clock = time.perf_counter()
         season = shots["season"].to_numpy()
         self.index = {s: np.flatnonzero(season == s) for s in development}
+        jobs = fold_jobs(development, pairs, bool(len(later)))
+        if pool is None:
+            results = [run_job(fit, shots, later, development, job) for job in jobs]
+        else:
+            if pool.shots is not shots or pool.later is not later:
+                raise ValueError("the pool holds other shots than this Folds")
+            results = pool.run(fit, jobs)
         self.oof = np.full(len(shots), np.nan)
-        for s in development:
-            train = shots.iloc[np.flatnonzero(np.isin(season, development) & (season != s))]
-            self.oof[self.index[s]] = fit(train)(shots.iloc[self.index[s]])
-        self.seconds = {"loso": time.perf_counter() - clock}
-        clock = time.perf_counter()
         self.pair: dict[tuple[int, int], FloatArray] = {}  # (left out s, t) -> preds on t
-        if pairs:
-            for s, t in combinations(development, 2):
-                keep = np.isin(season, development) & (season != s) & (season != t)
-                model = fit(shots.iloc[np.flatnonzero(keep)])
-                self.pair[(s, t)] = model(shots.iloc[self.index[t]])
-                self.pair[(t, s)] = model(shots.iloc[self.index[s]])
-        self.seconds["pairs"] = time.perf_counter() - clock
-        clock = time.perf_counter()
-        self.later = (
-            fit(shots.iloc[np.flatnonzero(np.isin(season, development))])(later)
-            if len(later)
-            else np.empty(0)
-        )
-        self.seconds["later"] = time.perf_counter() - clock
+        self.later = np.empty(0)
+        for (left_out, targets), predictions in zip(jobs, results, strict=True):
+            if targets == (LATER,):
+                self.later = predictions[0]
+            elif len(left_out) == 1:
+                self.oof[self.index[left_out[0]]] = predictions[0]
+            else:
+                s, t = left_out
+                self.pair[(s, t)], self.pair[(t, s)] = predictions
+        self.seconds = {"fits": time.perf_counter() - clock, "n": float(len(jobs))}
 
     def timing(self) -> str:
-        return ", ".join(f"{k} {v:.0f} s" for k, v in self.seconds.items())
+        return f"{self.seconds['n']:.0f} fits, {self.seconds['fits']:.0f} s"
 
 
 def mean_folds(folds: Sequence[Folds]) -> Folds:
@@ -157,8 +236,19 @@ def spline_fitter(n_knots: int, l2: float) -> Fitter:
     return lambda train: fit_spline(train, n_knots, l2).predict
 
 
+@dataclass(frozen=True)
+class GbmFitter:
+    """A LightGBM fitter that can be sent to a worker process (a lambda cannot)."""
+
+    params: dict[str, Any]
+    seed: int
+
+    def __call__(self, train: pd.DataFrame) -> Predictor:
+        return fit_gbm(train, self.params, self.seed).predict
+
+
 def gbm_fitter(params: dict[str, Any], seed: int) -> Fitter:
-    return lambda train: fit_gbm(train, params, seed).predict
+    return GbmFitter(params, seed)
 
 
 def cv_log_loss(folds: Folds, y: FloatArray) -> float:
@@ -292,6 +382,111 @@ def gate(
     }
 
 
+LEVEL_BASES = {"lgbm_level": "lgbm", "spline_level": "spline"}
+POST_HOC = "post-hoc, not a clean hold-out"
+LEVEL_DECLARATION = "reports/week7-10b_progress.md, LEVEL_DECLARATION"
+
+
+def calibration_in_the_large(p: FloatArray, shots: pd.DataFrame) -> dict[str, float]:
+    """Per season: sum of xPTS over actual FG points."""
+    value = shots["value"].to_numpy(dtype=np.float64)
+    frame = pd.DataFrame(
+        {"season": shots["season"].to_numpy(), "x": p * value, "a": _labels(shots) * value}
+    )
+    sums = frame.groupby("season")[["x", "a"]].sum()
+    return {str(s): _r(row["x"] / row["a"]) for s, row in sums.iterrows()}
+
+
+def _vs_base(p: FloatArray, base: FloatArray, shots: pd.DataFrame) -> dict[str, Any]:
+    """Level variant minus its base: log loss and Brier with game-level bootstrap CIs, and
+    the ECE difference with its CI (games resampled as weights)."""
+    y = _labels(shots)
+    games = shots["game_id"].to_numpy()
+    diff, low, high = ece_diff_bootstrap(
+        p, base, y, games, resamples=BOOTSTRAP_RESAMPLES, seed=BOOTSTRAP_SEED
+    )
+    return {
+        "log_loss": _diff_ci(shot_log_loss(p, y) - shot_log_loss(base, y), games),
+        "brier": _diff_ci((p - y) ** 2 - (base - y) ** 2, games),
+        "ece": {"mean": _r(diff), "ci95": [_r(low), _r(high)]},
+    }
+
+
+def level_variants(
+    bases: dict[str, Folds],
+    dev: pd.DataFrame,
+    later: pd.DataFrame,
+    val: npt.NDArray[np.bool_],
+    *,
+    tipoff: pd.Series,
+    development: Sequence[int],
+    score_test: bool,
+) -> dict[str, Any]:
+    """The declared season-level variants (G5), every number post-hoc (see LEVEL_DECLARATION)."""
+    y_dev, y_later = _labels(dev), _labels(later)
+    ticks = pd.to_datetime(tipoff, utc=True).dt.tz_convert(None).astype("int64")
+    tip_dev = np.asarray(dev["game_id"].map(ticks), dtype=np.int64)
+    tip_later = np.asarray(later["game_id"].map(ticks), dtype=np.int64)
+    later_season: npt.NDArray[np.int64] = later["season"].to_numpy(dtype=np.int64)
+    out: dict[str, Any] = {}
+    for name, base in LEVEL_BASES.items():
+        folds = bases[base]
+        lp = level_predictions(
+            folds,
+            y_dev,
+            tip_dev,
+            later_season=later_season,
+            y_later=y_later,
+            tip_later=tip_later,
+            development=development,
+        )
+        block: dict[str, Any] = {
+            "base": base,
+            "post_hoc": True,
+            "label": POST_HOC,
+            "cv": split_scores(lp.oof, dev),
+            "cv_per_season": {
+                str(s): _r(shot_log_loss(lp.oof[rows], y_dev[rows]).mean())
+                for s, rows in folds.index.items()
+            },
+            "validation": split_scores(lp.later[val], later[val]),
+            "test": split_scores(lp.later[~val], later[~val]) if score_test else None,
+            "calibration_in_the_large": {
+                "level": calibration_in_the_large(np.r_[lp.oof, lp.later], pd.concat([dev, later])),
+                "base": calibration_in_the_large(
+                    np.r_[folds.oof, folds.later], pd.concat([dev, later])
+                ),
+            },
+            "minus_base": {
+                "cv": _vs_base(lp.oof, folds.oof, dev),
+                "validation": _vs_base(lp.later[val], folds.later[val], later[val]),
+                "test": _vs_base(lp.later[~val], folds.later[~val], later[~val])
+                if score_test
+                else None,
+            },
+            "shrinkage": lp.shrinkage,
+            "priors": lp.priors,
+        }
+        block["meets_f_f"] = {
+            "validation": calibrated(block["validation"]),
+            "test": calibrated(block["test"]) if score_test else None,
+        }
+        out[name] = block
+    lgbm_cv = float(shot_log_loss(bases["lgbm"].oof, y_dev).mean())
+    level = out["lgbm_level"]
+    condition = {
+        "meets_f_f_on_validation": level["meets_f_f"]["validation"],
+        "cv_log_loss_below_lgbm": bool(level["cv"]["log_loss"] < _r(lgbm_cv)),
+    }
+    return {
+        "declaration": LEVEL_DECLARATION,
+        "post_hoc": True,
+        "label": POST_HOC,
+        "variants": out,
+        "g_g_condition": {**condition, "holds": all(condition.values())},
+    }
+
+
 class Lap:
     """Wall time of each backtest phase, reported as ``TIMING <phase>: <s> s`` progress lines."""
 
@@ -370,9 +565,12 @@ def run_m2_backtest(
     study: dict[str, Any],
     score_test: bool,
     progress: Progress,
+    *,
+    tipoff: pd.Series,
 ) -> tuple[dict[str, Any], pd.DataFrame]:
     """The report and the chosen M2's out-of-fold P(make) per shot (development LOSO,
-    validation, and test when scored). ``study`` is the stored Optuna result."""
+    validation, and test when scored). ``study`` is the stored Optuna result; ``tipoff`` maps
+    game_id to tip-off time (the season-level variants use earlier games only)."""
     lap = Lap(progress)
     used = shots[shots["validated_season"]]
     dev = used[used["season"].isin(seasons.development)].reset_index(drop=True)
@@ -388,10 +586,12 @@ def run_m2_backtest(
 
     grid, best, spline = spline_search(dev, later, seasons.development, progress, lap)
     seeds: dict[int, Folds] = {}
-    for seed in SEEDS:
-        seeds[seed] = Folds(dev, seasons.development, gbm_fitter(params, seed), True, later)
-        progress(f"lgbm seed {seed}: done")
-        lap(f"lgbm seed {seed} ({seeds[seed].timing()})")
+    with FitPool(dev, later, seasons.development, FIT_WORKERS) as pool:
+        for seed in SEEDS:
+            fit = gbm_fitter(params, seed)
+            seeds[seed] = Folds(dev, seasons.development, fit, True, later, pool=pool)
+            progress(f"lgbm seed {seed}: done")
+            lap(f"lgbm seed {seed} ({seeds[seed].timing()}, {FIT_WORKERS} processes)")
     gbm = mean_folds(list(seeds.values()))
 
     oof: dict[str, FloatArray] = {"spline": spline.oof, "lgbm": gbm.oof}
@@ -435,6 +635,16 @@ def run_m2_backtest(
         else None
     )
     lap("gate on test (bootstraps)")
+    levels = level_variants(
+        {"lgbm": gbm, "spline": spline},
+        dev,
+        later,
+        val,
+        tipoff=tipoff,
+        development=seasons.development,
+        score_test=score_test,
+    )
+    lap("season-level variants (offsets, scores, bootstraps)")
     chosen = verdict["chosen"]
     keys = ["game_id", "event", "season"]
     xpts = pd.concat(
@@ -463,6 +673,7 @@ def run_m2_backtest(
         "gate": verdict,
         "test_scored": score_test,
         "test_gate": test_gate,
+        "level_variants": levels,
     }
     lap("xPTS table + report (data hash)")
     return report, xpts

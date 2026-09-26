@@ -479,7 +479,10 @@ def _backtest_m2(score_test: bool, search_first: bool, tracking_uri: str) -> Non
         log.error("no stored Optuna result in %s; run: backtest --model m2 --search", M2_REPORT)
         raise typer.Exit(code=1)
     start = time.monotonic()
-    report, xpts = run_m2_backtest(shots_table, M2_SEASONS, study, score_test, log.info)
+    tipoff = read_games(MART_PATH, EUROLEAGUE.name).set_index("game_id")["tipoff_utc"]
+    report, xpts = run_m2_backtest(
+        shots_table, M2_SEASONS, study, score_test, log.info, tipoff=tipoff
+    )
     log.info("backtest (without the study): %.0f s", time.monotonic() - start)
     start = time.monotonic()
     _write_json(M2_REPORT, report)

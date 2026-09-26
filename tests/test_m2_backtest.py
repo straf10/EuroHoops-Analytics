@@ -41,6 +41,15 @@ def labelled(n: int, seed: int, seasons: tuple[int, ...]) -> pd.DataFrame:
     return shots
 
 
+def tipoffs(shots: pd.DataFrame) -> pd.Series:
+    """Tip-off per game_id: season s, game i tips off on day i of the season."""
+    games = pd.Series(sorted(set(shots["game_id"])))
+    parts = games.str.extract(r"E(?P<season>\d+)_(?P<game>\d+)").astype(int)
+    days = pd.to_timedelta(parts["game"], unit="D")
+    stamps = pd.to_datetime(parts["season"].astype(str) + "-10-01", utc=True) + days
+    return pd.Series(stamps.to_numpy(), index=games.to_numpy())
+
+
 def test_a_five_trial_study_on_two_seasons_is_reproducible() -> None:
     """F4 Done-when: the same seed gives identical trial values and best parameters."""
     shots = labelled(3_000, 1, (2011, 2012))
@@ -70,7 +79,27 @@ def _run(monkeypatch: pytest.MonkeyPatch, score_test: bool) -> tuple[dict[str, A
     monkeypatch.setattr(m2_backtest, "SPLINE_L2", (1e-4, 1e-3))
     monkeypatch.setattr(m2_backtest, "BOOTSTRAP_RESAMPLES", 50)
     shots = labelled(6_000, 2, (2011, 2012, 2013, 2014, 2015))
-    return m2_backtest.run_m2_backtest(shots, SEASONS, _study(), score_test, lambda _: None)
+    return m2_backtest.run_m2_backtest(
+        shots, SEASONS, _study(), score_test, lambda _: None, tipoff=tipoffs(shots)
+    )
+
+
+def test_parallel_fits_equal_sequential_fits() -> None:
+    """§3 (weeks 7-10b): LightGBM fits in worker processes give byte-identical predictions."""
+    shots = labelled(3_000, 4, (2011, 2012, 2013, 2014))
+    dev = shots[shots["season"] <= 2013].reset_index(drop=True)
+    later = shots[shots["season"] == 2014].reset_index(drop=True)
+    fit = m2_backtest.gbm_fitter(TINY, 20261001)
+    one = m2_backtest.Folds(dev, (2011, 2012, 2013), fit, True, later)
+    with m2_backtest.FitPool(dev, later, (2011, 2012, 2013), 2) as pool:
+        two = m2_backtest.Folds(dev, (2011, 2012, 2013), fit, True, later, pool=pool)
+        with pytest.raises(ValueError, match="other shots"):
+            m2_backtest.Folds(dev.copy(), (2011, 2012, 2013), fit, True, later, pool=pool)
+    assert one.oof.tobytes() == two.oof.tobytes()
+    assert one.later.tobytes() == two.later.tobytes()
+    assert one.pair.keys() == two.pair.keys()
+    assert all(one.pair[k].tobytes() == two.pair[k].tobytes() for k in one.pair)
+    assert len(one.pair) == 6 and not np.isnan(one.oof).any()
 
 
 def test_report_has_every_field_and_two_runs_are_identical(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -97,6 +126,26 @@ def test_report_has_every_field_and_two_runs_are_identical(monkeypatch: pytest.M
     assert report["test_gate"] is None and not report["test_scored"]
     assert set(xpts["split"]) == {"development", "validation"}
     assert xpts["p_make"].between(0, 1).all()
+    levels = report["level_variants"]
+    assert levels["post_hoc"] and levels["label"] == "post-hoc, not a clean hold-out"
+    assert set(levels["variants"]) == {"lgbm_level", "spline_level"}
+    for name, block in levels["variants"].items():
+        assert block["post_hoc"] and block["base"] == name.removesuffix("_level")
+        for split in ("cv", "validation"):
+            assert {"log_loss", "brier", "ece", "reliability", "by_band", "by_type"} <= set(
+                block[split]
+            )
+            assert {"log_loss", "brier", "ece"} <= set(block["minus_base"][split])
+            assert len(block["minus_base"][split]["log_loss"]["ci95"]) == 2
+        assert block["test"] is None and block["minus_base"]["test"] is None
+        assert set(block["calibration_in_the_large"]["level"]) == {"2011", "2012", "2013", "2014"}
+        assert block["meets_f_f"]["validation"] == calibrated(block["validation"])
+        assert set(block["priors"]) == {"2011", "2012", "2013", "2014"}
+        assert block["priors"]["2011"] == 0.0  # no validated season before the first
+    condition = levels["g_g_condition"]
+    assert condition["holds"] == (
+        condition["meets_f_f_on_validation"] and condition["cv_log_loss_below_lgbm"]
+    )
 
 
 def test_scoring_the_test_seasons_adds_test_numbers(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -105,3 +154,11 @@ def test_scoring_the_test_seasons_adds_test_numbers(monkeypatch: pytest.MonkeyPa
     assert report["variants"]["spline"]["test"]["n"] == report["shots"]["test"] > 0
     assert report["test_gate"]["split"] == "test"
     assert set(xpts["split"]) == {"development", "validation", "test"}
+    level = report["level_variants"]["variants"]["lgbm_level"]
+    assert level["test"]["n"] == report["shots"]["test"]
+    assert level["meets_f_f"]["test"] == calibrated(level["test"])
+    # scoring the test seasons changes no development or validation number of the variants
+    before, _ = _run(monkeypatch, score_test=False)
+    for name, block in before["level_variants"]["variants"].items():
+        after = report["level_variants"]["variants"][name]
+        assert block["cv"] == after["cv"] and block["validation"] == after["validation"]
