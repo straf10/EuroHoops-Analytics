@@ -5,14 +5,21 @@ You are building the **weeks 7–10 deliverables** of `PLAN.md` (read §2 R9–R
 
 **Goal, in one sentence:** a calibrated shot-quality model (M2) that gives every EuroLeague field-goal attempt since 2011-12 an expected value (xPTS), plus the free throws the shot context generates. From it come team shot quality (offence and defence allowed) and a shrunk, stability-checked player shot-making measure. The model is judged on seasons it was never tuned on.
 
-**Exit gate (PLAN §8, row 7–10):** the chosen M2 is calibrated (validation ECE ≤ F-f threshold) and beats the spline baseline on validation log loss, **or** the report says why not, with evidence. The R10 stability analysis is done. Every check in §6 must also pass in **one consecutive run**.
+**Exit gate (PLAN §8, row 7–10).** All four must hold:
+1. **Calibrated:** the chosen M2 meets F-f on validation (ECE ≤ 0.010 and every reliability bin with ≥ 500 shots within ±0.02).
+2. **Beats the baseline:** its validation log loss is below the spline baseline's, with the game-level bootstrap CI (F-g) reported. **If it does not, that is an accepted outcome:** the spline model becomes M2, and the report shows every variant, where the challenger loses (distance bands, 2s vs 3s, context flags) and a hypothesis. Hiding or re-running until it wins is not accepted.
+3. **Stability decided:** the F7 rule (F-k) has been applied and its verdict recorded.
+4. **One clean run:** every check in §6 passes in one consecutive run.
 
 ## How you work: the loop
 Repeat until the stop condition holds. Do not stop early, and do not call a partial run a success.
 
-1. Read `reports/week7-10_progress.md` and `git log --oneline -15`. Pick the first unfinished deliverable (§4, in order F1 → F10).
+1. Read `reports/week7-10_progress.md` and `git log --oneline -15`. (Iteration 1: create the progress file with the recorded decisions from §0.) Pick the first unfinished deliverable (§4, in order F1 → F10).
 2. Implement it, with tests.
-3. Run that deliverable's own checks (listed under it as **Done when**), then the **whole** §6 checklist (`bash scripts/checklist.sh`, extended per §6).
+3. Verify, in this order:
+   - the deliverable's own **Done when** checks (§4), each as an automated test or a script under `scripts/checks/`, never by eye;
+   - the fast gate every iteration: §6 items 1–6, 14 and 19 (`SKIP="7 8 9 10 11 12 13 15 16 17 18 20 21 22 23 24 25 26 27 28 29 30" bash scripts/checklist.sh`), plus any §6 item whose code or data your change touched;
+   - the **whole** §6 checklist when a deliverable is finished, before you mark it done.
 4. If anything is red, find the root cause, fix it and go back to step 3.
    - Never weaken, skip, `xfail` or delete a check to make it pass.
    - Never raise a tolerance unless you justify it in writing in the progress file.
@@ -23,6 +30,8 @@ Guards:
 - **Same failure three times** (same check, same error): stop patching. Write the diagnosis in the progress file, re-read the relevant code and data, then fix the cause.
 - **External blocker** (a source down or refusing, quota exhausted): mark the check `BLOCKED` and save the evidence in the progress file, then carry on with the other deliverables. Never report a blocked check as passed.
 - **Iteration budget: 35.** If iteration 35 ends without the stop condition, stop anyway. Write the final report with status `INCOMPLETE`, list each red check with its last error, and say what you would try next.
+- **Runtime budget:** `eurohoops backtest --model m2` (LOSO CV + validation, reusing the stored Optuna result) must finish in < 20 min locally; the Optuna study (`--search`) runs only when F4 changes and must finish in < 2 h. Record both times in the progress file. Over budget is a red check.
+- **Test seasons after a bug:** if you find a bug after the test seasons were scored, fix it, re-score, and record in the progress file what changed, both numbers, and why. The test result is then labelled "re-scored after a fix". Never pick between versions on test numbers.
 - **Resumability:** the progress file and the commits are your memory. A usage-limit account switch or a restart can interrupt you at any time. After any interruption, start again at loop step 1.
 
 ## 0. Decisions (defaults in bold; confirm with the user before starting, then record the answers here)
@@ -35,9 +44,10 @@ Guards:
 | F-e | Free throws ("total shot value") | **The shot feed has no shooting fouls on misses, so xPTS alone undervalues rim pressure. Model the free-throw points a team's shots generate at team-game level from PBP (FT trips per FGA, and FT points per trip), split by shot-distance band only where PBP ties a foul to the preceding shot. Report total shot value = xPTS + expected FT points. If PBP cannot tie fouls to shots, report team-level expected FT points and say so.** |
 | F-f | Calibration target | **Validation ECE ≤ 0.010 (20 equal-count bins, shot level) for the chosen model, and the reliability curve inside ±0.02 in every bin with ≥ 500 shots. Also reported per distance band and for 2s vs 3s.** |
 | F-g | Uncertainty unit | **Shots within a game are correlated: every CI (model differences, team shot quality, player shot-making) uses a game-level (cluster) bootstrap, 1,000 resamples, seed 20261001.** |
-| F-h | Player shot-making | **Σ(actual − xPTS) per 100 shots, using **out-of-fold** xPTS only (never a model that saw the shot). Empirical-Bayes shrinkage (R11) toward 0 with the prior variance estimated on development seasons; 90% intervals. Shown only for ≥ 100 FGA in a season.** |
+| F-h | Player shot-making | **Σ(actual − xPTS) per 100 shots, using out-of-fold xPTS only (never a model that saw the shot). Empirical-Bayes shrinkage (R11) toward 0 with the prior variance estimated on development seasons; 90% intervals. Shown only for ≥ 100 FGA in a season.** |
 | F-i | Outputs and the site | **Marts tables `shots` and `shot_xpts`, reports JSON, a model card and static PNG shot charts in `docs/models/m2/`. No site change (PLAN §9: UI only after week 16 except predictions + performance). M2 feeds no live prediction.** |
 | F-j | Dependencies | **`lightgbm`, `optuna` and `matplotlib` in the dev group (like MLflow): M2 is a local, monthly job, not part of the daily workflow. The daily workflow and CI keep working with `--no-dev`.** |
+| F-k | Stability rule for showing shot-making (decided before F7 runs) | **Shot-making is "stable enough to show" only if its year-to-year correlation (players with ≥ 200 FGA in consecutive seasons, development seasons) has a 90% CI lower bound ≥ 0.20 and the split-half correlation is ≥ 0.30. Otherwise the card says "not stable enough" and the player table stays in the report only.** |
 
 ## 1. Hard constraints (all weeks 0–7 constraints still apply)
 - **Scope = this file only.** No RAPM, no player impact beyond shot-making, no league translation, no GBL shot model (the GBL has no coordinates), no site pages, no live use of M2. Build nothing "for later".
@@ -76,11 +86,15 @@ Guards:
 ### F1: Shot table (`parse/shot_table.py`, marts `shots`)
 - From the cache only: one row per FGA with competition, season, game_id, period, seconds left in the period, team, opponent, home flag, shooter id (for F7 only), made, value (2/3), x/y metres, distance, |angle|, `ZONE`, the three context flags, pre-shot score margin from the shooter's side, `validated_season` flag. Pandera contract, trimmed fixture.
 - Exclusions kept in a `shots_excluded` table with the reason: (0, 0) coordinates, label contradicting the geometry beyond ±0.15 m, unparseable rows.
-- **Done when:** per team-game FGA and made-FG points reconcile with `team_games`/box for ≥ 99% of 2011+ team-games, or every gap class is explained in `docs/data/shots.md`; excluded share per season reported; two builds give identical tables.
+- **Done when:**
+  - per team-game FGA and made-FG points equal `team_games`/box for ≥ 99% of 2011+ team-games. Below that, each mismatch class has a count, a cause in `docs/data/shots.md` and a test on a real example, and the unexplained remainder is ≤ 0.5% of team-games;
+  - excluded shots are ≤ 1% of FGA in every validated season (report the share per season and reason);
+  - every §3 item has an answer in `docs/data/shots.md` and a test;
+  - two builds give identical tables.
 
 ### F2: Free-throw generation (F-e)
 - From PBP: FT trips and FT points per team-game, tied to the preceding shot's distance band where the data allow.
-- **Done when:** expected FT points per team-game reconcile with actual FT points on development seasons (mean gap within ±0.1 point per team-game), and the method and its limits are in `docs/data/shots.md`.
+- **Done when:** with rates fitted leave-one-season-out, expected FT points reconcile with actual FT points in **every** development season (mean gap within ±0.1 point per team-game) and on validation (within ±0.2); the method, and whether fouls could be tied to shots, are in `docs/data/shots.md` with a test on a real game.
 
 ### F3: Spline baseline (`models/xpts.py`)
 - Logistic regression with natural cubic splines on distance × shot type plus the linear features (F-b, F-c), fitted with numpy/scipy (no new runtime dependency).
@@ -88,12 +102,14 @@ Guards:
 
 ### F4: LightGBM challenger, calibration and the Optuna search
 - LightGBM with the declared Optuna study (F-d); isotonic calibration on out-of-fold predictions (never on the fold being scored).
-- **Done when:** the study is reproducible (same seed → same best trial and parameters), its trials are in MLflow, and the best parameters are in the report JSON.
+- Determinism: Optuna `TPESampler(seed=20261001)`, `n_jobs=1`; LightGBM `deterministic=True`, `force_row_wise=True`, fixed `num_threads` and `seed`. The study runs only with `backtest --model m2 --search`; otherwise the stored best parameters are used.
+- **Done when:** a 5-trial study on a 2-season subset run twice gives identical trial values and best parameters (a test); the full study's trials are in MLflow and its best parameters in the report JSON.
 
 ### F5: Evaluation, gate and test
 - `eurohoops backtest --model m2` writes `reports/backtest_m2.json`: per variant, LOSO CV and validation log loss, Brier, ECE + reliability (overall, per distance band, 2s vs 3s); the gate comparison with the game-level bootstrap CI (F-g).
+- The verdict applies exit-gate items 1 and 2 literally (F-f thresholds, log loss vs the spline baseline). On a fail, add the analysis the exit gate asks for.
 - Commit the verdict in the progress file, **then** score the test seasons once.
-- **Done when:** the report has every field above, the declaration and verdict commits precede the test run in `git log`, and two runs give identical JSON.
+- **Done when:** the report has every field above plus a machine-readable `gate` block (`calibrated`, `beats_baseline`, `passed`), the declaration and verdict commits precede the test run in `git log` (a script checks it), and two runs give identical JSON.
 
 ### F6: Team shot quality and total shot value
 - Per team-season (and per team-game in the marts): xPTS per shot for offence and allowed on defence, expected FT points (F2), total shot value, actual minus expected, with game-level bootstrap intervals. Out-of-fold xPTS only.
@@ -102,11 +118,11 @@ Guards:
 ### F7: Player shot-making and stability (R10, R11)
 - Shot-making per 100 shots with EB shrinkage and 90% intervals (F-h).
 - Stability: year-to-year correlation (players with ≥ 200 FGA in consecutive seasons) of shrunk shot-making vs raw eFG% and vs raw FG% on the same players; plus within-season split-half (odd/even games). Report discrimination (spread across players) too.
-- **Done when:** the numbers are in `reports/m2_players.json` with CIs, and the verdict "stable enough to show / not" is stated with the evidence.
+- **Done when:** the numbers are in `reports/m2_players.json` with CIs, and a `stability.verdict` field equals what the F-k rule gives on those numbers (a test recomputes it).
 
 ### F8: Shot charts
 - Static PNGs in `docs/models/m2/`: league xPTS surface (validation season), and actual-minus-expected hex charts for three teams and three players (named in the progress file before drawing). Court drawn to FIBA dimensions from `parse/shots.py` constants.
-- **Done when:** a test checks the court geometry used for drawing equals the `shots.py` constants, and the images are referenced from the model card.
+- **Done when:** a test checks the court geometry used for drawing equals the `shots.py` constants; you open every PNG (Read tool) and log one line per image in the progress file (court lines in place, legend and labels readable, colour scale centred at 0 for actual − expected); the images are referenced from the model card.
 
 ### F9: MLflow and leakage
 - Experiment `m2-backtest`: parent run per backtest, one child per variant and the Optuna study; params, data hash, commit, metrics, report artifact (reuse `eval/tracking.py`).
@@ -127,10 +143,10 @@ Add, in `scripts/checklist.sh` and `scripts/checks/`:
 
 21. F1: shot reconciliation rate and exclusion shares; two builds identical.
 22. F2: FT reconciliation within ±0.1 point per team-game.
-23. F3/F4 unit tests; the Optuna study reproducible from its seed.
-24. F5: `reports/backtest_m2.json` complete; declaration < verdict < test in `git log`; two runs identical.
+23. F3/F4 unit tests; the 5-trial Optuna reproducibility test; recorded backtest and study runtimes within budget.
+24. F5: `reports/backtest_m2.json` complete with its `gate` block; declaration < verdict < test in `git log`; two runs identical.
 25. F6: calibration in the large within 0.5% per development season.
-26. F7: `reports/m2_players.json` present with CIs and the stability verdict.
+26. F7: `reports/m2_players.json` present with CIs; the stability verdict matches the F-k rule.
 27. F8: the charts exist and the geometry test passes.
 28. F9: MLflow parent + children with params, hash and commit; leakage tests pass.
 29. F10: model card number check passes.
