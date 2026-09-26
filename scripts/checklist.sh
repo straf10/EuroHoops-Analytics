@@ -108,6 +108,11 @@ skip 29 "F10 model card" || {
   res "${PIPESTATUS[0]}"
 }
 skip 30 "no-dev build + predict" || { item "30 uv sync --no-dev, then build + predict"; bash "$CHECKS/no_dev.sh"; res $?; }
+skip 31 "G5 level variants" || {
+  item "31 G5 level variants: fields, post-hoc labels, two runs identical, leakage, declaration < run"
+  bash "$CHECKS/m2_level.sh"
+  res $?
+}
 skip 32 "G1 outcome coding" || {
   item "32 G1 no outcome-coded M2 feature level (both builders, development shots)"
   uv run python "$CHECKS/m2_outcome_coding.py"

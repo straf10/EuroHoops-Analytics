@@ -88,6 +88,49 @@ def calibrated(block: dict[str, Any]) -> bool:
     return bool(block["ece"] is not None and block["ece"] <= ECE_TARGET and bins_ok)
 
 
+def weighted_ece(
+    p: FloatArray,
+    y: FloatArray,
+    w: FloatArray,
+    order: npt.NDArray[np.intp],
+    bins: int = ECE_BINS,
+) -> float:
+    """ECE of a multiset: shot i counted w[i] times (a bootstrap resample). ``order`` is the
+    stable argsort of p. Each shot goes to the equal-count bin of its first copy's position,
+    which is ``ece`` exactly when every weight is 1."""
+    ws = w[order]
+    total = float(ws.sum())
+    start = np.cumsum(ws) - ws
+    index = np.minimum((start * bins // total).astype(np.int64), bins - 1)
+    gap = np.bincount(index, weights=ws * (p[order] - y[order]), minlength=bins)
+    return float(np.abs(gap).sum() / total)
+
+
+def ece_diff_bootstrap(
+    p_a: FloatArray,
+    p_b: FloatArray,
+    y: FloatArray,
+    clusters: npt.NDArray[Any],
+    *,
+    resamples: int,
+    seed: int,
+    level: float = 0.95,
+) -> tuple[float, float, float]:
+    """ECE(a) - ECE(b) and its percentile CI, resampling whole clusters (games) as weights."""
+    _, inverse = np.unique(clusters, return_inverse=True)
+    n_clusters = int(inverse.max()) + 1
+    order_a, order_b = np.argsort(p_a, kind="stable"), np.argsort(p_b, kind="stable")
+    rng = np.random.default_rng(seed)
+    stats = np.empty(resamples)
+    for r in range(resamples):
+        counts = np.bincount(rng.integers(0, n_clusters, n_clusters), minlength=n_clusters)
+        w = counts[inverse].astype(np.float64)
+        stats[r] = weighted_ece(p_a, y, w, order_a) - weighted_ece(p_b, y, w, order_b)
+    tail = (1.0 - level) / 2.0 * 100.0
+    low, high = np.percentile(stats, [tail, 100.0 - tail])
+    return ece(p_a, y) - ece(p_b, y), float(low), float(high)
+
+
 def cluster_bootstrap(
     values: FloatArray, clusters: npt.NDArray[Any], resamples: int, seed: int, level: float = 0.95
 ) -> tuple[float, float, float]:

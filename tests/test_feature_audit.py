@@ -86,4 +86,4 @@ def test_the_backtest_refuses_an_outcome_coded_feature(monkeypatch: pytest.Monke
     seasons = M2Seasons(development=(2011, 2012), validation=(2013,), test=(2014,))
     frame = shots().assign(season=lambda f: 2011 + f["event"] % 4, band="rim")
     with pytest.raises(ValueError, match="outcome-coded"):
-        m2_backtest.run_m2_backtest(frame, seasons, {}, False, lambda _: None)
+        m2_backtest.run_m2_backtest(frame, seasons, {}, False, lambda _: None, tipoff=pd.Series())
