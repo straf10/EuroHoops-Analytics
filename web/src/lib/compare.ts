@@ -175,7 +175,10 @@ export function bodyHtml(g: Grid, cols: Col[]): string {
   const tally =
     n > 1
       ? `<tbody class="tally"><tr><th scope="row">Rows led<small>of ${g.rows}</small></th>${g.led
-          .map((k) => `<td class="num">${k}</td>`)
+          .map((k) => {
+            const top = k > 0 && k === Math.max(...g.led);
+            return `<td class="num${top ? " lead" : ""}"><span class="cell"><span class="v">${top ? `<i class="lead-dot" aria-hidden="true"></i>` : ""}${k}</span><small></small></span></td>`;
+          })
           .join("")}</tr></tbody>`
       : "";
   const groups = g.groups
@@ -190,10 +193,10 @@ export function bodyHtml(g: Grid, cols: Col[]): string {
                 .map((c) => {
                   const cls = ["num", c.lead ? "lead" : "", c.floor ? "muted" : ""].filter(Boolean).join(" ");
                   const tip = c.floor && c.floor !== "No value" ? ` data-tip="${esc(c.floor)}"` : "";
-                  // Fixed slots (dot, value, place) so figures line up down each column.
-                  const dot = c.lead ? `<i class="lead-dot" aria-hidden="true"></i>` : `<i aria-hidden="true"></i>`;
+                  // Fixed slots (value with its dot, place) so figures line up down each column.
+                  const dot = c.lead ? `<i class="lead-dot" aria-hidden="true"></i>` : "";
                   const place = `<small>${c.lead ? "<span class=\"sr-only\">leads, </span>" : ""}${c.place ? ordinal(c.place) : ""}</small>`;
-                  return `<td class="${cls}"${tip}><span class="cell">${dot}<span class="v">${c.text}</span>${place}</span></td>`;
+                  return `<td class="${cls}"${tip}><span class="cell"><span class="v">${dot}${c.text}</span>${place}</span></td>`;
                 })
                 .join("") +
               `</tr>`,
