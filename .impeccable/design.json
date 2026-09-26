@@ -1,58 +1,550 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-25T14:30:00Z",
+  "generatedAt": "2026-09-26T12:33:12+00:00",
   "title": "Design System: EuroHoops Analytics",
   "extensions": {
     "colorMeta": {
-      "marker-blue": { "role": "primary", "displayName": "Marker Blue", "canonical": "#1f4fb8", "tonalRamp": ["#0c1f4a", "#123070", "#1a4296", "#1f4fb8", "#4a74cc", "#7aa2ff", "#b3caff", "#e3ecff"] },
-      "marker-red": { "role": "secondary", "displayName": "Marker Red", "canonical": "#c4362a", "tonalRamp": ["#4a130e", "#7a2019", "#a42d23", "#c4362a", "#dc5b4f", "#ff6f61", "#ffb0a8", "#ffe4e1"] },
-      "melamine-board": { "role": "neutral", "displayName": "Melamine Board", "canonical": "#f4f6f5", "tonalRamp": ["#121518", "#1c2126", "#33393e", "#4a535b", "#979fa5", "#b7bec3", "#d3dad9", "#f4f6f5"] }
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "oklch(98.2% 0.003 106.4)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242423",
+          "#40403f",
+          "#5e5e5c",
+          "#80807f",
+          "#a5a5a3",
+          "#cacac9",
+          "#eeeeec"
+        ]
+      },
+      "chart-surface": {
+        "role": "neutral",
+        "displayName": "Chart Surface",
+        "canonical": "oklch(99.1% 0.001 106.4)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#40403f",
+          "#5e5e5d",
+          "#80807f",
+          "#a4a4a4",
+          "#cacac9",
+          "#eeeeed"
+        ]
+      },
+      "sunk": {
+        "role": "neutral",
+        "displayName": "Sunk",
+        "canonical": "oklch(95.7% 0.004 106.5)",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#242423",
+          "#40403e",
+          "#5e5e5c",
+          "#80807e",
+          "#a5a5a2",
+          "#cbcbc8",
+          "#efefec"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "oklch(17.7% 0.002 106.6)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242423",
+          "#40403f",
+          "#5e5e5d",
+          "#80807f",
+          "#a5a5a3",
+          "#cacac9",
+          "#eeeeed"
+        ]
+      },
+      "ink-soft": {
+        "role": "neutral",
+        "displayName": "Ink Soft",
+        "canonical": "oklch(43.5% 0.005 91.5)",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#242423",
+          "#40403e",
+          "#5e5d5b",
+          "#81807d",
+          "#a6a4a1",
+          "#cccac7",
+          "#f0eeeb"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted",
+        "canonical": "oklch(52.8% 0.008 88.7)",
+        "tonalRamp": [
+          "#0c0b0a",
+          "#252422",
+          "#41403d",
+          "#5f5d5a",
+          "#82807c",
+          "#a6a49f",
+          "#cccac5",
+          "#f1eee8"
+        ]
+      },
+      "axis": {
+        "role": "neutral",
+        "displayName": "Axis",
+        "canonical": "oklch(62.3% 0.009 91.5)",
+        "tonalRamp": [
+          "#0c0b09",
+          "#252421",
+          "#41403c",
+          "#5f5d59",
+          "#82807b",
+          "#a6a49e",
+          "#cdcac4",
+          "#f1eee8"
+        ]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Rule",
+        "canonical": "oklch(90.6% 0.009 100.0)",
+        "tonalRamp": [
+          "#0b0b09",
+          "#242421",
+          "#40403c",
+          "#5e5e59",
+          "#81807b",
+          "#a6a59e",
+          "#cccbc4",
+          "#f0efe8"
+        ]
+      },
+      "rule-strong": {
+        "role": "neutral",
+        "displayName": "Rule Strong",
+        "canonical": "oklch(81.2% 0.015 102.5)",
+        "tonalRamp": [
+          "#0c0b08",
+          "#252420",
+          "#40403a",
+          "#5f5e57",
+          "#818178",
+          "#a6a59b",
+          "#cccbc0",
+          "#f0efe4"
+        ]
+      },
+      "model-blue": {
+        "role": "primary",
+        "displayName": "Model Blue",
+        "canonical": "oklch(57.5% 0.163 255.5)",
+        "tonalRamp": [
+          "#000925",
+          "#02234b",
+          "#153f73",
+          "#2a5e9f",
+          "#4281d1",
+          "#5ca6ff",
+          "#7fcdff",
+          "#a2f2ff"
+        ]
+      },
+      "baseline-gray": {
+        "role": "neutral",
+        "displayName": "Baseline Gray",
+        "canonical": "oklch(64.3% 0.011 93.6)",
+        "tonalRamp": [
+          "#0c0b09",
+          "#252421",
+          "#41403c",
+          "#5f5e59",
+          "#82807a",
+          "#a7a59e",
+          "#cdcac3",
+          "#f1eee7"
+        ]
+      },
+      "against-red": {
+        "role": "secondary",
+        "displayName": "Against Red",
+        "canonical": "oklch(62.3% 0.191 24.9)",
+        "tonalRamp": [
+          "#230000",
+          "#480509",
+          "#711d1d",
+          "#9d3533",
+          "#cf504c",
+          "#ff6d67",
+          "#ff928a",
+          "#ffb6ac"
+        ]
+      },
+      "night": {
+        "role": "neutral",
+        "displayName": "Night",
+        "canonical": "oklch(16.3% 0.002 106.6)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242423",
+          "#40403f",
+          "#5e5e5d",
+          "#80807f",
+          "#a5a5a3",
+          "#cacac9",
+          "#eeeeed"
+        ]
+      },
+      "night-surface": {
+        "role": "neutral",
+        "displayName": "Night Surface",
+        "canonical": "oklch(21.7% 0.002 106.6)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242423",
+          "#40403f",
+          "#5e5e5d",
+          "#80807f",
+          "#a5a5a3",
+          "#cacac9",
+          "#eeeeed"
+        ]
+      },
+      "night-sunk": {
+        "role": "neutral",
+        "displayName": "Night Sunk",
+        "canonical": "oklch(22.6% 0.002 106.6)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242423",
+          "#40403f",
+          "#5e5e5d",
+          "#80807f",
+          "#a5a5a3",
+          "#cacac9",
+          "#eeeeed"
+        ]
+      },
+      "night-ink": {
+        "role": "neutral",
+        "displayName": "Night Ink",
+        "canonical": "oklch(95.8% 0.007 97.4)",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#242422",
+          "#40403d",
+          "#5e5e5b",
+          "#81807c",
+          "#a5a5a0",
+          "#cbcbc6",
+          "#efeeea"
+        ]
+      },
+      "night-ink-soft": {
+        "role": "neutral",
+        "displayName": "Night Ink Soft",
+        "canonical": "oklch(81.2% 0.015 102.5)",
+        "tonalRamp": [
+          "#0c0b08",
+          "#252420",
+          "#40403a",
+          "#5f5e57",
+          "#818178",
+          "#a6a59b",
+          "#cccbc0",
+          "#f0efe4"
+        ]
+      },
+      "night-muted": {
+        "role": "neutral",
+        "displayName": "Night Muted",
+        "canonical": "oklch(68.6% 0.012 95.2)",
+        "tonalRamp": [
+          "#0c0b09",
+          "#252421",
+          "#41403b",
+          "#5f5e58",
+          "#82807a",
+          "#a7a59d",
+          "#cdcbc2",
+          "#f1efe6"
+        ]
+      },
+      "night-rule": {
+        "role": "neutral",
+        "displayName": "Night Rule",
+        "canonical": "oklch(29.2% 0.004 106.6)",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#242423",
+          "#40403e",
+          "#5e5e5c",
+          "#80807e",
+          "#a5a5a2",
+          "#cbcbc8",
+          "#efefec"
+        ]
+      },
+      "night-rule-strong": {
+        "role": "neutral",
+        "displayName": "Night Rule Strong",
+        "canonical": "oklch(38.8% 0.010 106.9)",
+        "tonalRamp": [
+          "#0b0b09",
+          "#242421",
+          "#40403c",
+          "#5e5e59",
+          "#81817b",
+          "#a5a59e",
+          "#cbcbc4",
+          "#efefe8"
+        ]
+      },
+      "night-model-blue": {
+        "role": "primary",
+        "displayName": "Night Model Blue",
+        "canonical": "oklch(62.2% 0.161 255.1)",
+        "tonalRamp": [
+          "#000925",
+          "#02234a",
+          "#144073",
+          "#2a5e9e",
+          "#4281d0",
+          "#5ba6ff",
+          "#7ecdff",
+          "#a2f2ff"
+        ]
+      },
+      "night-baseline-gray": {
+        "role": "neutral",
+        "displayName": "Night Baseline Gray",
+        "canonical": "oklch(51.7% 0.010 91.6)",
+        "tonalRamp": [
+          "#0c0b09",
+          "#252421",
+          "#41403c",
+          "#5f5d59",
+          "#82807b",
+          "#a7a49e",
+          "#cdcac4",
+          "#f1eee7"
+        ]
+      },
+      "night-against-red": {
+        "role": "secondary",
+        "displayName": "Night Against Red",
+        "canonical": "oklch(66.9% 0.159 22.3)",
+        "tonalRamp": [
+          "#1f0002",
+          "#430e11",
+          "#6a2627",
+          "#943e3f",
+          "#c45b5a",
+          "#f67978",
+          "#ff9e9b",
+          "#ffc2bd"
+        ]
+      }
     },
     "typographyMeta": {
-      "display": { "displayName": "Display", "purpose": "The one hero headline." },
-      "headline": { "displayName": "Headline", "purpose": "Section titles." },
-      "annotation": { "displayName": "Marker hand", "purpose": "Short annotations only; never a compared number." }
+      "display": {
+        "displayName": "Display",
+        "purpose": "The single page headline."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section titles."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Panel titles on a strong rule."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Prose, 38 to 64ch."
+      },
+      "data": {
+        "displayName": "Data",
+        "purpose": "Table cells and chart labels, tabular figures."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Table heads, legends, captions."
+      }
     },
     "shadows": [
-      { "name": "magnet", "value": "0 2px 3px var(--shadow), 0 6px 14px -6px var(--shadow)", "purpose": "Pucks and magnets sitting on the board." },
-      { "name": "board-inset", "value": "inset 0 0 0 1px rgb(255 255 255 / 0.4), inset 0 2px 10px var(--shadow)", "purpose": "The board seated in its frame." }
+      {
+        "name": "float",
+        "value": "0 6px 20px -6px rgb(0 0 0 / 0.35)",
+        "purpose": "Tooltip only: things that float above the page."
+      }
     ],
     "motion": [
-      { "name": "ease-out", "value": "cubic-bezier(0.23, 1, 0.32, 1)", "purpose": "Puck placement, marker stroke, icon nudge." },
-      { "name": "puck-place", "value": "900ms, 60ms stagger", "purpose": "Pucks slide from centre court to their call on load." },
-      { "name": "press", "value": "scale(0.97) 140-160ms ease-out", "purpose": "Buttons and switch labels." }
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.23, 1, 0.32, 1)",
+        "purpose": "Entrances and state changes."
+      },
+      {
+        "name": "ease-in-out",
+        "value": "cubic-bezier(0.77, 0, 0.175, 1)",
+        "purpose": "On-screen movement."
+      },
+      {
+        "name": "grow-from-even",
+        "value": "320ms ease-out, 40ms stagger",
+        "purpose": "Forecast bars grow from 50% to their call on appear."
+      },
+      {
+        "name": "panel-switch",
+        "value": "200ms ease-out, opacity and blur(2px)",
+        "purpose": "Panels fade in after a competition switch only."
+      },
+      {
+        "name": "press",
+        "value": "scale(0.97), 140ms",
+        "purpose": "Button press feedback."
+      }
     ],
     "breakpoints": [
-      { "name": "phone", "value": "480px" },
-      { "name": "narrow", "value": "560px" },
-      { "name": "stack", "value": "760px" },
-      { "name": "hero-stack", "value": "980px" }
+      {
+        "name": "phone",
+        "value": "480px"
+      },
+      {
+        "name": "table-shed",
+        "value": "560px"
+      },
+      {
+        "name": "panels-stack",
+        "value": "820px"
+      },
+      {
+        "name": "nav-collapse",
+        "value": "900px"
+      },
+      {
+        "name": "hero-stack",
+        "value": "980px"
+      }
     ]
   },
   "components": [
     {
       "name": "Primary Button",
       "kind": "button",
-      "html": "<a class=\"cta\" href=\"#\">Read the log</a>",
-      "css": ".cta{display:inline-flex;align-items:center;gap:10px;padding:13px 22px;border-radius:999px;background:#1c2126;color:#f4f6f5;font-weight:700;text-decoration:none}.cta:hover{background:#1f4fb8}.cta:active{transform:scale(.97)}"
+      "refersTo": "button-primary",
+      "description": "The one primary action per page, ink on paper.",
+      "html": "<a class=\"ds-btn\" href=\"#\">Read the log <svg viewBox=\"0 0 256 256\" width=\"14\" height=\"14\" fill=\"currentColor\"><path d=\"M204 64v104a12 12 0 0 1-24 0V93L72.49 200.49a12 12 0 0 1-17-17L163 76H88a12 12 0 0 1 0-24h104a12 12 0 0 1 12 12Z\"/></svg></a>",
+      "css": ":host{--ink:#111110;--paper:#f9f9f7;--sunk:#f1f1ee;--rule:#e1e0d9;--soft:#52514e;--muted:#6d6b66;--blue:#2a78d6;--gray:#8f8d86;--red:#e34948;font-family:'Geist Variable','Segoe UI',system-ui,sans-serif}.ds-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:8px;background:var(--ink);color:#fcfcfb;font-size:15px;font-weight:500;text-decoration:none;transition:transform 140ms ease-out}.ds-btn svg{transition:transform 200ms cubic-bezier(0.23,1,0.32,1)}.ds-btn:hover svg{transform:translate(2px,-2px)}.ds-btn:active{transform:scale(0.97)}.ds-btn:focus-visible{outline:2px solid var(--blue);outline-offset:2px}"
     },
     {
-      "name": "Puck",
+      "name": "Segmented Control",
+      "kind": "nav",
+      "refersTo": "segment",
+      "description": "Competition switch; the selection is filled ink, never colour.",
+      "html": "<div class=\"ds-seg\"><button class=\"on\">EuroLeague</button><button>Greek League</button></div>",
+      "css": ":host{--ink:#111110;--paper:#f9f9f7;--sunk:#f1f1ee;--rule:#e1e0d9;--soft:#52514e;--muted:#6d6b66;--blue:#2a78d6;--gray:#8f8d86;--red:#e34948;font-family:'Geist Variable','Segoe UI',system-ui,sans-serif}.ds-seg{display:inline-flex;padding:2px;border-radius:8px;background:var(--sunk);box-shadow:inset 0 0 0 1px var(--rule)}.ds-seg button{border:0;background:transparent;padding:4px 11px;border-radius:6px;font:500 13px/1.4 inherit;font-family:inherit;color:var(--soft);cursor:pointer;transition:background-color 180ms,color 180ms,transform 140ms}.ds-seg button:hover{color:var(--ink)}.ds-seg button:active{transform:scale(0.97)}.ds-seg .on{background:var(--ink);color:#fcfcfb}.ds-seg button:focus-visible{outline:2px solid var(--blue);outline-offset:1px}"
+    },
+    {
+      "name": "Icon Button",
+      "kind": "button",
+      "refersTo": "icon-button",
+      "description": "Theme toggle and GitHub link in the top bar.",
+      "html": "<button class=\"ds-icon\" aria-label=\"Switch theme\"><svg viewBox=\"0 0 256 256\" width=\"18\" height=\"18\" fill=\"currentColor\"><path d=\"M233.54 142.23a8 8 0 0 0-8-2 88.08 88.08 0 0 1-109.8-109.8 8 8 0 0 0-10-10 104.84 104.84 0 0 0-52.91 37A104 104 0 0 0 136 224a103.09 103.09 0 0 0 62.52-20.88 104.84 104.84 0 0 0 37-52.91 8 8 0 0 0-1.98-7.98Z\"/></svg></button>",
+      "css": ":host{--ink:#111110;--paper:#f9f9f7;--sunk:#f1f1ee;--rule:#e1e0d9;--soft:#52514e;--muted:#6d6b66;--blue:#2a78d6;--gray:#8f8d86;--red:#e34948;font-family:'Geist Variable','Segoe UI',system-ui,sans-serif}.ds-icon{display:grid;place-items:center;width:34px;height:34px;border:0;border-radius:8px;background:transparent;color:var(--soft);cursor:pointer;transition:background-color 150ms,color 150ms,transform 140ms}.ds-icon:hover{background:var(--sunk);color:var(--ink)}.ds-icon:active{transform:scale(0.94)}.ds-icon:focus-visible{outline:2px solid var(--blue);outline-offset:2px}"
+    },
+    {
+      "name": "Outcome Chips",
+      "kind": "chip",
+      "refersTo": "outcome-hit",
+      "description": "Hit, miss and not-scored verdicts: ink text, coloured icon and wash.",
+      "html": "<span class=\"ds-chip hit\"><svg viewBox=\"0 0 256 256\" width=\"11\" height=\"11\" fill=\"currentColor\"><path d=\"M232.49 80.49l-128 128a12 12 0 0 1-17 0l-56-56a12 12 0 1 1 17-17L96 183 215.51 63.51a12 12 0 0 1 17 17Z\"/></svg>Hit</span> <span class=\"ds-chip miss\"><svg viewBox=\"0 0 256 256\" width=\"11\" height=\"11\" fill=\"currentColor\"><path d=\"M208.49 191.51a12 12 0 0 1-17 17L128 145l-63.51 63.49a12 12 0 0 1-17-17L111 128 47.51 64.49a12 12 0 0 1 17-17L128 111l63.51-63.52a12 12 0 0 1 17 17L145 128Z\"/></svg>Miss</span> <span class=\"ds-chip none\">Not scored</span>",
+      "css": ":host{--ink:#111110;--paper:#f9f9f7;--sunk:#f1f1ee;--rule:#e1e0d9;--soft:#52514e;--muted:#6d6b66;--blue:#2a78d6;--gray:#8f8d86;--red:#e34948;font-family:'Geist Variable','Segoe UI',system-ui,sans-serif}.ds-chip{display:inline-flex;align-items:center;gap:5px;padding:2px 9px 2px 7px;border-radius:999px;font-size:12px;font-weight:600;color:var(--ink)}.hit{background:rgb(42 120 214/.1)}.hit svg{color:var(--blue)}.miss{background:rgb(227 73 72/.1)}.miss svg{color:var(--red)}.none{color:var(--muted);background:var(--sunk);box-shadow:inset 0 0 0 1px var(--rule)}"
+    },
+    {
+      "name": "Forecast Split Bar",
       "kind": "custom",
-      "html": "<span class=\"puck\">PAN</span>",
-      "css": ".puck{display:grid;place-items:center;width:40px;aspect-ratio:1;border-radius:50%;background:#1f4fb8;color:#f4f6f5;font:750 .72rem/1 'Sofia Sans Variable',sans-serif;box-shadow:0 2px 3px rgb(38 48 56/.18),0 6px 14px -6px rgb(38 48 56/.18)}"
+      "refersTo": "",
+      "description": "Signature: away share in gray meets home share in blue at P(home), with an even-odds tick; grows from 50% on appear.",
+      "html": "<div class=\"ds-split\"><span class=\"n\">38%</span><span class=\"bar\" style=\"--p:62\"><i class=\"a\"></i><i class=\"h\"></i></span><span class=\"n fav\">62%</span></div>",
+      "css": ":host{--ink:#111110;--paper:#f9f9f7;--sunk:#f1f1ee;--rule:#e1e0d9;--soft:#52514e;--muted:#6d6b66;--blue:#2a78d6;--gray:#8f8d86;--red:#e34948;font-family:'Geist Variable','Segoe UI',system-ui,sans-serif}@keyframes ev{from{flex-basis:50%}}.ds-split{display:grid;grid-template-columns:2.4rem 240px 2.4rem;align-items:center;gap:8px;font-size:13px;font-variant-numeric:tabular-nums}.n{color:var(--muted);text-align:right}.n.fav{color:var(--ink);font-weight:600;text-align:left}.bar{position:relative;display:flex;gap:2px;height:10px}.bar::after{content:'';position:absolute;left:50%;top:-5px;bottom:-5px;width:1px;background:var(--soft);opacity:.5}.a{flex:0 0 calc((100 - var(--p))*1%);background:var(--gray);opacity:.55;border-radius:4px 0 0 4px;animation:ev 320ms cubic-bezier(0.23,1,0.32,1) both}.h{flex:1;background:var(--blue);border-radius:0 4px 4px 0}"
+    },
+    {
+      "name": "Tooltip",
+      "kind": "custom",
+      "refersTo": "tooltip",
+      "description": "Precise readout on every chart mark and bar, opened on hover or focus.",
+      "html": "<div class=\"ds-tip\"><b>Game 57</b>, Thu 3 Dec<br>Elo 0.646, baseline 0.702</div>",
+      "css": ":host{--ink:#111110;--paper:#f9f9f7;--sunk:#f1f1ee;--rule:#e1e0d9;--soft:#52514e;--muted:#6d6b66;--blue:#2a78d6;--gray:#8f8d86;--red:#e34948;font-family:'Geist Variable','Segoe UI',system-ui,sans-serif}.ds-tip{display:inline-block;max-width:260px;padding:7px 10px;border-radius:6px;background:var(--ink);color:#fcfcfb;font-size:13px;line-height:1.4;font-variant-numeric:tabular-nums;box-shadow:0 6px 20px -6px rgb(0 0 0/.35)}.ds-tip b{font-weight:600}"
+    },
+    {
+      "name": "Rating Row",
+      "kind": "custom",
+      "refersTo": "",
+      "description": "Ladder row: stem from the dashed average line to the team's dot, blue above average, red below.",
+      "html": "<div class=\"ds-row\"><b>BBB</b><span class=\"rail\" style=\"--x:78;--s:50;--w:28\"><i></i></span><span>1614</span></div><div class=\"ds-row below\"><b>FFF</b><span class=\"rail\" style=\"--x:30;--s:30;--w:20\"><i></i></span><span>1411</span></div>",
+      "css": ":host{--ink:#111110;--paper:#f9f9f7;--sunk:#f1f1ee;--rule:#e1e0d9;--soft:#52514e;--muted:#6d6b66;--blue:#2a78d6;--gray:#8f8d86;--red:#e34948;font-family:'Geist Variable','Segoe UI',system-ui,sans-serif}.ds-row{display:grid;grid-template-columns:3rem 200px 3rem;align-items:center;gap:14px;min-height:42px;border-bottom:1px solid var(--rule);font-size:14px;font-variant-numeric:tabular-nums}.rail{position:relative;height:12px}.rail::before{content:'';position:absolute;left:50%;top:-15px;bottom:-15px;border-left:1px dashed #c3c2b7}.rail::after{content:'';position:absolute;top:50%;height:2px;translate:0 -50%;left:calc(var(--s)*1%);width:calc(var(--w)*1%);background:var(--blue);opacity:.4}.rail i{position:absolute;z-index:1;top:50%;left:calc(var(--x)*1%);width:10px;height:10px;translate:-50% -50%;border-radius:50%;background:var(--blue);box-shadow:0 0 0 2px var(--paper)}.below .rail::after,.below .rail i{background:var(--red)}"
     }
   ],
   "narrative": {
-    "northStar": "The Coach's Clipboard",
-    "overview": "Every forecast is drawn up on the board before tip-off and marked up after the whistle. The page is a white melamine tactics board in an aluminium frame (a black glass board in dark mode), carrying printed court lines and three marker inks.",
-    "keyCharacteristics": ["One board, one frame, three inks.", "Court geometry is the chart: the half-court line is 50%, the baskets are certainty.", "Handwriting annotates; it never carries a number that has to be compared."],
-    "rules": [
-      { "section": "colors", "name": "The Three Inks Rule", "body": "Black, blue and red are the only inks. Blue is the model, red is what happened. No fourth accent, ever." },
-      { "section": "colors", "name": "The Flat Ink Rule", "body": "Inks and frame are flat colour. No gradients imitating brushed metal, glossy magnets or marker sheen." },
-      { "section": "typography", "name": "The Marker Hand Rule", "body": "Caveat Brush writes annotations: the round title, puck percentages, the call being marked. Every number a reader compares is set in Sofia Sans." }
+    "northStar": "The Quiet Reference",
+    "overview": "EuroHoops reads like a well-kept reference work for EuroLeague numbers: neutral paper, one typeface, hairline rules, and colour that appears only where there is data. It sits alongside boxscorelab and databallr rather than trying to look like a basketball object; the owner rejected every themed metaphor (clipboard, station board, match tickets, terminals), so nothing on the page imitates a physical thing.\n\nDensity is that of a stats product, not a landing page: tables with many rows, tabular figures in every column, charts with precise hover tooltips. Controls are drawn in ink, not colour, so the one blue on screen always means \"the model\". Motion is scarce and only ever reports a change of data.\n\nLight and dark are equal citizens. The page follows the visitor's system setting, and a remembered toggle overrides it both ways.",
+    "keyCharacteristics": [
+      "Neutral paper and near-black night, never cream, never pure white or black.",
+      "One family, Geist, carries everything from the headline to axis ticks.",
+      "Hairlines separate; nothing is a card.",
+      "Colour lives in data marks only; text always wears ink tokens.",
+      "Tabular figures wherever numbers stack."
     ],
-    "dos": ["Do show Elo beside the home-win baseline every time a metric appears.", "Do keep scored and not-scored rows visibly distinct.", "Do honour reduced motion: pucks and marks render in place."],
-    "donts": ["Don't add team logos, photos or club colours. None are licensed, and the three inks carry identity.", "Don't present odds, stakes or \"picks\": this is a model benchmark, not betting advice.", "Don't put a label or eyebrow above a heading.", "Don't use a filled track behind a bar or rating rail."]
+    "rules": [
+      {
+        "name": "The Colour-Is-Data Rule",
+        "body": "Blue, gray and red appear only on data marks (bars, lines, dots, stems, outcome icons and their washes). Controls, links and headings are ink.",
+        "section": "colors"
+      },
+      {
+        "name": "The Ink Text Rule",
+        "body": "Text never wears a data colour. A value beside a blue dot is set in ink; identity comes from the mark beside it.",
+        "section": "colors"
+      },
+      {
+        "name": "The Validated Order Rule",
+        "body": "Chart colours come from the validated order (blue, then gray, then red) and are re-checked with the dataviz validator against both surfaces before any new series joins them. A fourth series folds into \"Other\" or small multiples.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tabular Rule",
+        "body": "Every column of numbers, axis tick and tooltip uses tabular figures. Standalone large numbers may stay proportional.",
+        "section": "typography"
+      },
+      {
+        "name": "The No-Eyebrow Rule",
+        "body": "A heading carries its own weight. No small uppercase label above it, ever.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat Page Rule",
+        "body": "Nothing that sits in the page flow casts a shadow or is boxed as a card.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** keep every forecast beside the home-win baseline wherever a metric appears.",
+      "**Do** carry outcome with an icon and a word as well as colour (\"Hit\", \"Miss\", \"Not scored\").",
+      "**Do** animate only a change of data: bars growing from even odds, panels fading in after a competition switch (200ms). Everything collapses to instant under reduced motion.",
+      "**Do** gate hover effects behind a fine-pointer media query."
+    ],
+    "donts": [
+      "**Don't** add team logos, player photos or club colours; none are licensed.",
+      "**Don't** present odds, stakes or \"picks\"; this is a model benchmark, not betting advice.",
+      "**Don't** reintroduce a themed metaphor (clipboard, board, ticket, terminal) or a handwriting face.",
+      "**Don't** put a filled background track behind a bar or rating rail.",
+      "**Don't** colour text with a data colour, or use green for success; blue and red are the only outcome inks."
+    ]
   }
 }

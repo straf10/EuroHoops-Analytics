@@ -29,7 +29,8 @@ Pipeline ingest → build → backtest → predict → score → publish runs da
 ## Capabilities and Constraints
 
 - v1 scope: live predictions (upcoming games: P(home), expected margin), recent results with hit/miss, scorecard (log loss, Brier, accuracy, margin MAE; Elo vs baseline), team power ratings (current Elo per team, trend).
-- Out of scope for v1: shot charts, season simulation, player models, odds.
+- Stats site (user decision 2026-09-26, ahead of PLAN §9's week-16 UI slot): EuroLeague-only stats pages modelled on boxscorelab.com and databallr.com. Stats-first home; Players dashboard (any metric, season or last 5/10/20 games, per-game/per-36/per-100); player pages with season history, game log, shot chart and Shot Profile Twin (last X games matched against every EuroLeague player-season since 2007-08); team pages with shots taken and allowed; Leaders; Compare; Shots explorer. All 20 seasons (2007-08 to today). Forecasts move to their own page and keep GBL.
+- Still out of scope: season simulation, odds on the site, tracking data (none exists).
 - Games whose prediction reached the public log after tip-off are shown but flagged and not scored.
 - Model today: MOV-adjusted Elo (FiveThirtyEight-style). Player models (xPTS, RAPM) are planned, not built.
 

@@ -1,181 +1,237 @@
 ---
 name: EuroHoops Analytics
-description: Pre-registered basketball forecasts, drawn up on a coach's clipboard before tip-off.
+description: A quiet EuroLeague reference where the data is the only loud thing.
 colors:
-  aluminium-frame: "#b7bec3"
-  melamine-board: "#f4f6f5"
-  board-sunk: "#eaeeed"
-  court-line: "#d3dad9"
-  marker-black: "#1c2126"
-  marker-black-soft: "#4a535b"
-  marker-blue: "#1f4fb8"
-  marker-red: "#c4362a"
-  glass-board: "#121518"
-  glass-frame: "#33393e"
-  glass-marker-blue: "#7aa2ff"
-  glass-marker-red: "#ff6f61"
+  paper: "#f9f9f7"
+  chart-surface: "#fcfcfb"
+  sunk: "#f1f1ee"
+  ink: "#111110"
+  ink-soft: "#52514e"
+  muted: "#6d6b66"
+  axis: "#898781"
+  rule: "#e1e0d9"
+  rule-strong: "#c3c2b7"
+  model-blue: "#2a78d6"
+  baseline-gray: "#8f8d86"
+  against-red: "#e34948"
+  night: "#0e0e0d"
+  night-surface: "#1a1a19"
+  night-sunk: "#1c1c1b"
+  night-ink: "#f2f1ec"
+  night-ink-soft: "#c3c2b7"
+  night-muted: "#9c9a92"
+  night-rule: "#2c2c2a"
+  night-rule-strong: "#45453f"
+  night-model-blue: "#3987e5"
+  night-baseline-gray: "#6a6862"
+  night-against-red: "#e66767"
 typography:
   display:
-    fontFamily: "Sofia Sans Extra Condensed Variable"
-    fontSize: "clamp(3.2rem, 6.4vw, 5.6rem)"
-    fontWeight: 800
-    lineHeight: 0.9
-    letterSpacing: "-0.015em"
+    fontFamily: "Geist Variable, Segoe UI, system-ui, sans-serif"
+    fontSize: "2.75rem"
+    fontWeight: 620
+    lineHeight: 1.04
+    letterSpacing: "-0.035em"
   headline:
-    fontFamily: "Sofia Sans Extra Condensed Variable"
-    fontSize: "clamp(2.2rem, 4.4vw, 3.4rem)"
-    fontWeight: 800
-    lineHeight: 0.95
+    fontFamily: "Geist Variable, Segoe UI, system-ui, sans-serif"
+    fontSize: "1.5rem"
+    fontWeight: 600
+    lineHeight: 1.15
+    letterSpacing: "-0.02em"
   title:
-    fontFamily: "Sofia Sans Extra Condensed Variable"
-    fontSize: "clamp(1.5rem, 2.4vw, 1.9rem)"
-    fontWeight: 800
-  body:
-    fontFamily: "Sofia Sans Variable"
+    fontFamily: "Geist Variable, Segoe UI, system-ui, sans-serif"
     fontSize: "1rem"
+    fontWeight: 600
+    lineHeight: 1.15
+    letterSpacing: "-0.01em"
+  body:
+    fontFamily: "Geist Variable, Segoe UI, system-ui, sans-serif"
+    fontSize: "1rem"
+    fontWeight: 400
+    lineHeight: 1.5
+  data:
+    fontFamily: "Geist Variable, Segoe UI, system-ui, sans-serif"
+    fontSize: "0.875rem"
     fontWeight: 400
     lineHeight: 1.5
     fontFeature: "tnum"
   label:
-    fontFamily: "Sofia Sans Variable"
-    fontSize: "0.78rem"
-    fontWeight: 600
-    letterSpacing: "0.06em"
-  annotation:
-    fontFamily: "Caveat Brush"
-    fontSize: "1.15rem"
+    fontFamily: "Geist Variable, Segoe UI, system-ui, sans-serif"
+    fontSize: "0.75rem"
+    fontWeight: 500
+    lineHeight: 1.4
 rounded:
-  board: "14px"
+  bar-end: "4px"
+  control-inner: "6px"
+  control: "8px"
   pill: "999px"
-  puck: "50%"
 spacing:
-  gutter: "clamp(16px, 3.2vw, 44px)"
-  band: "clamp(44px, 6vw, 84px)"
+  gutter: "clamp(16px, 4vw, 40px)"
+  section: "88px"
+  section-phone: "64px"
+  section-head: "28px"
+  column-gap: "56px"
+  container: "1240px"
 components:
   button-primary:
-    backgroundColor: "{colors.marker-black}"
-    textColor: "{colors.melamine-board}"
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.chart-surface}"
+    rounded: "{rounded.control}"
+    padding: "10px 16px"
+  segment:
+    backgroundColor: "{colors.sunk}"
+    textColor: "{colors.ink-soft}"
+    rounded: "{rounded.control}"
+    padding: "2px"
+  segment-selected:
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.chart-surface}"
+    rounded: "{rounded.control-inner}"
+    padding: "4px 11px"
+  icon-button:
+    backgroundColor: "transparent"
+    textColor: "{colors.ink-soft}"
+    rounded: "{rounded.control}"
+    size: "34px"
+  icon-button-hover:
+    backgroundColor: "{colors.sunk}"
+    textColor: "{colors.ink}"
+  outcome-hit:
+    backgroundColor: "rgb(42 120 214 / 0.1)"
+    textColor: "{colors.ink}"
     rounded: "{rounded.pill}"
-    padding: "13px 22px"
-  button-primary-hover:
-    backgroundColor: "{colors.marker-blue}"
-    textColor: "{colors.melamine-board}"
-  switch-active:
-    backgroundColor: "{colors.marker-blue}"
-    textColor: "{colors.melamine-board}"
+    padding: "2px 9px 2px 7px"
+  outcome-miss:
+    backgroundColor: "rgb(227 73 72 / 0.1)"
+    textColor: "{colors.ink}"
     rounded: "{rounded.pill}"
-  puck:
-    backgroundColor: "{colors.marker-blue}"
-    textColor: "{colors.melamine-board}"
-    rounded: "{rounded.puck}"
-    size: "40px"
+    padding: "2px 9px 2px 7px"
+  tooltip:
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.chart-surface}"
+    rounded: "6px"
+    padding: "7px 10px"
 ---
 
 # Design System: EuroHoops Analytics
 
 ## Overview
 
-**Creative North Star: "The Coach's Clipboard"**
+**Creative North Star: "The Quiet Reference"**
 
-Every forecast is drawn up on the board before tip-off and marked up after the whistle. The page is a white melamine tactics board in an aluminium frame (a black glass board in dark mode), carrying printed court lines and three marker inks. It refuses the dark KPI-tile stats dashboard: numbers sit on the board as a coach would write them, not in tiles.
+EuroHoops reads like a well-kept reference work for EuroLeague numbers: neutral paper, one typeface, hairline rules, and colour that appears only where there is data. It sits alongside boxscorelab and databallr rather than trying to look like a basketball object; the owner rejected every themed metaphor (clipboard, station board, match tickets, terminals), so nothing on the page imitates a physical thing.
+
+Density is that of a stats product, not a landing page: tables with many rows, tabular figures in every column, charts with precise hover tooltips. Controls are drawn in ink, not colour, so the one blue on screen always means "the model". Motion is scarce and only ever reports a change of data.
+
+Light and dark are equal citizens. The page follows the visitor's system setting, and a remembered toggle overrides it both ways.
 
 **Key Characteristics:**
-- One board, one frame, three inks.
-- Court geometry is the chart: the half-court line is 50%, the baskets are certainty.
-- Handwriting annotates; it never carries a number that has to be compared.
+- Neutral paper and near-black night, never cream, never pure white or black.
+- One family, Geist, carries everything from the headline to axis ticks.
+- Hairlines separate; nothing is a card.
+- Colour lives in data marks only; text always wears ink tokens.
+- Tabular figures wherever numbers stack.
 
 ## Colors
 
+A near-neutral ground with three data inks: the model's blue, a neutral gray for baselines, and a red for the opposite pole.
+
 ### Primary
-- **Marker Blue** (`#1f4fb8`, dark `#7aa2ff`): the model's call. Pucks, call annotations, the better number in a pair, the active switch, focus rings.
+- **Model Blue** (light and dark values in the frontmatter): the model and everything it claims. Forecast shares, the Elo line, calibration dots, above-average ratings, the "Hit" outcome icon, focus rings, text selection.
 
 ### Secondary
-- **Marker Red** (`#c4362a`, dark `#ff6f61`): the result mark-up only. Rings around hits, strikes through misses, falling ratings, the not-scored asterisk.
+- **Against Red**: the other pole of a diverging reading. Below-average ratings, falling ratings, the "Miss" outcome icon. Never used for text.
 
 ### Neutral
-- **Melamine Board** (`#f4f6f5`) / **Glass Board** (`#121518`): the page field, cool and never cream.
-- **Aluminium Frame** (`#b7bec3`) / **Glass Frame** (`#33393e`): body ground and the marker tray.
-- **Marker Black** (`#1c2126`) and its soft tone (`#4a535b`): structure, numbers, secondary text.
-- **Court Line** (`#d3dad9`): printed court markings and row rules.
+- **Paper / Night**: the page ground.
+- **Chart Surface**: the plot area of every chart, one step off the page.
+- **Sunk**: control tracks and hovered rows.
+- **Ink, Ink Soft, Muted**: primary text, secondary text, and the smallest text that still clears 4.5:1 (captions, tick labels, table heads).
+- **Axis**: axis and reference strokes only, never text.
+- **Rule / Rule Strong**: row hairlines, and the heavier rule under a table head or section title.
+- **Baseline Gray**: the neutral data series (the home-win baseline, the away share of a forecast).
 
 ### Named Rules
-**The Three Inks Rule.** Black, blue and red are the only inks. Blue is the model, red is what happened. No fourth accent, ever.
+**The Colour-Is-Data Rule.** Blue, gray and red appear only on data marks (bars, lines, dots, stems, outcome icons and their washes). Controls, links and headings are ink.
 
-**The Flat Ink Rule.** Inks and frame are flat colour. No gradients imitating brushed metal, glossy magnets or marker sheen.
+**The Ink Text Rule.** Text never wears a data colour. A value beside a blue dot is set in ink; identity comes from the mark beside it.
+
+**The Validated Order Rule.** Chart colours come from the validated order (blue, then gray, then red) and are re-checked with the dataviz validator against both surfaces before any new series joins them. A fourth series folds into "Other" or small multiples.
 
 ## Typography
 
-**Display Font:** Sofia Sans Extra Condensed (sports-sheet compression; covers Greek)
-**Body Font:** Sofia Sans with tabular numerals (covers Greek team names)
-**Annotation Font:** Caveat Brush (marker hand, Latin only: codes, percentages, short notes)
+**Body Font:** Geist Variable (with Segoe UI, system-ui)
+
+**Character:** one neutral grotesk for every role, ranked by weight and size steps of about 1.2, never by a second family.
 
 ### Hierarchy
-- **Display** (800, clamp 3.2 to 5.6rem, 0.9, uppercase): the one hero headline.
-- **Headline** (800, clamp 2.2 to 3.4rem, uppercase): section titles.
-- **Title** (800, clamp 1.5 to 1.9rem): sub-blocks such as scorecard columns.
-- **Body** (400, 1rem, 1.5): prose, capped near 62ch.
-- **Label** (600, 0.78rem, 0.06em tracking, uppercase): table headers and axis labels only, never above a heading.
+- **Display** (620, 2.75rem, 1.04, 2.25rem under 980px): the single page headline.
+- **Headline** (600, 1.5rem, 1.15): section titles.
+- **Title** (600, 1rem, 1.15): panel titles inside a section, sitting on a strong rule.
+- **Body** (400, 1rem, 1.5): prose, capped at 38 to 64ch.
+- **Data** (400, 0.875rem, tabular figures): every table cell and chart label.
+- **Label** (500, 0.75rem, sentence case): table heads, legends, captions.
 
 ### Named Rules
-**The Marker Hand Rule.** Caveat Brush writes annotations: the round title, puck percentages, the call being marked. Every number a reader compares is set in Sofia Sans.
+**The Tabular Rule.** Every column of numbers, axis tick and tooltip uses tabular figures. Standalone large numbers may stay proportional.
+
+**The No-Eyebrow Rule.** A heading carries its own weight. No small uppercase label above it, ever.
 
 ## Layout
 
-A single board, max 1360px, inside the frame. Bands stack with `clamp(44px, 6vw, 84px)` vertical padding and a 1px court-line rule between them; the scorecard band sits on the sunk board tone. The hero is 2:1 court to copy and stacks copy-first under 980px. Two-column blocks (scorecard, ratings) collapse to one under 760px. Tables scroll inside their own box on phones; the page never scrolls sideways.
+A single centred column (max 1240px) with a fluid gutter. Sections stack with 88px of space above each title (64px on phones), a title plus a one-sentence explainer directly below it, then 28px to the content. Paired panels (scorecard, calibration, ratings) sit in two columns with a 56px gap and collapse to one column below 820 to 900px. The first viewport is a split: headline, explainer and log link on the left, tonight's forecasts on the wider right; it stacks copy-first under 980px.
+
+Tables scroll inside their own box when they cannot fit, and on phones they shed columns (full names, date) before they scroll, so the verdict column is always in view. Tonight's rows use container queries: full names only when the panel is wider than 820px, a two-row layout plus a margin row under 520px.
 
 ## Elevation & Depth
 
-Flat board, physical objects. Only magnets carry shadow (`0 2px 3px` plus a soft `0 6px 14px -6px`, tinted from the shadow token). The board itself sits in the frame with an inset shadow.
+Flat. Depth comes from tonal steps (paper, chart surface, sunk) and hairline rules, not shadows. The only shadows in the system belong to things that float above the page: the tooltip, and the translucent sticky top bar with its backdrop blur.
+
+### Named Rules
+**The Flat Page Rule.** Nothing that sits in the page flow casts a shadow or is boxed as a card.
 
 ## Shapes
 
-The board has a 14px radius. Controls are pills. Pucks and rating magnets are circles. Tables and bands are square.
+Gentle, small radii. Controls and buttons are 8px, their inner selected segment 6px, data bars have 4px rounded ends and stay square where two segments meet, outcome chips are full pills, dots are circles. Tables and sections are square and open, bounded only by rules.
 
 ## Components
 
 ### Buttons
-Primary is a marker-black pill with board-coloured text; hover turns it marker blue and nudges the arrow icon up and right; press scales to 0.97. One primary action per page ("Read the log").
+- **Shape:** gently rounded (8px).
+- **Primary:** ink fill with paper text, 10px by 16px, 0.9375rem medium. One per page ("Read the log").
+- **Hover / Active:** the trailing arrow icon nudges up and right; press scales to 0.97 over 140ms.
+- **Icon buttons:** 34px square, transparent, soft ink; hover fills with Sunk and darkens to ink; press scales to 0.94.
+
+### Chips
+- **Outcome chips:** full pills with ink text, a Phosphor check or cross icon, and a 10% wash of the icon's colour: blue for a hit, red for a miss. "Not scored" is a muted chip on Sunk with a hairline ring and links to the footnote.
 
 ### Navigation
-Header rail: wordmark with a blue magnet dot, the competition switch (a pill segmented control built on radio inputs, so it works without JavaScript), section links, GitHub icon. Links collapse to the icon under 980px.
+- **Top bar:** 56px, sticky, paper at 88% with a saturating blur and a bottom hairline. Wordmark (a blue ring and "EuroHoops"), section links in soft ink that darken on hover, then the competition switch, theme toggle and GitHub icon on the right. Section links drop below 900px.
+- **Segmented control:** a Sunk track with a hairline ring; the selected option is filled ink with paper text. Built on radio inputs so it works without JavaScript; labels shorten ("GBL") under 480px.
 
-### Court board (signature)
-Each upcoming game is a lane across a printed court. The puck sits at P(home), labelled with the favourite's code and its chance in marker blue. On load each puck slides from centre court to its call (900ms, `cubic-bezier(0.23, 1, 0.32, 1)`, 60ms stagger). Hover or focus draws the call as a blue marker stroke from centre court to the puck. Empty state: a marker note naming the next tip-off.
+### Tooltip
+Ink fill, paper text, 6px radius, soft drop shadow, max 260px. Opens after 120ms, then instantly for neighbouring marks while warm; enters from 2px below at 0.98 scale over 125ms. Every chart mark and forecast bar carries one, reachable by keyboard focus too.
 
-### Result mark-up
-A red hand-drawn ring around a correct call, a red strike through a wrong one, always with the word "hit" or "miss" beside it. Marks draw on as they scroll into view.
+### Forecast split bar (signature)
+One row per upcoming game: tip-off time, away code, a 10px split bar, home code, expected margin. The bar is the away share in Baseline Gray meeting the home share in Model Blue at P(home), with a 2px gap, 4px outer ends and a thin even-odds tick standing proud at 50%. The favourite's percentage is ink and semibold; the other is muted. On load and on each competition switch every bar grows out of even odds to its call (320ms ease-out, 40ms stagger).
 
 ### Rating ladder
-Ranked rows with code, name, a rail with a black magnet at the team's rating, the rating, and the season change (blue up, red down, with a caret icon).
+Ranked rows: rank, code, name, a bare rail with a dashed league-average line, a stem from average to the team's dot (blue above, red below), the rating, and the season change with a blue or red caret beside muted figures. No filled track behind the rail.
 
-### Reliability diagram
-A square court: court-line gridlines at 0, 50% and 100% on both axes, and the diagonal as a
-dashed soft-black line ("called 70%, won 70%"). Each non-empty forecast bin is a blue marker
-dot at (mean forecast, home win rate), with its area growing with the bin's games. The game
-count is written beside every dot, so a big miss on a tiny bin reads as small. The dots are
-joined by a thin blue stroke. It shows the held-out test seasons only; the live season is too
-small to bin. A screen-reader table carries the bins.
-
-### Rolling window
-Log loss over the latest 50 scored games: Elo is a solid blue stroke, the baseline a dashed
-soft-black one, and each line ends in a label with its last value. There is no fill under the
-lines and no legend box. Below 50 scored games the chart isn't drawn: a plain sentence says
-when it starts and how many games are scored so far.
-
-### Named Rule
-**The Diagonal Rule.** In a calibration chart the diagonal is the only reference line that
-matters. It's drawn in soft black, never blue or red, because it's neither the model nor the
-result.
+### Charts
+Plot areas sit on Chart Surface with 1px solid gridlines in Rule; reference lines (the calibration diagonal) are dashed soft ink. Lines are 2px with round joins, dots carry a 2px paper ring, a legend appears for two or more series and end labels name the last values. Every chart has a text caption and a screen-reader table.
 
 ## Do's and Don'ts
 
 ### Do:
-- **Do** show Elo beside the home-win baseline every time a metric appears.
-- **Do** keep scored and not-scored rows visibly distinct.
-- **Do** honour reduced motion: pucks and marks render in place.
+- **Do** keep every forecast beside the home-win baseline wherever a metric appears.
+- **Do** carry outcome with an icon and a word as well as colour ("Hit", "Miss", "Not scored").
+- **Do** animate only a change of data: bars growing from even odds, panels fading in after a competition switch (200ms). Everything collapses to instant under reduced motion.
+- **Do** gate hover effects behind a fine-pointer media query.
 
 ### Don't:
-- **Don't** add team logos, photos or club colours. None are licensed, and the three inks carry identity.
-- **Don't** present odds, stakes or "picks": this is a model benchmark, not betting advice.
-- **Don't** put a label or eyebrow above a heading.
-- **Don't** use a filled track behind a bar or rating rail.
+- **Don't** add team logos, player photos or club colours; none are licensed.
+- **Don't** present odds, stakes or "picks"; this is a model benchmark, not betting advice.
+- **Don't** reintroduce a themed metaphor (clipboard, board, ticket, terminal) or a handwriting face.
+- **Don't** put a filled background track behind a bar or rating rail.
+- **Don't** colour text with a data colour, or use green for success; blue and red are the only outcome inks.
