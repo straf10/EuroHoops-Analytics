@@ -42,8 +42,7 @@ const description =
   <section class="wrap head" aria-labelledby="players-title">
     <h1 id="players-title">Players</h1>
     <p>
-      Every EuroLeague player since 2007-08. Pick a season and a measure; the chart ranks the
-      league on it and the table lists everyone. Click any column to rank by it.
+      Every EuroLeague player since 2007-08, ranked on any measure. Click a column to re-rank.
     </p>
   </section>
 
@@ -840,6 +839,10 @@ const description =
     .plot {
       grid-template-columns: 1.4rem minmax(0, 10.25rem) minmax(0, 1fr) 2.8rem;
       column-gap: 8px;
+    }
+    /* Every other tick label, so the narrower phone axis never crowds (gridlines stay). */
+    .ticks :global(span:nth-child(even)) {
+      display: none;
     }
     /* The sticky name column gives way so a phone sees more than three measures. */
     tbody :global(th.c-nm) {

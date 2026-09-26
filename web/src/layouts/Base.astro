@@ -147,22 +147,43 @@ const pages = [
       // On a phone the link row scrolls: bring the current page clear of the edge fade.
       const nav = document.querySelector<HTMLElement>(".links");
       const here = nav?.querySelector<HTMLElement>('[aria-current="page"]');
-      if (nav && here && nav.scrollWidth > nav.clientWidth) {
-        // Land on a word boundary: the first link that still leaves the current one clear of the fade.
-        const left = nav.getBoundingClientRect().left;
-        const gap = parseFloat(getComputedStyle(nav).columnGap) || 0;
-        const end = here.getBoundingClientRect().right - left;
-        const first = [...nav.children].find((a) => end - (a.getBoundingClientRect().left - left) <= nav.clientWidth - 32);
-        if (!first) nav.scrollLeft = nav.scrollWidth; // too narrow for both fades: show the row's end
-        else if (first !== nav.firstElementChild) nav.scrollLeft = first.getBoundingClientRect().left - left - gap;
-      }
       // The edge fades say there is more on that side; they lift at the row's ends.
       const navEdges = () => {
         nav?.classList.toggle("at-start", nav.scrollLeft <= 1);
         nav?.classList.toggle("at-end", nav.scrollLeft + nav.clientWidth >= nav.scrollWidth - 1);
       };
+      const placeNav = () => {
+        if (!nav || !here) return;
+        nav.style.paddingInlineEnd = "";
+        if (nav.scrollWidth > nav.clientWidth) {
+          // Land on a word boundary: the first link that still leaves the current one clear of the fade.
+          const left = nav.getBoundingClientRect().left - nav.scrollLeft; // the row's own origin
+          const gap = parseFloat(getComputedStyle(nav).columnGap) || 0;
+          const end = here.getBoundingClientRect().right - left;
+          const first = [...nav.children].find((a) => end - (a.getBoundingClientRect().left - left) <= nav.clientWidth - 32);
+          if (!first) nav.scrollLeft = nav.scrollWidth; // too narrow for both fades: show the row's end
+          else {
+            const target = first === nav.firstElementChild ? 0 : first.getBoundingClientRect().left - left - gap;
+            // Near the row's end the scroll would clamp mid-word: a little end room lets it land clean.
+            const short = target - (nav.scrollWidth - nav.clientWidth);
+            if (short > 0) nav.style.paddingInlineEnd = `${short}px`;
+            nav.scrollLeft = target;
+          }
+        }
+        navEdges();
+      };
       nav?.addEventListener("scroll", navEdges, { passive: true });
-      navEdges();
+      placeNav();
+      // The web font widens the links once it arrives; place the row again then, and on resize.
+      document.fonts?.ready.then(placeNav);
+      let navWidth = innerWidth; // phones fire resize as the address bar slides; only a new width counts
+      addEventListener(
+        "resize",
+        () => {
+          if (innerWidth !== navWidth) (navWidth = innerWidth), placeNav();
+        },
+        { passive: true },
+      );
 
       // Competition switch memory.
       document.querySelectorAll<HTMLInputElement>('input[name="comp"]').forEach((r) =>
@@ -387,6 +408,32 @@ const pages = [
     }
     .links.at-start.at-end {
       mask-image: none;
+    }
+    /* On forecast pages the competition switch takes a full-width second row, so the links keep the first. */
+    .bar-inner:has(.seg) {
+      flex-wrap: wrap;
+      height: auto;
+      min-height: 56px;
+      row-gap: 0;
+    }
+    .bar-inner:has(.seg) .links {
+      flex: 1;
+      min-width: 0;
+    }
+    .bar-inner:has(.seg) .tools {
+      display: contents;
+    }
+    .bar-inner:has(.seg) .icon-btn {
+      margin-block: 11px;
+    }
+    .tools .seg {
+      order: 5;
+      flex: 1 0 100%;
+      margin: 0 0 10px;
+    }
+    .tools .seg label {
+      flex: 1;
+      text-align: center;
     }
     .links::-webkit-scrollbar {
       display: none;
