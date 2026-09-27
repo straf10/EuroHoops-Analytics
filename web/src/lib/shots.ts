@@ -6,7 +6,7 @@
 
 import { dotChart, hexChart, hexOf, type HexCell } from "./court";
 import { esc } from "./format";
-import { tip, tipAttr } from "./tip";
+import { dataTip, tip } from "./tip";
 import { BAND_LABELS } from "./player";
 
 export interface Attempts {
@@ -402,7 +402,7 @@ export function facetRows(bars: Bar[], c: FacetContext): string {
   return bars
     .map((b) => {
       const t = barText(b, c);
-      return `<button type="button" class="bar${b.on && !off ? " on" : ""}" data-facet="${c.facet}" data-value="${b.value}" aria-pressed="${c.chosen.includes(b.value)}"${off ? " disabled" : ""} data-tip="${tipAttr(t.tip)}"><span class="b-label">${esc(b.label)}</span><span class="b-track"><span class="b-bar" style="width:${((100 * b.att) / most).toFixed(1)}%"></span></span><span class="b-att">${count(b.att)}</span><span class="b-fg">${t.fg}</span><span class="b-diff">${t.diff}</span></button>`;
+      return `<button type="button" class="bar${b.on && !off ? " on" : ""}" data-facet="${c.facet}" data-value="${b.value}" aria-pressed="${c.chosen.includes(b.value)}"${off ? " disabled" : ""}${dataTip(t.tip)}><span class="b-label">${esc(b.label)}</span><span class="b-track"><span class="b-bar" style="width:${((100 * b.att) / most).toFixed(1)}%"></span></span><span class="b-att">${count(b.att)}</span><span class="b-fg">${t.fg}</span><span class="b-diff">${t.diff}</span></button>`;
     })
     .join("");
 }

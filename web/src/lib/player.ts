@@ -3,7 +3,7 @@
 
 import { hexChart } from "./court";
 import { esc } from "./format";
-import { tip, tipAttr } from "./tip";
+import { dataTip, tip } from "./tip";
 import type { Bands, PlayerSeason } from "./stats";
 
 export const BAND_LABELS: Record<string, [string, string]> = {
@@ -112,7 +112,7 @@ export function logHtml(s: PlayerSeason): string {
       const d = new Date(`${date}T12:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
       const pm = n("pm");
       const phaseText = phase === "RS" ? `Round ${round}` : String(phase);
-      return `<tr><td class="date" data-tip="${tipAttr(tip`${date} · ${phaseText}`)}">${d}</td><td class="opp"><span class="at">${isHome ? "vs" : "@"}</span>${esc(String(opp))}</td><td class="res"><span class="wl ${won ? "w" : "l"}">${won ? "W" : "L"}</span>${own}–${their}</td><td class="num">${Math.round(n("sec") / 60)}</td><td class="num strong">${n("pts")}</td><td class="num">${n("oreb") + n("dreb")}</td><td class="num">${n("ast")}</td><td class="num">${n("stl")}</td><td class="num">${n("blk")}</td><td class="num">${n("tov")}</td><td class="num">${n("fg2m") + n("fg3m")}-${n("fg2a") + n("fg3a")}</td><td class="num">${n("fg3m")}-${n("fg3a")}</td><td class="num">${n("ftm")}-${n("fta")}</td><td class="num">${n("pir")}</td><td class="num">${pm > 0 ? "+" : pm < 0 ? "−" : ""}${Math.abs(pm)}</td></tr>`;
+      return `<tr><td class="date"${dataTip(tip`${date} · ${phaseText}`)}>${d}</td><td class="opp"><span class="at">${isHome ? "vs" : "@"}</span>${esc(String(opp))}</td><td class="res"><span class="wl ${won ? "w" : "l"}">${won ? "W" : "L"}</span>${own}–${their}</td><td class="num">${Math.round(n("sec") / 60)}</td><td class="num strong">${n("pts")}</td><td class="num">${n("oreb") + n("dreb")}</td><td class="num">${n("ast")}</td><td class="num">${n("stl")}</td><td class="num">${n("blk")}</td><td class="num">${n("tov")}</td><td class="num">${n("fg2m") + n("fg3m")}-${n("fg2a") + n("fg3a")}</td><td class="num">${n("fg3m")}-${n("fg3a")}</td><td class="num">${n("ftm")}-${n("fta")}</td><td class="num">${n("pir")}</td><td class="num">${pm > 0 ? "+" : pm < 0 ? "−" : ""}${Math.abs(pm)}</td></tr>`;
     })
     .join("");
 }

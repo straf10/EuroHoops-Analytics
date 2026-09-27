@@ -4,7 +4,7 @@
 
 import { hexChart, type HexCell } from "./court";
 import { esc } from "./format";
-import { tip, tipAttr } from "./tip";
+import { dataTip, tip } from "./tip";
 import { SEASON_COLS, bandRows, totalsOf, type Totals } from "./player";
 import { teamHref } from "./players";
 import type { TeamSeason } from "./stats";
@@ -94,7 +94,7 @@ export function strips(t: TeamSeason, metrics: Metric[], base: string): Strip[] 
       .filter((x) => x.c.code !== t.code)
       .map(({ c, f }) => {
         const dotTip = tip`<b>${c.code}</b> ${c.name}<br>${name}: ${text(f[key])}`;
-        return `<a class="s-dot" style="left:${at(f[key]).toFixed(2)}%" href="${teamHref(base, c.code, t.season)}" data-tip="${tipAttr(dotTip)}" aria-label="${esc(`${c.name}: ${text(f[key])}`)}"></a>`;
+        return `<a class="s-dot" style="left:${at(f[key]).toFixed(2)}%" href="${teamHref(base, c.code, t.season)}"${dataTip(dotTip)} aria-label="${esc(`${c.name}: ${text(f[key])}`)}"></a>`;
       })
       .join("");
     const avgTip = tip`League average: ${text(league[key])}`;
@@ -106,13 +106,13 @@ export function strips(t: TeamSeason, metrics: Metric[], base: string): Strip[] 
       rank,
       me: at(me[key]),
       tip: tip`<b>${t.code}</b> ${t.name}<br>${name}: ${text(me[key])}, ${rank}`,
-      field: `<span class="s-avg" style="left:${at(league[key]).toFixed(2)}%" data-tip="${tipAttr(avgTip)}"></span>${dots}`,
+      field: `<span class="s-avg" style="left:${at(league[key]).toFixed(2)}%"${dataTip(avgTip)}></span>${dots}`,
     };
   });
 }
 
 export const stripHtml = (s: Strip) =>
-  `<div class="strip" data-key="${s.key}"><span class="s-name"><span data-tip="${tipAttr(tip`<b>${s.name}</b><br>${s.about}`)}" tabindex="0">${s.name}</span></span><span class="s-val">${s.value}</span><span class="s-rank">${s.rank}</span><span class="s-track"><span class="s-field">${s.field}</span><span class="s-me" style="left:${s.me.toFixed(2)}%" data-tip="${tipAttr(s.tip)}"></span></span></div>`;
+  `<div class="strip" data-key="${s.key}"><span class="s-name"><span${dataTip(tip`<b>${s.name}</b><br>${s.about}`)} tabindex="0">${s.name}</span></span><span class="s-val">${s.value}</span><span class="s-rank">${s.rank}</span><span class="s-track"><span class="s-field">${s.field}</span><span class="s-me" style="left:${s.me.toFixed(2)}%"${dataTip(s.tip)}></span></span></div>`;
 
 // ---- Head ----------------------------------------------------------------------------------
 
