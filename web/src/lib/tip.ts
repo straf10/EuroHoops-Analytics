@@ -13,3 +13,8 @@ export function tip(strings: TemplateStringsArray, ...values: unknown[]): string
  * and <b> and <br> stay as written, as Astro writes data-tip={...} in components. */
 export const dataTip = (html: string): string =>
   ` data-tip="${html.replace(/[&"]/g, (c) => (c === "&" ? "&amp;" : "&quot;"))}"`;
+
+/** For a link that carries a tip: a touch only follows the link, so its aria-label holds the tip
+ * as plain text (a <br> reads as a comma) for screen readers, after the data-tip attribute. */
+export const linkTip = (html: string): string =>
+  `${dataTip(html)} aria-label="${html.replace(/<br>/g, ", ").replace(/<[^>]*>/g, "").replace(/"/g, "&quot;")}"`;

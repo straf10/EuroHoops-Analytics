@@ -227,6 +227,52 @@ const bandHead = [
   import type { SeasonShared, TeamOwn, TeamSeason } from "../../lib/stats";
   import { DEFENSE, OFFENSE, facts, rosterHtml, strips, teamBands, teamCharts } from "../../lib/team";
 
+  // Without hover the gray dots only open their club, so each rank opens every club's value as
+  // text: a list read off the strip's own marks (their tips), best first.
+  const METRICS = [...OFFENSE, ...DEFENSE];
+  const TIP = /^<b>(.*?)<\/b> (.*?)<br>[^:]*: ([^,]*)/;
+  function fillList(list: HTMLElement) {
+    const strip = list.previousElementSibling as HTMLElement;
+    const sign = METRICS.find((m) => m.key === strip.dataset.key)?.high ? 1 : -1;
+    const rows = [...strip.querySelectorAll<HTMLElement>(".s-dot, .s-me")].map((el) => {
+      const [, code, name, value] = TIP.exec(el.dataset.tip ?? "") ?? [];
+      return { code, name, value, x: sign * parseFloat(value), href: el.getAttribute("href") };
+    });
+    // The league average (the dashed tick, "League average: 105.3") takes its place in the order.
+    const avg = strip.querySelector<HTMLElement>(".s-avg")?.dataset.tip?.split(": ")[1] ?? "";
+    const avgX = sign * parseFloat(avg);
+    rows.sort((a, b) => b.x - a.x);
+    const at = rows.filter((r) => r.x >= avgX).length;
+    const items = rows.map((r) => {
+      const rank = 1 + rows.filter((o) => o.x > r.x).length;
+      const club = `<b>${r.code}</b> <span>${r.name}</span>`;
+      return `<li${r.href ? "" : ' class="me"'}><span class="rk">${rank}</span>${r.href ? `<a href="${r.href}">${club}</a>` : `<span>${club}</span>`}<span class="v">${r.value}</span></li>`;
+    });
+    if (avg) items.splice(at, 0, `<li class="avg"><span class="rk"></span><span>League average</span><span class="v">${avg}</span></li>`);
+    list.innerHTML = items.join("");
+  }
+  if (!matchMedia("(hover: hover) and (pointer: fine)").matches)
+    document.querySelectorAll<HTMLElement>(".strip").forEach((strip) => {
+      const rank = strip.querySelector(".s-rank")!;
+      const button = document.createElement("button");
+      const list = document.createElement("ol");
+      button.type = "button";
+      button.className = "s-rank";
+      button.textContent = rank.textContent;
+      button.setAttribute("aria-expanded", "false");
+      button.setAttribute("aria-controls", (list.id = `clubs-${strip.dataset.key}`));
+      list.className = "s-list";
+      list.hidden = true;
+      list.setAttribute("aria-label", `Every club, ${strip.querySelector(".s-name")!.textContent}`);
+      rank.replaceWith(button);
+      strip.after(list);
+      button.addEventListener("click", () => {
+        list.hidden = !list.hidden;
+        button.setAttribute("aria-expanded", String(!list.hidden));
+        if (!list.hidden) fillList(list);
+      });
+    });
+
   const head = document.getElementById("team");
   const select = document.getElementById("season") as HTMLSelectElement | null;
   if (head && select) {
@@ -278,6 +324,7 @@ const bandHead = [
         text("t-code", t.code);
         patchStrips(document.getElementById("offense")!, strips(t, OFFENSE, base!));
         patchStrips(document.getElementById("defense")!, strips(t, DEFENSE, base!));
+        document.querySelectorAll<HTMLElement>(".s-list:not([hidden])").forEach(fillList);
         const charts = teamCharts(t, Number(radius));
         const bands = teamBands(t, up, down);
         for (const side of ["taken", "allowed"] as const) {
