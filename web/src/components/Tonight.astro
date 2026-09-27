@@ -65,7 +65,7 @@ const rounds = [...new Set(games.map((g) => g.round))];
       <div class="empty">
         <p class="lead">
           {comp.next_tipoff_utc
-            ? `Next tip-off ${athensDay(comp.next_tipoff_utc)}, ${athensTime(comp.next_tipoff_utc)}.`
+            ? `Next tip-off ${athensDay(comp.next_tipoff_utc)}, ${comp.next_tipoff_time_tbc ? "time TBC" : athensTime(comp.next_tipoff_utc)}.`
             : "The season has no scheduled games left."}
         </p>
         <p>

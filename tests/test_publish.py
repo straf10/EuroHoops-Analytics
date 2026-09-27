@@ -153,3 +153,23 @@ def test_an_on_time_row_wins_over_an_earlier_listed_late_one() -> None:
     row = next(r for r in data["results"] if r["game_id"] == game["game_id"])
     assert not row["late"] and row["provable"]
     assert row["p_home"] == 0.4
+
+
+def test_next_tip_off_skips_games_without_a_confirmed_time() -> None:
+    """A GBL game without a confirmed time sits at 00:00 Athens; it is never the next tip-off."""
+    plain = section()
+    games = plain.games.copy()
+    ahead = games[(games["season"] == 2026) & ~games["played"]].index
+    games.loc[ahead[0], "confirmed_date"] = False
+    data = section_data(dataclasses.replace(plain, games=games), NOW)
+    assert data["next_tipoff_utc"] == stamp_of(games.loc[ahead[1], "tipoff_utc"])
+    assert data["next_tipoff_time_tbc"] is False
+
+
+def test_next_tip_off_is_a_date_with_time_tbc_when_no_time_is_confirmed() -> None:
+    plain = section()
+    games = plain.games.assign(confirmed_date=False)
+    data = section_data(dataclasses.replace(plain, games=games), NOW)
+    first = games[(games["season"] == 2026) & ~games["played"]]["tipoff_utc"].min()
+    assert data["next_tipoff_utc"] == stamp_of(first)
+    assert data["next_tipoff_time_tbc"] is True

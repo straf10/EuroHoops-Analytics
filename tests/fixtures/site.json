@@ -7,6 +7,7 @@
       "season": "2027-28",
       "logged": 64,
       "next_tipoff_utc": "2027-10-01T18:00:00Z",
+      "next_tipoff_time_tbc": false,
       "upcoming": [
         {
           "game_id": "E2027_1",
@@ -804,6 +805,7 @@
       "season": "2027-28",
       "logged": 34,
       "next_tipoff_utc": "2027-10-01T18:00:00Z",
+      "next_tipoff_time_tbc": false,
       "upcoming": [
         {
           "game_id": "GBL2027_1",
