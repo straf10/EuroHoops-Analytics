@@ -236,14 +236,14 @@ export function fiveHtml(b: Board, view: View, base: string): string {
       const [x, y] = SLOTS[i];
       const tag = b.lineup ? "" : `<span class="rk">${r.rank}</span>`;
       const muted = r.floor ? " muted" : "";
-      const tip = r.floor ? ` data-tip="${esc(tip`${r.floor}`)}"` : "";
+      const floorAttr = r.floor ? ` data-tip="${esc(tip`${r.floor}`)}"` : "";
       return (
         `<li class="slot" style="--x:${x}%;--y:${y}%" data-key="${esc(e.key)}">` +
         `<a class="shirt-link" href="${playerHref(base, e.slug)}" tabindex="-1" aria-hidden="true">${jerseySvg({ code: e.team, name: e.name, number: e.dorsal, size: 72 })}</a>` +
         `<span class="tag">` +
         `<span class="who">${tag}<a href="${playerHref(base, e.slug)}">${esc(e.name)}</a></span>` +
         `<span class="meta">${esc(e.team)} · ${when(e)}</span>` +
-        `<span class="big${muted}"${tip}>${r.text}<small>${head}</small></span>` +
+        `<span class="big${muted}"${floorAttr}>${r.text}<small>${head}</small></span>` +
         `<span class="line">${statLine(e, view)}</span>` +
         `</span>` +
         `</li>`
@@ -256,13 +256,13 @@ export function benchHtml(b: Board, view: View, base: string): string {
   return b.bench
     .map((r) => {
       const { e } = r;
-      const tip = r.floor ? ` data-tip="${esc(tip`${r.floor}`)}"` : "";
+      const floorAttr = r.floor ? ` data-tip="${esc(tip`${r.floor}`)}"` : "";
       return (
         `<li data-key="${esc(e.key)}">` +
         `<span class="rk">${r.rank || ""}</span>` +
         jerseySvg({ code: e.team, name: e.name, number: e.dorsal, size: 30 }) +
         `<span class="nm"><a href="${playerHref(base, e.slug)}">${esc(e.name)}</a><small>${esc(e.team)} · ${when(e)} · ${games(e)}</small></span>` +
-        `<span class="val${r.floor ? " muted" : ""}"${tip}>${r.text}</span>` +
+        `<span class="val${r.floor ? " muted" : ""}"${floorAttr}>${r.text}</span>` +
         `</li>`
       );
     })

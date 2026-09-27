@@ -354,8 +354,8 @@ export function bodyHtml(ls: Line[], view: View, base: string): string {
           const v = l.values[key];
           const short = m.qualifies && !m.qualifies(l.totals);
           const cls = ["num", key === view.sort ? "on" : "", short ? "short" : ""].filter(Boolean).join(" ");
-          const tip = short ? ` data-tip="${esc(tip`${m.floor ?? ""}`)}"` : "";
-          return `<td class="${cls}"${tip}>${format(m, v)}</td>`;
+          const floorAttr = short ? ` data-tip="${esc(tip`${m.floor ?? ""}`)}"` : "";
+          return `<td class="${cls}"${floorAttr}>${format(m, v)}</td>`;
         })
         .join("");
       return `<tr><td class="c-rk">${l.ranked ? rank : ""}</td><th scope="row" class="c-nm"><a href="${playerHref(base, l.row.slug)}">${esc(l.row.name)}</a><span class="tm">${l.row.teams.map((t) => `<a href="${teamHref(base, t, view.season)}">${esc(t)}</a>`).join(" · ")}</span></th>${cells}</tr>`;
