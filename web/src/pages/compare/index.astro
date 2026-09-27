@@ -86,6 +86,12 @@ const description = "Up to five EuroLeague players side by side, a season each o
           <p class="count" id="status" aria-live="polite">Up to {MAX} players.</p>
         </form>
 
+        <script is:inline>
+          // Opened with players in the link: the table paints once their cards arrive. Until then
+          // the empty state keeps its place unseen and a screen tall, so the footer starts below
+          // the fold and nothing jumps when the table replaces it (0.096 CLS before).
+          if (/[?&]p=[^&]/.test(location.search)) document.documentElement.dataset.picks = "";
+        </script>
         <div class="empty" id="empty">
           <p>Add a player by name, or start from one of these:</p>
           <ul>
@@ -189,7 +195,10 @@ const description = "Up to five EuroLeague players side by side, a season each o
       } catch {
         $("status").textContent = "Could not load these players. Reload the page to try again.";
       } finally {
-        if (ticket === pending) host.removeAttribute("aria-busy");
+        if (ticket === pending) {
+          host.removeAttribute("aria-busy");
+          delete document.documentElement.dataset.picks;
+        }
       }
     };
 
@@ -241,6 +250,7 @@ const description = "Up to five EuroLeague players side by side, a season each o
 
     syncForm();
     if (picks.length) paint();
+    else delete document.documentElement.dataset.picks;
   }
 </script>
 
@@ -320,6 +330,10 @@ const description = "Up to five EuroLeague players side by side, a season each o
     font-size: 0.8125rem;
   }
 
+  :global(html[data-picks]) .empty {
+    visibility: hidden;
+    min-height: 100dvh;
+  }
   .empty {
     color: var(--ink-2);
   }
