@@ -4,7 +4,7 @@
 
 import { hexChart, type HexCell } from "./court";
 import { esc } from "./format";
-import { dataTip, tip } from "./tip";
+import { dataTip, linkTip, tip } from "./tip";
 import { SEASON_COLS, bandRows, totalsOf, type Totals } from "./player";
 import { teamHref } from "./players";
 import type { ClubLine, TeamSeason } from "./stats";
@@ -95,7 +95,8 @@ export function strips(t: TeamSeason, metrics: Metric[], base: string): Strip[] 
       .filter((x) => x.c.code !== t.code)
       .map(({ c, f }) => {
         const dotTip = tip`<b>${c.code}</b> ${c.name}<br>${name}: ${text(f[key])}`;
-        return `<a class="s-dot" style="left:${at(f[key]).toFixed(2)}%" href="${teamHref(base, c.code, t.season)}"${dataTip(dotTip)} aria-label="${esc(`${c.name}: ${text(f[key])}`)}"></a>`;
+        // The tip and its plain twin sit side by side (and the style last) so the page gzips small.
+        return `<a class="s-dot" href="${teamHref(base, c.code, t.season)}"${linkTip(dotTip)} style="left:${at(f[key]).toFixed(2)}%"></a>`;
       })
       .join("");
     const avgTip = tip`League average: ${text(league[key])}`;
