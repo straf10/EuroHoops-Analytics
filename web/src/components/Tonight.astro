@@ -1,4 +1,5 @@
 ---
+import { esc } from "../lib/court";
 import type { Competition } from "../lib/format";
 import { athensDay, athensTime, call, pct } from "../lib/format";
 
@@ -39,7 +40,7 @@ const rounds = [...new Set(games.map((g) => g.round))];
               <span
                 class="split"
                 tabindex="0"
-                data-tip={`<b>${g.home.name}</b> win chance ${pct(g.p_home)}<br>${g.away.name} ${pct(1 - g.p_home)}<br>Expected margin: ${fav.team.code} by ${margin}`}
+                data-tip={`<b>${esc(g.home.name)}</b> win chance ${pct(g.p_home)}<br>${esc(g.away.name)} ${pct(1 - g.p_home)}<br>Expected margin: ${esc(fav.team.code)} by ${margin}`}
                 aria-label={`${g.home.name} host ${g.away.name}. Home win chance ${pct(g.p_home)}. Expected margin ${fav.team.code} by ${margin} points.`}
               >
                 <span class="pa">{pct(1 - g.p_home)}</span>
