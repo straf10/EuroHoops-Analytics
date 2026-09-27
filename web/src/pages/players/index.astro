@@ -623,7 +623,8 @@ const description =
     transform: translateX(calc(var(--x) * 1%));
     transition: transform 200ms var(--ease-out);
   }
-  .rows :global(.dot) {
+  .rows :global(.pos)::before {
+    content: "";
     position: absolute;
     top: 50%;
     left: 0;
