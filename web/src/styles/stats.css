@@ -477,8 +477,9 @@ svg.court {
   }
 }
 
-/* A finger needs more than the 1px average tick to land on (the dots stay on top of it). */
-@media (hover: none) {
+/* A finger needs more than the 1px average tick to land on (the dots stay on top of it). Same
+   test as the rank list's script: no hover with a fine pointer. */
+@media not ((hover: hover) and (pointer: fine)) {
   .s-avg::before {
     content: "";
     position: absolute;

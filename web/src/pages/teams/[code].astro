@@ -225,21 +225,20 @@ const bandHead = [
   import up from "@phosphor-icons/core/assets/fill/caret-up-fill.svg?raw";
   import down from "@phosphor-icons/core/assets/fill/caret-down-fill.svg?raw";
   import type { SeasonShared, TeamOwn, TeamSeason } from "../../lib/stats";
-  import { DEFENSE, OFFENSE, facts, rosterHtml, strips, teamBands, teamCharts } from "../../lib/team";
+  import { DEFENSE, OFFENSE, avgTipValue, facts, rosterHtml, stripTipParts, strips, teamBands, teamCharts } from "../../lib/team";
 
   // Without hover the gray dots only open their club, so each rank opens every club's value as
   // text: a list read off the strip's own marks (their tips), best first.
   const METRICS = [...OFFENSE, ...DEFENSE];
-  const TIP = /^<b>(.*?)<\/b> (.*?)<br>[^:]*: ([^,]*)/;
   function fillList(list: HTMLElement) {
     const strip = list.previousElementSibling as HTMLElement;
     const sign = METRICS.find((m) => m.key === strip.dataset.key)?.high ? 1 : -1;
     const rows = [...strip.querySelectorAll<HTMLElement>(".s-dot, .s-me")].map((el) => {
-      const [, code, name, value] = TIP.exec(el.dataset.tip ?? "") ?? [];
+      const { code, name, value } = stripTipParts(el.dataset.tip ?? "");
       return { code, name, value, x: sign * parseFloat(value), href: el.getAttribute("href") };
     });
     // The league average (the dashed tick, "League average: 105.3") takes its place in the order.
-    const avg = strip.querySelector<HTMLElement>(".s-avg")?.dataset.tip?.split(": ")[1] ?? "";
+    const avg = avgTipValue(strip.querySelector<HTMLElement>(".s-avg")?.dataset.tip ?? "");
     const avgX = sign * parseFloat(avg);
     rows.sort((a, b) => b.x - a.x);
     const at = rows.filter((r) => r.x >= avgX).length;
