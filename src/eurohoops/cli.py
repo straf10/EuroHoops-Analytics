@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import time
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from pathlib import Path
@@ -42,8 +43,9 @@ from eurohoops.config import (
     STINT_REPORT,
     STINTS_MART_REPORT,
     TEAM_CONTINUITY_REPORT,
+    Competition,
 )
-from eurohoops.eval.backtest import format_table, load_tuned_model, run_backtest
+from eurohoops.eval.backtest import TunedModel, format_table, load_tuned_model, run_backtest
 from eurohoops.eval.m1_backtest import format_m1_table, run_m1_backtest
 from eurohoops.eval.m2_backtest import run_m2_backtest
 from eurohoops.eval.m2_backtest import search as m2_search
@@ -120,6 +122,25 @@ def _both_games() -> pd.DataFrame:
     return pd.concat(
         [read_games(MART_PATH, c.name).assign(competition=c.name) for c in (EUROLEAGUE, GBL)],
         ignore_index=True,
+    )
+
+
+@dataclass(frozen=True)
+class Live:
+    """What predict, score and publish read for a competition's live season."""
+
+    games: pd.DataFrame  # the competition's games mart
+    model: TunedModel  # the live Elo parameters (its live backtest report)
+    season: int
+    replay_from: int  # Elo replays from the live backtest's first warm-up season
+
+
+def _live(comp: Competition) -> Live:
+    return Live(
+        read_games(MART_PATH, comp.name),
+        load_tuned_model(comp.live_backtest.report),
+        LIVE_SEASON,
+        comp.live_backtest.warmup[0],
     )
 
 
@@ -607,14 +628,14 @@ def predict(
 ) -> None:
     """Append pre-tip-off predictions for upcoming live-season games to the public log."""
     comp = COMPETITIONS[competition]
-    games = read_games(MART_PATH, comp.name)
+    live = _live(comp)
     try:
         added = predict_upcoming(
-            games,
-            load_tuned_model(comp.live_backtest.report),
+            live.games,
+            live.model,
             log_path=comp.prediction_log,
-            season=LIVE_SEASON,
-            replay_from=comp.live_backtest.warmup[0],
+            season=live.season,
+            replay_from=live.replay_from,
             window=timedelta(hours=window_hours),
             clock=utc_now,
         )
@@ -622,12 +643,12 @@ def predict(
         m1 = None if comp.m1 is None else load_m1(comp.m1.report)
         if m1 is not None and comp.m1_prediction_log is not None:
             added = predict_upcoming_m1(
-                games,
+                live.games,
                 _team_games(comp.name),
                 m1,
                 log_path=comp.m1_prediction_log,
-                season=LIVE_SEASON,
-                replay_from=comp.live_backtest.warmup[0],
+                season=live.season,
+                replay_from=live.replay_from,
                 window=timedelta(hours=window_hours),
                 clock=utc_now,
             )
@@ -665,10 +686,11 @@ def odds() -> None:
 def score(competition: CompetitionOption = CompetitionName.euroleague) -> None:
     """Score the prediction log against results and write the competition's scorecard."""
     comp = COMPETITIONS[competition]
+    live = _live(comp)
     card = build_scorecard(
         comp.prediction_log,
-        read_games(MART_PATH, comp.name),
-        load_tuned_model(comp.live_backtest.report),
+        live.games,
+        live.model,
         utc_now(),
         manual_pushes=comp.manual_pushes,
         odds_path=comp.odds_log,
@@ -681,25 +703,27 @@ def score(competition: CompetitionOption = CompetitionName.euroleague) -> None:
 @app.command()
 def publish() -> None:
     """Write the site data (web/src/data/site.json) the Astro front-end renders."""
-    sections = [
-        Section(
-            key=comp.name,
-            title=title,
-            log=(
-                pd.read_csv(comp.prediction_log, dtype={"game_id": str})
-                if comp.prediction_log.exists()
-                else pd.DataFrame()
-            ),
-            scorecard=json.loads(comp.scorecard.read_text(encoding="utf-8")),
-            backtest=json.loads(comp.live_backtest.report.read_text(encoding="utf-8")),
-            games=read_games(MART_PATH, comp.name),
-            names=dict(read_teams(MART_PATH, comp.name).itertuples(index=False)),
-            model=load_tuned_model(comp.live_backtest.report),
-            season=LIVE_SEASON,
-            replay_from=comp.live_backtest.warmup[0],
+    sections = []
+    for title, comp in (("EuroLeague", EUROLEAGUE), ("Greek Basket League", GBL)):
+        live = _live(comp)
+        sections.append(
+            Section(
+                key=comp.name,
+                title=title,
+                log=(
+                    pd.read_csv(comp.prediction_log, dtype={"game_id": str})
+                    if comp.prediction_log.exists()
+                    else pd.DataFrame()
+                ),
+                scorecard=json.loads(comp.scorecard.read_text(encoding="utf-8")),
+                backtest=json.loads(comp.live_backtest.report.read_text(encoding="utf-8")),
+                games=live.games,
+                names=dict(read_teams(MART_PATH, comp.name).itertuples(index=False)),
+                model=live.model,
+                season=live.season,
+                replay_from=live.replay_from,
+            )
         )
-        for title, comp in (("EuroLeague", EUROLEAGUE), ("Greek Basket League", GBL))
-    ]
     _write_json(SITE_DATA, site_data(sections, utc_now()))
     typer.echo(f"wrote {SITE_DATA}")
 
