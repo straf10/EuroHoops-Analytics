@@ -1,6 +1,8 @@
-"""The public append-only CSV logs (predictions, odds, odds calls): rows are only ever appended."""
+"""The public records the pipeline commits: append-only CSV logs (predictions, odds, odds calls),
+whose rows are only ever appended, and the JSON reports."""
 
 import csv
+import json
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
@@ -34,3 +36,9 @@ def append_rows(path: Path, columns: Sequence[str], rows: Sequence[Mapping[str, 
         if is_new:
             writer.writeheader()
         writer.writerows(rows)
+
+
+def write_json(path: Path, payload: dict[str, Any]) -> None:
+    """A JSON report, indented, LF line endings, so reruns diff cleanly."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8", newline="\n")
