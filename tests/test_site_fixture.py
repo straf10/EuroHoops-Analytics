@@ -16,8 +16,9 @@ from eurohoops.config import Backtest, Grid
 from eurohoops.eval.backtest import load_tuned_model, run_backtest, win_probabilities
 from eurohoops.eval.scorecard import build_scorecard
 from eurohoops.live_m1 import M1_LOG_COLUMNS
+from eurohoops.logs import TIME_FORMAT
 from eurohoops.models.elo import prepare, replay
-from eurohoops.predict import LOG_COLUMNS, TIME_FORMAT
+from eurohoops.predict import LOG_COLUMNS
 from eurohoops.publish import Section, site_data
 from tests.conftest import FIXTURES, make_games, teams_table
 

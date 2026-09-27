@@ -6,9 +6,12 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 from pathlib import Path
 
+import numpy as np
+import numpy.typing as npt
 import pandas as pd
 
 from eurohoops.eval.backtest import TunedModel
+from eurohoops.logs import TIME_FORMAT, append_rows
 from eurohoops.models.elo import prepare, replay, win_probability
 
 LOG_COLUMNS = (
@@ -25,7 +28,6 @@ LOG_COLUMNS = (
     "model_version",
     "predicted_at_utc",
 )
-TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
 log = logging.getLogger(__name__)
 
@@ -39,6 +41,26 @@ def logged_keys(log_path: Path) -> set[tuple[str, str]]:
         return set()
     with log_path.open(newline="", encoding="utf-8") as fh:
         return {(row["game_id"], row["model_version"]) for row in csv.DictReader(fh)}
+
+
+def upcoming_games(
+    games: pd.DataFrame, season: int, now: datetime, window: timedelta
+) -> npt.NDArray[np.bool_]:
+    """Confirmed, unplayed ``season`` games tipping off after ``now`` and within ``window``."""
+    return (
+        (games["season"] == season)
+        & ~games["played"]
+        & games["confirmed_date"]
+        & (games["tipoff_utc"] > now)
+        & (games["tipoff_utc"] <= now + window)
+    ).to_numpy()
+
+
+def refuse_late(predicted_at: datetime, targets: list[tuple[str, pd.Timestamp]]) -> None:
+    """Raise LatePredictionError unless ``predicted_at`` is strictly before every tip-off."""
+    late = [game_id for game_id, tipoff in targets if predicted_at >= tipoff]
+    if late:
+        raise LatePredictionError(f"predicted_at {predicted_at} is not before tip-off of {late}")
 
 
 def predict_upcoming(
@@ -61,13 +83,7 @@ def predict_upcoming(
     now = clock()
     games = games[games["season"] >= replay_from]
     diffs = replay(prepare(games), model.params)
-    upcoming = (
-        (games["season"] == season)
-        & ~games["played"]
-        & games["confirmed_date"]
-        & (games["tipoff_utc"] > now)
-        & (games["tipoff_utc"] <= now + window)
-    ).to_numpy()
+    upcoming = upcoming_games(games, season, now, window)
     model_version = model.version()
     logged = logged_keys(log_path)
     targets = [
@@ -76,9 +92,7 @@ def predict_upcoming(
         if (game["game_id"], model_version) not in logged
     ]
     predicted_at = clock()
-    late = [game["game_id"] for game, _ in targets if predicted_at >= game["tipoff_utc"]]
-    if late:
-        raise LatePredictionError(f"predicted_at {predicted_at} is not before tip-off of {late}")
+    refuse_late(predicted_at, [(game["game_id"], game["tipoff_utc"]) for game, _ in targets])
     rows = [
         {
             "game_id": game["game_id"],
@@ -96,13 +110,7 @@ def predict_upcoming(
         }
         for game, diff in targets
     ]
-    is_new = not log_path.exists()
-    log_path.parent.mkdir(parents=True, exist_ok=True)
-    with log_path.open("a", newline="", encoding="utf-8") as fh:
-        writer = csv.DictWriter(fh, fieldnames=LOG_COLUMNS, lineterminator="\n")
-        if is_new:
-            writer.writeheader()
-        writer.writerows(rows)
+    append_rows(log_path, LOG_COLUMNS, rows)
     log.info(
         "%d upcoming games in window, %d already logged, %d rows appended",
         int(upcoming.sum()),

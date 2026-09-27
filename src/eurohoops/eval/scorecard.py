@@ -11,8 +11,9 @@ import pandas as pd
 from eurohoops.eval.backtest import TunedModel, totals_scores
 from eurohoops.eval.metrics import crps_normal, crps_student_t, per_game_log_loss, score
 from eurohoops.live_m1 import M1_LOG_COLUMNS
+from eurohoops.logs import TIME_FORMAT
 from eurohoops.models.elo import FloatArray
-from eurohoops.predict import LOG_COLUMNS, TIME_FORMAT
+from eurohoops.predict import LOG_COLUMNS
 
 ROLLING_WINDOW = 50  # scored games per point of the rolling log loss (PLAN §7 monitoring)
 RESULT_GRACE = timedelta(hours=48)  # a logged game without a result after this is flagged

@@ -12,10 +12,10 @@ from typing import Any
 import pandas as pd
 
 from eurohoops.eval.backtest import TunedModel
+from eurohoops.logs import TIME_FORMAT
 from eurohoops.models.elo import prepare, season_ratings
 
 RECENT_RESULTS = 12
-TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
 # Display-only team codes. The pipeline (marts, prediction logs, odds) keeps the source's codes;
 # only the site shows these real-life abbreviations in their place.
