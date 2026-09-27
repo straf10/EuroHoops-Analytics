@@ -39,7 +39,7 @@ never uses them (`OUTCOME_CODED_FLAGS`); per-season shares and make rates are in
 `test_the_feed_context_flags_are_outcome_coded`. Found in the first M2 run (see
 `reports/week7-10_progress.md`).
 
-**Dropped for good** (user decision, 2026-09-26; F-b amended in `prompts/week-7-10.md`). Two
+**Dropped for good** (user decision, 2026-09-26; F-b amended in `docs/history/prompts/week-7-10.md`). Two
 guards keep them, and anything like them, out of M2: a name guard in both feature builders, and
 a data audit (`models/feature_audit.py`, checklist item 32, also run at the start of every M2
 backtest) that fails if any flag or level of either builder has a make rate ≥ 0.99 or ≤ 0.01
