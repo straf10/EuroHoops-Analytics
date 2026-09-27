@@ -97,6 +97,30 @@ def daily_jobs() -> dict[str, Any]:
     return jobs
 
 
+def test_npm_never_runs_while_the_job_can_write_to_the_repository() -> None:
+    """Third-party npm packages run in ``npm ci``: that job gets no write token."""
+    top = yaml.safe_load(DAILY).get("permissions", {})
+    assert top in ({}, None) or top.get("contents") != "write"
+    npm_jobs = [
+        name
+        for name, job in daily_jobs().items()
+        if any("npm ci" in str(step.get("run", "")) for step in job["steps"])
+    ]
+    assert npm_jobs
+    for name in npm_jobs:
+        assert daily_jobs()[name].get("permissions", {}).get("contents") != "write", name
+
+
+def test_the_write_job_keeps_its_token_out_of_the_checkout() -> None:
+    for name, job in daily_jobs().items():
+        if job.get("permissions", {}).get("contents") != "write":
+            continue
+        checkout = next(
+            s for s in job["steps"] if str(s.get("uses", "")).startswith("actions/checkout")
+        )
+        assert checkout.get("with", {}).get("persist-credentials") is False, name
+
+
 def commit_step() -> dict[str, Any]:
     steps = [s for job in daily_jobs().values() for s in job["steps"]]
     return next(s for s in steps if s.get("name") == "Commit predictions and reports if changed")
