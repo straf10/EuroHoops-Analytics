@@ -8,6 +8,7 @@ import { SEASON_COLS } from "../../lib/player";
 import { defaultSeason, meta, teamIndex, teamSeason, type TeamIndexRow } from "../../lib/stats";
 import { DEFENSE, OFFENSE, facts, rosterHtml, stripHtml, strips, teamBands, teamCharts } from "../../lib/team";
 import { tip } from "../../lib/tip";
+import { GROUPS, colsHtml } from "../../lib/cols";
 
 export async function getStaticPaths() {
   return (await teamIndex()).map((t) => ({ params: { code: t.code.toLowerCase() }, props: { club: t } }));
@@ -158,29 +159,32 @@ const bandHead = [
                 <span>Size: how often {side === "taken" ? "the club" : "opponents"} shot from there</span>
               </p>
             </figure>
-            <div class="scroll">
-              <table class="grid bands">
-                <caption class="sr-only">
-                  {side === "taken" ? "Shots taken" : "Shots allowed"} by distance against the league
-                </caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Distance</th>
-                    {bandHead.map(([h, about]) => (
-                      <th scope="col" class="num">
-                        {about ? (
-                          <span data-tip={tip`${about}`} tabindex="0">
-                            {h}
-                          </span>
-                        ) : (
-                          h
-                        )}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody id={`bands-${side}`} set:html={bands[side]} />
-              </table>
+            <div>
+              <Fragment set:html={colsHtml(`bc-${side}`, GROUPS.bands)} />
+              <div class="scroll">
+                <table class="grid bands">
+                  <caption class="sr-only">
+                    {side === "taken" ? "Shots taken" : "Shots allowed"} by distance against the league
+                  </caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Distance</th>
+                      {bandHead.map(([h, about]) => (
+                        <th scope="col" class="num">
+                          {about ? (
+                            <span data-tip={tip`${about}`} tabindex="0">
+                              {h}
+                            </span>
+                          ) : (
+                            h
+                          )}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody id={`bands-${side}`} set:html={bands[side]} />
+                </table>
+              </div>
             </div>
           </div>
         ))
@@ -197,6 +201,7 @@ const bandHead = [
       <h2 id="roster-title">Roster</h2>
       <p>Everyone who played for the club that season, by minutes. Per game, for this club only.</p>
     </header>
+    <Fragment set:html={colsHtml("rc", GROUPS.line)} />
     <div class="scroll busy-fade seasonal">
       <table class="grid roster">
         <thead>

@@ -9,6 +9,7 @@ import { SEASON_COLS, bandsHtml, logHtml, perGame, shotChart, totalsOf, ts, type
 import { meta, playerData, playerIndex, twinData, type PlayerIndexRow } from "../../lib/stats";
 import { tip } from "../../lib/tip";
 import ShotTwin from "../../components/ShotTwin.astro";
+import { GROUPS, colsHtml } from "../../lib/cols";
 
 export async function getStaticPaths() {
   return (await playerIndex()).map((p) => ({ params: { slug: p.slug }, props: { p } }));
@@ -78,6 +79,7 @@ const seasonOptions = (list: typeof seasons, chosen: number) =>
       <h2 id="seasons-title">Season by season</h2>
       <p>Per game. The career line adds up every season's totals.</p>
     </header>
+    <Fragment set:html={colsHtml("sc", GROUPS.line)} />
     <div class="scroll">
       <table class="grid seasons">
         <thead>
@@ -171,25 +173,28 @@ const seasonOptions = (list: typeof seasons, chosen: number) =>
             </figcaption>
           </figure>
           <div class="bands">
-            <table class="grid">
-              <caption class="sr-only">Shots by distance against the league</caption>
-              <thead>
-                <tr>
-                  <th scope="col">Distance</th>
-                  <th scope="col" class="num">Shots</th>
-                  <th scope="col" class="num">Share</th>
-                  <th scope="col" class="num">League</th>
-                  <th scope="col" class="num">FG%</th>
-                  <th scope="col" class="num">League</th>
-                  <th scope="col" class="num">
-                    <span data-tip="His FG% minus the league's, in points, from 10 attempts up" tabindex="0">
-                      Diff
-                    </span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody id="bands" set:html={bandsHtml(shotSeason, up, down)} />
-            </table>
+            <Fragment set:html={colsHtml("bc", GROUPS.bands)} />
+            <div class="scroll">
+              <table class="grid bands">
+                <caption class="sr-only">Shots by distance against the league</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Distance</th>
+                    <th scope="col" class="num">Shots</th>
+                    <th scope="col" class="num">Share</th>
+                    <th scope="col" class="num">League</th>
+                    <th scope="col" class="num">FG%</th>
+                    <th scope="col" class="num">League</th>
+                    <th scope="col" class="num">
+                      <span data-tip="His FG% minus the league's, in points, from 10 attempts up" tabindex="0">
+                        Diff
+                      </span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody id="bands" set:html={bandsHtml(shotSeason, up, down)} />
+              </table>
+            </div>
             <p class="note">
               Distances are from the basket. Share is the part of his field-goal attempts from each
               distance; the league columns are every EuroLeague shot that season.
@@ -233,6 +238,7 @@ const seasonOptions = (list: typeof seasons, chosen: number) =>
         )
       }
     </header>
+    <Fragment set:html={colsHtml("lc", GROUPS.line)} />
     <div class="scroll busy-fade">
       <table class="grid log">
         <thead>

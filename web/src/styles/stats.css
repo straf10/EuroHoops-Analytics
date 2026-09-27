@@ -421,3 +421,47 @@ svg.court {
     align-items: start;
   }
 }
+
+/* Column groups on phones (lib/cols.ts): the control sits right before the table's box, and a
+   group shows the identity columns plus its own. Every column belongs to a group. Season lines
+   and rosters share their columns after two identity ones: GP GS MIN PTS | REB AST STL BLK TOV |
+   PIR (with scoring) | FG% 3P% FT% TS%. */
+@media (max-width: 720px) {
+  .cols:has(+ .scroll > :is(.seasons, .roster, .log)) {
+    display: inline-flex;
+  }
+  .cols:has(> :nth-child(1) > :checked) + .scroll > :is(.seasons, .roster) :is(th, td):is(:nth-child(n + 7):nth-child(-n + 11), :nth-child(n + 13)),
+  .cols:has(> :nth-child(2) > :checked) + .scroll > :is(.seasons, .roster) :is(th, td):is(:nth-child(n + 3):nth-child(-n + 6), :nth-child(n + 12)),
+  .cols:has(> :nth-child(3) > :checked) + .scroll > :is(.seasons, .roster) :is(th, td):nth-child(n + 3):nth-child(-n + 12),
+  /* Game log, after date and opponent: Result MIN PTS | REB AST STL BLK TOV | FG 3P FT | PIR +/- (with scoring). */
+  .cols:has(> :nth-child(1) > :checked) + .scroll > .log :is(th, td):nth-child(n + 6):nth-child(-n + 13),
+  .cols:has(> :nth-child(2) > :checked) + .scroll > .log :is(th, td):is(:nth-child(n + 3):nth-child(-n + 5), :nth-child(n + 11)),
+  .cols:has(> :nth-child(3) > :checked) + .scroll > .log :is(th, td):is(:nth-child(n + 3):nth-child(-n + 10), :nth-child(n + 14)) {
+    display: none;
+  }
+  .seasons .team,
+  .roster tbody th {
+    white-space: normal;
+  }
+}
+/* Teams index, after rank and club: W–L | ORtg DRtg | Net (every group: the ranking) | Pace. */
+@media (max-width: 560px) {
+  .cols:has(+ .scroll > .clubs) {
+    display: inline-flex;
+  }
+  .cols:has(> :nth-child(1) > :checked) + .scroll > .clubs :is(th, td):is(:nth-child(4), :nth-child(5), :nth-child(7)),
+  .cols:has(> :nth-child(2) > :checked) + .scroll > .clubs :is(th, td):is(:nth-child(3), :nth-child(7)),
+  .cols:has(> :nth-child(3) > :checked) + .scroll > .clubs :is(th, td):nth-child(n + 3):nth-child(-n + 5) {
+    display: none;
+  }
+}
+/* Distance tables, after distance and shots: FG% League Diff | Share League. */
+@media (max-width: 480px) {
+  .cols:has(+ .scroll > .bands) {
+    display: inline-flex;
+  }
+  .cols:has(> :nth-child(1) > :checked) + .scroll > .bands :is(th, td):is(:nth-child(3), :nth-child(4)),
+  .cols:has(> :nth-child(2) > :checked) + .scroll > .bands :is(th, td):nth-child(n + 5) {
+    display: none;
+  }
+}

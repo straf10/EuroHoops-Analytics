@@ -14,6 +14,6 @@ export const clubRowsHtml = (base: string, season: number | undefined, rows: Clu
     .map(
       ([code, name, wl, ortg, drtg, net, pace], i) =>
         `<tr><td class="num muted">${i + 1}</td><th scope="row"><a href="${base.replace(/\/$/, "")}/teams/${code.toLowerCase()}/${season ? `?season=${season}` : ""}"><span class="code">${esc(code)}</span>${esc(name)}</a></th>` +
-        `<td class="num">${wl}</td><td class="num wide">${ortg}</td><td class="num wide">${drtg}</td><td class="num strong">${net}</td><td class="num wide">${pace}</td></tr>`,
+        `<td class="num">${wl}</td><td class="num">${ortg}</td><td class="num">${drtg}</td><td class="num strong">${net}</td><td class="num">${pace}</td></tr>`,
     )
     .join("");

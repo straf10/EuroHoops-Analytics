@@ -6,6 +6,7 @@ import { teamHref } from "../../lib/players";
 import { defaultSeason, meta, season, teamIndex } from "../../lib/stats";
 import { clubRowsHtml, type ClubCells } from "../../lib/clubs";
 import { tip } from "../../lib/tip";
+import { GROUPS, colsHtml } from "../../lib/cols";
 import { clubCells } from "../../lib/team";
 
 const m = await meta();
@@ -25,13 +26,13 @@ const others: Record<string, [string, ClubCells[]]> = Object.fromEntries(
   tables.filter((t) => t !== shown).map(({ s, rows }) => [s.season, [s.label, rows]]),
 );
 const clubs = await teamIndex();
-// The third field marks columns a phone sheds, so Net (the ranking) stays in view.
+// A phone shows them in groups (Record, Ratings, Pace), with Net, the ranking, in every group.
 const COLS = [
-  ["W–L", "Wins and losses", ""],
-  ["ORtg", "Points scored per 100 possessions", "wide"],
-  ["DRtg", "Points allowed per 100 opponent possessions", "wide"],
-  ["Net", "Offensive minus defensive rating", ""],
-  ["Pace", "Possessions per 40 minutes", "wide"],
+  ["W–L", "Wins and losses"],
+  ["ORtg", "Points scored per 100 possessions"],
+  ["DRtg", "Points allowed per 100 opponent possessions"],
+  ["Net", "Offensive minus defensive rating"],
+  ["Pace", "Possessions per 40 minutes"],
 ];
 ---
 
@@ -65,6 +66,7 @@ const COLS = [
             </span>
           </label>
         </header>
+        {shown && <Fragment set:html={colsHtml("cc", GROUPS.clubs)} />}
         {shown && (
           <div class="scroll" id="clubs" data-base={base} data-others={JSON.stringify(others)}>
             <table class="grid clubs">
@@ -73,8 +75,8 @@ const COLS = [
                 <tr>
                   <th scope="col" class="num">#</th>
                   <th scope="col">Club</th>
-                  {COLS.map(([h, about, wide]) => (
-                    <th scope="col" class:list={["num", wide]}>
+                  {COLS.map(([h, about]) => (
+                    <th scope="col" class="num">
                       <span data-tip={tip`<b>${h}</b><br>${about}`} tabindex="0">
                         {h}
                       </span>
@@ -179,9 +181,6 @@ const COLS = [
     outline-offset: 2px;
   }
   @media (max-width: 560px) {
-    .scroll :global(.wide) {
-      display: none;
-    }
     /* Long club names wrap so Net, the ranking, stays on screen. */
     .clubs tbody :global(th) {
       white-space: normal;

@@ -284,6 +284,23 @@ body:not(:has(#comp-gbl:checked)) [data-comp="gbl"] {
 .seg .short {
   display: none;
 }
+/* Column groups (lib/cols.ts) nest each radio in its label, to keep the markup short. Only a
+   table's phone breakpoint shows them; wider screens keep every column. */
+.seg label:has(> input:checked) {
+  background: var(--ink);
+  color: var(--on-ink);
+}
+.seg label:has(> input:focus-visible) {
+  outline: 2px solid var(--data-1);
+  outline-offset: 1px;
+}
+.seg.cols {
+  display: none;
+  margin-bottom: 12px;
+}
+.seg.cols label {
+  white-space: nowrap;
+}
 @media (max-width: 480px) {
   .seg {
     width: var(--seg-w-short, var(--seg-w, auto));
