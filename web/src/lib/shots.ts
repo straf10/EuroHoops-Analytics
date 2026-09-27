@@ -27,6 +27,44 @@ export interface Attempts {
   opp: number[];
 }
 
+/** data/shots/{season}.json: the attempts with each shot's club and opponent folded into runs of
+ * one game's pair ([club, club, shots]) plus a side bit in the flags (set when the second club shot). */
+export type PackedAttempts = Omit<Attempts, "team" | "opp"> & { games: [number, number, number][] };
+
+/** Every attempt in the same order, the same flags (side bit dropped, period back in place). */
+export function unpackAttempts(p: PackedAttempts): Attempts {
+  const { games, ...rest } = p;
+  const side = p.bits.period - 1; // the packer puts the side bit just under the period
+  const team: number[] = [];
+  const opp: number[] = [];
+  const flags: number[] = [];
+  let i = 0;
+  for (const [a, b, n] of games)
+    for (let k = 0; k < n; k++, i++) {
+      const f = p.flags[i];
+      const second = (f >> side) & 1;
+      team.push(second ? b : a);
+      opp.push(second ? a : b);
+      flags.push((f & ((1 << side) - 1)) | ((f >> p.bits.period) << side));
+    }
+  return { ...rest, bits: { ...p.bits, period: side }, flags, team, opp };
+}
+
+/** The inverse, for the endpoint: a new run starts whenever the pair of clubs changes. */
+export function packAttempts(a: Attempts): PackedAttempts {
+  const { team, opp, ...rest } = a;
+  const side = a.bits.period;
+  const games: [number, number, number][] = [];
+  const flags = a.flags.map((f, i) => {
+    const [x, y] = [Math.min(team[i], opp[i]), Math.max(team[i], opp[i])];
+    const run = games[games.length - 1];
+    if (run && run[0] === x && run[1] === y) run[2]++;
+    else games.push([x, y, 1]);
+    return (f & ((1 << side) - 1)) | (team[i] === y ? 1 << side : 0) | ((f >> side) << (side + 1));
+  });
+  return { ...rest, bits: { ...a.bits, period: side + 1 }, flags, games };
+}
+
 export type Who = "league" | "team" | "player";
 export type Side = "taken" | "allowed";
 export type ViewKind = "fg" | "freq" | "dots";
