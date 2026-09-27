@@ -19,6 +19,8 @@ export interface Result extends Game {
   away_score: number;
   hit: boolean;
   provable: boolean;
+  /** Logged at or after tip-off: shown apart, never counted. */
+  late: boolean;
 }
 
 /** One equal-width bin of predicted P(home): its games, mean prediction and home win rate. */
@@ -67,6 +69,7 @@ export interface Competition {
     elo: Metrics;
     b0: Metrics;
     not_provable: number;
+    late: number;
     rolling: { window: number; series: RollingPoint[] };
     m1: { n: number; log_loss: number | null; elo_log_loss: number | null } | null;
   };

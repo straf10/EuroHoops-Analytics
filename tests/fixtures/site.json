@@ -78,7 +78,7 @@
           "game_id": "E2026_30",
           "round": 10,
           "tipoff_utc": "2026-12-03T18:30:00Z",
-          "predicted_at_utc": "2026-12-03T08:30:00Z",
+          "predicted_at_utc": "2026-12-03T19:30:00Z",
           "home": {
             "code": "FFF",
             "name": "Team FFF & Co"
@@ -92,7 +92,8 @@
           "home_score": 80,
           "away_score": 84,
           "hit": true,
-          "provable": true
+          "provable": false,
+          "late": true
         },
         {
           "game_id": "E2026_29",
@@ -112,7 +113,8 @@
           "home_score": 80,
           "away_score": 82,
           "hit": false,
-          "provable": true
+          "provable": true,
+          "late": false
         },
         {
           "game_id": "E2026_28",
@@ -132,7 +134,8 @@
           "home_score": 80,
           "away_score": 81,
           "hit": true,
-          "provable": true
+          "provable": true,
+          "late": false
         },
         {
           "game_id": "E2026_27",
@@ -152,7 +155,8 @@
           "home_score": 80,
           "away_score": 91,
           "hit": true,
-          "provable": true
+          "provable": true,
+          "late": false
         },
         {
           "game_id": "E2026_26",
@@ -172,7 +176,8 @@
           "home_score": 80,
           "away_score": 87,
           "hit": false,
-          "provable": true
+          "provable": true,
+          "late": false
         },
         {
           "game_id": "E2026_25",
@@ -192,7 +197,8 @@
           "home_score": 80,
           "away_score": 81,
           "hit": false,
-          "provable": true
+          "provable": true,
+          "late": false
         },
         {
           "game_id": "E2026_24",
@@ -212,7 +218,8 @@
           "home_score": 86,
           "away_score": 80,
           "hit": true,
-          "provable": true
+          "provable": true,
+          "late": false
         },
         {
           "game_id": "E2026_23",
@@ -232,7 +239,8 @@
           "home_score": 93,
           "away_score": 80,
           "hit": true,
-          "provable": true
+          "provable": true,
+          "late": false
         },
         {
           "game_id": "E2026_22",
@@ -252,7 +260,8 @@
           "home_score": 80,
           "away_score": 83,
           "hit": true,
-          "provable": true
+          "provable": true,
+          "late": false
         },
         {
           "game_id": "E2026_21",
@@ -272,7 +281,8 @@
           "home_score": 94,
           "away_score": 80,
           "hit": true,
-          "provable": true
+          "provable": true,
+          "late": false
         },
         {
           "game_id": "E2026_20",
@@ -292,7 +302,8 @@
           "home_score": 80,
           "away_score": 90,
           "hit": false,
-          "provable": true
+          "provable": true,
+          "late": false
         },
         {
           "game_id": "E2026_19",
@@ -312,17 +323,18 @@
           "home_score": 80,
           "away_score": 87,
           "hit": false,
-          "provable": true
+          "provable": true,
+          "late": false
         }
       ],
       "scorecard": {
         "elo": {
-          "n": 60,
-          "log_loss": 0.665396,
-          "brier": 0.236293,
-          "accuracy": 0.583333,
-          "margin_mae": 8.283167,
-          "ece": 0.135377,
+          "n": 59,
+          "log_loss": 0.667356,
+          "brier": 0.237267,
+          "accuracy": 0.576271,
+          "margin_mae": 8.388814,
+          "ece": 0.130503,
           "reliability": [
             {
               "low": 0.0,
@@ -355,9 +367,9 @@
             {
               "low": 0.4,
               "high": 0.5,
-              "n": 8,
-              "mean_p": 0.462025,
-              "observed": 0.25
+              "n": 7,
+              "mean_p": 0.467614,
+              "observed": 0.285714
             },
             {
               "low": 0.5,
@@ -395,15 +407,15 @@
               "observed": null
             }
           ],
-          "margin_crps": 6.006118
+          "margin_crps": 6.0679
         },
         "b0": {
-          "n": 60,
-          "log_loss": 0.702116,
-          "brier": 0.254444,
-          "accuracy": 0.5,
-          "margin_mae": 8.95,
-          "ece": 0.066667,
+          "n": 59,
+          "log_loss": 0.699843,
+          "brier": 0.253315,
+          "accuracy": 0.508475,
+          "margin_mae": 9.019774,
+          "ece": 0.058192,
           "reliability": [
             {
               "low": 0.0,
@@ -443,9 +455,9 @@
             {
               "low": 0.5,
               "high": 0.6,
-              "n": 60,
+              "n": 59,
               "mean_p": 0.566667,
-              "observed": 0.5
+              "observed": 0.508475
             },
             {
               "low": 0.6,
@@ -476,9 +488,10 @@
               "observed": null
             }
           ],
-          "margin_crps": 6.328029
+          "margin_crps": 6.381749
         },
         "not_provable": 0,
+        "late": 1,
         "rolling": {
           "window": 50,
           "series": [
@@ -551,20 +564,13 @@
               "n": 59,
               "elo": 0.639798,
               "b0": 0.696751
-            },
-            {
-              "game_id": "E2026_30",
-              "tipoff_utc": "2026-12-03T18:30:00Z",
-              "n": 60,
-              "elo": 0.645641,
-              "b0": 0.702116
             }
           ]
         },
         "m1": {
-          "n": 60,
-          "log_loss": 0.669997,
-          "elo_log_loss": 0.665396
+          "n": 59,
+          "log_loss": 0.67226,
+          "elo_log_loss": 0.667356
         }
       },
       "backtest": {
@@ -869,7 +875,7 @@
           "game_id": "GBL2026_30",
           "round": 10,
           "tipoff_utc": "2026-12-03T18:30:00Z",
-          "predicted_at_utc": "2026-12-03T08:30:00Z",
+          "predicted_at_utc": "2026-12-03T19:30:00Z",
           "home": {
             "code": "FFF",
             "name": "Team FFF & Co"
@@ -883,7 +889,8 @@
           "home_score": 80,
           "away_score": 84,
           "hit": true,
-          "provable": true
+          "provable": false,
+          "late": true
         },
         {
           "game_id": "GBL2026_29",
@@ -903,7 +910,8 @@
           "home_score": 80,
           "away_score": 82,
           "hit": false,
-          "provable": true
+          "provable": true,
+          "late": false
         },
         {
           "game_id": "GBL2026_27",
@@ -923,7 +931,8 @@
           "home_score": 80,
           "away_score": 91,
           "hit": true,
-          "provable": true
+          "provable": true,
+          "late": false
         },
         {
           "game_id": "GBL2026_26",
@@ -943,7 +952,8 @@
           "home_score": 80,
           "away_score": 87,
           "hit": false,
-          "provable": true
+          "provable": true,
+          "late": false
         },
         {
           "game_id": "GBL2026_25",
@@ -963,7 +973,8 @@
           "home_score": 80,
           "away_score": 81,
           "hit": false,
-          "provable": true
+          "provable": true,
+          "late": false
         },
         {
           "game_id": "GBL2026_24",
@@ -983,7 +994,8 @@
           "home_score": 86,
           "away_score": 80,
           "hit": true,
-          "provable": true
+          "provable": true,
+          "late": false
         },
         {
           "game_id": "GBL2026_23",
@@ -1003,7 +1015,8 @@
           "home_score": 93,
           "away_score": 80,
           "hit": true,
-          "provable": true
+          "provable": true,
+          "late": false
         },
         {
           "game_id": "GBL2026_22",
@@ -1023,7 +1036,8 @@
           "home_score": 80,
           "away_score": 83,
           "hit": true,
-          "provable": true
+          "provable": true,
+          "late": false
         },
         {
           "game_id": "GBL2026_20",
@@ -1043,7 +1057,8 @@
           "home_score": 80,
           "away_score": 90,
           "hit": false,
-          "provable": true
+          "provable": true,
+          "late": false
         },
         {
           "game_id": "GBL2026_19",
@@ -1063,7 +1078,8 @@
           "home_score": 80,
           "away_score": 87,
           "hit": false,
-          "provable": true
+          "provable": true,
+          "late": false
         },
         {
           "game_id": "GBL2026_18",
@@ -1083,7 +1099,8 @@
           "home_score": 80,
           "away_score": 89,
           "hit": false,
-          "provable": true
+          "provable": true,
+          "late": false
         },
         {
           "game_id": "GBL2026_17",
@@ -1103,17 +1120,18 @@
           "home_score": 80,
           "away_score": 85,
           "hit": true,
-          "provable": true
+          "provable": true,
+          "late": false
         }
       ],
       "scorecard": {
         "elo": {
-          "n": 26,
-          "log_loss": 0.675189,
-          "brier": 0.24038,
-          "accuracy": 0.615385,
-          "margin_mae": 8.956154,
-          "ece": 0.205023,
+          "n": 25,
+          "log_loss": 0.676124,
+          "brier": 0.240821,
+          "accuracy": 0.6,
+          "margin_mae": 9.1796,
+          "ece": 0.194068,
           "reliability": [
             {
               "low": 0.0,
@@ -1146,8 +1164,8 @@
             {
               "low": 0.4,
               "high": 0.5,
-              "n": 4,
-              "mean_p": 0.44745,
+              "n": 3,
+              "mean_p": 0.436967,
               "observed": 0.0
             },
             {
@@ -1186,15 +1204,15 @@
               "observed": null
             }
           ],
-          "margin_crps": 6.300515
+          "margin_crps": 6.455869
         },
         "b0": {
-          "n": 26,
-          "log_loss": 0.741948,
-          "brier": 0.274039,
-          "accuracy": 0.423077,
-          "margin_mae": 9.721894,
-          "ece": 0.173077,
+          "n": 25,
+          "log_loss": 0.735357,
+          "brier": 0.270784,
+          "accuracy": 0.44,
+          "margin_mae": 9.886923,
+          "ece": 0.156154,
           "reliability": [
             {
               "low": 0.0,
@@ -1234,9 +1252,9 @@
             {
               "low": 0.5,
               "high": 0.6,
-              "n": 26,
+              "n": 25,
               "mean_p": 0.596154,
-              "observed": 0.423077
+              "observed": 0.44
             },
             {
               "low": 0.6,
@@ -1267,9 +1285,10 @@
               "observed": null
             }
           ],
-          "margin_crps": 6.903273
+          "margin_crps": 7.044739
         },
         "not_provable": 0,
+        "late": 1,
         "rolling": {
           "window": 50,
           "series": []

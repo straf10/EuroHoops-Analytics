@@ -72,10 +72,18 @@ def _stamp(ts: pd.Timestamp) -> str:
 
 
 def _logged(section: Section) -> list[dict[Hashable, Any]]:
-    """Earliest (pre-registered) row per game, joined with the game's current state."""
+    """The pre-registered row per game, joined with the game's current state.
+
+    That is the earliest row stamped before its tip-off, as the scorecard counts it; a game with
+    only rows stamped at or after tip-off keeps its earliest one, marked ``late``.
+    """
     if section.log.empty:
         return []
-    first = section.log.sort_values("predicted_at_utc").drop_duplicates("game_id", keep="first")
+    log = section.log.assign(
+        late=pd.to_datetime(section.log["predicted_at_utc"], utc=True)
+        >= pd.to_datetime(section.log["tipoff_utc"], utc=True)
+    )
+    first = log.sort_values(["late", "predicted_at_utc"]).drop_duplicates("game_id", keep="first")
     cols = ["game_id", "tipoff_utc", "played", "forfeit", "home_score", "away_score"]
     joined = first.drop(columns="tipoff_utc").merge(section.games[cols], on="game_id")
     return joined.sort_values("tipoff_utc").to_dict("records")
@@ -139,7 +147,11 @@ def _m1(card: dict[str, Any]) -> dict[str, Any] | None:
 def section_data(section: Section, now: datetime) -> dict[str, Any]:
     logged = _logged(section)
     hidden = set(section.scorecard.get("games_not_provable", []))
-    upcoming = [_game(section, g) for g in logged if not g["played"] and g["tipoff_utc"] > now]
+    upcoming = [
+        _game(section, g)
+        for g in logged
+        if not g["played"] and not g["late"] and g["tipoff_utc"] > now
+    ]
     finished = [g for g in logged if g["played"] and not g["forfeit"]][-RECENT_RESULTS:]
     results = [
         {
@@ -147,7 +159,8 @@ def section_data(section: Section, now: datetime) -> dict[str, Any]:
             "home_score": int(g["home_score"]),
             "away_score": int(g["away_score"]),
             "hit": (g["p_home"] >= 0.5) == (g["home_score"] > g["away_score"]),
-            "provable": g["game_id"] not in hidden,
+            "provable": g["game_id"] not in hidden and not g["late"],
+            "late": bool(g["late"]),
         }
         for g in reversed(finished)
     ]
@@ -164,6 +177,7 @@ def section_data(section: Section, now: datetime) -> dict[str, Any]:
             "elo": card["elo"],
             "b0": card["b0"],
             "not_provable": len(hidden),
+            "late": sum(bool(g["late"]) for g in logged),
             "rolling": card["rolling"],
             "m1": _m1(card),
         },
