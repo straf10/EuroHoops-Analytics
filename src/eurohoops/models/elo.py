@@ -100,7 +100,8 @@ def _run(
             strict=True,
         )
     ):
-        if season != current_season:
+        # Revert once per season, even if a postponed game of the last one sorts after its start.
+        if current_season is None or season > current_season:
             current_season = season
             for team, rating in ratings.items():
                 ratings[team] = keep * rating + params.reversion * INITIAL_RATING
