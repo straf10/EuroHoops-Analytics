@@ -100,8 +100,8 @@ jobs:
           git commit -m "Daily predictions $(date -u +%Y-%m-%dT%H:%MZ)"
           remote="https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git"
           if ! git pull --rebase "$remote" "$BRANCH"; then
-            git rebase --abort
-            echo "::error::rebase onto $BRANCH conflicted; nothing pushed, merge the logs by hand"
+            git rebase --abort 2>/dev/null || true  # no rebase to abort if the pull itself failed
+            echo "::error::could not replay onto $BRANCH (conflict or fetch failure); nothing pushed, merge by hand"
             exit 1
           fi
           git push "$remote" "HEAD:$BRANCH"
