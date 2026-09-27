@@ -139,7 +139,7 @@ const cfg = { base, open, seasons: seasons.map((x) => x.season) };
               <p id="subject-season">{a.label}</p>
             </figcaption>
             <div id="court" set:html={courtHtml(a, s, r)} />
-            <div class="key" data-key="fg">
+            <div class="key" data-key="fg" hidden={s.view !== "fg"}>
               <span class="scale" aria-hidden="true">
                 <i class="t-2" />
                 <i class="t-1" />
@@ -155,7 +155,7 @@ const cfg = { base, open, seasons: seasons.map((x) => x.season) };
               </span>
               <span>Size: how often the shots came from there</span>
             </div>
-            <div class="key" data-key="freq" hidden>
+            <div class="key" data-key="freq" hidden={s.view !== "freq"}>
               <span class="scale" aria-hidden="true">
                 <i class="f1" />
                 <i class="f2" />
@@ -165,7 +165,7 @@ const cfg = { base, open, seasons: seasons.map((x) => x.season) };
               </span>
               <span>Colour and size: how often the shots came from there, rarely to most</span>
             </div>
-            <div class="key" data-key="dots" hidden>
+            <div class="key" data-key="dots" hidden={s.view !== "dots"}>
               <span class="dots" aria-hidden="true">
                 <i class="made" />
                 <i class="miss" />
@@ -373,7 +373,18 @@ const cfg = { base, open, seasons: seasons.map((x) => x.season) };
       draw();
     });
 
-    load();
+    // The page arrives drawn for the default view, so a season's shots (up to ~1 MB, ~300 KB
+    // on the wire) load when the visitor reaches for the explorer: the pointer over it, a touch
+    // or keyboard focus. A link with filters needs them at once.
+    if (writeState(state, cfg.open)) load();
+    else {
+      const intents = ["pointerover", "touchstart", "focusin"] as const;
+      const reach = () => {
+        for (const t of intents) root.removeEventListener(t, reach);
+        load();
+      };
+      for (const t of intents) root.addEventListener(t, reach, { passive: true });
+    }
   }
 </script>
 
