@@ -420,6 +420,11 @@ const withLeague = (cells: Cell[], lg: Map<string, [number, number]>) =>
     return [q, r, att, made, la ? Math.round((1000 * lm) / la) : -1];
   });
 
+/** Every club of a season, as the rank strips read them. */
+export async function seasonClubs(year: number): Promise<ClubLine[]> {
+  return (await season(year, "teams")).teams.map(({ code, name, w, l, totals, opp }) => ({ code, name, w, l, totals, opp }));
+}
+
 /** Everything one team page shows for one season. */
 export async function teamSeason(code: string, year: number): Promise<TeamSeason | null> {
   const m = (await meta())!;
@@ -466,7 +471,7 @@ export async function teamSeason(code: string, year: number): Promise<TeamSeason
     totals: row.totals,
     opp: row.opp,
     league: teams.league.totals,
-    clubs: teams.teams.map(({ code, name, w, l, totals, opp }) => ({ code, name, w, l, totals, opp })),
+    clubs: await seasonClubs(year),
     bands: row.bands,
     bandsAllowed: row.bands_allowed,
     leagueBands: teams.league.bands,

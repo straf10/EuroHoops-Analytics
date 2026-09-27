@@ -1,4 +1,5 @@
-// One club's season for the team page's season switch (fetched when the visitor changes season).
+// One club's season for the team page's season switch (fetched when the visitor changes season),
+// without the season's clubs: those are the same for every club, in data/clubs/{season}.json.
 import type { APIRoute, GetStaticPaths } from "astro";
 import { teamIndex, teamSeason } from "../../../../lib/stats";
 
@@ -9,7 +10,8 @@ export const getStaticPaths: GetStaticPaths = async () =>
 
 export const GET: APIRoute = async ({ props }) => {
   const { code, s } = props as { code: string; s: number };
-  return new Response(JSON.stringify(await teamSeason(code, s)), {
+  const { clubs: _, ...own } = (await teamSeason(code, s))!;
+  return new Response(JSON.stringify(own), {
     headers: { "Content-Type": "application/json" },
   });
 };
