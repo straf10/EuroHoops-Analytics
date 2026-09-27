@@ -7,7 +7,7 @@ import { esc } from "./format";
 import { dataTip, tip } from "./tip";
 import { SEASON_COLS, bandRows, totalsOf, type Totals } from "./player";
 import { teamHref } from "./players";
-import type { TeamSeason } from "./stats";
+import type { ClubLine, TeamSeason } from "./stats";
 import type { ClubCells } from "./clubs";
 
 /** Ratings and four factors of one side, from its totals and its opponents'. */
@@ -170,7 +170,7 @@ export function rosterHtml(t: TeamSeason, base: string): string {
 // ---- Teams index -----------------------------------------------------------------------------
 
 /** A season's clubs by net rating, as the index shows them (rows already in rank order). */
-export function clubCells(fields: string[], teams: { code: string; name: string; w: number; l: number; totals: number[]; opp: number[] }[]): ClubCells[] {
+export function clubCells(fields: string[], teams: ClubLine[]): ClubCells[] {
   return teams
     .map((t) => ({ t, f: factors(fields, t.totals, t.opp) }))
     .sort((a, b) => b.f.net - a.f.net)

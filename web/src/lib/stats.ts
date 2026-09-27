@@ -270,7 +270,10 @@ export interface TwinData {
 
 /** twins.json with a resolver for its pool rows: the player's name and slug, the season's label
  * and whether its locations are approximate, the club's name. */
-async function twinsFile() {
+let twinsCache: ReturnType<typeof readTwins> | null = null;
+const twinsFile = () => (twinsCache ??= readTwins());
+
+async function readTwins() {
   const file = await load<TwinsFile>("twins.json");
   if (!file) return null;
   const m = (await meta())!;
@@ -423,13 +426,34 @@ const withLeague = (cells: Cell[], lg: Map<string, [number, number]>) =>
   });
 
 /** What a season's club and player pages share: every club (the rank strips) and the league's bands. */
-export async function seasonShared(year: number): Promise<{ clubs: ClubLine[]; bands: Bands }> {
-  const teams = await season(year, "teams");
-  return { clubs: teams.teams.map(({ code, name, w, l, totals, opp }) => ({ code, name, w, l, totals, opp })), bands: teams.league.bands };
+export interface SeasonShared {
+  clubs: ClubLine[];
+  bands: Bands;
+}
+const sharedCache = new Map<number, Promise<SeasonShared>>();
+export function seasonShared(year: number): Promise<SeasonShared> {
+  if (!sharedCache.has(year))
+    sharedCache.set(
+      year,
+      season(year, "teams").then((teams) => ({
+        clubs: teams.teams.map(({ code, name, w, l, totals, opp }) => ({ code, name, w, l, totals, opp })),
+        bands: teams.league.bands,
+      })),
+    );
+  return sharedCache.get(year)!;
 }
 
-/** Everything one team page shows for one season. */
+/** A club's season without what the whole season shares (data/team/{code}/{season}.json). */
+export type TeamOwn = Omit<TeamSeason, "clubs" | "leagueBands">;
+
+/** Everything one team page shows for one season: its own data joined to the season's. */
 export async function teamSeason(code: string, year: number): Promise<TeamSeason | null> {
+  const [own, shared] = await Promise.all([teamOwn(code, year), seasonShared(year)]);
+  return own && { ...own, clubs: shared.clubs, leagueBands: shared.bands };
+}
+
+/** One club's own season: record, totals, bands, both shot charts, roster. */
+export async function teamOwn(code: string, year: number): Promise<TeamOwn | null> {
   const m = (await meta())!;
   const [teams, shots, games, players, cells] = await Promise.all([
     season(year, "teams"),
@@ -474,10 +498,8 @@ export async function teamSeason(code: string, year: number): Promise<TeamSeason
     totals: row.totals,
     opp: row.opp,
     league: teams.league.totals,
-    clubs: (await seasonShared(year)).clubs,
     bands: row.bands,
     bandsAllowed: row.bands_allowed,
-    leagueBands: teams.league.bands,
     taken: withLeague(hex.taken, cells),
     allowed: withLeague(hex.allowed, cells),
     rosterFields: ["gp", "gs", ...numbers],

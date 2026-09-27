@@ -1,7 +1,7 @@
 // One club's season for the team page's season switch (fetched when the visitor changes season),
 // without what every club shares that season (its clubs, the league's bands: data/season/{season}.json).
 import type { APIRoute, GetStaticPaths } from "astro";
-import { teamIndex, teamSeason } from "../../../../lib/stats";
+import { teamIndex, teamOwn } from "../../../../lib/stats";
 
 export const getStaticPaths: GetStaticPaths = async () =>
   (await teamIndex()).flatMap((t) =>
@@ -10,8 +10,7 @@ export const getStaticPaths: GetStaticPaths = async () =>
 
 export const GET: APIRoute = async ({ props }) => {
   const { code, s } = props as { code: string; s: number };
-  const { clubs: _, leagueBands: __, ...own } = (await teamSeason(code, s))!;
-  return new Response(JSON.stringify(own), {
+  return new Response(JSON.stringify(await teamOwn(code, s)), {
     headers: { "Content-Type": "application/json" },
   });
 };

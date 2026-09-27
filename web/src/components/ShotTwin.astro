@@ -6,7 +6,7 @@ import up from "@phosphor-icons/core/assets/fill/caret-up-fill.svg?raw";
 import down from "@phosphor-icons/core/assets/fill/caret-down-fill.svg?raw";
 import { BAND_LABELS } from "../lib/player";
 import { playerHref } from "../lib/players";
-import type { TwinData, TwinSeason, TwinWindow } from "../lib/stats";
+import type { TwinData } from "../lib/stats";
 import { tip } from "../lib/tip";
 import {
   RATE_LABELS,
@@ -35,8 +35,6 @@ const every = windows.flatMap((w) => [prof(w.counts), ...w.twins.map((t) => prof
 const zoneTop = axisTop(every.flatMap((p) => p.zones));
 const rateTop = axisTop(every.flatMap((p) => p.rates.map((r) => r ?? 0)));
 
-const winText = (w: TwinWindow) => windowLine(w.key, w.from, w.to, prof(w.counts).att);
-const twinText = (t: TwinSeason) => twinLine(t.label, t.club, t.games);
 const him = start ? prof(start.counts) : null;
 const first = start?.twins[0];
 const twin = first ? prof(first.counts) : null;
@@ -129,7 +127,7 @@ const payload = data && {
                   {name.split(" ").slice(0, -1).join(" ")}{" "}
                   <span class="nw">{surname}<i class="swatch him" aria-hidden="true" /></span>
                 </span>
-                <span class="sub" data-f="window">{winText(start)}</span>
+                <span class="sub" data-f="window">{windowLine(start.key, start.from, start.to, him!.att)}</span>
               </th>
               <td class="staff" />
               <th scope="col" class="who r">
@@ -137,7 +135,7 @@ const payload = data && {
                   <i class="swatch twin" aria-hidden="true" />
                   <a class="ink-link" data-f="twin-link" href={first.slug ? playerHref(base, first.slug) : undefined}>{first.name}</a>
                 </span>
-                <span class="sub" data-f="twin-line">{twinText(first)}</span>
+                <span class="sub" data-f="twin-line">{twinLine(first.label, first.club, first.games)}</span>
                 <span class="sub approx" data-f="approx" hidden={first.validated}>
                   Shot locations before 2011-12 are approximate
                 </span>
@@ -237,7 +235,7 @@ const payload = data && {
 <script>
   import up from "@phosphor-icons/core/assets/fill/caret-up-fill.svg?raw";
   import down from "@phosphor-icons/core/assets/fill/caret-down-fill.svg?raw";
-  import type { TwinPool } from "../lib/stats";
+  import type { TwinPool, TwinPoolRow } from "../lib/stats";
   import { fgHtml, profile, rateText, shareText, twinLine, windowLine, type Profile } from "../lib/twin";
 
   interface Payload {
@@ -252,15 +250,19 @@ const payload = data && {
     const data = JSON.parse(root.dataset.twin!) as Payload;
     const section = root.closest("section")!;
     // The pool is shared by every player page: fetched on the first sign of interest, once.
-    let pool: Promise<TwinPool> | null = null;
-    const load = () =>
-      (pool ??= fetch(`${data.base}/data/twins.json`).then(async (r) => {
+    const fetchJson = <T,>(url: string): Promise<T> =>
+      fetch(url).then((r) => {
         if (!r.ok) throw new Error(String(r.status));
-        // Keep only the rows this page's windows name; the rest of the pool is someone else's.
-        const all = (await r.json()) as TwinPool;
-        const mine = new Set(Object.values(data.windows).flatMap(([, , , twins]) => twins.map(([row]) => row)));
-        return { ...all, pool: all.pool.map((row, i) => (mine.has(i) ? row : null!)) };
-      })).catch((e) => {
+        return r.json();
+      });
+    // Only the rows this page's windows name are kept; the rest of the pool is someone else's.
+    type Pool = Omit<TwinPool, "pool"> & { rows: Map<number, TwinPoolRow> };
+    let pool: Promise<Pool> | null = null;
+    const load = () =>
+      (pool ??= fetchJson<TwinPool>(`${data.base}/data/twins.json`).then(({ pool: all, ...rest }) => ({
+        ...rest,
+        rows: new Map(Object.values(data.windows).flatMap(([, , , twins]) => twins.map(([i]) => [i, all[i]] as const))),
+      }))).catch((e) => {
         pool = null; // the next choice tries again
         throw e;
       });
@@ -291,23 +293,27 @@ const payload = data && {
       });
     }
 
+    let drawn = win; // the window his side and the five picks show
     async function show(key: string, pick: number) {
-      const { fields, zones, bands, clubs, pool: rows } = await load();
+      const { fields, zones, bands, clubs, rows } = await load();
       if (key !== win || pick !== picked()) return; // a later choice owns the table
       const prof = (counts: number[]) => profile(fields, zones, bands, counts);
       const [from, to, counts, twins] = data.windows[key];
-      field("window").textContent = windowLine(key, from, to, prof(counts).att);
-      side("l", prof(counts));
-      root!.querySelectorAll<HTMLInputElement>('input[name="twin-pick"]').forEach((input, i) => {
-        const label = input.nextElementSibling as HTMLElement;
-        input.hidden = label.hidden = !twins[i];
-        if (!twins[i]) return;
-        const [name, , season, team] = rows[twins[i][0]];
-        label.querySelector(".who")!.textContent = name;
-        label.querySelector(".what")!.textContent = `${season} · ${team}`;
-        label.querySelector(".match b")!.textContent = String(twins[i][1]);
-      });
-      const [name, slug, season, team, games, approx, tc] = rows[twins[pick][0]];
+      if (key !== drawn) {
+        drawn = key;
+        field("window").textContent = windowLine(key, from, to, prof(counts).att);
+        side("l", prof(counts));
+        root!.querySelectorAll<HTMLInputElement>('input[name="twin-pick"]').forEach((input, i) => {
+          const label = input.nextElementSibling as HTMLElement;
+          input.hidden = label.hidden = !twins[i];
+          if (!twins[i]) return;
+          const [name, , season, team] = rows.get(twins[i][0])!;
+          label.querySelector(".who")!.textContent = name;
+          label.querySelector(".what")!.textContent = `${season} · ${team}`;
+          label.querySelector(".match b")!.textContent = String(twins[i][1]);
+        });
+      }
+      const [name, slug, season, team, games, approx, tc] = rows.get(twins[pick][0])!;
       const link = field("twin-link") as HTMLAnchorElement;
       link.textContent = name;
       if (slug) link.href = `${data.base}/players/${slug}/`;
