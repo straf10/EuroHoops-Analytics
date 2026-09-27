@@ -3,7 +3,7 @@
 // Shots pages. Court metres, basket at the origin; drawn with the baseline on top.
 
 import { esc } from "./format";
-import { tip, tipAttr } from "./tip";
+import { dataTip, tip } from "./tip";
 
 /** [q, r, attempts, makes, league FG% in the cell x10 (-1: no league shots there)] */
 export type HexCell = [q: number, r: number, att: number, made: number, league: number];
@@ -42,22 +42,26 @@ export const court = (layer: string, label: string, closed = false) => {
   );
 };
 
+// The six corners of a pointy-top hex, from 30 degrees above the right-hand side, clockwise.
+const CORNERS = [0, 1, 2, 3, 4, 5].map((i) => {
+  const a = ((60 * i - 30) * Math.PI) / 180;
+  return [Math.cos(a), Math.sin(a)];
+});
+
 /** A pointy-top hex in short absolute form: the same six vertices, rounded to 0.001 m as before,
  * but without trailing zeros, with V for the vertical sides and runs of implicit linetos
  * (a chart holds hundreds of these). Absolute, so the browser draws exactly the same points. */
 function hexPath(cx: number, cy: number, r: number): string {
-  const pts: [string, string][] = [];
-  for (let i = 0; i < 6; i++) {
-    const a = ((60 * i - 30) * Math.PI) / 180;
-    pts.push([String(+(cx + r * Math.cos(a)).toFixed(3)), String(+(cy + r * Math.sin(a)).toFixed(3))]);
-  }
-  let d = `M${pts[0][0]} ${pts[0][1]}`;
-  let vertical = false; // after V the next pair needs an explicit L; after M or L it runs on
-  for (let i = 1; i < 6; i++) {
-    const [x, y] = pts[i];
-    if (x === pts[i - 1][0]) d += `V${y}`;
-    else d += `${vertical ? "L" : " "}${x} ${y}`;
-    vertical = x === pts[i - 1][0];
+  let d = "";
+  let px = NaN; // the previous corner's x
+  let afterV = false; // a pair after V needs an explicit L; after M or L it runs on
+  for (const [cos, sin] of CORNERS) {
+    const x = +(cx + r * cos).toFixed(3);
+    const y = +(cy + r * sin).toFixed(3);
+    const vertical = x === px;
+    d += !d ? `M${x} ${y}` : vertical ? `V${y}` : `${afterV ? "L" : " "}${x} ${y}`;
+    px = x;
+    afterV = vertical;
   }
   return `${d}Z`;
 }
@@ -119,7 +123,7 @@ export function hexChart(hex: HexCell[], radius: number, o: HexOptions): string 
       const cy = toY(radius * 1.5 * r);
       const size = radius * 0.94 * (0.32 + 0.68 * Math.sqrt(Math.min(1, att / full)));
       const cls = o.color ? o.color(cell, total) : `t${(o.invert ? -1 : 1) * tone(att, made, lg) || 0}`;
-      return `<path class="${cls}" d="${hexPath(cx, cy, size)}" data-tip="${tipAttr(cellTip(cell, total))}"/>`;
+      return `<path class="${cls}" d="${hexPath(cx, cy, size)}"${dataTip(cellTip(cell, total))}/>`;
     })
     .join("");
   return court(`<g class="cells">${cells}</g>`, o.label);
