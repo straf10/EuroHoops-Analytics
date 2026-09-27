@@ -4,7 +4,9 @@
 // facet shows what choosing in it would give) and the league under the same filters.
 // Pure, so the build and the page share it.
 
-import { dotChart, esc, hexChart, hexOf, type HexCell } from "./court";
+import { dotChart, hexChart, hexOf, type HexCell } from "./court";
+import { esc } from "./format";
+import { tip } from "./tip";
 import { BAND_LABELS } from "./player";
 
 export interface Attempts {
@@ -327,20 +329,22 @@ export function courtHtml(a: Attempts, s: State, r: Result): string {
   if (s.view === "dots") return dotChart(r.points, label);
   const invert = s.who === "team" && s.side === "allowed";
   const who = invert ? "Opponents " : "";
-  const tip = ([, , att, made, lg]: HexCell, total: number) =>
-    (r.makesOnly
-      ? `${who}<b>${att} made shots</b>, ${((100 * att) / total).toFixed(1)}% of these<br>`
-      : `${who}<b>${made} of ${att}</b> (${((100 * made) / att).toFixed(0)}%), ${((100 * att) / total).toFixed(1)}% of these shots<br>`) +
-    (lg < 0
-      ? "no league shots here"
-      : r.isLeague
-        ? `every league shot ${(lg / 10).toFixed(1)}%`
-        : `league ${(lg / 10).toFixed(1)}% with the same filters`);
+  const cellTip = ([, , att, made, lg]: HexCell, total: number) => {
+    const league =
+      lg < 0
+        ? "no league shots here"
+        : r.isLeague
+          ? `every league shot ${(lg / 10).toFixed(1)}%`
+          : `league ${(lg / 10).toFixed(1)}% with the same filters`;
+    return r.makesOnly
+      ? tip`${who}<b>${att} made shots</b>, ${((100 * att) / total).toFixed(1)}% of these<br>${league}`
+      : tip`${who}<b>${made} of ${att}</b> (${((100 * made) / att).toFixed(0)}%), ${((100 * att) / total).toFixed(1)}% of these shots<br>${league}`;
+  };
   if (s.view === "freq") {
     const most = Math.max(1, ...r.cells.map((c) => c[2]));
-    return hexChart(r.cells, a.radius, { label, tip, color: (c) => freqStep(c, most) });
+    return hexChart(r.cells, a.radius, { label, tip: cellTip, color: (c) => freqStep(c, most) });
   }
-  return hexChart(r.cells, a.radius, { label, tip, invert });
+  return hexChart(r.cells, a.radius, { label, tip: cellTip, invert });
 }
 
 export function totalsHtml(r: Result): string {
@@ -373,7 +377,7 @@ function barText(b: Bar, c: FacetContext) {
         share !== null && theirs !== null && !c.r.isLeague && !c.r.playOff && mine >= 10
           ? signed(share - theirs)
           : "–",
-      tip: `<b>${esc(b.label)}</b> ${esc(b.about)}<br>${b.att} made shots, ${share === null ? "–" : share.toFixed(1)}% of the makes; league ${theirs === null ? "–" : theirs.toFixed(1)}%`,
+      tip: tip`<b>${b.label}</b> ${b.about}<br>${b.att} made shots, ${share === null ? "–" : share.toFixed(1)}% of the makes; league ${theirs === null ? "–" : theirs.toFixed(1)}%`,
     };
   }
   const fg = b.att ? (100 * b.made) / b.att : null;
@@ -384,8 +388,8 @@ function barText(b: Bar, c: FacetContext) {
     fg: fgText,
     diff: fg !== null && lg !== null && b.att >= 10 && !c.r.makesOnly ? signed(fg - lg) : "–",
     tip: c.r.makesOnly
-      ? `<b>${esc(b.label)}</b> ${esc(b.about)}<br>${b.att} made shots`
-      : `<b>${esc(b.label)}</b> ${esc(b.about)}<br>${b.made} of ${b.att} (${fgText}%), ${of} ${lg === null ? "–" : lg.toFixed(1)}%`,
+      ? tip`<b>${b.label}</b> ${b.about}<br>${b.att} made shots`
+      : tip`<b>${b.label}</b> ${b.about}<br>${b.made} of ${b.att} (${fgText}%), ${of} ${lg === null ? "–" : lg.toFixed(1)}%`,
   };
 }
 

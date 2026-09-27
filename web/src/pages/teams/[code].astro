@@ -7,6 +7,7 @@ import "../../styles/stats.css";
 import { SEASON_COLS } from "../../lib/player";
 import { defaultSeason, meta, teamIndex, teamSeason, type TeamIndexRow } from "../../lib/stats";
 import { DEFENSE, OFFENSE, facts, rosterHtml, stripHtml, strips, teamBands, teamCharts } from "../../lib/team";
+import { tip } from "../../lib/tip";
 
 export async function getStaticPaths() {
   return (await teamIndex()).map((t) => ({ params: { code: t.code.toLowerCase() }, props: { club: t } }));
@@ -168,7 +169,7 @@ const bandHead = [
                     {bandHead.map(([h, about]) => (
                       <th scope="col" class="num">
                         {about ? (
-                          <span data-tip={about} tabindex="0">
+                          <span data-tip={tip`${about}`} tabindex="0">
                             {h}
                           </span>
                         ) : (
@@ -204,7 +205,7 @@ const bandHead = [
             <th scope="col">Player</th>
             {SEASON_COLS.map((c) => (
               <th scope="col" class="num">
-                <span data-tip={`<b>${c.head}</b><br>${c.about}`} tabindex="0">{c.head}</span>
+                <span data-tip={tip`<b>${c.head}</b><br>${c.about}`} tabindex="0">{c.head}</span>
               </th>
             ))}
           </tr>

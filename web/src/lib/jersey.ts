@@ -3,7 +3,7 @@
 // here, apart from the chart palette, and only ever paint a shirt's body and trim. No crests,
 // sponsor marks or kit patterns; the cut is one generic sleeveless shirt for every club.
 
-import { esc } from "./court";
+import { esc } from "./format";
 
 /** Display code -> [body, trim]. A club's usual colours across 2007-2026, not any one kit. */
 export const CLUB_COLOURS: Record<string, [body: string, trim: string]> = {

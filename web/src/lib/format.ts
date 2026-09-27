@@ -90,6 +90,10 @@ export interface SiteData {
   competitions: Competition[];
 }
 
+/** Text -> HTML text or attribute value. */
+export const esc = (s: string) =>
+  s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] ?? c);
+
 const ATHENS = "Europe/Athens";
 const day = new Intl.DateTimeFormat("en-GB", {
   timeZone: ATHENS,

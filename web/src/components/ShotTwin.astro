@@ -7,6 +7,7 @@ import down from "@phosphor-icons/core/assets/fill/caret-down-fill.svg?raw";
 import { BAND_LABELS } from "../lib/player";
 import { playerHref } from "../lib/players";
 import type { TwinData, TwinSeason, TwinWindow } from "../lib/stats";
+import { tip } from "../lib/tip";
 import { RATE_LABELS, ZONE_LABELS, axisTop, fgHtml, profile, rateText, shareText } from "../lib/twin";
 
 interface Props {
@@ -91,7 +92,7 @@ const payload = data && {
                   checked={w === start}
                   disabled={!w}
                 />
-                <label for={`tw-${key}`} data-tip={w ? `Match ${about}` : "Too few shots or games to match"}>
+                <label for={`tw-${key}`} data-tip={w ? tip`Match ${about}` : "Too few shots or games to match"}>
                   {key === "season" && w ? w.from : label}
                 </label>
               </>
@@ -170,7 +171,7 @@ const payload = data && {
                     <span class="v">{shareText(him.zones[i])}</span>
                   </span>
                 </td>
-                <th scope="row" class="staff" data-tip={ZONE_LABELS[z][2]} tabindex="0">
+                <th scope="row" class="staff" data-tip={tip`${ZONE_LABELS[z][2]}`} tabindex="0">
                   <span class="long">{ZONE_LABELS[z][0]}</span>
                   <span class="short">{ZONE_LABELS[z][1]}</span>
                 </th>
@@ -192,7 +193,7 @@ const payload = data && {
             {data!.bands.map((b, i) => (
               <tr class="fg-row">
                 <td class="l" data-b={i} set:html={fgHtml(him.bands[i], up, down)} />
-                <th scope="row" class="staff" data-tip={BAND_LABELS[b][1]} tabindex="0">
+                <th scope="row" class="staff" data-tip={tip`${BAND_LABELS[b][1]}`} tabindex="0">
                   <span class="long">{BAND_LABELS[b][0]}</span>
                   <span class="short">{BAND_LABELS[b][0]}</span>
                 </th>
@@ -214,7 +215,7 @@ const payload = data && {
                     <span class="v">{rateText(him.rates[i])}</span>
                   </span>
                 </td>
-                <th scope="row" class="staff" data-tip={about} tabindex="0">
+                <th scope="row" class="staff" data-tip={tip`${about}`} tabindex="0">
                   <span class="long">{label}</span>
                   <span class="short">{label}</span>
                 </th>

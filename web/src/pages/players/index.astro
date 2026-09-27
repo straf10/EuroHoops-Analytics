@@ -198,6 +198,7 @@ const description =
     gridHtml,
     headHtml,
     lines,
+    slotTip,
     ticksHtml,
     toQuery,
     type View,
@@ -274,8 +275,7 @@ const description =
         name.textContent = row.name;
         name.href = `${root}/players/${row.slug}/`;
         (slot.querySelector(".val") as HTMLElement).textContent = s.text;
-        const tip = `<b>${row.name}</b> ${row.teams.join(", ")}<br>${c.title.split(": ")[1]}: ${s.text}`;
-        (slot.querySelector(".track") as HTMLElement).dataset.tip = tip;
+        (slot.querySelector(".track") as HTMLElement).dataset.tip = slotTip(row, c, s.text);
       }
       $("thead").innerHTML = headHtml(view);
       $("tbody").innerHTML = bodyHtml(ls, view, cfg.base);

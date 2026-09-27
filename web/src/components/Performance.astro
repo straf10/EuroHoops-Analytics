@@ -1,6 +1,7 @@
 ---
 import type { Bin, Competition, RollingPoint } from "../lib/format";
 import { athensDay, seasonSpan } from "../lib/format";
+import { tip } from "../lib/tip";
 
 interface Props {
   comp: Competition;
@@ -105,7 +106,7 @@ const yTicks = [0, 0.5, 1].map((f) => ymin + (ymax - ymin) * (0.1 + 0.8 * f));
           <g
             class="hit"
             tabindex="0"
-            data-tip={`<b>Forecast ${pct(b.low)} to ${pct(b.high)}</b><br>${b.n.toLocaleString("en-GB")} games<br>Mean forecast ${pct(b.mean_p)}, won ${pct(b.observed)}`}
+            data-tip={tip`<b>Forecast ${pct(b.low)} to ${pct(b.high)}</b><br>${b.n.toLocaleString("en-GB")} games<br>Mean forecast ${pct(b.mean_p)}, won ${pct(b.observed)}`}
           >
             <circle class="target" cx={px(b.mean_p)} cy={py(b.observed)} r={Math.max(12, radius(b.n) + 4)} />
             <circle class="dot" cx={px(b.mean_p)} cy={py(b.observed)} r={radius(b.n)} />
@@ -214,7 +215,7 @@ const yTicks = [0, 0.5, 1].map((f) => ymin + (ymax - ymin) * (0.1 + 0.8 * f));
                 y={RPAD.top}
                 width={Math.max(step, 1)}
                 height={RH - RPAD.top - RPAD.bottom}
-                data-tip={`<b>Game ${p.n}</b>, ${athensDay(p.tipoff_utc)}<br>Elo ${p.elo.toFixed(3)} · baseline ${p.b0.toFixed(3)}`}
+                data-tip={tip`<b>Game ${p.n}</b>, ${athensDay(p.tipoff_utc)}<br>Elo ${p.elo.toFixed(3)} · baseline ${p.b0.toFixed(3)}`}
               />
             ))}
           </svg>
