@@ -77,6 +77,10 @@ const scored = results.filter((r) => r.provable).length;
                           <span class="icon" set:html={r.hit ? check : cross} />
                           {r.hit ? "Hit" : "Miss"}
                         </span>
+                      ) : r.late ? (
+                        <a class="pill unscored" href={`#logged-late-${comp.key}`}>
+                          Logged late
+                        </a>
                       ) : (
                         <a class="pill unscored" href={`#not-provable-${comp.key}`}>
                           Not scored
@@ -100,6 +104,15 @@ const scored = results.filter((r) => r.provable).length;
         Not scored: {comp.scorecard.not_provable} game
         {comp.scorecard.not_provable > 1 ? "s" : ""} whose prediction was stamped before tip-off but
         reached the public log only after it. They are shown, never counted.
+      </p>
+    )
+  }
+  {
+    comp.scorecard.late > 0 && (
+      <p class="footnote" id={`logged-late-${comp.key}`}>
+        Logged late: {comp.scorecard.late} game{comp.scorecard.late > 1 ? "s" : ""} whose
+        prediction was logged after tip-off, so {comp.scorecard.late > 1 ? "they are" : "it is"}
+        shown but never counted.
       </p>
     )
   }

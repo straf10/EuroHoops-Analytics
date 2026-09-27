@@ -1,3 +1,4 @@
+import dataclasses
 import json
 from datetime import UTC, datetime
 
@@ -25,6 +26,10 @@ REPORT = {
 MODEL = TunedModel(EloParams(k=20.0, hca=90.0, reversion=0.25), 25.0, 0.63, 3.7)
 
 
+def stamp_of(ts: pd.Timestamp) -> str:
+    return str(ts.strftime("%Y-%m-%dT%H:%M:%SZ"))
+
+
 def section(card: dict[str, object] = CARD, logged_rounds: int = 2) -> Section:
     games = make_games({2025: True, 2026: False})
     played = (games["season"] == 2026) & (games["round"] == 1)
@@ -32,7 +37,10 @@ def section(card: dict[str, object] = CARD, logged_rounds: int = 2) -> Section:
     live = games[(games["season"] == 2026) & (games["round"] <= logged_rounds)]
     log = pd.DataFrame(
         [
-            [g.game_id, 2026, g.round, "RS", "", g.home, g.away, 0.4, -2.0, "elo", "v1", stamp]
+            [
+                *(g.game_id, 2026, g.round, "RS", stamp_of(g.tipoff_utc), g.home, g.away),
+                *(0.4, -2.0, "elo", "v1", stamp),
+            ]
             for g in live.itertuples()
             for stamp in ("2026-09-30T08:00:00Z", "2026-09-30T09:00:00Z")  # a re-log
         ],
@@ -112,3 +120,36 @@ def test_display_codes_rename_only_what_the_site_shows(monkeypatch: MonkeyPatch)
 def test_display_codes_are_unique_per_competition() -> None:
     for codes in DISPLAY_CODES.values():
         assert len(set(codes.values())) == len(codes)
+
+
+def test_rows_logged_after_tip_off_are_shown_apart_and_never_scored() -> None:
+    """A game whose only rows were stamped at or after tip-off (a hand-logged row) is late: it
+    is flagged apart from the unprovable games and never counted as a hit or a miss."""
+    plain = section()
+    first_round = plain.games[(plain.games["season"] == 2026) & (plain.games["round"] == 1)]
+    late_id, late_tip = first_round["game_id"].iloc[0], first_round["tipoff_utc"].iloc[0]
+    log = plain.log.copy()
+    log.loc[log["game_id"] == late_id, "predicted_at_utc"] = stamp_of(late_tip)
+    data = section_data(dataclasses.replace(plain, log=log), NOW)
+    late = next(r for r in data["results"] if r["game_id"] == late_id)
+    assert late["late"] and not late["provable"]
+    assert [r["late"] for r in data["results"]].count(True) == 1
+    assert data["scorecard"]["late"] == 1
+    assert data["scorecard"]["not_provable"] == 0
+
+
+def test_an_on_time_row_wins_over_an_earlier_listed_late_one() -> None:
+    """If a game has both, the pre-registered row is its earliest row stamped before tip-off."""
+    plain = section()
+    game = plain.games[(plain.games["season"] == 2026) & (plain.games["round"] == 1)].iloc[0]
+    late = (
+        plain.log[plain.log["game_id"] == game["game_id"]]
+        .iloc[:1]
+        .assign(
+            predicted_at_utc="2026-09-29T08:00:00Z", tipoff_utc="2026-09-29T07:00:00Z", p_home=0.9
+        )
+    )
+    data = section_data(dataclasses.replace(plain, log=pd.concat([late, plain.log])), NOW)
+    row = next(r for r in data["results"] if r["game_id"] == game["game_id"])
+    assert not row["late"] and row["provable"]
+    assert row["p_home"] == 0.4
