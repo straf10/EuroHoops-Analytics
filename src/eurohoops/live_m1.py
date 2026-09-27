@@ -7,7 +7,6 @@ game with box lines from season ``replay_from`` (the live Elo's first warm-up se
 tipped off before the game's round opened.
 """
 
-import csv
 import json
 import logging
 from collections.abc import Callable
@@ -18,9 +17,10 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from eurohoops.logs import TIME_FORMAT, append_rows
 from eurohoops.models.elo import FloatArray
 from eurohoops.models.team_eff import DecayParams, MarginModel, forecast, prepare_history
-from eurohoops.predict import TIME_FORMAT, LatePredictionError, logged_keys
+from eurohoops.predict import logged_keys, refuse_late, upcoming_games
 
 M1_LOG_COLUMNS = (
     "game_id",
@@ -114,13 +114,7 @@ def predict_upcoming_m1(
     now = clock()
     fc = m1_forecasts(games, team_games, model, replay_from)
     g = fc.games
-    upcoming = (
-        (g["season"] == season)
-        & ~g["played"]
-        & g["confirmed_date"]
-        & (g["tipoff_utc"] > now)
-        & (g["tipoff_utc"] <= now + window)
-    ).to_numpy()
+    upcoming = upcoming_games(g, season, now, window)
     missing = upcoming & np.isnan(fc.margin)
     if missing.any():
         log.warning("M1: %d upcoming games have no forecast (no box lines)", int(missing.sum()))
@@ -132,9 +126,7 @@ def predict_upcoming_m1(
         if (str(records[i]["game_id"]), model.version) not in logged
     ]
     predicted_at = clock()
-    late = [records[i]["game_id"] for i in targets if predicted_at >= records[i]["tipoff_utc"]]
-    if late:
-        raise LatePredictionError(f"predicted_at {predicted_at} is not before tip-off of {late}")
+    refuse_late(predicted_at, [(records[i]["game_id"], records[i]["tipoff_utc"]) for i in targets])
     rows = [
         {
             "game_id": records[i]["game_id"],
@@ -156,12 +148,6 @@ def predict_upcoming_m1(
         }
         for i in targets
     ]
-    is_new = not log_path.exists()
-    log_path.parent.mkdir(parents=True, exist_ok=True)
-    with log_path.open("a", newline="", encoding="utf-8") as fh:
-        writer = csv.DictWriter(fh, fieldnames=M1_LOG_COLUMNS, lineterminator="\n")
-        if is_new:
-            writer.writeheader()
-        writer.writerows(rows)
+    append_rows(log_path, M1_LOG_COLUMNS, rows)
     log.info("M1: %d rows appended to %s", len(rows), log_path)
     return len(rows)

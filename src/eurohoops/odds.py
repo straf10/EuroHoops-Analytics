@@ -24,6 +24,7 @@ import httpx
 import pandas as pd
 
 from eurohoops.ingest.cache import write_atomic
+from eurohoops.logs import TIME_FORMAT, append_rows
 
 API_URL = "https://api.the-odds-api.com/v4/sports/basketball_euroleague/odds"
 QUERY = {
@@ -34,7 +35,6 @@ QUERY = {
 }
 MIN_REMAINING = 20
 MATCH_WINDOW = pd.Timedelta(hours=48)  # API start time vs the schedule's tip-off
-TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
 ODDS_COLUMNS = (
     "game_id",
@@ -103,16 +103,6 @@ def last_remaining(calls: Path) -> int | None:
         known = [row["requests_remaining"] for row in csv.DictReader(fh)]
     known = [value for value in known if value]
     return int(float(known[-1])) if known else None
-
-
-def _append(path: Path, columns: tuple[str, ...], rows: list[dict[str, Any]]) -> None:
-    is_new = not path.exists()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a", newline="", encoding="utf-8") as fh:
-        writer = csv.DictWriter(fh, fieldnames=columns, lineterminator="\n")
-        if is_new:
-            writer.writeheader()
-        writer.writerows(rows)
 
 
 def devig_two_way(home_price: float, away_price: float) -> float:
@@ -260,13 +250,15 @@ def record_odds(
         call["requests_remaining"] or "?",
     )
     if response.status_code != httpx.codes.OK:
-        _append(paths.calls, CALL_COLUMNS, [call])
+        append_rows(paths.calls, CALL_COLUMNS, [call])
         raise OddsApiError(f"HTTP {response.status_code} {_error_code(response)}".strip())
     write_atomic(paths.raw_dir / f"{fetched_at:%Y%m%dT%H%M%SZ}.json.gz", response.content)
     events: list[dict[str, Any]] = json.loads(response.content)
     rows, unmatched = consensus_rows(events, read_team_map(paths.teams), games, fetched_at)
-    _append(paths.log, ODDS_COLUMNS, rows)
-    _append(paths.calls, CALL_COLUMNS, [{**call, "events": len(events), "rows_written": len(rows)}])
+    append_rows(paths.log, ODDS_COLUMNS, rows)
+    append_rows(
+        paths.calls, CALL_COLUMNS, [{**call, "events": len(events), "rows_written": len(rows)}]
+    )
     for reason in unmatched:
         log.warning("unmatched odds event: %s", reason)
     return {**call, "events": len(events), "rows_written": len(rows), "unmatched": unmatched}
