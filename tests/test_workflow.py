@@ -205,3 +205,14 @@ def test_a_conflict_on_an_append_only_log_fails_without_rewriting_rows(tmp_path:
     git(other, "pull", "-q", "origin", "main")
     assert (other / "predictions/log.csv").read_text() == "game_id,p\nG1,0.5\nG9,0.1\n"
     assert not (runner / ".git/rebase-merge").exists()  # the rebase was aborted, not resolved
+
+
+def test_an_unreachable_remote_fails_with_the_error_annotation(tmp_path: Path) -> None:
+    """A pull that fails before any rebase starts (network, auth) still reports ::error::."""
+    _, runner, env = sandbox(tmp_path)
+    with (runner / "predictions/log.csv").open("a", newline="\n") as fh:
+        fh.write("G2,0.6\n")
+    env["GIT_CONFIG_KEY_0"] = f"url.{(tmp_path / 'missing.git').as_posix()}.insteadOf"
+    done = run_commit_step(runner, env)
+    assert done.returncode != 0
+    assert "::error::" in done.stdout
