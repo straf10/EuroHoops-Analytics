@@ -232,13 +232,13 @@ const bandHead = [
         cache.set(
           s,
           Promise.all(
-            [`team/${code}/${s}`, `clubs/${s}`].map((path) =>
+            [`team/${code}/${s}`, `season/${s}`].map((path) =>
               fetch(`${base}/data/${path}.json`).then((r) => {
                 if (!r.ok) throw new Error(String(r.status));
                 return r.json();
               }),
             ),
-          ).then(([t, clubs]) => ({ ...t, clubs })),
+          ).then(([t, shared]) => ({ ...t, clubs: shared.clubs, leagueBands: shared.bands })),
         );
       return cache.get(s)!;
     };
