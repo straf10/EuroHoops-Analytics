@@ -23,7 +23,7 @@ import pandas as pd
 import pandera.pandas as pa
 
 from eurohoops.ingest.cache import read_cached
-from eurohoops.parse.schemas import schema_dtypes
+from eurohoops.parse.schemas import validated
 
 HEADER = ("Time", "Score")
 ACTIONS = ("in", "out", "ft_made", "ft_missed", "fg_made", "fg_missed", "period", "other")
@@ -285,6 +285,5 @@ def build_pbp_table(root: Path, games: pd.DataFrame) -> pd.DataFrame:
         except PbpScoreError as exc:
             log.warning("%s: %s", game_id, exc)
     if not frames:
-        empty = pd.DataFrame(columns=list(PBP_SCHEMA.columns))
-        return PBP_SCHEMA.validate(empty.astype(schema_dtypes(PBP_SCHEMA)))
+        return validated(pd.DataFrame(columns=list(PBP_SCHEMA.columns)), PBP_SCHEMA)
     return PBP_SCHEMA.validate(pd.concat(frames, ignore_index=True))
