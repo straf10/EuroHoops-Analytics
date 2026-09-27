@@ -260,7 +260,12 @@ const cfg = { base, open, seasons: seasons.map((x) => x.season) };
       if (!cache.has(season))
         cache.set(
           season,
-          fetchJson<PackedAttempts>(`${cfg.base}/data/shots/${season}.json`).then(unpackAttempts),
+          fetchJson<PackedAttempts>(`${cfg.base}/data/shots/${season}.json`)
+            .then(unpackAttempts)
+            .catch((e) => {
+              cache.delete(season); // a later touch tries again
+              throw e;
+            }),
         );
       return cache.get(season)!;
     };
@@ -327,15 +332,20 @@ const cfg = { base, open, seasons: seasons.map((x) => x.season) };
       history.replaceState(null, "", `${location.pathname}${writeState(state, cfg.open)}`);
     }
 
+    // The season's shots in hand and the pickers filled; nothing on the court changes.
+    async function prepare() {
+      const next = await get(state.season);
+      if (next !== data) {
+        data = next;
+        fillPickers(data);
+      }
+      syncForm(data);
+    }
+
     async function load() {
       root!.setAttribute("aria-busy", "true");
       try {
-        const next = await get(state.season);
-        if (next !== data) {
-          data = next;
-          fillPickers(data);
-        }
-        syncForm(data);
+        await prepare();
         draw();
       } catch {
         const season = el<HTMLSelectElement>("season");
@@ -358,7 +368,8 @@ const cfg = { base, open, seasons: seasons.map((x) => x.season) };
       if (input.name === "team") state.team = v;
       if (input.name === "player") state.player = v;
       if (input.name === "view") state.view = v as State["view"];
-      if (data) syncForm(data);
+      if (!data) return void load(); // drawn with every choice made meanwhile once the shots are in
+      syncForm(data);
       draw();
     });
 
@@ -369,25 +380,41 @@ const cfg = { base, open, seasons: seasons.map((x) => x.season) };
       const value = bar.dataset.value!;
       const chosen = state[facet];
       state = { ...state, [facet]: chosen.includes(value) ? chosen.filter((x) => x !== value) : [...chosen, value] };
-      draw();
+      // The press paints at once; the court and bars follow in the next task (a redraw of a
+      // season's shots takes a slow phone past 100 ms), or when the season's shots are in.
+      bar.setAttribute("aria-pressed", String(!chosen.includes(value)));
+      if (data) requestAnimationFrame(() => setTimeout(draw));
+      else load();
     });
 
     clear.addEventListener("click", () => {
       state = { ...state, q: [], band: [], play: [] };
-      draw();
+      if (data) draw();
+      else load();
     });
 
-    // The page arrives drawn for the default view, so a season's shots (up to ~1 MB, ~300 KB
-    // on the wire) load when the visitor reaches for the explorer: the pointer over it, a touch
-    // or keyboard focus. A link with filters needs them at once.
+    // The page arrives drawn for the default view, so a season's shots (~0.8 MB, ~260 KB on the
+    // wire) load when the visitor reaches for the explorer: the pointer over it, a touch or keyboard
+    // focus. A link with filters needs them at once. Otherwise they are fetched once the page has
+    // loaded and the browser is idle, so the first tap on a phone finds them there, unless the
+    // visitor saves data or is on 2G.
     if (writeState(state, cfg.open)) load();
     else {
       const intents = ["pointerover", "touchstart", "focusin"] as const;
+      // Reaching for the explorer only readies the data: the page arrives drawn for the default
+      // view, and redrawing the court here would swap the mark under a finger mid-tap.
       const reach = () => {
         for (const t of intents) root.removeEventListener(t, reach);
-        load();
+        prepare().catch(() => {});
       };
       for (const t of intents) root.addEventListener(t, reach, { passive: true });
+      const net = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
+      if (!net?.saveData && !/2g$/.test(net?.effectiveType ?? "")) {
+        const prefetch = () => get(state.season).catch(() => {});
+        const idle = () => ("requestIdleCallback" in window ? requestIdleCallback(prefetch, { timeout: 3000 }) : setTimeout(prefetch, 1000));
+        if (document.readyState === "complete") idle();
+        else addEventListener("load", idle, { once: true });
+      }
     }
   }
 </script>
