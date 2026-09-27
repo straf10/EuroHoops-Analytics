@@ -141,6 +141,18 @@
 .scroll {
   overflow-x: auto;
 }
+/* A box that still scrolls sideways fades at its end, and the fade lifts once scrolled there.
+   The scroll timeline is inactive while the table fits, so a fitting table is never masked. */
+@supports (animation-timeline: scroll()) {
+  .scroll {
+    /* Longhands: the minifier folds a shorthand and the timeline into one invalid shorthand. */
+    animation-name: edge-fade;
+    animation-timing-function: linear;
+    animation-fill-mode: both;
+    animation-duration: auto !important; /* not motion: reduced motion keeps the fade */
+    animation-timeline: scroll(self inline);
+  }
+}
 .grid {
   width: 100%;
   border-collapse: collapse;

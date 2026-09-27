@@ -132,6 +132,16 @@ const scored = results.filter((r) => r.provable).length;
   .scroll {
     overflow-x: auto;
   }
+  /* While it still scrolls sideways, the box fades at its end (edge-fade in global.css). */
+  @supports (animation-timeline: scroll()) {
+    .scroll {
+      animation-name: edge-fade;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-duration: auto !important;
+      animation-timeline: scroll(self inline);
+    }
+  }
   /* The table takes its natural width, so no slack column opens up between Date and Home. */
   table {
     width: auto;

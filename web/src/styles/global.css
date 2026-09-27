@@ -330,6 +330,19 @@ body:not(:has(#comp-gbl:checked)) [data-comp="gbl"] {
   font-weight: 600;
 }
 
+/* The end fade of a table box that still scrolls sideways, run on the box's own scroll timeline
+   (stats.css, the Players page, Results): it lifts once scrolled to the end, and a box that fits
+   has no timeline, so it is never masked. Not motion, so reduced motion keeps it. */
+@keyframes edge-fade {
+  0%,
+  96% {
+    mask-image: linear-gradient(to left, transparent, #000 32px);
+  }
+  100% {
+    mask-image: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
