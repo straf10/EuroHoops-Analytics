@@ -4,6 +4,7 @@
 /** One club's line in the teams index: [code, name, W–L, ORtg, DRtg, Net, Pace], as shown. */
 export type ClubCells = [string, string, string, string, string, string, string];
 
+// esc and the link below mirror format.ts's esc and players.ts's teamHref (not imported, see above).
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
 
 /** A season's rows in rank order; links carry the season unless it is the one team pages open on. */

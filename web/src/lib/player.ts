@@ -4,7 +4,30 @@
 import { hexChart } from "./court";
 import { esc } from "./format";
 import { dataTip, tip } from "./tip";
-import type { Bands, PlayerSeason } from "./stats";
+import type { Bands, PlayerData, PlayerSeason } from "./stats";
+
+/** data/player/{slug}.json: each log row carries its game's details (gameFields) after its own
+ * fields, and the league's bands are left to data/season/{season}.json, which a season's pages share. */
+export type PackedPlayer = Omit<PlayerData, "seasons"> & { seasons: Omit<PlayerSeason, "games" | "leagueBands">[] };
+
+export const packPlayer = (d: PlayerData): PackedPlayer => ({
+  ...d,
+  seasons: d.seasons.map(({ leagueBands: _, games, log, ...s }) => ({ ...s, log: log.map((row) => [...row, ...games[String(row[0])]]) })),
+});
+
+/** The seasons as the renderers read them; each season's leagueBands still to be joined. */
+export const unpackPlayer = (p: PackedPlayer): PlayerData => ({
+  ...p,
+  seasons: p.seasons.map((s) => {
+    const n = s.logFields.length;
+    return {
+      ...s,
+      leagueBands: {},
+      log: s.log.map((row) => row.slice(0, n)),
+      games: Object.fromEntries(s.log.map((row) => [row[0], row.slice(n)])) as PlayerSeason["games"],
+    };
+  }),
+});
 
 export const BAND_LABELS: Record<string, [string, string]> = {
   rim: ["At the rim", "under 1.5 m"],

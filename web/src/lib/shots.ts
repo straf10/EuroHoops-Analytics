@@ -35,17 +35,18 @@ export type PackedAttempts = Omit<Attempts, "team" | "opp"> & { games: [number, 
 export function unpackAttempts(p: PackedAttempts): Attempts {
   const { games, ...rest } = p;
   const side = p.bits.period - 1; // the packer puts the side bit just under the period
-  const team: number[] = [];
-  const opp: number[] = [];
-  const flags: number[] = [];
+  // Sized up front: a season is ~50,000 shots, and arrays grown by push keep spare capacity.
+  const team = new Array<number>(p.flags.length);
+  const opp = new Array<number>(p.flags.length);
+  const flags = new Array<number>(p.flags.length);
   let i = 0;
   for (const [a, b, n] of games)
     for (let k = 0; k < n; k++, i++) {
       const f = p.flags[i];
       const second = (f >> side) & 1;
-      team.push(second ? b : a);
-      opp.push(second ? a : b);
-      flags.push((f & ((1 << side) - 1)) | ((f >> p.bits.period) << side));
+      team[i] = second ? b : a;
+      opp[i] = second ? a : b;
+      flags[i] = (f & ((1 << side) - 1)) | ((f >> p.bits.period) << side);
     }
   return { ...rest, bits: { ...p.bits, period: side }, flags, team, opp };
 }
