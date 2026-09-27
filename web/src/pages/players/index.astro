@@ -60,7 +60,7 @@ const description =
           <label class="field">
             <span>Season</span>
             <span class="select">
-              <select name="season">
+              <select name="season" style="--select-w: 7.875rem">
                 {seasons.map((s) => (
                   <option value={s.season} selected={s.season === view.season}>
                     {s.label}
@@ -74,7 +74,7 @@ const description =
 
           <fieldset class="field">
             <legend>Games</legend>
-            <div class="seg">
+            <div class="seg" style="--seg-w: 16.652rem">
               {WINDOWS.map((w) => (
                 <>
                   <input type="radio" name="window" id={`w-${w.key}`} value={w.key} checked={w.key === view.window} />
@@ -86,7 +86,7 @@ const description =
 
           <fieldset class="field">
             <legend>Rate</legend>
-            <div class="seg">
+            <div class="seg" style="--seg-w: 13.39rem">
               {RATES.map((r) => (
                 <>
                   <input type="radio" name="rate" id={`r-${r.key}`} value={r.key} checked={r.key === view.rate} />
@@ -423,6 +423,7 @@ const description =
     transition: box-shadow 150ms ease;
   }
   select {
+    width: var(--select-w, auto); /* pinned to its Geist width, as .seg in global.css */
     max-width: 12rem;
     padding: 0 30px 0 10px;
     cursor: pointer;

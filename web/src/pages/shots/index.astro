@@ -46,7 +46,7 @@ const cfg = { base, open, seasons: seasons.map((x) => x.season) };
           <label class="field">
             <span>Season</span>
             <span class="select">
-              <select name="season">
+              <select name="season" style="--select-w: 7.875rem">
                 {seasons.map((x) => (
                   <option value={x.season} selected={x.season === open}>
                     {x.label}
@@ -60,7 +60,7 @@ const cfg = { base, open, seasons: seasons.map((x) => x.season) };
 
           <fieldset class="field">
             <legend>Shots of</legend>
-            <div class="seg">
+            <div class="seg" style="--seg-w: 13.017rem">
               {(
                 [
                   ["league", "League"],
@@ -118,7 +118,7 @@ const cfg = { base, open, seasons: seasons.map((x) => x.season) };
 
           <fieldset class="field view">
             <legend>View</legend>
-            <div class="seg">
+            <div class="seg" style="--seg-w: 17.405rem; --seg-w-short: 9.271rem">
               {VIEWS.map(([v, long, short]) => (
                 <>
                   <input type="radio" name="view" id={`view-${v}`} value={v} checked={v === s.view} />
