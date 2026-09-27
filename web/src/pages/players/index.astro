@@ -827,6 +827,16 @@ const description =
       min-height: 0;
       mask-image: none;
     }
+    /* In the page, a table that still scrolls sideways fades at its end (as in stats.css). */
+    @supports (animation-timeline: scroll()) {
+      .scroll {
+        animation-name: edge-fade;
+        animation-timing-function: linear;
+        animation-fill-mode: both;
+        animation-duration: auto !important;
+        animation-timeline: scroll(self inline);
+      }
+    }
     .cut tbody :global(tr:nth-child(n + 51)) {
       display: none;
     }
