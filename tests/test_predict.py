@@ -119,3 +119,15 @@ def test_refuses_to_append_onto_an_unterminated_last_row(
     with pytest.raises(ValueError, match="does not end with a newline"):
         run(games, tuned, log, fixed(NOW + timedelta(days=7)))
     assert log.read_bytes() == cut
+
+
+def test_an_empty_log_file_gets_the_header(
+    games: pd.DataFrame, tuned: TunedModel, tmp_path: Path
+) -> None:
+    """A run killed between creating the file and writing its header leaves 0 bytes."""
+    log = tmp_path / "log.csv"
+    log.touch()
+    assert run(games, tuned, log, fixed(NOW)) == 3
+    rows = read_rows(log)
+    assert tuple(rows[0]) == LOG_COLUMNS
+    assert len(rows) == 3

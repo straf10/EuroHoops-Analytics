@@ -22,12 +22,12 @@ def require_terminated(path: Path) -> None:
 
 
 def append_rows(path: Path, columns: Sequence[str], rows: Sequence[Mapping[str, Any]]) -> None:
-    """Append ``rows`` (a new file gets the header first, even with no rows).
+    """Append ``rows`` (a new or empty file gets the header first, even with no rows).
 
     Refuses a file whose last row is unterminated (``require_terminated``): nothing is written.
     """
     require_terminated(path)
-    is_new = not path.exists()
+    is_new = not path.exists() or not path.stat().st_size
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("a", newline="", encoding="utf-8") as fh:
         writer = csv.DictWriter(fh, fieldnames=columns, lineterminator="\n")
