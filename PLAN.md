@@ -123,7 +123,7 @@ Odds (fwd) ─┘                                                          │
 ```
 EuroHoops-Analytics/
   src/eurohoops/{ingest,parse,entity,features,models,eval,sim,serve,cli}/
-  sql/            # staging → marts transforms
+  src/eurohoops/sql/  # staging → marts transforms
   tests/          # unit (parsers, features), property tests (no leakage), data-contract tests
   notebooks/      # exploration only; nothing production lives here
   predictions/    # append-only public log (CSV/JSON), committed by CI before tip-off

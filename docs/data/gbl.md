@@ -1,7 +1,7 @@
 # GBL data (ESAKE): structure, quirks and quality
 
 *Built 2026-09-24 from a full crawl: 1,658 pages (results + box scores), 2018-19 → 2026-27.*
-Source code: `src/eurohoops/ingest/gbl.py`, `src/eurohoops/parse/esake.py`, `sql/box.sql`.
+Source code: `src/eurohoops/ingest/gbl.py`, `src/eurohoops/parse/esake.py`, `src/eurohoops/sql/box.sql`.
 
 ## Structure
 

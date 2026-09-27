@@ -8,7 +8,7 @@ from eurohoops.models.elo import EloParams
 
 LIVE_SEASON = 2026
 MART_PATH = Path("data/marts/eurohoops.duckdb")
-SQL_DIR = Path("sql")
+SQL_DIR = Path(__file__).parent / "sql"  # shipped inside the package, found from any cwd
 BOX_INVARIANTS_REPORT = Path("reports/gbl_box_invariants.json")
 STINT_REPORT = Path("reports/stint_validation.json")
 POSSESSION_REPORT = Path("reports/possessions.json")

@@ -21,7 +21,6 @@ from eurohoops.config import (
     ODDS_TEAMS,
     POSSESSION_REPORT,
     SITE_DATA,
-    SQL_DIR,
     STINT_REPORT,
     STINTS_MART_REPORT,
     TEAM_CONTINUITY_REPORT,
@@ -29,7 +28,7 @@ from eurohoops.config import (
 from eurohoops.eval.backtest import load_tuned_model
 from eurohoops.marts import read_games, write_tables
 from eurohoops.parse.games import write_table
-from tests.conftest import REPO, make_games, make_team_games, write_pipeline
+from tests.conftest import make_games, make_team_games, write_pipeline
 from tests.test_gbl_ingest import FakeEsake
 from tests.test_gbl_pbp import GAME, FakeBasketHotel, export
 from tests.test_ingest import FakeApi
@@ -44,9 +43,6 @@ NOW = datetime(2026, 10, 1, 8, 0, tzinfo=UTC)
 @pytest.fixture
 def workdir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     monkeypatch.chdir(tmp_path)
-    (tmp_path / SQL_DIR).mkdir()
-    for sql in (REPO / SQL_DIR).glob("*.sql"):
-        (tmp_path / SQL_DIR / sql.name).write_text(sql.read_text(encoding="utf-8"))
     return tmp_path
 
 
