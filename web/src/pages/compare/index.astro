@@ -64,7 +64,7 @@ const description = "Up to five EuroLeague players side by side, a season each o
 
           <fieldset class="field">
             <legend>Scope</legend>
-            <div class="seg">
+            <div class="seg" style="--seg-w: 8.402rem">
               <input type="radio" name="scope" id="c-season" value="season" checked />
               <label for="c-season">Season</label>
               <input type="radio" name="scope" id="c-career" value="career" />
@@ -74,7 +74,7 @@ const description = "Up to five EuroLeague players side by side, a season each o
 
           <fieldset class="field">
             <legend>Rate</legend>
-            <div class="seg">
+            <div class="seg" style="--seg-w: 12.766rem">
               {RATES.map((r) => (
                 <>
                   <input type="radio" name="rate" id={`r-${r.key}`} value={r.key} checked={r.key === "game"} />
@@ -311,6 +311,8 @@ const description = "Up to five EuroLeague players side by side, a season each o
     outline-offset: 1px;
   }
   .count {
+    min-width: 5.782rem; /* "Up to 5 players." in Geist, so the swap never drops it to a new row */
+    text-align: right;
     margin-left: auto;
     align-self: flex-end;
     line-height: 32px; /* on the controls' row, not between their labels and them */

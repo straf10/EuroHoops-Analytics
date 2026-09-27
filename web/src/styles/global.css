@@ -236,8 +236,13 @@ body:not(:has(#comp-gbl:checked)) [data-comp="gbl"] {
 }
 
 /* Segmented control: ink fill marks the choice, never colour. */
+/* A control in a filter row can pin its width to the width it has in Geist (--seg-w, and
+   --seg-w-short where the labels shorten under 480px): the row then wraps the same before and
+   after the web font arrives, instead of dropping a control to a new line on the swap. While
+   the narrower fallback shows, the labels share the spare few pixels. */
 .seg {
   display: inline-flex;
+  width: var(--seg-w, auto);
   margin: 0;
   padding: 2px;
   border: 0;
@@ -251,6 +256,8 @@ body:not(:has(#comp-gbl:checked)) [data-comp="gbl"] {
   pointer-events: none;
 }
 .seg label {
+  flex-grow: 1;
+  text-align: center;
   padding: 4px 11px;
   border-radius: 6px;
   font-size: 0.8125rem;
@@ -278,6 +285,9 @@ body:not(:has(#comp-gbl:checked)) [data-comp="gbl"] {
   display: none;
 }
 @media (max-width: 480px) {
+  .seg {
+    width: var(--seg-w-short, var(--seg-w, auto));
+  }
   .seg .long {
     display: none;
   }

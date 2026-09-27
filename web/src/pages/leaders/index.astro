@@ -62,7 +62,7 @@ const description =
         <form class="filters" id="filters" aria-label="Filters">
           <fieldset class="field">
             <legend>Scope</legend>
-            <div class="seg">
+            <div class="seg" style="--seg-w: 14.891rem">
               {SCOPES.map((s) => (
                 <>
                   <input type="radio" name="scope" id={`s-${s.key}`} value={s.key} checked={s.key === view.scope} />
@@ -75,7 +75,7 @@ const description =
           <label class="field" id="season-field">
             <span>Season</span>
             <span class="select">
-              <select name="season">
+              <select name="season" style="--select-w: 7.875rem">
                 {seasons.map((s) => (
                   <option value={s.season} selected={s.season === view.season}>
                     {s.label}
@@ -90,7 +90,7 @@ const description =
           <label class="field">
             <span>Measure</span>
             <span class="select">
-              <select name="stat">
+              <select name="stat" style="--select-w: 8.563rem">
                 {STATS.map((k) => (
                   <option value={k} selected={k === view.stat}>
                     {BY_KEY[k].name}
@@ -103,7 +103,7 @@ const description =
 
           <fieldset class="field">
             <legend>Rate</legend>
-            <div class="seg">
+            <div class="seg" style="--seg-w: 8.904rem">
               {MODES.map((r) => (
                 <>
                   <input type="radio" name="mode" id={`m-${r.key}`} value={r.key} checked={r.key === view.mode} />
