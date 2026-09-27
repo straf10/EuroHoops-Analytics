@@ -8,7 +8,14 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from eurohoops.eval.m2_backtest import Fitter, Folds, calibrate, gbm_fitter, spline_fitter
+from eurohoops.eval.m2_backtest import (
+    GAME_IN_PLAY,
+    Fitter,
+    Folds,
+    calibrate,
+    gbm_fitter,
+    spline_fitter,
+)
 from eurohoops.models.season_level import LevelPredictions, level_predictions
 from tests.test_m2_backtest import TINY, labelled, tipoffs
 
@@ -86,7 +93,7 @@ def _level(fit: Fitter, dev: pd.DataFrame, later: pd.DataFrame) -> LevelPredicti
     """The G5 season-level predictions of one base, as the backtest computes them."""
     folds = Folds(dev, DEVELOPMENT, fit, True, later)
     ticks = pd.to_datetime(tipoffs(pd.concat([dev, later])), utc=True)
-    ticks = ticks.dt.tz_convert(None).astype("int64")
+    ticks = ticks.dt.tz_convert(None).astype("datetime64[ns]").astype("int64")
     return level_predictions(
         folds,
         dev["made"].to_numpy(dtype=np.float64),
@@ -95,6 +102,7 @@ def _level(fit: Fitter, dev: pd.DataFrame, later: pd.DataFrame) -> LevelPredicti
         y_later=later["made"].to_numpy(dtype=np.float64),
         tip_later=later["game_id"].map(ticks).to_numpy(dtype=np.int64),
         development=DEVELOPMENT,
+        in_play=GAME_IN_PLAY.value,
     )
 
 

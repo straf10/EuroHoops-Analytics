@@ -98,9 +98,12 @@ def season_offsets(
     tipoff: npt.NDArray[np.int64],
     prior: float,
     shrink: Shrinkage,
+    *,
+    in_play: int,
 ) -> FloatArray:
     """The offset of every shot of one season: games at one tip-off time share it, and it uses
-    only shots of games that tipped off strictly earlier."""
+    only shots of games that tipped off more than ``in_play`` earlier (``tipoff`` units): a game
+    still in play at that tip-off has shots from after it."""
     order = np.argsort(tipoff, kind="stable")
     times = tipoff[order]
     starts = np.flatnonzero(np.r_[True, times[1:] != times[:-1]])
@@ -109,7 +112,7 @@ def season_offsets(
     out = np.empty(len(p_base))
     d = 0.0
     for a, b in zip(starts, ends, strict=True):
-        n = int(a)
+        n = int(np.searchsorted(times, times[a] - in_play, side="left"))
         if n:
             d = mle_shift(logits[:n], labels[:n], d)
         w = shrink.weight(n)
@@ -149,6 +152,7 @@ def level_predictions(
     y_later: FloatArray,
     tip_later: npt.NDArray[np.int64],
     development: Sequence[int],
+    in_play: int,
 ) -> LevelPredictions:
     """The level variant of one base (see the module doc and the declaration).
 
@@ -164,7 +168,9 @@ def level_predictions(
         shrink = fit_shrinkage(others)
         prior = mle_shift(logit(others[s - 1][0]), others[s - 1][1]) if s - 1 in others else 0.0
         rows = folds.index[s]
-        off_oof[rows] = season_offsets(folds.oof[rows], y_dev[rows], tip_dev[rows], prior, shrink)
+        off_oof[rows] = season_offsets(
+            folds.oof[rows], y_dev[rows], tip_dev[rows], prior, shrink, in_play=in_play
+        )
         oof[rows] = shifted(folds.oof[rows], off_oof[rows])
         shrinkage[str(s)], priors[str(s)] = shrink.to_json(), round(prior, 6)
     loso = {t: (folds.oof[folds.index[t]], y_dev[folds.index[t]]) for t in development}
@@ -181,7 +187,7 @@ def level_predictions(
             prior = 0.0
         rows = np.flatnonzero(later_season == u)
         off_later[rows] = season_offsets(
-            folds.later[rows], y_later[rows], tip_later[rows], prior, shrink
+            folds.later[rows], y_later[rows], tip_later[rows], prior, shrink, in_play=in_play
         )
         later[rows] = shifted(folds.later[rows], off_later[rows])
         priors[str(u)] = round(prior, 6)
