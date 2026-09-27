@@ -1,0 +1,224 @@
+"""The local M2 research commands (``eurohoops shots``, ``free-throws``, ``shot-quality``,
+``shot-charts`` and ``backtest --model m2``): the daily workflow never runs them. cli.py registers
+them under their names; nothing here is fetched, everything reads the marts and the raw cache."""
+
+import json
+import logging
+import time
+
+import typer
+
+from eurohoops.config import (
+    EUROLEAGUE,
+    FREE_THROWS_REPORT,
+    M2_CHART_PLAYERS,
+    M2_CHART_TEAMS,
+    M2_CHARTS_DIR,
+    M2_PLAYERS_REPORT,
+    M2_REPORT,
+    M2_SEASONS,
+    M2_TEAMS_REPORT,
+    MART_PATH,
+    SHOTS_REPORT,
+)
+from eurohoops.eval.m2_backtest import run_m2_backtest
+from eurohoops.eval.m2_backtest import search as m2_search
+from eurohoops.eval.shot_making import player_report
+from eurohoops.eval.team_shot_quality import shots_with_xpts, team_report
+from eurohoops.eval.team_shot_quality import team_games as team_shot_games
+from eurohoops.eval.tracking import log_m2_backtest
+from eurohoops.logs import write_json
+from eurohoops.marts import read_games, read_table, write_tables
+from eurohoops.parse.free_throws import LEVEL_CHECK, build_ft_team_games, ft_report
+from eurohoops.parse.shot_table import build_shot_table, reconcile, shot_report
+from eurohoops.publish import DISPLAY_CODES
+
+log = logging.getLogger("eurohoops")
+
+
+def shots() -> None:
+    """Build the ``shots`` and ``shots_excluded`` marts (EuroLeague, from the raw shot cache) and
+    write reports/shots.json: exclusions per season and the feed-vs-box reconciliation.
+
+    Local only, like ``possessions``: the daily workflow never runs it (M2 has no live use)."""
+    games = read_games(MART_PATH, EUROLEAGUE.name)
+    table = build_shot_table(EUROLEAGUE.raw_dir, games)
+    write_tables(
+        MART_PATH,
+        {"shots": table.shots, "shots_excluded": table.excluded, "shooters": table.shooters},
+    )
+    report = shot_report(table, reconcile(table, EUROLEAGUE.raw_dir, games))
+    write_json(SHOTS_REPORT, report)
+    typer.echo(
+        f"{report['shots']} shots, {report['excluded']} excluded; feed = box for "
+        f"{report['reconciliation_match_rate_validated']:.2%} of 2011+ team-games; "
+        f"wrote {SHOTS_REPORT}"
+    )
+
+
+def free_throws() -> None:
+    """Build ``ft_team_games`` (FT trips and points per team-game from EuroLeague play-by-play,
+    and-ones tied to their shot) and write reports/free_throws.json (needs ``eurohoops shots``)."""
+    shots_table = read_table(MART_PATH, "shots")
+    excluded = read_table(MART_PATH, "shots_excluded")
+    if shots_table is None or excluded is None:
+        log.error("no shots in the marts; run: eurohoops shots")
+        raise typer.Exit(code=1)
+    table = build_ft_team_games(EUROLEAGUE.raw_dir, shots_table, excluded)
+    write_tables(MART_PATH, {"ft_team_games": table})
+    report = ft_report(table, M2_SEASONS.development, M2_SEASONS.validation)
+    write_json(FREE_THROWS_REPORT, report)
+    for season, block in report["seasons"].items():
+        shares = block["shares"]
+        bands_out = [b for b, v in shares["bands"].items() if not v["within_tolerance"]]
+        teams = shares["teams"]
+        typer.echo(
+            f"{season} {block['split']}: teams {'PASS' if shares['teams_pass'] else 'FAIL'}, "
+            f"bands outside 2 SE: {bands_out or 'none'} (team mean |gap| "
+            f"{teams['mean_abs_share_gap']:.5f} <= {teams['mean_abs_tolerance']:.5f}: "
+            f"{teams['mean_abs_within_tolerance']}; r {teams['pearson_r']:.3f} >= "
+            f"{teams['r_tolerance']:.3f}: {teams['r_within_tolerance']}) | {LEVEL_CHECK}: FT "
+            f"points {block['ft_points_per_team_game']:.2f}, expected "
+            f"{block['expected_per_team_game']:.2f}, gap {block['mean_gap']:+.3f}"
+        )
+    gate = report["share_check"]
+    typer.echo(
+        f"band flags {gate['band_flags']} of {gate['band_checks']} (allowed "
+        f"{gate['band_flags_allowed']}); team checks pass every season: "
+        f"{gate['team_checks_pass_every_season']}; F2 share gate "
+        f"{'PASSED' if gate['passed'] else 'FAILED'}; wrote {FREE_THROWS_REPORT}"
+    )
+
+
+def backtest_m2(score_test: bool, search_first: bool, tracking_uri: str) -> None:
+    """M2 (EuroLeague only): the declared variants, the gate, and ``shot_xpts`` in the marts."""
+    shots_table = read_table(MART_PATH, "shots")
+    if shots_table is None:
+        log.error("no shots in the marts; run: eurohoops shots")
+        raise typer.Exit(code=1)
+    if search_first:
+        start = time.monotonic()
+        study = m2_search(
+            shots_table[shots_table["validated_season"]], M2_SEASONS.development, progress=log.info
+        )
+        log.info("optuna study: %.0f s", time.monotonic() - start)
+    elif M2_REPORT.exists():
+        study = json.loads(M2_REPORT.read_text(encoding="utf-8"))["optuna_study"]
+    else:
+        log.error("no stored Optuna result in %s; run: backtest --model m2 --search", M2_REPORT)
+        raise typer.Exit(code=1)
+    start = time.monotonic()
+    tipoff = read_games(MART_PATH, EUROLEAGUE.name).set_index("game_id")["tipoff_utc"]
+    report, xpts = run_m2_backtest(
+        shots_table, M2_SEASONS, study, score_test, log.info, tipoff=tipoff
+    )
+    log.info("backtest (without the study): %.0f s", time.monotonic() - start)
+    start = time.monotonic()
+    write_json(M2_REPORT, report)
+    write_tables(MART_PATH, {"shot_xpts": xpts})
+    log.info("TIMING report + shot_xpts mart written: %.1f s", time.monotonic() - start)
+    g = report["gate"]
+    diff = g["log_loss_challenger_minus_baseline"]
+    typer.echo(
+        f"{M2_REPORT}: {g['challenger']} vs {g['baseline']} validation log loss "
+        f"{diff['mean']:+.5f} {diff['ci95']}; calibrated {g['calibrated']}; "
+        f"gate {'PASSED' if g['passed'] else 'FAILED'} (chosen M2: {g['chosen']})"
+    )
+    start = time.monotonic()
+    run_id = log_m2_backtest(report, tracking_uri)
+    log.info("TIMING MLflow: %.1f s", time.monotonic() - start)
+    if run_id is not None:
+        typer.echo(f"MLflow parent run {run_id}")
+
+
+def shot_quality() -> None:
+    """Team shot quality (F6: mart ``team_shot_quality``, reports/m2_teams.json) and player
+    shot-making with its stability verdict (F7: reports/m2_players.json), from the out-of-fold
+    xPTS of the last ``backtest --model m2`` (``shot_xpts``)."""
+    tables = {
+        n: read_table(MART_PATH, n) for n in ("shots", "shot_xpts", "ft_team_games", "shooters")
+    }
+    missing = [n for n, t in tables.items() if t is None]
+    if missing:
+        log.error(
+            "missing marts %s; run: eurohoops shots, free-throws, backtest --model m2", missing
+        )
+        raise typer.Exit(code=1)
+    shots_table, xpts, ft, shooters = (
+        tables[n] for n in ("shots", "shot_xpts", "ft_team_games", "shooters")
+    )
+    assert shots_table is not None and xpts is not None and ft is not None and shooters is not None
+    scored = shots_with_xpts(shots_table, xpts)
+    later = sorted(set(scored["season"]) - set(M2_SEASONS.development))
+    per_game = team_shot_games(scored, ft, M2_SEASONS.development, later)
+    write_tables(MART_PATH, {"team_shot_quality": per_game})
+    variant = str(xpts["variant"].iloc[0])
+    teams = team_report(scored, per_game, M2_SEASONS.development, variant)
+    write_json(M2_TEAMS_REPORT, teams)
+    games = read_games(MART_PATH, EUROLEAGUE.name)
+    split_of = {
+        s: name
+        for name, seasons in (
+            ("development", M2_SEASONS.development),
+            ("validation", M2_SEASONS.validation),
+            ("test", M2_SEASONS.test),
+        )
+        for s in seasons
+    }
+    players = player_report(
+        scored,
+        games.set_index("game_id")["tipoff_utc"],
+        dict(zip(shooters["shooter"], shooters["name"], strict=True)),
+        M2_SEASONS.development,
+        split_of,
+    )
+    write_json(M2_PLAYERS_REPORT, players)
+    large = teams["calibration_in_the_large"]
+    worst = max(large.items(), key=lambda kv: abs(kv[1]["ratio"] - 1.0))
+    stability = players["stability"]
+    typer.echo(
+        f"calibration in the large: worst {worst[0]} ratio {worst[1]['ratio']}; "
+        f"shot-making year-to-year r {stability['year_to_year']['shrunk_shot_making']['r']} "
+        f"(90% CI {stability['year_to_year']['shrunk_shot_making']['ci90']}), split-half "
+        f"{stability['split_half']['r']}: {stability['verdict']}; wrote {M2_TEAMS_REPORT}, "
+        f"{M2_PLAYERS_REPORT}"
+    )
+
+
+def shot_charts() -> None:
+    """Static M2 shot charts (F8) in docs/models/m2/ for the validation season: the league xPTS
+    surface, and actual minus expected for the declared teams and the top-FGA players."""
+    from eurohoops.eval.shot_charts import residual_chart, xpts_surface  # noqa: PLC0415
+
+    tables = {n: read_table(MART_PATH, n) for n in ("shots", "shot_xpts", "shooters")}
+    if any(t is None for t in tables.values()):
+        log.error("missing marts; run: eurohoops shots, backtest --model m2")
+        raise typer.Exit(code=1)
+    shots_table, xpts, shooters = (tables[n] for n in ("shots", "shot_xpts", "shooters"))
+    assert shots_table is not None and xpts is not None and shooters is not None
+    season = M2_SEASONS.validation[0]
+    scored = shots_with_xpts(shots_table, xpts)
+    scored = scored[scored["season"] == season]
+    label = f"{season}-{(season + 1) % 100:02d}"
+    xpts_surface(
+        scored,
+        f"EuroLeague {label}\nexpected points per shot (M2, out of sample)",
+        M2_CHARTS_DIR / f"xpts_surface_{season}.png",
+    )
+    names = dict(zip(shooters["shooter"], shooters["name"], strict=True))
+    for team in M2_CHART_TEAMS:
+        shown = DISPLAY_CODES[EUROLEAGUE.name].get(team, team)
+        residual_chart(
+            scored[scored["team"] == team],
+            f"{shown} {label}\nactual minus expected points per shot",
+            M2_CHARTS_DIR / f"team_{shown}_{season}.png",
+        )
+    top = scored["shooter"].value_counts().sort_index().sort_values(ascending=False, kind="stable")
+    for shooter in top.index[:M2_CHART_PLAYERS]:
+        residual_chart(
+            scored[scored["shooter"] == shooter],
+            f"{names.get(shooter, shooter)} {label}\nactual minus expected points per shot",
+            M2_CHARTS_DIR / f"player_{shooter}_{season}.png",
+        )
+        typer.echo(f"player {shooter} {names.get(shooter, '')}: {top[shooter]} FGA")
+    typer.echo(f"wrote charts to {M2_CHARTS_DIR}")
