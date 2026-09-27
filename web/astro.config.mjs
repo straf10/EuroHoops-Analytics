@@ -7,4 +7,8 @@ export default defineConfig({
   outDir: "../site",
   trailingSlash: "ignore",
   build: { inlineStylesheets: "auto" },
+  // Scope component styles with an astro-* class rather than a data-astro-cid-* attribute: the
+  // same specificity (one class = one attribute), but ~9 bytes shorter on every element, which
+  // over ~970k scoped elements is 6.8 MB of HTML.
+  scopedStyleStrategy: "class",
 });
