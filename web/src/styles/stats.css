@@ -422,6 +422,17 @@ svg.court {
   }
 }
 
+/* Column group controls, pinned to their width in Geist (lib/cols.ts). */
+.cols:has(+ .scroll > :is(.seasons, .roster, .log)) {
+  --seg-w: 14.27rem;
+}
+.cols:has(+ .scroll > .bands) {
+  --seg-w: 6.946rem;
+}
+.cols:has(+ .scroll > .clubs) {
+  --seg-w: 11.859rem;
+}
+
 /* Column groups on phones (lib/cols.ts): the control sits right before the table's box, and a
    group shows the identity columns plus its own. Every column belongs to a group. Season lines
    and rosters share their columns after two identity ones: GP GS MIN PTS | REB AST STL BLK TOV |
