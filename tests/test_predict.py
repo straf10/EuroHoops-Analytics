@@ -105,3 +105,17 @@ def test_history_before_replay_start_cannot_shift_live_predictions(
     run(games, tuned, tmp_path / "a.csv", fixed(NOW))
     run(with_history, tuned, tmp_path / "b.csv", fixed(NOW))
     assert (tmp_path / "a.csv").read_bytes() == (tmp_path / "b.csv").read_bytes()
+
+
+def test_refuses_to_append_onto_an_unterminated_last_row(
+    games: pd.DataFrame, tuned: TunedModel, tmp_path: Path
+) -> None:
+    """A run killed mid-write (or a hand edit) can leave the last row without its newline; an
+    append would glue the next row onto it. Nothing is written and the run fails loudly."""
+    log = tmp_path / "log.csv"
+    run(games, tuned, log, fixed(NOW))
+    cut = log.read_bytes()[:-20]
+    log.write_bytes(cut)
+    with pytest.raises(ValueError, match="does not end with a newline"):
+        run(games, tuned, log, fixed(NOW + timedelta(days=7)))
+    assert log.read_bytes() == cut
