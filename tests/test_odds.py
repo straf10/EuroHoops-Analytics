@@ -274,3 +274,20 @@ def test_api_key_sources(tmp_path: Path) -> None:
     assert api_key({"ODDS_API_KEY": "from-env"}, dotenv) == "from-env"
     dotenv.write_text("ODDS_API_KEY=\n")
     assert api_key({}, dotenv) is None
+
+
+@pytest.mark.parametrize("torn", ["log", "calls"])
+def test_an_unterminated_log_stops_the_run_before_the_paid_call(
+    paths: OddsPaths, torn: str
+) -> None:
+    """Either log ending mid-row would refuse the append after the call: the quota would be
+    spent and one log left without its row. The check runs before any request."""
+    run(paths, FakeOddsApi())
+    path = getattr(paths, torn)
+    path.write_bytes(path.read_bytes().rstrip(b"\n"))
+    before = (paths.log.read_bytes(), paths.calls.read_bytes())
+    api = FakeOddsApi()
+    with pytest.raises(OddsApiError, match="does not end with a newline"):
+        run(paths, api)
+    assert api.requests == []
+    assert (paths.log.read_bytes(), paths.calls.read_bytes()) == before
