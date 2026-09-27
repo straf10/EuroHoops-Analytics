@@ -10,12 +10,16 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Runs the pipeline and commits the logs. Its write token is used only in the push step: the
+  # checkout keeps no credentials, and third-party npm code runs in build-site, which cannot write.
   predict:
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
       - uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
@@ -70,19 +74,14 @@ jobs:
         run: |
           uv run --no-dev eurohoops publish
           uv run --no-dev eurohoops export-stats
-      - uses: actions/setup-node@v4
+      - uses: actions/upload-artifact@v4
         with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: web/package-lock.json
-      - name: Build the site (Astro, into site/)
-        working-directory: web
-        run: |
-          npm ci
-          npm run build
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: site
+          name: site-data
+          path: |
+            web/src/data/site.json
+            web/src/data/stats/
+          if-no-files-found: error
+          retention-days: 1
       # main may have moved during the run: replay the run's commit on top of it. A conflict (an
       # append-only log changed on both sides) is never resolved here: abort, fail, merge by hand.
       - name: Commit predictions and reports if changed
@@ -107,8 +106,35 @@ jobs:
           fi
           git push "$remote" "HEAD:$BRANCH"
 
-  deploy-page:
+  build-site:
     needs: predict
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: site-data
+          path: web/src/data
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Build the site (Astro, into site/)
+        working-directory: web
+        run: |
+          npm ci
+          npm run build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy-page:
+    needs: build-site
     runs-on: ubuntu-latest
     permissions:
       pages: write
