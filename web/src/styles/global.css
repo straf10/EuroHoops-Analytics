@@ -346,6 +346,17 @@ body:not(:has(#comp-gbl:checked)) [data-comp="gbl"] {
 .tip b {
   font-weight: 600;
 }
+/* A tap on a mark answers at once: no double-tap zoom to wait for. */
+[data-tip] {
+  touch-action: manipulation;
+}
+/* Without hover a tap opens the tip; iOS only passes taps on plain marks on when they look tappable. */
+@media (hover: none) {
+  [data-tip] {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
 
 /* The end fade of a table box that still scrolls sideways, run on the box's own scroll timeline
    (stats.css, the Players page, Results): it lifts once scrolled to the end, and a box that fits

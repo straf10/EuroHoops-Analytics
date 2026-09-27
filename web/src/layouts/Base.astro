@@ -211,7 +211,7 @@ const pages = [
         if (y < 8) y = r.bottom + 8;
         tip.style.translate = `${Math.round(x)}px ${Math.round(y)}px`;
       };
-      const show = (el: Element) => {
+      const show = (el: Element, now?: boolean) => {
         clearTimeout(timer);
         clearTimeout(coolTimer);
         tip.innerHTML = el.getAttribute("data-tip") ?? "";
@@ -222,7 +222,7 @@ const pages = [
           tip.setAttribute("data-open", "");
           warm = true;
         };
-        if (warm) open();
+        if (warm || now) open();
         else timer = window.setTimeout(open, 120);
       };
       const hide = () => {
@@ -230,20 +230,38 @@ const pages = [
         tip.removeAttribute("data-open");
         coolTimer = window.setTimeout(() => (warm = false), 300);
       };
-      document.addEventListener("pointerover", (e) => {
-        const el = (e.target as Element).closest?.("[data-tip]");
+      const tipOf = (e: Event) => (e.target as Element).closest?.("[data-tip]");
+      const over = (e: Event) => {
+        const el = tipOf(e);
         if (el) show(el);
-      });
+      };
+      document.addEventListener("pointerover", over);
       document.addEventListener("pointerout", (e) => {
-        const el = (e.target as Element).closest?.("[data-tip]");
+        const el = tipOf(e);
         if (el && !el.contains(e.relatedTarget as Node)) hide();
       });
-      document.addEventListener("focusin", (e) => {
-        const el = (e.target as Element).closest?.("[data-tip]");
-        if (el) show(el);
+      document.addEventListener("focusin", over);
+      // Touch: a tap opens a mark's tip at once; a second tap, a tap elsewhere or a scroll closes
+      // it. A mark that is a link only navigates (its aria-label carries the tip).
+      let touch = false;
+      let tapped: Element | null = null;
+      const untap = () => {
+        tapped = null;
+        hide();
+      };
+      document.addEventListener("pointerdown", (e) => (touch = e.pointerType == "touch"));
+      document.addEventListener("click", (e) => {
+        // A tapped label passes a second click on to its input: that one is not a tap elsewhere.
+        if (!touch || (tapped as HTMLLabelElement | null)?.control == e.target) return;
+        const el = tipOf(e);
+        // A tap after the open mark was redrawn (a sort redraws its head) closes, as on the mark.
+        if (!el || el.closest("a") || el == tapped || (tapped && !tapped.isConnected)) return untap();
+        // Pages listen on their own elements, so a facet's tip already holds its new counts here.
+        show((tapped = el), true);
       });
-      document.addEventListener("focusout", hide);
-      addEventListener("scroll", hide, { passive: true });
+      document.addEventListener("focusout", () => tapped || hide());
+      // A page scroll closes any tip; a scroll inside a box closes a tapped one.
+      addEventListener("scroll", (e) => (tapped || e.target == document) && untap(), { passive: true, capture: true });
     </script>
   </body>
 </html>
