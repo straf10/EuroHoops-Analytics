@@ -82,6 +82,21 @@ def test_season_start_reversion() -> None:
     assert diffs[1] == pytest.approx(2 * SHIFT * 0.5, abs=1e-5)
 
 
+def test_a_late_game_of_the_previous_season_does_not_revert_twice() -> None:
+    """Reversion happens once, when a later season first appears: a previous-season game that
+    sorts after it (postponed past the new season's start) must not trigger it again."""
+    diffs = replay(
+        games(
+            (2024, "A", "B", True, True, 10),
+            (2025, "A", "B", True, False, 0),
+            (2024, "C", "D", True, False, 0),  # postponed 2024 game, played after 2025 began
+            (2025, "A", "B", True, False, 0),
+        ),
+        PARAMS,
+    )
+    assert diffs[3] == pytest.approx(diffs[1], abs=1e-9)
+
+
 def test_unplayed_games_do_not_update_ratings() -> None:
     diffs = replay(
         games((2024, "A", "B", True, False, 0), (2024, "A", "B", True, False, 0)), PARAMS
