@@ -23,7 +23,7 @@ import pandera.pandas as pa
 from eurohoops.ingest.cache import read_cached
 from eurohoops.parse.esake import BoxLine, parse_box_score
 from eurohoops.parse.gbl_pbp import PbpScoreError, parse_export, player_lines
-from eurohoops.parse.schemas import schema_dtypes
+from eurohoops.parse.schemas import validated
 
 COUNTS = ("points", "fg2m", "fg2a", "fg3m", "fg3a", "ftm", "fta", "seconds")
 SIGNATURE = COUNTS[:-1]  # every counting stat except minutes, which ESAKE and PBP round alike
@@ -224,12 +224,7 @@ def build_box_tables(root: Path, games: pd.DataFrame) -> BoxTables:
     team_box = pd.DataFrame(teams, columns=list(TEAM_BOX_SCHEMA.columns))
     fill = pd.DataFrame(fills, columns=list(FILL_SCHEMA.columns))
     return BoxTables(
-        _validated(player_box, PLAYER_BOX_SCHEMA),
-        _validated(team_box, TEAM_BOX_SCHEMA),
-        _validated(fill, FILL_SCHEMA),
+        validated(player_box, PLAYER_BOX_SCHEMA),
+        validated(team_box, TEAM_BOX_SCHEMA),
+        validated(fill, FILL_SCHEMA),
     )
-
-
-def _validated(frame: pd.DataFrame, schema: pa.DataFrameSchema) -> pd.DataFrame:
-    """Cast to the schema's dtypes first: an empty frame's columns are ``object`` otherwise."""
-    return schema.validate(frame.astype(schema_dtypes(schema)))

@@ -20,7 +20,7 @@ import pandera.pandas as pa
 
 from eurohoops.ingest.cache import read_cached
 from eurohoops.parse.possessions import box_possessions
-from eurohoops.parse.schemas import schema_dtypes
+from eurohoops.parse.schemas import validated
 from eurohoops.parse.team_box import euroleague_lines
 
 # Output name -> box-score key. Minutes are parsed separately into seconds.
@@ -194,16 +194,12 @@ def build_box_games(raw_dir: Path, games: pd.DataFrame) -> BoxGames:
         players += found[0]
         teams += found[1]
     return BoxGames(
-        _validated(
+        validated(
             pd.DataFrame(players, columns=list(PLAYER_GAMES_SCHEMA.columns)), PLAYER_GAMES_SCHEMA
         ),
-        _validated(
+        validated(
             pd.DataFrame(teams, columns=list(TEAM_STAT_GAMES_SCHEMA.columns)),
             TEAM_STAT_GAMES_SCHEMA,
         ),
-        _validated(pd.DataFrame(missing, columns=list(MISSING_SCHEMA.columns)), MISSING_SCHEMA),
+        validated(pd.DataFrame(missing, columns=list(MISSING_SCHEMA.columns)), MISSING_SCHEMA),
     )
-
-
-def _validated(frame: pd.DataFrame, schema: pa.DataFrameSchema) -> pd.DataFrame:
-    return schema.validate(frame.astype(schema_dtypes(schema)))

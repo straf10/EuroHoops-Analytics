@@ -22,7 +22,7 @@ import pandas as pd
 import pandera.pandas as pa
 
 from eurohoops.ingest.cache import read_cached
-from eurohoops.parse.schemas import schema_dtypes
+from eurohoops.parse.schemas import validated
 from eurohoops.parse.shots import FIRST_VALIDATED_SEASON, FREE_THROW_SENTINEL, to_court_coords
 
 SHOT_VALUE = {
@@ -165,7 +165,7 @@ def build_shots(raw_dir: Path, games: pd.DataFrame) -> Shots:
         [{"season": s, **c, "validated": s >= FIRST_VALIDATED_SEASON} for s, c in coverage.items()],
         columns=["season", "games", "shots", "unplaced", "validated"],
     )
-    return Shots(SHOTS_SCHEMA.validate(table.astype(schema_dtypes(SHOTS_SCHEMA))), cover)
+    return Shots(validated(table, SHOTS_SCHEMA), cover)
 
 
 def hex_cells(

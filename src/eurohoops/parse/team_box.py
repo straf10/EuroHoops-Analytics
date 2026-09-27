@@ -25,7 +25,7 @@ from eurohoops.ingest.cache import read_cached
 from eurohoops.parse.esake import parse_box_score, parse_overtimes
 from eurohoops.parse.gbl_pbp import team_counts
 from eurohoops.parse.possessions import box_possessions
-from eurohoops.parse.schemas import schema_dtypes
+from eurohoops.parse.schemas import validated
 from eurohoops.parse.stints import overtimes
 
 COMPETITIONS = ("euroleague", "gbl")
@@ -271,6 +271,6 @@ def build_team_games(
     table = pd.DataFrame(rows, columns=list(TEAM_GAMES_SCHEMA.columns))
     gaps = pd.DataFrame(missing, columns=list(MISSING_SCHEMA.columns))
     return TeamGames(
-        TEAM_GAMES_SCHEMA.validate(table.astype(schema_dtypes(TEAM_GAMES_SCHEMA))),
-        MISSING_SCHEMA.validate(gaps.astype(schema_dtypes(MISSING_SCHEMA))),
+        validated(table, TEAM_GAMES_SCHEMA),
+        validated(gaps, MISSING_SCHEMA),
     )
