@@ -17,6 +17,7 @@ import {
   type View,
 } from "../../lib/players";
 import { defaultSeason, meta, season } from "../../lib/stats";
+import { GROUPS, colsHtml } from "../../lib/cols";
 
 const m = await meta();
 const base = import.meta.env.BASE_URL;
@@ -160,6 +161,7 @@ const description =
                 <input type="radio" name="set" id="set-shooting" value="shooting" form="filters" />
                 <label for="set-shooting">Shooting</label>
               </fieldset>
+              <Fragment set:html={colsHtml("cols", GROUPS.players)} />
               <p class="count" id="count" aria-live="polite">
                 {ls.length} players
               </p>
@@ -195,6 +197,7 @@ const description =
     chart,
     bodyHtml,
     fromQuery,
+    PHONE_GROUPS,
     gridHtml,
     headHtml,
     lines,
@@ -281,6 +284,7 @@ const description =
       $("tbody").innerHTML = bodyHtml(ls, view, cfg.base);
       $("count").textContent = `${ls.length} player${ls.length === 1 ? "" : "s"}`;
       shorten(ls.length);
+      syncCols(false);
       history.replaceState(null, "", location.pathname + toQuery(view, cfg.defaultSeason));
     };
 
@@ -348,7 +352,27 @@ const description =
       update().then(() => ($("thead").querySelector(`[data-sort="${key}"]`) as HTMLElement)?.focus());
     });
 
+    // Phones pick one of four column groups (PHONE_GROUPS), two per column set: a group of the
+    // other set switches the set. The sorted column shows in every group.
+    const cols = [...host.querySelectorAll<HTMLInputElement>('input[name="cols"]')];
+    const syncCols = (toSort: boolean) => {
+      const at = cols.findIndex((c) => c.checked);
+      if (!toSort && PHONE_GROUPS[at]?.set === view.set) return;
+      const own = PHONE_GROUPS.findIndex((g) => g.set === view.set && g.keys.includes(view.sort));
+      cols[own >= 0 ? own : PHONE_GROUPS.findIndex((g) => g.set === view.set)].checked = true;
+    };
+    cols.forEach((c, i) =>
+      c.addEventListener("change", () => {
+        const { set } = PHONE_GROUPS[i];
+        if (set === view.set) return;
+        view = { ...view, set };
+        setField("set", set);
+        update();
+      }),
+    );
+
     syncForm();
+    syncCols(true);
     if (location.search) update();
     // Warm the shown season so the first change is instant.
     else requestIdleCallback?.(() => loadSeason(view.season));
@@ -856,9 +880,32 @@ const description =
     .ticks :global(span:nth-child(even)) {
       display: none;
     }
-    /* The sticky name column gives way so a phone sees more than three measures. */
+    /* A phone shows one column group (PHONE_GROUPS in lib/players.ts, by place in SETS) plus the
+       sorted column, beside names that wrap. */
+    .list-tools > .seg {
+      display: none;
+    }
+    /* The count takes its own line, so the row never rewraps when the web font swaps in. */
+    .list-tools {
+      flex-wrap: wrap;
+    }
+    .count {
+      flex-basis: 100%;
+    }
+    .list-tools > :global(.cols) {
+      display: inline-flex;
+      flex: none;
+      margin: 0;
+    }
+    :global(.list:has(.cols > :nth-child(1) > :checked) #table:has([data-sort="gp"]) :is(th, td):nth-child(n + 6):nth-child(-n + 10):not(.on)),
+    :global(.list:has(.cols > :nth-child(2) > :checked) #table:has([data-sort="gp"]) :is(th, td):is(:nth-child(n + 3):nth-child(-n + 5), :nth-child(n + 11)):not(.on)),
+    :global(.list:has(.cols > :nth-child(3) > :checked) #table:has([data-sort="fga"]) :is(th, td):nth-child(n + 8):not(.on)),
+    :global(.list:has(.cols > :nth-child(4) > :checked) #table:has([data-sort="fga"]) :is(th, td):nth-child(n + 3):nth-child(-n + 7):not(.on)) {
+      display: none;
+    }
     tbody :global(th.c-nm) {
-      min-width: 8.5rem;
+      min-width: 0;
+      white-space: normal;
     }
     tbody :global(.tm) {
       display: block;
