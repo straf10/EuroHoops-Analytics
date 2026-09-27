@@ -152,7 +152,7 @@ const payload = data && {
             </tr>
             {data!.zones.map((z, i) => (
               <tr class="bar-row">
-                <td class="l" data-z={i}>
+                <td class="l">
                   <span class="mark him" style={width(him.zones[i], zoneTop)}>
                     <i class="bar" aria-hidden="true" />
                     <span class="v">{shareText(him.zones[i])}</span>
@@ -162,7 +162,7 @@ const payload = data && {
                   <span class="long">{ZONE_LABELS[z][0]}</span>
                   <span class="short">{ZONE_LABELS[z][1]}</span>
                 </th>
-                <td class="r" data-z={i}>
+                <td class="r">
                   <span class="mark twin" style={width(twin.zones[i], zoneTop)}>
                     <i class="bar" aria-hidden="true" />
                     <span class="v">{shareText(twin.zones[i])}</span>
@@ -179,12 +179,12 @@ const payload = data && {
             </tr>
             {data!.bands.map((b, i) => (
               <tr class="fg-row">
-                <td class="l" data-b={i} set:html={fgHtml(him.bands[i], up, down)} />
+                <td class="l" set:html={fgHtml(him.bands[i], up, down)} />
                 <th scope="row" class="staff" data-tip={tip`${BAND_LABELS[b][1]}`} tabindex="0">
                   <span class="long">{BAND_LABELS[b][0]}</span>
                   <span class="short">{BAND_LABELS[b][0]}</span>
                 </th>
-                <td class="r" data-b={i} set:html={fgHtml(twin.bands[i], up, down)} />
+                <td class="r" set:html={fgHtml(twin.bands[i], up, down)} />
               </tr>
             ))}
           </tbody>
@@ -196,7 +196,7 @@ const payload = data && {
             </tr>
             {RATE_LABELS.map(([label, about], i) => (
               <tr class="bar-row">
-                <td class="l" data-r={i}>
+                <td class="l">
                   <span class="mark him" style={width(him.rates[i] ?? 0, rateTop)}>
                     <i class="bar" aria-hidden="true" />
                     <span class="v">{rateText(him.rates[i])}</span>
@@ -206,7 +206,7 @@ const payload = data && {
                   <span class="long">{label}</span>
                   <span class="short">{label}</span>
                 </th>
-                <td class="r" data-r={i}>
+                <td class="r">
                   <span class="mark twin" style={width(twin.rates[i] ?? 0, rateTop)}>
                     <i class="bar" aria-hidden="true" />
                     <span class="v">{rateText(twin.rates[i])}</span>
@@ -264,17 +264,19 @@ const payload = data && {
     const scale = (x: number, top: number) => Math.min(1, x / top).toFixed(4);
     let win = (section.querySelector<HTMLInputElement>('input[name="twin-window"]:checked') ?? { value: "" }).value;
 
+    // One tbody per group (zones, bands, rates); a side's cells run in the group's order.
+    const cells = (key: "l" | "r") => [...root!.querySelectorAll("tbody")].map((body) => body.querySelectorAll<HTMLElement>(`td.${key}`));
     function side(key: "l" | "r", p: Profile) {
-      root!.querySelectorAll<HTMLElement>(`td.${key}[data-z]`).forEach((td) => {
-        const i = Number(td.dataset.z);
+      const [zones, bands, rates] = cells(key);
+      zones.forEach((td, i) => {
         td.querySelector<HTMLElement>(".mark")!.style.setProperty("--s", scale(p.zones[i], data.zoneTop));
         td.querySelector<HTMLElement>(".v")!.textContent = shareText(p.zones[i]);
       });
-      root!.querySelectorAll<HTMLElement>(`td.${key}[data-b]`).forEach((td) => {
-        td.innerHTML = fgHtml(p.bands[Number(td.dataset.b)], up, down);
+      bands.forEach((td, i) => {
+        td.innerHTML = fgHtml(p.bands[i], up, down);
       });
-      root!.querySelectorAll<HTMLElement>(`td.${key}[data-r]`).forEach((td) => {
-        const rate = p.rates[Number(td.dataset.r)];
+      rates.forEach((td, i) => {
+        const rate = p.rates[i];
         td.querySelector<HTMLElement>(".mark")!.style.setProperty("--s", scale(rate ?? 0, data.rateTop));
         td.querySelector<HTMLElement>(".v")!.textContent = rateText(rate);
       });
