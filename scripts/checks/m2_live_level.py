@@ -6,7 +6,9 @@ after the last game of 2026-27, with ``--after-season``.
 was declared. The rule, fixed before any 2026-27 number exists:
 - 2026-27 shots from the cache with the F1 rules (the shot table, live season included);
 - ``lgbm`` = the 5 seeds refitted on 2011-12 -> 2025-26 with the stored Optuna parameters;
-- ``lgbm_level``: offsets from 2026-27 games that tipped off before the shot's game, prior = the
+- ``lgbm_level``: offsets from 2026-27 games that tipped off at least three hours before the
+  shot's game (amended 2026-09-27, before any 2026-27 number existed: a game that tipped off
+  earlier the same evening may still be in play, see docs/models/m2.md), prior = the
   full-season shift of 2025-26 under the 5 seeds fitted on 2011-12 -> 2024-25, k = the report's
   validation/test k (``level_variants.variants.lgbm_level.shrinkage.later``);
 - both scored on every 2026-27 shot: F-f (ECE <= 0.010, 20 equal-count bins, every bin with >=
@@ -26,7 +28,7 @@ import numpy as np
 import pandas as pd
 
 from eurohoops.config import EUROLEAGUE
-from eurohoops.eval.m2_backtest import BOOTSTRAP_RESAMPLES, BOOTSTRAP_SEED, SEEDS
+from eurohoops.eval.m2_backtest import BOOTSTRAP_RESAMPLES, BOOTSTRAP_SEED, GAME_IN_PLAY, SEEDS
 from eurohoops.eval.shot_metrics import calibrated, cluster_bootstrap, scores, shot_log_loss
 from eurohoops.marts import read_games, read_table
 from eurohoops.models.season_level import Shrinkage, logit, mle_shift, season_offsets, shifted
@@ -75,8 +77,9 @@ prior = mle_shift(logit(p_last), last["made"].to_numpy(dtype=np.float64))
 
 y = live["made"].to_numpy(dtype=np.float64)
 ticks = pd.to_datetime(season.set_index("game_id")["tipoff_utc"], utc=True)
-tip = np.asarray(live["game_id"].map(ticks.dt.tz_convert(None).astype("int64")), dtype=np.int64)
-p_level = shifted(p_live, season_offsets(p_live, y, tip, prior, shrink))
+naive = ticks.dt.tz_convert(None).astype("datetime64[ns]")  # GAME_IN_PLAY.value is in ns
+tip = np.asarray(live["game_id"].map(naive.astype("int64")), dtype=np.int64)
+p_level = shifted(p_live, season_offsets(p_live, y, tip, prior, shrink, in_play=GAME_IN_PLAY.value))
 
 games_of = live["game_id"].to_numpy()
 mean, low, high = cluster_bootstrap(

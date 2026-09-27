@@ -52,6 +52,9 @@ CHALLENGERS = ("lgbm", "lgbm_iso")
 BOOTSTRAP_RESAMPLES = 1000
 BOOTSTRAP_SEED = 20261001
 END_OF_PERIOD_S = 24  # the last shot-clock of a period
+# A game that tipped off less than this before another may still be in play at its tip-off, so
+# its shots never reach that game's season-level offset (EuroLeague games with overtime < 2.5 h).
+GAME_IN_PLAY = pd.Timedelta(hours=3)
 
 Predictor = Callable[[pd.DataFrame], FloatArray]
 Fitter = Callable[[pd.DataFrame], Predictor]
@@ -442,7 +445,8 @@ def level_variants(
 ) -> dict[str, Any]:
     """The declared season-level variants (G5), every number post-hoc (see LEVEL_DECLARATION)."""
     y_dev, y_later = _labels(dev), _labels(later)
-    ticks = pd.to_datetime(tipoff, utc=True).dt.tz_convert(None).astype("int64")
+    naive = pd.to_datetime(tipoff, utc=True).dt.tz_convert(None).astype("datetime64[ns]")
+    ticks = naive.astype("int64")  # nanoseconds, the unit of GAME_IN_PLAY.value
     tip_dev = np.asarray(dev["game_id"].map(ticks), dtype=np.int64)
     tip_later = np.asarray(later["game_id"].map(ticks), dtype=np.int64)
     later_season: npt.NDArray[np.int64] = later["season"].to_numpy(dtype=np.int64)
@@ -457,6 +461,7 @@ def level_variants(
             y_later=y_later,
             tip_later=tip_later,
             development=development,
+            in_play=GAME_IN_PLAY.value,  # nanoseconds, as the tip-off ticks
         )
         block: dict[str, Any] = {
             "base": base,

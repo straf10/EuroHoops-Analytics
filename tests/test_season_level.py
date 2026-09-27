@@ -60,16 +60,32 @@ def test_k_follows_the_season_to_season_variance() -> None:
 def test_an_offset_uses_only_games_that_tipped_off_earlier() -> None:
     p, y, tipoff = _season(6_000, 0.4, 5)
     shrink = Shrinkage(k=500.0, tau2=0.01, v_bar=0.2, pairs=5)
-    base = season_offsets(p, y, tipoff, 0.1, shrink)
+    base = season_offsets(p, y, tipoff, 0.1, shrink, in_play=0)
     assert np.all(base[tipoff == 0] == 0.1)  # the first tip-off: the prior alone
     for g in (1, 12, 29):
         edited = np.where(tipoff >= g, 1.0 - y, y)  # every shot of game g and later flipped
-        moved = season_offsets(p, edited, tipoff, 0.1, shrink)
+        moved = season_offsets(p, edited, tipoff, 0.1, shrink, in_play=0)
         np.testing.assert_array_equal(moved[tipoff <= g], base[tipoff <= g])
         if g < 29:  # guard: the edit reaches the later games' offsets
             assert not np.array_equal(moved[tipoff > g], base[tipoff > g])
     # one offset per game, and shots of a later tip-off see more of the season
     assert all(len(set(base[tipoff == t])) == 1 for t in range(30))
+
+
+def test_an_offset_ignores_games_still_in_play_at_tip_off() -> None:
+    """A game that tipped off less than ``in_play`` earlier may still be going on: none of its
+    shots reach the offset, however early they came."""
+    p, y, tipoff = _season(6_000, 0.4, 5)
+    shrink = Shrinkage(k=500.0, tau2=0.01, v_bar=0.2, pairs=5)
+    base = season_offsets(p, y, tipoff, 0.1, shrink, in_play=3)
+    assert np.all(base[tipoff < 3] == 0.1)  # nothing has finished yet: the prior alone
+    for g in (4, 12, 29):
+        edited = np.where(tipoff > g - 3, 1.0 - y, y)  # games in play at g's tip-off, and later
+        moved = season_offsets(p, edited, tipoff, 0.1, shrink, in_play=3)
+        np.testing.assert_array_equal(moved[tipoff == g], base[tipoff == g])
+    edited = np.where(tipoff == 7, 1.0 - y, y)  # 4 before 11: finished, it reaches 11's offset
+    moved = season_offsets(p, edited, tipoff, 0.1, shrink, in_play=3)
+    assert not np.array_equal(moved[tipoff == 11], base[tipoff == 11])
 
 
 def _folds(n: int = 3_000) -> tuple[SimpleNamespace, np.ndarray, np.ndarray, list[int]]:
@@ -97,7 +113,14 @@ def _folds(n: int = 3_000) -> tuple[SimpleNamespace, np.ndarray, np.ndarray, lis
 def _offsets(folds: SimpleNamespace, y: np.ndarray, tip: np.ndarray, dev: list[int]) -> np.ndarray:
     empty = np.empty(0, dtype=np.int64)
     return level_predictions(
-        folds, y, tip, later_season=empty, y_later=np.empty(0), tip_later=empty, development=dev
+        folds,
+        y,
+        tip,
+        later_season=empty,
+        y_later=np.empty(0),
+        tip_later=empty,
+        development=dev,
+        in_play=0,
     ).offsets_oof
 
 
