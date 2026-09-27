@@ -231,10 +231,14 @@ const bandHead = [
       if (!cache.has(s))
         cache.set(
           s,
-          fetch(`${base}/data/team/${code}/${s}.json`).then((r) => {
-            if (!r.ok) throw new Error(String(r.status));
-            return r.json();
-          }),
+          Promise.all(
+            [`team/${code}/${s}`, `clubs/${s}`].map((path) =>
+              fetch(`${base}/data/${path}.json`).then((r) => {
+                if (!r.ok) throw new Error(String(r.status));
+                return r.json();
+              }),
+            ),
+          ).then(([t, clubs]) => ({ ...t, clubs })),
         );
       return cache.get(s)!;
     };
