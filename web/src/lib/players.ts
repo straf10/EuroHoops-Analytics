@@ -317,7 +317,7 @@ export function chartHtml(c: Chart, base: string): string {
       if (!s) return `<li class="slot" hidden></li>`;
       const { row } = s.line;
       const body = slotTip(row, c, s.text);
-      return `<li class="slot" style="--x:${s.x.toFixed(2)}"><span class="rk">${i + 1}</span><a class="nm" href="${playerHref(base, row.slug)}">${esc(row.name)}</a><span class="track"${dataTip(body)} tabindex="-1"><span class="pos"><i class="dot"></i></span></span><span class="val">${s.text}</span></li>`;
+      return `<li class="slot" style="--x:${s.x.toFixed(2)}"><span class="rk">${i + 1}</span><a class="nm" href="${playerHref(base, row.slug)}">${esc(row.name)}</a><span class="track"${dataTip(body)} tabindex="-1"><span class="pos"></span></span><span class="val">${s.text}</span></li>`;
     })
     .join("");
 }
@@ -340,6 +340,12 @@ export function headHtml(view: View): string {
   return `<tr><th scope="col" class="c-rk"><span class="sr-only">Rank</span></th><th scope="col" class="c-nm">Player</th>${cols.join("")}</tr>`;
 }
 
+/** The team code(s) under a name: a lone club is the link itself (one element per row, not two). */
+const teamCell = (teams: string[], base: string, season: number) => {
+  const links = teams.map((t) => `<a${teams.length === 1 ? ' class="tm"' : ""} href="${teamHref(base, t, season)}">${esc(t)}</a>`);
+  return teams.length === 1 ? links[0] : `<span class="tm">${links.join(" · ")}</span>`;
+};
+
 export function bodyHtml(ls: Line[], view: View, base: string): string {
   if (!ls.length) {
     return `<tr class="empty"><td colspan="${SETS[view.set].length + 2}">No players match. Lower the minutes floor, pick another team, or clear the search.</td></tr>`;
@@ -358,7 +364,7 @@ export function bodyHtml(ls: Line[], view: View, base: string): string {
           return `<td class="${cls}"${floorAttr}>${format(m, v)}</td>`;
         })
         .join("");
-      return `<tr><td class="c-rk">${l.ranked ? rank : ""}</td><th scope="row" class="c-nm"><a href="${playerHref(base, l.row.slug)}">${esc(l.row.name)}</a><span class="tm">${l.row.teams.map((t) => `<a href="${teamHref(base, t, view.season)}">${esc(t)}</a>`).join(" · ")}</span></th>${cells}</tr>`;
+      return `<tr><td class="c-rk">${l.ranked ? rank : ""}</td><th scope="row" class="c-nm"><a href="${playerHref(base, l.row.slug)}">${esc(l.row.name)}</a>${teamCell(l.row.teams, base, view.season)}</th>${cells}</tr>`;
     })
     .join("");
 }
