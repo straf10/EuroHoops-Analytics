@@ -8,7 +8,18 @@ import { BAND_LABELS } from "../lib/player";
 import { playerHref } from "../lib/players";
 import type { TwinData, TwinSeason, TwinWindow } from "../lib/stats";
 import { tip } from "../lib/tip";
-import { RATE_LABELS, ZONE_LABELS, axisTop, fgHtml, profile, rateText, shareText } from "../lib/twin";
+import {
+  RATE_LABELS,
+  WINDOW_NAMES,
+  ZONE_LABELS,
+  axisTop,
+  fgHtml,
+  profile,
+  rateText,
+  shareText,
+  twinLine as line,
+  windowLine as winLine,
+} from "../lib/twin";
 
 interface Props {
   data: TwinData | null;
@@ -17,12 +28,6 @@ interface Props {
 }
 const { data, name, base } = Astro.props;
 
-const WINDOW_NAMES: Record<string, [string, string]> = {
-  last5: ["Last 5", "his last 5 games"],
-  last10: ["Last 10", "his last 10 games"],
-  last20: ["Last 20", "his last 20 games"],
-  season: ["Season", "his latest full season"],
-};
 const windows = data?.windows ?? [];
 const start = windows.find((w) => w.key === "last10") ?? windows[0];
 const prof = (counts: number[]) => profile(data!.fields, data!.zones, data!.bands, counts);
@@ -30,40 +35,22 @@ const every = windows.flatMap((w) => [prof(w.counts), ...w.twins.map((t) => prof
 const zoneTop = axisTop(every.flatMap((p) => p.zones));
 const rateTop = axisTop(every.flatMap((p) => p.rates.map((r) => r ?? 0)));
 
-const span = (w: TwinWindow) => (w.from === w.to ? w.from : `${w.from} to ${w.to}`);
-const windowLine = (w: TwinWindow) =>
-  `${w.key === "season" ? w.from : `${WINDOW_NAMES[w.key][0]} games, ${span(w)}`} · ${prof(w.counts).att} shots`;
-const twinLine = (t: TwinSeason) => `${t.label} · ${t.club} · ${t.games} games`;
+const windowLine = (w: TwinWindow) => winLine(w.key, w.from, w.to, prof(w.counts).att);
+const twinLine = (t: TwinSeason) => line(t.label, t.club, t.games);
 const him = start ? prof(start.counts) : null;
 const first = start?.twins[0];
 const twin = first ? prof(first.counts) : null;
 const width = (x: number, top: number) => `--s:${Math.min(1, x / top).toFixed(4)}`;
 const surname = name.split(" ").slice(-1)[0];
 
-// Everything the switch needs, trimmed to what it reads.
+// What the switch needs beyond the shared pool (data/twins.json): the axis tops, and per window
+// its span, his counts and the twins as [pool row, match].
 const payload = data && {
-  fields: data.fields,
-  zones: data.zones,
-  bands: data.bands,
+  base,
   zoneTop,
   rateTop,
   windows: Object.fromEntries(
-    windows.map((w) => [
-      w.key,
-      {
-        line: windowLine(w),
-        counts: w.counts,
-        twins: w.twins.map((t) => ({
-          name: t.name,
-          href: t.slug ? playerHref(base, t.slug) : "",
-          short: `${t.label} · ${t.team}`,
-          line: twinLine(t),
-          approx: !t.validated,
-          match: Math.round(t.match),
-          counts: t.counts,
-        })),
-      },
-    ]),
+    windows.map((w) => [w.key, [w.from, w.to, w.counts, w.twins.map((t) => [t.index, Math.round(t.match)])]]),
   ),
 };
 ---
@@ -250,31 +237,29 @@ const payload = data && {
 <script>
   import up from "@phosphor-icons/core/assets/fill/caret-up-fill.svg?raw";
   import down from "@phosphor-icons/core/assets/fill/caret-down-fill.svg?raw";
-  import { fgHtml, profile, rateText, shareText, type Profile } from "../lib/twin";
+  import type { TwinPool } from "../lib/stats";
+  import { fgHtml, profile, rateText, shareText, twinLine, windowLine, type Profile } from "../lib/twin";
 
-  interface Twin {
-    name: string;
-    href: string;
-    short: string;
-    line: string;
-    approx: boolean;
-    match: number;
-    counts: number[];
-  }
   interface Payload {
-    fields: string[];
-    zones: string[];
-    bands: string[];
+    base: string;
     zoneTop: number;
     rateTop: number;
-    windows: Record<string, { line: string; counts: number[]; twins: Twin[] }>;
+    windows: Record<string, [from: string, to: string, counts: number[], twins: [row: number, match: number][]]>;
   }
 
   const root = document.querySelector<HTMLElement>("#twin .twin");
   if (root) {
     const data = JSON.parse(root.dataset.twin!) as Payload;
     const section = root.closest("section")!;
-    const prof = (counts: number[]) => profile(data.fields, data.zones, data.bands, counts);
+    // The pool is shared by every player page: fetched on the first sign of interest, once.
+    let pool: Promise<TwinPool> | null = null;
+    const load = () =>
+      (pool ??= fetch(`${data.base}/data/twins.json`).then((r) => {
+        if (!r.ok) throw new Error(String(r.status));
+        return r.json();
+      }));
+    for (const type of ["pointerover", "touchstart", "focusin"]) section.addEventListener(type, load, { once: true, passive: true });
+
     const field = (name: string) => root.querySelector<HTMLElement>(`[data-f="${name}"]`)!;
     const scale = (x: number, top: number) => Math.min(1, x / top).toFixed(4);
     let win = (section.querySelector<HTMLInputElement>('input[name="twin-window"]:checked') ?? { value: "" }).value;
@@ -295,39 +280,49 @@ const payload = data && {
       });
     }
 
-    function showTwin(i: number) {
-      const t = data.windows[win].twins[i];
-      const link = field("twin-link") as HTMLAnchorElement;
-      link.textContent = t.name;
-      if (t.href) link.href = t.href;
-      else link.removeAttribute("href");
-      field("twin-line").textContent = t.line;
-      field("approx").hidden = !t.approx;
-      side("r", prof(t.counts));
-    }
-
-    function showWindow(key: string) {
-      win = key;
-      const w = data.windows[key];
-      field("window").textContent = w.line;
-      side("l", prof(w.counts));
+    async function show(key: string, pick: number) {
+      const { fields, zones, bands, clubs, pool: rows } = await load();
+      if (key !== win || pick !== picked()) return; // a later choice owns the table
+      const prof = (counts: number[]) => profile(fields, zones, bands, counts);
+      const [from, to, counts, twins] = data.windows[key];
+      field("window").textContent = windowLine(key, from, to, prof(counts).att);
+      side("l", prof(counts));
       root!.querySelectorAll<HTMLInputElement>('input[name="twin-pick"]').forEach((input, i) => {
-        const t = w.twins[i];
         const label = input.nextElementSibling as HTMLElement;
-        input.hidden = label.hidden = !t;
-        input.checked = i === 0;
-        if (!t) return;
-        label.querySelector(".who")!.textContent = t.name;
-        label.querySelector(".what")!.textContent = t.short;
-        label.querySelector(".match b")!.textContent = String(t.match);
+        input.hidden = label.hidden = !twins[i];
+        if (!twins[i]) return;
+        const [name, , season, team] = rows[twins[i][0]];
+        label.querySelector(".who")!.textContent = name;
+        label.querySelector(".what")!.textContent = `${season} · ${team}`;
+        label.querySelector(".match b")!.textContent = String(twins[i][1]);
       });
-      showTwin(0);
+      const [name, slug, season, team, games, approx, tc] = rows[twins[pick][0]];
+      const link = field("twin-link") as HTMLAnchorElement;
+      link.textContent = name;
+      if (slug) link.href = `${data.base}/players/${slug}/`;
+      else link.removeAttribute("href");
+      field("twin-line").textContent = twinLine(season, clubs[team] ?? team, games);
+      field("approx").hidden = !approx;
+      side("r", prof(tc));
     }
 
-    section.addEventListener("change", (e) => {
+    const picked = () => Number(root.querySelector<HTMLInputElement>('input[name="twin-pick"]:checked')?.value ?? 0);
+    section.addEventListener("change", async (e) => {
       const input = e.target as HTMLInputElement;
-      if (input.name === "twin-window") showWindow(input.value);
-      else if (input.name === "twin-pick") showTwin(Number(input.value));
+      if (input.name === "twin-window") {
+        win = input.value;
+        root.querySelector<HTMLInputElement>("#tp-0")!.checked = true;
+      } else if (input.name !== "twin-pick") return;
+      // Hold the section's height while the pool loads, so nothing below it moves.
+      root.style.minHeight = `${Math.max(root.offsetHeight, parseFloat(root.style.minHeight) || 0)}px`;
+      section.setAttribute("aria-busy", "true");
+      try {
+        await show(win, picked());
+      } catch {
+        field("twin-line").textContent = "Could not load the twins. Reload the page to try again.";
+      } finally {
+        section.removeAttribute("aria-busy");
+      }
     });
   }
 </script>
