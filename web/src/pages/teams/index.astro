@@ -1,11 +1,12 @@
 ---
 import caret from "@phosphor-icons/core/assets/bold/caret-down-bold.svg?raw";
 import Base from "../../layouts/Base.astro";
-import { tip } from "../../lib/tip";
 import "../../styles/stats.css";
 import { teamHref } from "../../lib/players";
 import { defaultSeason, meta, season, teamIndex } from "../../lib/stats";
-import { factors, signed } from "../../lib/team";
+import { clubRowsHtml, type ClubCells } from "../../lib/clubs";
+import { tip } from "../../lib/tip";
+import { clubCells } from "../../lib/team";
 
 const m = await meta();
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -14,13 +15,15 @@ const tables = m
   ? await Promise.all(
       [...m.seasons].reverse().map(async (s) => {
         const data = await season(s.season, "teams");
-        const rows = data.teams
-          .map((t) => ({ t, f: factors(data.fields, t.totals, t.opp) }))
-          .sort((a, b) => b.f.net - a.f.net);
-        return { s, rows };
+        return { s, rows: clubCells(data.fields, data.teams) };
       }),
     )
   : [];
+const shown = tables.find(({ s }) => s.season === open);
+// Only the open season is in the page; the switch draws the others from these cells.
+const others: Record<string, [string, ClubCells[]]> = Object.fromEntries(
+  tables.filter((t) => t !== shown).map(({ s, rows }) => [s.season, [s.label, rows]]),
+);
 const clubs = await teamIndex();
 // The third field marks columns a phone sheds, so Net (the ranking) stays in view.
 const COLS = [
@@ -62,10 +65,10 @@ const COLS = [
             </span>
           </label>
         </header>
-        {tables.map(({ s, rows }) => (
-          <div class="scroll" data-season={s.season} hidden={s.season !== open}>
+        {shown && (
+          <div class="scroll" id="clubs" data-season={open} data-base={base} data-others={JSON.stringify(others)}>
             <table class="grid clubs">
-              <caption class="sr-only">{s.label} clubs by net rating</caption>
+              <caption class="sr-only">{shown.s.label} clubs by net rating</caption>
               <thead>
                 <tr>
                   <th scope="col" class="num">#</th>
@@ -79,29 +82,10 @@ const COLS = [
                   ))}
                 </tr>
               </thead>
-              <tbody>
-                {rows.map(({ t, f }, i) => (
-                  <tr>
-                    <td class="num muted">{i + 1}</td>
-                    <th scope="row">
-                      <a href={teamHref(base, t.code, s.season === open ? undefined : s.season)}>
-                        <span class="code">{t.code}</span>
-                        {t.name}
-                      </a>
-                    </th>
-                    <td class="num">
-                      {t.w}–{t.l}
-                    </td>
-                    <td class="num wide">{f.ortg.toFixed(1)}</td>
-                    <td class="num wide">{f.drtg.toFixed(1)}</td>
-                    <td class="num strong">{signed(f.net)}</td>
-                    <td class="num wide">{f.pace.toFixed(1)}</td>
-                  </tr>
-                ))}
-              </tbody>
+              <tbody set:html={clubRowsHtml(base, undefined, shown.rows)} />
             </table>
           </div>
-        ))}
+        )}
       </section>
     )
   }
@@ -130,14 +114,26 @@ const COLS = [
 </Base>
 
 <script>
+  import { clubRowsHtml, type ClubCells } from "../../lib/clubs";
+
   const select = document.getElementById("season") as HTMLSelectElement | null;
-  select?.addEventListener("change", () => {
-    for (const box of document.querySelectorAll<HTMLElement>("[data-season]")) box.hidden = box.dataset.season !== select.value;
-  });
+  const box = document.getElementById("clubs");
+  if (select && box) {
+    const others = JSON.parse(box.dataset.others!) as Record<string, [string, ClubCells[]]>;
+    const caption = box.querySelector("caption")!;
+    const body = box.querySelector("tbody")!;
+    const open = [caption.textContent!, body.innerHTML];
+    select.addEventListener("change", () => {
+      const s = others[select.value];
+      [caption.textContent, body.innerHTML] = s ? [`${s[0]} clubs by net rating`, clubRowsHtml(box.dataset.base!, Number(select.value), s[1])] : open;
+      box.dataset.season = select.value;
+    });
+  }
 </script>
 
 <style>
-  .code {
+  .code,
+  .scroll :global(.code) {
     display: inline-block;
     width: 3.25em;
     color: var(--muted);
@@ -145,7 +141,7 @@ const COLS = [
     font-weight: 500;
     font-variant-numeric: tabular-nums;
   }
-  .clubs td.strong {
+  .clubs :global(td.strong) {
     color: var(--ink);
     font-weight: 600;
   }
@@ -184,11 +180,11 @@ const COLS = [
     outline-offset: 2px;
   }
   @media (max-width: 560px) {
-    .wide {
+    .scroll :global(.wide) {
       display: none;
     }
     /* Long club names wrap so Net, the ranking, stays on screen. */
-    .clubs tbody th {
+    .clubs tbody :global(th) {
       white-space: normal;
     }
   }
