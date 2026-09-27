@@ -83,7 +83,13 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
+      # main may have moved during the run: replay the run's commit on top of it. A conflict (an
+      # append-only log changed on both sides) is never resolved here: abort, fail, merge by hand.
       - name: Commit predictions and reports if changed
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
         run: |
           git add predictions/ reports/ odds/
           if git diff --cached --quiet; then
@@ -93,7 +99,13 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "Daily predictions $(date -u +%Y-%m-%dT%H:%MZ)"
-          git push
+          remote="https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git"
+          if ! git pull --rebase "$remote" "$BRANCH"; then
+            git rebase --abort
+            echo "::error::rebase onto $BRANCH conflicted; nothing pushed, merge the logs by hand"
+            exit 1
+          fi
+          git push "$remote" "HEAD:$BRANCH"
 
   deploy-page:
     needs: predict
