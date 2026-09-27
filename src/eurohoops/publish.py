@@ -107,11 +107,19 @@ def _game(section: Section, g: dict[Hashable, Any]) -> dict[str, Any]:
     }
 
 
-def _next_tipoff(section: Section, now: datetime) -> str | None:
+def _next_tipoff(section: Section, now: datetime) -> tuple[str | None, bool]:
+    """The next live-season tip-off with a confirmed time, and False.
+
+    A game without a confirmed time sits at local midnight, so it is skipped; only when no game
+    ahead has one is the first date returned, with True (the page shows "time TBC").
+    """
     games = section.games
     ahead = games[(games["season"] == section.season) & ~games["played"]]
     ahead = ahead[ahead["tipoff_utc"] > now]
-    return None if ahead.empty else _stamp(ahead["tipoff_utc"].min())
+    confirmed = ahead[ahead["confirmed_date"]]
+    if not confirmed.empty:
+        return _stamp(confirmed["tipoff_utc"].min()), False
+    return (None, False) if ahead.empty else (_stamp(ahead["tipoff_utc"].min()), True)
 
 
 def _ratings(section: Section) -> list[dict[str, Any]]:
@@ -165,12 +173,14 @@ def section_data(section: Section, now: datetime) -> dict[str, Any]:
         for g in reversed(finished)
     ]
     card = section.scorecard
+    next_tipoff, time_tbc = _next_tipoff(section, now)
     return {
         "key": section.key,
         "title": section.title,
         "season": f"{section.season}-{(section.season + 1) % 100:02d}",
         "logged": len(logged),
-        "next_tipoff_utc": _next_tipoff(section, now),
+        "next_tipoff_utc": next_tipoff,
+        "next_tipoff_time_tbc": time_tbc,
         "upcoming": upcoming,
         "results": results,
         "scorecard": {

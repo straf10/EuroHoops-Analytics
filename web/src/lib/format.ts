@@ -63,6 +63,8 @@ export interface Competition {
   season: string;
   logged: number;
   next_tipoff_utc: string | null;
+  /** No game ahead has a confirmed time: show the date only. */
+  next_tipoff_time_tbc: boolean;
   upcoming: Game[];
   results: Result[];
   scorecard: {
