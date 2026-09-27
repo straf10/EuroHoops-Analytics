@@ -2,7 +2,9 @@
 // (every club's dot, this club's in blue), both shot charts, the bands and the roster.
 // Pure (types only from ./stats), so the build and the in-page season switch share them.
 
-import { esc, hexChart, type HexCell } from "./court";
+import { hexChart, type HexCell } from "./court";
+import { esc } from "./format";
+import { tip } from "./tip";
 import { SEASON_COLS, bandRows, totalsOf, type Totals } from "./player";
 import { teamHref } from "./players";
 import type { TeamSeason } from "./stats";
@@ -91,11 +93,11 @@ export function strips(t: TeamSeason, metrics: Metric[], base: string): Strip[] 
     const dots = all
       .filter((x) => x.c.code !== t.code)
       .map(({ c, f }) => {
-        const tip = `<b>${esc(c.code)}</b> ${esc(c.name)}<br>${name}: ${text(f[key])}`;
-        return `<a class="s-dot" style="left:${at(f[key]).toFixed(2)}%" href="${teamHref(base, c.code, t.season)}" data-tip="${esc(tip)}" aria-label="${esc(`${c.name}: ${text(f[key])}`)}"></a>`;
+        const dotTip = tip`<b>${c.code}</b> ${c.name}<br>${name}: ${text(f[key])}`;
+        return `<a class="s-dot" style="left:${at(f[key]).toFixed(2)}%" href="${teamHref(base, c.code, t.season)}" data-tip="${esc(dotTip)}" aria-label="${esc(`${c.name}: ${text(f[key])}`)}"></a>`;
       })
       .join("");
-    const avgTip = `League average: ${text(league[key])}`;
+    const avgTip = tip`League average: ${text(league[key])}`;
     return {
       key,
       name,
@@ -103,14 +105,14 @@ export function strips(t: TeamSeason, metrics: Metric[], base: string): Strip[] 
       value: text(me[key]),
       rank,
       me: at(me[key]),
-      tip: `<b>${esc(t.code)}</b> ${esc(t.name)}<br>${name}: ${text(me[key])}, ${rank}`,
+      tip: tip`<b>${t.code}</b> ${t.name}<br>${name}: ${text(me[key])}, ${rank}`,
       field: `<span class="s-avg" style="left:${at(league[key]).toFixed(2)}%" data-tip="${esc(avgTip)}"></span>${dots}`,
     };
   });
 }
 
 export const stripHtml = (s: Strip) =>
-  `<div class="strip" data-key="${s.key}"><span class="s-name"><span data-tip="${esc(`<b>${s.name}</b><br>${s.about}`)}" tabindex="0">${s.name}</span></span><span class="s-val">${s.value}</span><span class="s-rank">${s.rank}</span><span class="s-track"><span class="s-field">${s.field}</span><span class="s-me" style="left:${s.me.toFixed(2)}%" data-tip="${esc(s.tip)}"></span></span></div>`;
+  `<div class="strip" data-key="${s.key}"><span class="s-name"><span data-tip="${esc(tip`<b>${s.name}</b><br>${s.about}`)}" tabindex="0">${s.name}</span></span><span class="s-val">${s.value}</span><span class="s-rank">${s.rank}</span><span class="s-track"><span class="s-field">${s.field}</span><span class="s-me" style="left:${s.me.toFixed(2)}%" data-tip="${esc(s.tip)}"></span></span></div>`;
 
 // ---- Head ----------------------------------------------------------------------------------
 
@@ -128,7 +130,7 @@ export function facts(t: TeamSeason) {
 
 const cellTip = (who: string) => ([, , att, made, lg]: HexCell) => {
   const league = lg < 0 ? "no league shots here" : `league ${(lg / 10).toFixed(1)}%`;
-  return `${who}<b>${made} of ${att}</b> (${((100 * made) / att).toFixed(0)}%)<br>${league}`;
+  return tip`${who}<b>${made} of ${att}</b> (${((100 * made) / att).toFixed(0)}%)<br>${league}`;
 };
 
 export function teamCharts(t: TeamSeason, radius: number) {

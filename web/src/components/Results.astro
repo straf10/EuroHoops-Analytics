@@ -3,6 +3,7 @@ import check from "@phosphor-icons/core/assets/bold/check-bold.svg?raw";
 import cross from "@phosphor-icons/core/assets/bold/x-bold.svg?raw";
 import type { Competition } from "../lib/format";
 import { athensDay, athensTime, call, pct } from "../lib/format";
+import { tip } from "../lib/tip";
 
 interface Props {
   comp: Competition;
@@ -67,7 +68,7 @@ const scored = results.filter((r) => r.provable).length;
                     </td>
                     <td
                       class="call"
-                      data-tip={`Logged ${athensDay(r.predicted_at_utc)}, ${athensTime(r.predicted_at_utc)} Athens<br>Tip-off ${athensDay(r.tipoff_utc)}, ${athensTime(r.tipoff_utc)}`}
+                      data-tip={tip`Logged ${athensDay(r.predicted_at_utc)}, ${athensTime(r.predicted_at_utc)} Athens<br>Tip-off ${athensDay(r.tipoff_utc)}, ${athensTime(r.tipoff_utc)}`}
                     >
                       {c.team.code} <span>{pct(c.p)}</span>
                     </td>

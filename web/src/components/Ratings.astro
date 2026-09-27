@@ -2,8 +2,8 @@
 import caretUp from "@phosphor-icons/core/assets/fill/caret-up-fill.svg?raw";
 import caretDown from "@phosphor-icons/core/assets/fill/caret-down-fill.svg?raw";
 import type { Competition } from "../lib/format";
-import { esc } from "../lib/court";
 import { signed } from "../lib/format";
+import { tip } from "../lib/tip";
 
 interface Props {
   comp: Competition;
@@ -37,7 +37,7 @@ const columns = [ratings.slice(0, half), ratings.slice(half)];
             class:list={{ below: Math.round(r.rating) < 1500, even: Math.round(r.rating) === 1500 }}
             style={`--x:${pos(r.rating).toFixed(1)};--s:${Math.min(pos(r.rating), pos(1500)).toFixed(1)};--w:${Math.abs(pos(r.rating) - pos(1500)).toFixed(1)}`}
             tabindex="0"
-            data-tip={`<b>${esc(r.name)}</b><br>Elo ${r.rating.toFixed(0)}, ${signed(r.change, 0)} since the season started`}
+            data-tip={tip`<b>${r.name}</b><br>Elo ${r.rating.toFixed(0)}, ${signed(r.change, 0)} since the season started`}
           >
             <span class="team">
               <span class="rank">{c * half + i + 1}</span>

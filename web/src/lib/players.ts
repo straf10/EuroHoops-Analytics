@@ -2,7 +2,8 @@
 // Pure functions of the season data and the view state, run both at build time (the first
 // paint) and in the browser (every filter change), so the two can never disagree.
 
-import { esc } from "./court";
+import { esc } from "./format";
+import { tip } from "./tip";
 import type { PlayerRow, SeasonPlayers } from "./stats";
 
 export type Window = "season" | "last5" | "last10" | "last20";
@@ -304,6 +305,10 @@ export function chart(ls: Line[], view: View): Chart {
   };
 }
 
+/** The tooltip of one chart row: the player, his clubs and the value charted. */
+export const slotTip = (row: PlayerRow, c: Chart, text: string) =>
+  tip`<b>${row.name}</b> ${row.teams.join(", ")}<br>${c.title.split(": ")[1]}: ${text}`;
+
 /** Chart rows as HTML. Always CHART_ROWS slots, so a change retargets dots instead of rebuilding. */
 export function chartHtml(c: Chart, base: string): string {
   const slots = Array.from({ length: CHART_ROWS }, (_, i) => c.rows[i]);
@@ -311,8 +316,8 @@ export function chartHtml(c: Chart, base: string): string {
     .map((s, i) => {
       if (!s) return `<li class="slot" hidden></li>`;
       const { row } = s.line;
-      const tip = `<b>${esc(row.name)}</b> ${esc(row.teams.join(", "))}<br>${esc(c.title.split(": ")[1])}: ${s.text}`;
-      return `<li class="slot" style="--x:${s.x.toFixed(2)}"><span class="rk">${i + 1}</span><a class="nm" href="${playerHref(base, row.slug)}">${esc(row.name)}</a><span class="track" data-tip="${esc(tip)}" tabindex="-1"><span class="pos"><i class="dot"></i></span></span><span class="val">${s.text}</span></li>`;
+      const body = slotTip(row, c, s.text);
+      return `<li class="slot" style="--x:${s.x.toFixed(2)}"><span class="rk">${i + 1}</span><a class="nm" href="${playerHref(base, row.slug)}">${esc(row.name)}</a><span class="track" data-tip="${esc(body)}" tabindex="-1"><span class="pos"><i class="dot"></i></span></span><span class="val">${s.text}</span></li>`;
     })
     .join("");
 }
@@ -330,7 +335,7 @@ export function headHtml(view: View): string {
     const m = BY_KEY[key];
     const on = key === view.sort;
     const sort = on ? (view.dir === "desc" ? "descending" : "ascending") : "none";
-    return `<th scope="col" class="num${on ? " on" : ""}" aria-sort="${sort}"><button type="button" data-sort="${key}" data-tip="${esc(`<b>${m.name}</b><br>${m.about}`)}">${m.head}</button></th>`;
+    return `<th scope="col" class="num${on ? " on" : ""}" aria-sort="${sort}"><button type="button" data-sort="${key}" data-tip="${esc(tip`<b>${m.name}</b><br>${m.about}`)}">${m.head}</button></th>`;
   });
   return `<tr><th scope="col" class="c-rk"><span class="sr-only">Rank</span></th><th scope="col" class="c-nm">Player</th>${cols.join("")}</tr>`;
 }
@@ -349,7 +354,7 @@ export function bodyHtml(ls: Line[], view: View, base: string): string {
           const v = l.values[key];
           const short = m.qualifies && !m.qualifies(l.totals);
           const cls = ["num", key === view.sort ? "on" : "", short ? "short" : ""].filter(Boolean).join(" ");
-          const tip = short ? ` data-tip="${esc(m.floor ?? "")}"` : "";
+          const tip = short ? ` data-tip="${esc(tip`${m.floor ?? ""}`)}"` : "";
           return `<td class="${cls}"${tip}>${format(m, v)}</td>`;
         })
         .join("");

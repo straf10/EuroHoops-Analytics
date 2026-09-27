@@ -1,6 +1,7 @@
 ---
 import caret from "@phosphor-icons/core/assets/bold/caret-down-bold.svg?raw";
 import Base from "../../layouts/Base.astro";
+import { tip } from "../../lib/tip";
 import "../../styles/stats.css";
 import { teamHref } from "../../lib/players";
 import { defaultSeason, meta, season, teamIndex } from "../../lib/stats";
@@ -71,7 +72,7 @@ const COLS = [
                   <th scope="col">Club</th>
                   {COLS.map(([h, about, wide]) => (
                     <th scope="col" class:list={["num", wide]}>
-                      <span data-tip={`<b>${h}</b><br>${about}`} tabindex="0">
+                      <span data-tip={tip`<b>${h}</b><br>${about}`} tabindex="0">
                         {h}
                       </span>
                     </th>

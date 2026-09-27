@@ -7,6 +7,7 @@ import "../../styles/stats.css";
 import { teamHref as linkTeam } from "../../lib/players";
 import { SEASON_COLS, bandsHtml, logHtml, perGame, shotChart, totalsOf, ts, type Totals } from "../../lib/player";
 import { meta, playerData, playerIndex, twinData, type PlayerIndexRow } from "../../lib/stats";
+import { tip } from "../../lib/tip";
 import ShotTwin from "../../components/ShotTwin.astro";
 
 export async function getStaticPaths() {
@@ -85,7 +86,7 @@ const seasonOptions = (list: typeof seasons, chosen: number) =>
             <th scope="col">Team</th>
             {SEASON_COLS.map((c) => (
               <th scope="col" class="num">
-                <span data-tip={`<b>${c.head}</b><br>${c.about}`} tabindex="0">{c.head}</span>
+                <span data-tip={tip`<b>${c.head}</b><br>${c.about}`} tabindex="0">{c.head}</span>
               </th>
             ))}
           </tr>

@@ -2,8 +2,8 @@
 // attempts). Pure strings, shared by the build and the in-page updates of the player, team and
 // Shots pages. Court metres, basket at the origin; drawn with the baseline on top.
 
-export const esc = (s: string) =>
-  s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] ?? c);
+import { esc } from "./format";
+import { tip } from "./tip";
 
 /** [q, r, attempts, makes, league FG% in the cell x10 (-1: no league shots there)] */
 export type HexCell = [q: number, r: number, att: number, made: number, league: number];
@@ -91,7 +91,7 @@ export interface HexOptions {
 
 const defaultTip = ([, , att, made, lg]: HexCell) => {
   const league = lg < 0 ? "no league shots here" : `league ${(lg / 10).toFixed(1)}%`;
-  return `<b>${made} of ${att}</b> (${((100 * made) / att).toFixed(0)}%)<br>${league}`;
+  return tip`<b>${made} of ${att}</b> (${((100 * made) / att).toFixed(0)}%)<br>${league}`;
 };
 
 /** Hexes sized by how often the cell was used; coloured by FG% against the league unless told. */
@@ -100,7 +100,7 @@ export function hexChart(hex: HexCell[], radius: number, o: HexOptions): string 
   const total = hex.reduce((a, c) => a + c[2], 0);
   const most = Math.max(1, ...shown.map((c) => c[2]));
   const full = Math.max(1, most * 0.6); // the busiest cells all draw at full size
-  const tip = o.tip ?? defaultTip;
+  const cellTip = o.tip ?? defaultTip;
   const cells = shown
     .map((cell) => {
       const [q, r, att, made, lg] = cell;
@@ -108,7 +108,7 @@ export function hexChart(hex: HexCell[], radius: number, o: HexOptions): string 
       const cy = toY(radius * 1.5 * r);
       const size = radius * 0.94 * (0.32 + 0.68 * Math.sqrt(Math.min(1, att / full)));
       const cls = o.color ? o.color(cell, total) : `t${(o.invert ? -1 : 1) * tone(att, made, lg) || 0}`;
-      return `<path class="${cls}" d="${hexPath(cx, cy, size)}" data-tip="${esc(tip(cell, total))}"/>`;
+      return `<path class="${cls}" d="${hexPath(cx, cy, size)}" data-tip="${esc(cellTip(cell, total))}"/>`;
     })
     .join("");
   return court(`<g class="cells">${cells}</g>`, o.label);
