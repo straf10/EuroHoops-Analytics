@@ -193,11 +193,11 @@ export function bodyHtml(g: Grid, cols: Col[]): string {
               r.cells
                 .map((c) => {
                   const cls = ["num", c.lead ? "lead" : "", c.floor ? "muted" : ""].filter(Boolean).join(" ");
-                  const tip = c.floor && c.floor !== "No value" ? ` data-tip="${esc(tip`${c.floor}`)}"` : "";
+                  const floorAttr = c.floor && c.floor !== "No value" ? ` data-tip="${esc(tip`${c.floor}`)}"` : "";
                   // Fixed slots (value with its dot, place) so figures line up down each column.
                   const dot = c.lead ? `<i class="lead-dot" aria-hidden="true"></i>` : "";
                   const place = `<small>${c.lead ? "<span class=\"sr-only\">leads, </span>" : ""}${c.place ? ordinal(c.place) : ""}</small>`;
-                  return `<td class="${cls}"${tip}><span class="cell"><span class="v">${dot}${c.text}</span>${place}</span></td>`;
+                  return `<td class="${cls}"${floorAttr}><span class="cell"><span class="v">${dot}${c.text}</span>${place}</span></td>`;
                 })
                 .join("") +
               `</tr>`,
