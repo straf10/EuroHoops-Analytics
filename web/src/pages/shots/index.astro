@@ -373,6 +373,7 @@ const cfg = { base, open, seasons: seasons.map((x) => x.season) };
       draw();
     });
 
+    let redraw = 0;
     root.addEventListener("click", (e) => {
       const bar = (e.target as HTMLElement).closest<HTMLButtonElement>("button.bar");
       if (!bar) return;
@@ -383,8 +384,14 @@ const cfg = { base, open, seasons: seasons.map((x) => x.season) };
       // The press paints at once; the court and bars follow in the next task (a redraw of a
       // season's shots takes a slow phone past 100 ms), or when the season's shots are in.
       bar.setAttribute("aria-pressed", String(!chosen.includes(value)));
-      if (data) requestAnimationFrame(() => setTimeout(draw));
-      else load();
+      if (!data) load();
+      else if (!redraw)
+        redraw = requestAnimationFrame(() =>
+          setTimeout(() => {
+            redraw = 0; // taps meanwhile are all in `state`: one redraw serves them
+            draw();
+          }),
+        );
     });
 
     clear.addEventListener("click", () => {

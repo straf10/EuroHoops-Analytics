@@ -10,6 +10,14 @@ import { teamHref } from "./players";
 import type { ClubLine, TeamSeason } from "./stats";
 import type { ClubCells } from "./clubs";
 
+/** A strip mark's tip read back (the touch list on the team page builds its rows from the marks):
+ * "<b>CODE</b> name<br>measure: value[, rank]" as strips() writes it, and "League average: value". */
+export const stripTipParts = (html: string) => {
+  const [, code = "", name = "", value = ""] = /^<b>(.*?)<\/b> (.*?)<br>[^:]*: ([^,]*)/.exec(html) ?? [];
+  return { code, name, value };
+};
+export const avgTipValue = (html: string) => html.split(": ")[1] ?? "";
+
 /** Ratings and four factors of one side, from its totals and its opponents'. */
 export function factors(fields: string[], own: number[], against: number[]) {
   const t = totalsOf(fields, own);
