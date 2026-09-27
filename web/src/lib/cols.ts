@@ -6,14 +6,14 @@
  *  to its width in Geist (--seg-w in stats.css and the Players page), as the filter rows' controls
  *  are, so the fallback font never rewraps it: re-measure there when a label changes. */
 export const GROUPS = {
-  line: { labels: ["Scoring", "All-round", "Shooting"] }, // season lines, rosters, game log: 14.27rem
-  bands: { labels: ["FG%", "Share"] }, // 6.946rem
-  clubs: { labels: ["Record", "Ratings", "Pace"] }, // 11.859rem
-  players: { labels: ["Scoring", "All-round", "Shots", "Efficiency"] }, // 18.125rem
+  line: ["Scoring", "All-round", "Shooting"], // season lines, rosters, game log: 14.27rem
+  bands: ["FG%", "Share"], // 6.946rem
+  clubs: ["Record", "Ratings", "Pace"], // 11.859rem
+  players: ["Scoring", "All-round", "Shots", "Efficiency"], // 18.125rem
 };
 
 /** The control as HTML: one radio per group, the first checked. */
-export const colsHtml = (name: string, { labels }: { labels: string[] }): string =>
+export const colsHtml = (name: string, labels: string[]): string =>
   `<fieldset class="seg cols" aria-label="Columns">${labels
     .map((l, i) => `<label><input type="radio" name="${name}"${i ? "" : " checked"}>${l}</label>`)
     .join("")}</fieldset>`;

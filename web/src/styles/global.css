@@ -350,8 +350,9 @@ body:not(:has(#comp-gbl:checked)) [data-comp="gbl"] {
 [data-tip] {
   touch-action: manipulation;
 }
-/* Without hover a tap opens the tip; iOS only passes taps on plain marks on when they look tappable. */
-@media (hover: none) {
+/* Without hover a tap opens the tip; iOS only passes taps on plain marks on when they look tappable.
+   (The one touch test the site uses: no hover with a fine pointer.) */
+@media not ((hover: hover) and (pointer: fine)) {
   [data-tip] {
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
