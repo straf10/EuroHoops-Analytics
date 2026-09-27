@@ -219,26 +219,27 @@ const bandHead = [
 <script>
   import up from "@phosphor-icons/core/assets/fill/caret-up-fill.svg?raw";
   import down from "@phosphor-icons/core/assets/fill/caret-down-fill.svg?raw";
-  import type { TeamSeason } from "../../lib/stats";
+  import type { SeasonShared, TeamOwn, TeamSeason } from "../../lib/stats";
   import { DEFENSE, OFFENSE, facts, rosterHtml, strips, teamBands, teamCharts } from "../../lib/team";
 
   const head = document.getElementById("team");
   const select = document.getElementById("season") as HTMLSelectElement | null;
   if (head && select) {
     const { code, base, radius, year } = head.dataset;
+    const fetchJson = <T,>(url: string): Promise<T> =>
+      fetch(url).then((r) => {
+        if (!r.ok) throw new Error(String(r.status));
+        return r.json();
+      });
     const cache = new Map<string, Promise<TeamSeason>>();
     const get = (s: string) => {
       if (!cache.has(s))
         cache.set(
           s,
-          Promise.all(
-            [`team/${code}/${s}`, `season/${s}`].map((path) =>
-              fetch(`${base}/data/${path}.json`).then((r) => {
-                if (!r.ok) throw new Error(String(r.status));
-                return r.json();
-              }),
-            ),
-          ).then(([t, shared]) => ({ ...t, clubs: shared.clubs, leagueBands: shared.bands })),
+          Promise.all([
+            fetchJson<TeamOwn>(`${base}/data/team/${code}/${s}.json`),
+            fetchJson<SeasonShared>(`${base}/data/season/${s}.json`),
+          ]).then(([t, shared]) => ({ ...t, clubs: shared.clubs, leagueBands: shared.bands })),
         );
       return cache.get(s)!;
     };

@@ -269,16 +269,16 @@ const seasonOptions = (list: typeof seasons, chosen: number) =>
   const shots = document.getElementById("shots");
   if (shots) {
     const { slug, base, radius } = shots.dataset;
-    const json = <T,>(path: string): Promise<T> =>
-      fetch(`${base}/data/${path}.json`).then((r) => {
+    const fetchJson = <T,>(url: string): Promise<T> =>
+      fetch(url).then((r) => {
         if (!r.ok) throw new Error(String(r.status));
         return r.json();
       });
     let data: Promise<PlayerData> | null = null;
-    const load = () => (data ??= json<PackedPlayer>(`player/${slug}`).then(unpackPlayer));
+    const load = () => (data ??= fetchJson<PackedPlayer>(`${base}/data/player/${slug}.json`).then(unpackPlayer));
     const league = new Map<number, Promise<Bands>>();
     const bandsOf = (season: number) => {
-      if (!league.has(season)) league.set(season, json<{ bands: Bands }>(`season/${season}`).then((x) => x.bands));
+      if (!league.has(season)) league.set(season, fetchJson<{ bands: Bands }>(`${base}/data/season/${season}.json`).then((x) => x.bands));
       return league.get(season)!;
     };
 

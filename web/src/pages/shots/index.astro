@@ -237,6 +237,7 @@ const cfg = { base, open, seasons: seasons.map((x) => x.season) };
     unpackAttempts,
     writeState,
     type Attempts,
+    type PackedAttempts,
     type Facet,
     type State,
   } from "../../lib/shots";
@@ -249,15 +250,17 @@ const cfg = { base, open, seasons: seasons.map((x) => x.season) };
     const clear = document.getElementById("clear") as HTMLButtonElement;
     let state: State = readState(new URLSearchParams(location.search), cfg.open, cfg.seasons);
     let data: Attempts | null = null;
+    const fetchJson = <T,>(url: string): Promise<T> =>
+      fetch(url).then((r) => {
+        if (!r.ok) throw new Error(String(r.status));
+        return r.json();
+      });
     const cache = new Map<number, Promise<Attempts>>();
     const get = (season: number) => {
       if (!cache.has(season))
         cache.set(
           season,
-          fetch(`${cfg.base}/data/shots/${season}.json`).then(async (r) => {
-            if (!r.ok) throw new Error(String(r.status));
-            return unpackAttempts(await r.json());
-          }),
+          fetchJson<PackedAttempts>(`${cfg.base}/data/shots/${season}.json`).then(unpackAttempts),
         );
       return cache.get(season)!;
     };
