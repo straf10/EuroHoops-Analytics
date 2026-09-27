@@ -30,7 +30,7 @@ import pandas as pd
 import pandera.pandas as pa
 
 from eurohoops.ingest.cache import read_cached
-from eurohoops.parse.schemas import schema_dtypes
+from eurohoops.parse.schemas import validated as cast_and_validate
 from eurohoops.parse.shots import (
     FIRST_VALIDATED_SEASON,
     FREE_THROW_SENTINEL,
@@ -351,11 +351,10 @@ def build_shot_table(raw_dir: Path, games: pd.DataFrame) -> ShotTable:
         frame = frame[~wrong].assign(validated_season=validated[~wrong])
     kept = pd.DataFrame(frame, columns=list(SHOTS_SCHEMA.columns))
     gone = pd.DataFrame(excluded, columns=list(EXCLUDED_SCHEMA.columns))
-    kept = kept.astype(schema_dtypes(SHOTS_SCHEMA)).sort_values(["game_id", "event"])
-    gone = gone.astype(schema_dtypes(EXCLUDED_SCHEMA)).sort_values(["game_id", "event"])
+    order = ["game_id", "event"]
     return ShotTable(
-        SHOTS_SCHEMA.validate(kept.reset_index(drop=True)),
-        EXCLUDED_SCHEMA.validate(gone.reset_index(drop=True)),
+        cast_and_validate(kept, SHOTS_SCHEMA).sort_values(order, ignore_index=True),
+        cast_and_validate(gone, EXCLUDED_SCHEMA).sort_values(order, ignore_index=True),
         not_cached,
         {season: dict(sorted(counts.items())) for season, counts in sorted(actions.items())},
         pd.DataFrame(
