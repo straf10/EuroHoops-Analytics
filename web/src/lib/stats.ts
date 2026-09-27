@@ -105,8 +105,6 @@ function load<T>(relative: string): Promise<T> | null {
   return cache.get(key) as Promise<T>;
 }
 
-export const hasStats = () => `../data/stats/meta.json` in files;
-
 export async function meta(): Promise<Meta | null> {
   return (await load<Meta>("meta.json")) ?? null;
 }
