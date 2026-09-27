@@ -7,3 +7,7 @@ import { esc } from "./format";
 export function tip(strings: TemplateStringsArray, ...values: unknown[]): string {
   return strings.reduce((html, part, i) => html + part + (i < values.length ? esc(String(values[i])) : ""), "");
 }
+
+/** A tooltip body as a double-quoted data-tip value. Only & and " need escaping inside one; the
+ * value the browser reads back is the body exactly, so <b> and <br> stay as written. */
+export const tipAttr = (html: string): string => html.replace(/&/g, "&amp;").replace(/"/g, "&quot;");

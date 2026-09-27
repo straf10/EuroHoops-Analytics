@@ -3,7 +3,7 @@
 // run at build time for the first paint and in the browser on every filter change.
 
 import { esc } from "./format";
-import { tip } from "./tip";
+import { tip, tipAttr } from "./tip";
 import { jerseySvg } from "./jersey";
 import { BY_KEY, playerHref } from "./players";
 
@@ -236,7 +236,7 @@ export function fiveHtml(b: Board, view: View, base: string): string {
       const [x, y] = SLOTS[i];
       const tag = b.lineup ? "" : `<span class="rk">${r.rank}</span>`;
       const muted = r.floor ? " muted" : "";
-      const floorAttr = r.floor ? ` data-tip="${esc(tip`${r.floor}`)}"` : "";
+      const floorAttr = r.floor ? ` data-tip="${tipAttr(tip`${r.floor}`)}"` : "";
       return (
         `<li class="slot" style="--x:${x}%;--y:${y}%" data-key="${esc(e.key)}">` +
         `<a class="shirt-link" href="${playerHref(base, e.slug)}" tabindex="-1" aria-hidden="true">${jerseySvg({ code: e.team, name: e.name, number: e.dorsal, size: 72 })}</a>` +
@@ -256,7 +256,7 @@ export function benchHtml(b: Board, view: View, base: string): string {
   return b.bench
     .map((r) => {
       const { e } = r;
-      const floorAttr = r.floor ? ` data-tip="${esc(tip`${r.floor}`)}"` : "";
+      const floorAttr = r.floor ? ` data-tip="${tipAttr(tip`${r.floor}`)}"` : "";
       return (
         `<li data-key="${esc(e.key)}">` +
         `<span class="rk">${r.rank || ""}</span>` +

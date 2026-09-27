@@ -3,7 +3,7 @@
 // the build and the browser.
 
 import { esc } from "./format";
-import { tip } from "./tip";
+import { tip, tipAttr } from "./tip";
 import { jerseySvg } from "./jersey";
 import { seasonLabel } from "./leaders";
 import { BY_KEY, playerHref, rated, type Measure } from "./players";
@@ -189,11 +189,11 @@ export function bodyHtml(g: Grid, cols: Col[]): string {
         grp.rows
           .map(
             (r) =>
-              `<tr><th scope="row"><span data-tip="${esc(tip`<b>${r.name}</b> ${r.about}`)}" tabindex="0">${r.head}</span></th>` +
+              `<tr><th scope="row"><span data-tip="${tipAttr(tip`<b>${r.name}</b> ${r.about}`)}" tabindex="0">${r.head}</span></th>` +
               r.cells
                 .map((c) => {
                   const cls = ["num", c.lead ? "lead" : "", c.floor ? "muted" : ""].filter(Boolean).join(" ");
-                  const floorAttr = c.floor && c.floor !== "No value" ? ` data-tip="${esc(tip`${c.floor}`)}"` : "";
+                  const floorAttr = c.floor && c.floor !== "No value" ? ` data-tip="${tipAttr(tip`${c.floor}`)}"` : "";
                   // Fixed slots (value with its dot, place) so figures line up down each column.
                   const dot = c.lead ? `<i class="lead-dot" aria-hidden="true"></i>` : "";
                   const place = `<small>${c.lead ? "<span class=\"sr-only\">leads, </span>" : ""}${c.place ? ordinal(c.place) : ""}</small>`;
