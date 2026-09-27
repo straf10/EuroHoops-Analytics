@@ -43,4 +43,4 @@ _Avoid_: team id
 The real-life abbreviation the site shows in place of a source code (`FBT`, `PAO`).
 
 **Confirmed time**:
-A tip-off time the source has published. A game without one (in the GBL it sits at local midnight of its date) is never forecast or announced as the next tip-off.
+A tip-off time the source has published. A game without one (in the GBL it sits at local midnight of its date) is never forecast; it is the next tip-off only by its date ("time TBC"), when no game ahead has a confirmed time.
