@@ -2,6 +2,10 @@ import os
 import re
 import shutil
 import subprocess
+from pathlib import Path
+from typing import Any
+
+import yaml
 
 from tests.conftest import REPO
 
@@ -86,3 +90,94 @@ def test_ci_builds_the_site_from_the_committed_fixture() -> None:
     assert web.index("site.json web/src/data") < web.index("npm ci") < web.index("npm run build")
     assert "working-directory: web" in web
     assert (REPO / "tests/fixtures/site.json").exists()
+
+
+def daily_jobs() -> dict[str, Any]:
+    jobs: dict[str, Any] = yaml.safe_load(DAILY)["jobs"]
+    return jobs
+
+
+def commit_step() -> dict[str, Any]:
+    steps = [s for job in daily_jobs().values() for s in job["steps"]]
+    return next(s for s in steps if s.get("name") == "Commit predictions and reports if changed")
+
+
+def git(cwd: Path, *args: str) -> str:
+    done = subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True, check=True)
+    return done.stdout
+
+
+def sandbox(tmp_path: Path) -> tuple[Path, Path, dict[str, str]]:
+    """A bare 'GitHub' remote, the runner's clone, and an env that routes the step's
+    https://x-access-token URL to the bare remote."""
+    bare, runner, other = tmp_path / "remote.git", tmp_path / "runner", tmp_path / "other"
+    git(tmp_path, "init", "-q", "--bare", "-b", "main", str(bare))
+    git(tmp_path, "clone", "-q", str(bare), str(other))
+    for key, value in (("user.name", "t"), ("user.email", "t@t"), ("commit.gpgsign", "false")):
+        git(other, "config", key, value)
+    (other / "predictions").mkdir()
+    (other / "predictions/log.csv").write_text("game_id,p\nG1,0.5\n", newline="\n")
+    for folder in ("reports", "odds"):  # the step adds all three folders
+        (other / folder).mkdir()
+        (other / folder / "keep.txt").write_text("x\n", newline="\n")
+    git(other, "add", ".")
+    git(other, "commit", "-qm", "base")
+    git(other, "push", "-q", "origin", "main")
+    git(tmp_path, "clone", "-q", str(bare), str(runner))
+    url = "https://x-access-token:tok@github.com/o/r.git"
+    env = {
+        **os.environ,
+        "GH_TOKEN": "tok",
+        "REPO": "o/r",
+        "BRANCH": "main",
+        "GIT_CONFIG_COUNT": "2",
+        "GIT_CONFIG_KEY_0": f"url.{bare.as_posix()}.insteadOf",
+        "GIT_CONFIG_VALUE_0": url,
+        "GIT_CONFIG_KEY_1": "commit.gpgsign",
+        "GIT_CONFIG_VALUE_1": "false",
+    }
+    return other, runner, env
+
+
+def run_commit_step(runner: Path, env: dict[str, str]) -> subprocess.CompletedProcess[str]:
+    step = commit_step()
+    assert set(step["env"]) >= {"GH_TOKEN", "REPO", "BRANCH"}
+    return subprocess.run(
+        [BASH, "-e", "-c", step["run"]],
+        cwd=runner,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+
+def test_push_replays_the_run_on_a_main_that_moved(tmp_path: Path) -> None:
+    other, runner, env = sandbox(tmp_path)
+    (other / "README").write_text("moved\n")
+    git(other, "add", ".")
+    git(other, "commit", "-qm", "owner commit during the run")
+    git(other, "push", "-q", "origin", "main")
+    with (runner / "predictions/log.csv").open("a", newline="\n") as fh:
+        fh.write("G2,0.6\n")
+    done = run_commit_step(runner, env)
+    assert done.returncode == 0, done.stderr
+    git(other, "pull", "-q", "origin", "main")
+    assert (other / "predictions/log.csv").read_text() == "game_id,p\nG1,0.5\nG2,0.6\n"
+    assert (other / "README").exists()
+
+
+def test_a_conflict_on_an_append_only_log_fails_without_rewriting_rows(tmp_path: Path) -> None:
+    other, runner, env = sandbox(tmp_path)
+    with (other / "predictions/log.csv").open("a", newline="\n") as fh:
+        fh.write("G9,0.1\n")  # a row pushed while the run was going
+    git(other, "commit", "-qam", "hand-logged row")
+    git(other, "push", "-q", "origin", "main")
+    with (runner / "predictions/log.csv").open("a", newline="\n") as fh:
+        fh.write("G2,0.6\n")
+    done = run_commit_step(runner, env)
+    assert done.returncode != 0
+    assert "::error::" in done.stdout
+    git(other, "pull", "-q", "origin", "main")
+    assert (other / "predictions/log.csv").read_text() == "game_id,p\nG1,0.5\nG9,0.1\n"
+    assert not (runner / ".git/rebase-merge").exists()  # the rebase was aborted, not resolved
