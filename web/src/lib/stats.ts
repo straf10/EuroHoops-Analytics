@@ -420,9 +420,10 @@ const withLeague = (cells: Cell[], lg: Map<string, [number, number]>) =>
     return [q, r, att, made, la ? Math.round((1000 * lm) / la) : -1];
   });
 
-/** Every club of a season, as the rank strips read them. */
-export async function seasonClubs(year: number): Promise<ClubLine[]> {
-  return (await season(year, "teams")).teams.map(({ code, name, w, l, totals, opp }) => ({ code, name, w, l, totals, opp }));
+/** What a season's club and player pages share: every club (the rank strips) and the league's bands. */
+export async function seasonShared(year: number): Promise<{ clubs: ClubLine[]; bands: Bands }> {
+  const teams = await season(year, "teams");
+  return { clubs: teams.teams.map(({ code, name, w, l, totals, opp }) => ({ code, name, w, l, totals, opp })), bands: teams.league.bands };
 }
 
 /** Everything one team page shows for one season. */
@@ -471,7 +472,7 @@ export async function teamSeason(code: string, year: number): Promise<TeamSeason
     totals: row.totals,
     opp: row.opp,
     league: teams.league.totals,
-    clubs: await seasonClubs(year),
+    clubs: (await seasonShared(year)).clubs,
     bands: row.bands,
     bandsAllowed: row.bands_allowed,
     leagueBands: teams.league.bands,

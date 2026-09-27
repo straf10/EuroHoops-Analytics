@@ -264,17 +264,32 @@ const seasonOptions = (list: typeof seasons, chosen: number) =>
   import up from "@phosphor-icons/core/assets/fill/caret-up-fill.svg?raw";
   import down from "@phosphor-icons/core/assets/fill/caret-down-fill.svg?raw";
   import { bandsHtml, logHtml, shotChart } from "../../lib/player";
-  import type { PlayerData } from "../../lib/stats";
+  import type { Bands, PlayerData, PlayerSeason } from "../../lib/stats";
 
   const shots = document.getElementById("shots");
   if (shots) {
     const { slug, base, radius } = shots.dataset;
-    let data: Promise<PlayerData> | null = null;
-    const load = () =>
-      (data ??= fetch(`${base}/data/player/${slug}.json`).then((r) => {
+    const json = <T,>(path: string): Promise<T> =>
+      fetch(`${base}/data/${path}.json`).then((r) => {
         if (!r.ok) throw new Error(String(r.status));
         return r.json();
-      }));
+      });
+    // data/player packs each game's details into its log row and leaves the league's bands to the
+    // season's shared file; unpack both into the seasons the renderers read.
+    let data: Promise<PlayerData> | null = null;
+    const load = () =>
+      (data ??= json<PlayerData>(`player/${slug}`).then((d) => ({
+        ...d,
+        seasons: d.seasons.map((s) => {
+          const n = s.logFields.length;
+          return { ...s, log: s.log.map((row) => row.slice(0, n)), games: Object.fromEntries(s.log.map((row) => [row[0], row.slice(n)])) } as PlayerSeason;
+        }),
+      })));
+    const league = new Map<number, Promise<Bands>>();
+    const bandsOf = (season: number) => {
+      if (!league.has(season)) league.set(season, json<{ bands: Bands }>(`season/${season}`).then((x) => x.bands));
+      return league.get(season)!;
+    };
 
     document.addEventListener("change", async (e) => {
       const select = e.target as HTMLSelectElement;
@@ -283,9 +298,12 @@ const seasonOptions = (list: typeof seasons, chosen: number) =>
       const section = select.closest("section") as HTMLElement;
       section.setAttribute("aria-busy", "true");
       try {
-        const s = (await load()).seasons.find((x) => x.season === Number(select.value));
+        const year = Number(select.value);
+        const [d, bands] = await Promise.all([load(), target === "shots" ? bandsOf(year) : null]);
+        const s = d.seasons.find((x) => x.season === year);
         if (!s) return;
         if (target === "shots") {
+          s.leagueBands = bands!;
           document.getElementById("court")!.innerHTML = shotChart(s, Number(radius));
           document.getElementById("bands")!.innerHTML = bandsHtml(s, up, down);
           document.getElementById("caveat")!.hidden = s.validated;
