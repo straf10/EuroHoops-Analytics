@@ -162,6 +162,15 @@ export const SETS: Record<ColumnSet, string[]> = {
   shooting: ["fga", "fg_pct", "fg2_pct", "fg3a", "fg3_pct", "fta", "ft_pct", "efg", "ts", "usg"],
 };
 
+/** On a phone each set sheds into two groups (GROUPS.players in lib/cols.ts, same order). The
+ *  Players page's CSS hides the other columns by their place in SETS: keep the three in step. */
+export const PHONE_GROUPS: { set: ColumnSet; keys: string[] }[] = [
+  { set: "box", keys: ["gp", "min", "pts", "pir", "pm"] },
+  { set: "box", keys: ["reb", "ast", "stl", "blk", "tov"] },
+  { set: "shooting", keys: ["fga", "fg_pct", "fg2_pct", "fg3a", "fg3_pct"] },
+  { set: "shooting", keys: ["fta", "ft_pct", "efg", "ts", "usg"] },
+];
+
 export const WINDOWS: { key: Window; label: string }[] = [
   { key: "season", label: "Season" },
   { key: "last5", label: "Last 5" },
