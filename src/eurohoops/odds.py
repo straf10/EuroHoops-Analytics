@@ -24,7 +24,7 @@ import httpx
 import pandas as pd
 
 from eurohoops.ingest.cache import write_atomic
-from eurohoops.logs import TIME_FORMAT, append_rows
+from eurohoops.logs import TIME_FORMAT, append_rows, require_terminated
 
 API_URL = "https://api.the-odds-api.com/v4/sports/basketball_euroleague/odds"
 QUERY = {
@@ -223,7 +223,15 @@ def record_odds(
     paths: OddsPaths,
     clock: Callable[[], datetime],
 ) -> dict[str, Any]:
-    """Make one API call, cache it, append consensus rows; return a summary (no secrets)."""
+    """Make one API call, cache it, append consensus rows; return a summary (no secrets).
+
+    Both logs are checked before the call, so a torn log never costs quota or half a record.
+    """
+    for path in (paths.log, paths.calls):
+        try:
+            require_terminated(path)
+        except ValueError as exc:
+            raise OddsApiError(str(exc)) from None
     remaining = last_remaining(paths.calls)
     if remaining is not None and remaining < MIN_REMAINING:
         raise OddsApiError(f"refusing to call: {remaining} requests remaining (< {MIN_REMAINING})")
