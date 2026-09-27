@@ -268,15 +268,39 @@ export interface TwinData {
   windows: TwinWindow[]; // in twins.json order; windows he has too few shots for are absent
 }
 
-/** His windows and their five closest player-seasons, names and labels resolved. */
-export async function twinData(id: string): Promise<TwinData | null> {
+/** twins.json with a resolver for its pool rows: the player's name and slug, the season's label
+ * and whether its locations are approximate, the club's name. */
+async function twinsFile() {
   const file = await load<TwinsFile>("twins.json");
-  const mine = file?.players[id];
-  if (!file || !mine) return null;
+  if (!file) return null;
   const m = (await meta())!;
   const labels = new Map(m.seasons.map((s) => [s.season, s]));
   const people = new Map((await playerIndex()).map((p) => [p.id, p]));
   const label = (year: number) => labels.get(year)?.label ?? String(year);
+  const row = (i: number) => {
+    const [pid, season, team, games, counts] = file.pool[i];
+    const who = people.get(pid);
+    return {
+      name: who?.name ?? pid,
+      slug: who?.slug ?? "",
+      season,
+      label: label(season),
+      team,
+      club: m.teams[team] ?? team,
+      games,
+      validated: labels.get(season)?.coords_validated ?? true,
+      counts,
+    };
+  };
+  return { file, label, row };
+}
+
+/** His windows and their five closest player-seasons, names and labels resolved. */
+export async function twinData(id: string): Promise<TwinData | null> {
+  const twins = await twinsFile();
+  const mine = twins?.file.players[id];
+  if (!twins || !mine) return null;
+  const { file, label, row } = twins;
   return {
     fields: file.count_fields,
     zones: file.zones,
@@ -293,23 +317,7 @@ export async function twinData(id: string): Promise<TwinData | null> {
           to: label(w.to),
           games: w.games,
           counts: w.counts,
-          twins: w.twins.map(([i, match]) => {
-            const [pid, season, team, games, counts] = file.pool[i];
-            const who = people.get(pid);
-            return {
-              index: i,
-              name: who?.name ?? pid,
-              slug: who?.slug ?? "",
-              season,
-              label: label(season),
-              team,
-              club: m.teams[team] ?? team,
-              games,
-              validated: labels.get(season)?.coords_validated ?? true,
-              match,
-              counts,
-            };
-          }),
+          twins: w.twins.map(([i, match]) => ({ index: i, ...row(i), match })),
         };
       }),
   };
@@ -330,22 +338,16 @@ export interface TwinPool {
 /** Every pool player-season, names resolved: one shared file (data/twins.json) the player pages
  * fetch for the twins and windows they do not render. */
 export async function twinPool(): Promise<TwinPool | null> {
-  const file = await load<TwinsFile>("twins.json");
-  if (!file) return null;
-  const m = (await meta())!;
-  const labels = new Map(m.seasons.map((s) => [s.season, s]));
-  const people = new Map((await playerIndex()).map((p) => [p.id, p]));
-  const teams = new Set(file.pool.map((r) => r[2]));
+  const twins = await twinsFile();
+  if (!twins) return null;
+  const { file, row } = twins;
+  const rows = file.pool.map((_, i) => row(i));
   return {
     fields: file.count_fields,
     zones: file.zones,
     bands: file.bands,
-    clubs: Object.fromEntries([...teams].sort().map((t) => [t, m.teams[t] ?? t])),
-    pool: file.pool.map(([pid, season, team, games, counts]) => {
-      const who = people.get(pid);
-      const info = labels.get(season);
-      return [who?.name ?? pid, who?.slug ?? "", info?.label ?? String(season), team, games, (info?.coords_validated ?? true) ? 0 : 1, counts];
-    }),
+    clubs: Object.fromEntries([...new Map(rows.map((r) => [r.team, r.club]))].sort()),
+    pool: rows.map((r): TwinPoolRow => [r.name, r.slug, r.label, r.team, r.games, r.validated ? 0 : 1, r.counts]),
   };
 }
 

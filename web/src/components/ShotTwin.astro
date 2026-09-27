@@ -17,8 +17,8 @@ import {
   profile,
   rateText,
   shareText,
-  twinLine as line,
-  windowLine as winLine,
+  twinLine,
+  windowLine,
 } from "../lib/twin";
 
 interface Props {
@@ -35,8 +35,8 @@ const every = windows.flatMap((w) => [prof(w.counts), ...w.twins.map((t) => prof
 const zoneTop = axisTop(every.flatMap((p) => p.zones));
 const rateTop = axisTop(every.flatMap((p) => p.rates.map((r) => r ?? 0)));
 
-const windowLine = (w: TwinWindow) => winLine(w.key, w.from, w.to, prof(w.counts).att);
-const twinLine = (t: TwinSeason) => line(t.label, t.club, t.games);
+const winText = (w: TwinWindow) => windowLine(w.key, w.from, w.to, prof(w.counts).att);
+const twinText = (t: TwinSeason) => twinLine(t.label, t.club, t.games);
 const him = start ? prof(start.counts) : null;
 const first = start?.twins[0];
 const twin = first ? prof(first.counts) : null;
@@ -129,7 +129,7 @@ const payload = data && {
                   {name.split(" ").slice(0, -1).join(" ")}{" "}
                   <span class="nw">{surname}<i class="swatch him" aria-hidden="true" /></span>
                 </span>
-                <span class="sub" data-f="window">{windowLine(start)}</span>
+                <span class="sub" data-f="window">{winText(start)}</span>
               </th>
               <td class="staff" />
               <th scope="col" class="who r">
@@ -137,7 +137,7 @@ const payload = data && {
                   <i class="swatch twin" aria-hidden="true" />
                   <a class="ink-link" data-f="twin-link" href={first.slug ? playerHref(base, first.slug) : undefined}>{first.name}</a>
                 </span>
-                <span class="sub" data-f="twin-line">{twinLine(first)}</span>
+                <span class="sub" data-f="twin-line">{twinText(first)}</span>
                 <span class="sub approx" data-f="approx" hidden={first.validated}>
                   Shot locations before 2011-12 are approximate
                 </span>
@@ -254,11 +254,20 @@ const payload = data && {
     // The pool is shared by every player page: fetched on the first sign of interest, once.
     let pool: Promise<TwinPool> | null = null;
     const load = () =>
-      (pool ??= fetch(`${data.base}/data/twins.json`).then((r) => {
+      (pool ??= fetch(`${data.base}/data/twins.json`).then(async (r) => {
         if (!r.ok) throw new Error(String(r.status));
-        return r.json();
-      }));
-    for (const type of ["pointerover", "touchstart", "focusin"]) section.addEventListener(type, load, { once: true, passive: true });
+        // Keep only the rows this page's windows name; the rest of the pool is someone else's.
+        const all = (await r.json()) as TwinPool;
+        const mine = new Set(Object.values(data.windows).flatMap(([, , , twins]) => twins.map(([row]) => row)));
+        return { ...all, pool: all.pool.map((row, i) => (mine.has(i) ? row : null!)) };
+      })).catch((e) => {
+        pool = null; // the next choice tries again
+        throw e;
+      });
+    const warm = () => load().catch(() => {});
+    for (const type of ["pointerover", "touchstart", "focusin"]) section.addEventListener(type, warm, { once: true, passive: true });
+    // The held height (below) is for one layout; a new width lays the section out afresh.
+    addEventListener("resize", () => (root.style.minHeight = ""), { passive: true });
 
     const field = (name: string) => root.querySelector<HTMLElement>(`[data-f="${name}"]`)!;
     const scale = (x: number, top: number) => Math.min(1, x / top).toFixed(4);

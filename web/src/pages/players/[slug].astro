@@ -263,8 +263,8 @@ const seasonOptions = (list: typeof seasons, chosen: number) =>
 <script>
   import up from "@phosphor-icons/core/assets/fill/caret-up-fill.svg?raw";
   import down from "@phosphor-icons/core/assets/fill/caret-down-fill.svg?raw";
-  import { bandsHtml, logHtml, shotChart } from "../../lib/player";
-  import type { Bands, PlayerData, PlayerSeason } from "../../lib/stats";
+  import { bandsHtml, logHtml, shotChart, unpackPlayer, type PackedPlayer } from "../../lib/player";
+  import type { Bands, PlayerData } from "../../lib/stats";
 
   const shots = document.getElementById("shots");
   if (shots) {
@@ -274,17 +274,8 @@ const seasonOptions = (list: typeof seasons, chosen: number) =>
         if (!r.ok) throw new Error(String(r.status));
         return r.json();
       });
-    // data/player packs each game's details into its log row and leaves the league's bands to the
-    // season's shared file; unpack both into the seasons the renderers read.
     let data: Promise<PlayerData> | null = null;
-    const load = () =>
-      (data ??= json<PlayerData>(`player/${slug}`).then((d) => ({
-        ...d,
-        seasons: d.seasons.map((s) => {
-          const n = s.logFields.length;
-          return { ...s, log: s.log.map((row) => row.slice(0, n)), games: Object.fromEntries(s.log.map((row) => [row[0], row.slice(n)])) } as PlayerSeason;
-        }),
-      })));
+    const load = () => (data ??= json<PackedPlayer>(`player/${slug}`).then(unpackPlayer));
     const league = new Map<number, Promise<Bands>>();
     const bandsOf = (season: number) => {
       if (!league.has(season)) league.set(season, json<{ bands: Bands }>(`season/${season}`).then((x) => x.bands));
