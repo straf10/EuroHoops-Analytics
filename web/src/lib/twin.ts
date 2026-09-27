@@ -19,6 +19,21 @@ export const ZONE_LABELS: Record<string, [string, string, string]> = {
   deep3: ["Deep three", "Deep 3", "a three from 8 m and out"],
 };
 
+/** Window -> [control label, what the tooltip says it matches]. */
+export const WINDOW_NAMES: Record<string, [string, string]> = {
+  last5: ["Last 5", "his last 5 games"],
+  last10: ["Last 10", "his last 10 games"],
+  last20: ["Last 20", "his last 20 games"],
+  season: ["Season", "his latest full season"],
+};
+
+/** "Last 10 games, 2025-26 · 88 shots" or "2024-25 · 612 shots" (from and to are season labels). */
+export const windowLine = (key: string, from: string, to: string, att: number) =>
+  `${key === "season" ? from : `${WINDOW_NAMES[key][0]} games, ${from === to ? from : `${from} to ${to}`}`} · ${att} shots`;
+
+/** The twin's column head: "2024-25 · Armani Olimpia Milan · 34 games". */
+export const twinLine = (label: string, club: string, games: number) => `${label} · ${club} · ${games} games`;
+
 export const RATE_LABELS: [string, string][] = [
   ["3PA rate", "Three-point attempts per field-goal attempt"],
   ["FT rate", "Free-throw attempts per field-goal attempt"],

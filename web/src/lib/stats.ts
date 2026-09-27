@@ -237,6 +237,7 @@ interface TwinsFile {
 }
 
 export interface TwinSeason {
+  index: number; // its row in twins.json's pool (and data/twins.json)
   name: string;
   slug: string;
   season: number;
@@ -296,6 +297,7 @@ export async function twinData(id: string): Promise<TwinData | null> {
             const [pid, season, team, games, counts] = file.pool[i];
             const who = people.get(pid);
             return {
+              index: i,
               name: who?.name ?? pid,
               slug: who?.slug ?? "",
               season,
@@ -310,6 +312,40 @@ export async function twinData(id: string): Promise<TwinData | null> {
           }),
         };
       }),
+  };
+}
+
+/** A pool row as the twin switch reads it: [name, slug, season label, team, games, approximate
+ * locations (1) or not (0), counts]. */
+export type TwinPoolRow = [string, string, string, string, number, number, Counts];
+
+export interface TwinPool {
+  fields: string[];
+  zones: string[];
+  bands: string[];
+  clubs: Record<string, string>;
+  pool: TwinPoolRow[];
+}
+
+/** Every pool player-season, names resolved: one shared file (data/twins.json) the player pages
+ * fetch for the twins and windows they do not render. */
+export async function twinPool(): Promise<TwinPool | null> {
+  const file = await load<TwinsFile>("twins.json");
+  if (!file) return null;
+  const m = (await meta())!;
+  const labels = new Map(m.seasons.map((s) => [s.season, s]));
+  const people = new Map((await playerIndex()).map((p) => [p.id, p]));
+  const teams = new Set(file.pool.map((r) => r[2]));
+  return {
+    fields: file.count_fields,
+    zones: file.zones,
+    bands: file.bands,
+    clubs: Object.fromEntries([...teams].sort().map((t) => [t, m.teams[t] ?? t])),
+    pool: file.pool.map(([pid, season, team, games, counts]) => {
+      const who = people.get(pid);
+      const info = labels.get(season);
+      return [who?.name ?? pid, who?.slug ?? "", info?.label ?? String(season), team, games, (info?.coords_validated ?? true) ? 0 : 1, counts];
+    }),
   };
 }
 
