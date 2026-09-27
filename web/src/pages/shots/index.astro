@@ -234,6 +234,7 @@ const cfg = { base, open, seasons: seasons.map((x) => x.season) };
     run,
     subjectLabel,
     totalsHtml,
+    unpackAttempts,
     writeState,
     type Attempts,
     type Facet,
@@ -253,9 +254,9 @@ const cfg = { base, open, seasons: seasons.map((x) => x.season) };
       if (!cache.has(season))
         cache.set(
           season,
-          fetch(`${cfg.base}/data/shots/${season}.json`).then((r) => {
+          fetch(`${cfg.base}/data/shots/${season}.json`).then(async (r) => {
             if (!r.ok) throw new Error(String(r.status));
-            return r.json();
+            return unpackAttempts(await r.json());
           }),
         );
       return cache.get(season)!;
