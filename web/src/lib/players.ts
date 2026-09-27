@@ -2,6 +2,7 @@
 // Pure functions of the season data and the view state, run both at build time (the first
 // paint) and in the browser (every filter change), so the two can never disagree.
 
+import { esc } from "./court";
 import type { PlayerRow, SeasonPlayers } from "./stats";
 
 export type Window = "season" | "last5" | "last10" | "last20";
@@ -248,9 +249,6 @@ export function format(m: Measure, v: number | null): string {
   if (v < 0 && Number(text) !== 0) return `−${text}`;
   return text;
 }
-
-const esc = (s: string) =>
-  s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] ?? c);
 
 export const teamHref = (base: string, code: string, season?: number) =>
   `${base.replace(/\/$/, "")}/teams/${code.toLowerCase()}/${season ? `?season=${season}` : ""}`;
