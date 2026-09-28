@@ -14,6 +14,8 @@ jobs:
   # checkout keeps no credentials, and third-party npm code runs in build-site, which cannot write.
   predict:
     runs-on: ubuntu-latest
+    # A cold raw cache (a few thousand throttled requests) fits well inside this.
+    timeout-minutes: 150
     permissions:
       contents: write
     steps:
@@ -26,8 +28,10 @@ jobs:
       - run: uv sync --frozen --no-dev
       # GBL history lives only in ESAKE HTML; keep the raw page cache between runs so a
       # run fetches just the live season's unfinished rounds (a cold cache refetches ~350 pages).
+      # Restore and save are separate steps so a failed run still saves what it fetched: with
+      # actions/cache a failure dropped it, and every retry started cold and hit the rate limit.
       - name: Restore GBL raw cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: data/raw/gbl
           key: gbl-raw-${{ github.run_id }}
@@ -35,7 +39,7 @@ jobs:
       # The team model (M1) needs box scores: keep the EuroLeague raw cache between runs too, so
       # only games finished since the last run are fetched (the first run fills 2023-24 on).
       - name: Restore EuroLeague raw cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: data/raw/euroleague
           key: euroleague-raw-${{ github.run_id }}
@@ -49,6 +53,18 @@ jobs:
         run: |
           uv run --no-dev eurohoops ingest --details
           uv run --no-dev eurohoops ingest --competition gbl --details --pbp --seasons 2018 2019
+      - name: Save GBL raw cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: data/raw/gbl
+          key: gbl-raw-${{ github.run_id }}
+      - name: Save EuroLeague raw cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: data/raw/euroleague
+          key: euroleague-raw-${{ github.run_id }}
       - name: Build marts
         run: uv run --no-dev eurohoops build
       # Market benchmark (EuroLeague only): one The Odds API call. The repository secret is
@@ -109,6 +125,7 @@ jobs:
   build-site:
     needs: predict
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
     steps:

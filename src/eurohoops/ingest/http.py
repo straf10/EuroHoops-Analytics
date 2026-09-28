@@ -5,7 +5,8 @@ import time
 import httpx
 from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
 
-MAX_ATTEMPTS = 5
+# A 429 from the EuroLeague API clears within a minute or two: back off up to ~4 min in all.
+MAX_ATTEMPTS = 8
 USER_AGENT = "EuroHoops-Analytics/0.1 (+https://github.com/straf10/EuroHoops-Analytics)"
 
 
@@ -31,7 +32,7 @@ class Fetcher:
     @retry(
         retry=retry_if_exception(_is_retryable),
         stop=stop_after_attempt(MAX_ATTEMPTS),
-        wait=wait_exponential(multiplier=1, max=30),
+        wait=wait_exponential(multiplier=2, max=120),
         reraise=True,
     )
     def get(self, url: str) -> bytes:
