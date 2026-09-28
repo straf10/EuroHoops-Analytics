@@ -6,6 +6,7 @@ import os
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
+from functools import partial
 from pathlib import Path
 from typing import Annotated
 
@@ -24,6 +25,7 @@ from eurohoops.config import (
     GBL_PLAYER_BOX,
     GBL_TEAM_BOX,
     LIVE_SEASON,
+    M3,
     MART_PATH,
     ODDS_CALLS,
     ODDS_RAW_DIR,
@@ -38,8 +40,9 @@ from eurohoops.config import (
 )
 from eurohoops.eval.backtest import TunedModel, format_table, load_tuned_model, run_backtest
 from eurohoops.eval.m1_backtest import format_m1_table, run_m1_backtest
+from eurohoops.eval.m3_backtest import format_m3_table, run_m3_backtest
 from eurohoops.eval.scorecard import build_scorecard
-from eurohoops.eval.tracking import default_tracking_uri, log_backtest
+from eurohoops.eval.tracking import default_tracking_uri, log_backtest, log_m3_backtest
 from eurohoops.ingest import euroleague, gbl
 from eurohoops.ingest.http import Fetcher, make_client
 from eurohoops.live_m1 import load_m1, predict_upcoming_m1
@@ -53,6 +56,7 @@ from eurohoops.marts import (
     refresh_box_gaps,
     write_tables,
 )
+from eurohoops.models.box_impact import BoxGrid, box_only_margins, pir_margins
 from eurohoops.odds import OddsApiError, OddsPaths, api_key, record_odds
 from eurohoops.parse.box import build_box_tables
 from eurohoops.parse.continuity import continuity_report
@@ -88,6 +92,7 @@ class ModelName(StrEnum):
     elo = "elo"
     m1 = "m1"
     m2 = "m2"
+    m3 = "m3"
 
 
 CompetitionOption = Annotated[
@@ -371,15 +376,61 @@ def possessions() -> None:
     )
 
 
+def _backtest_m3(
+    competition: CompetitionName, score_test: bool, tuning_only: bool, tracking_uri: str
+) -> None:
+    """``backtest --model m3`` (week 9-12 H1): EuroLeague only for now."""
+    if competition is not CompetitionName.euroleague:
+        log.error("m3 backtest is EuroLeague only for now (week 9-12 H1)")
+        raise typer.Exit(code=1)
+    if EUROLEAGUE.m1 is None or not EUROLEAGUE.m1.report.exists():
+        log.error("no committed M1 report; run: eurohoops backtest --model m1")
+        raise typer.Exit(code=1)
+    tuned_m1 = json.loads(EUROLEAGUE.m1.report.read_text(encoding="utf-8"))["tuned"]
+    games = read_games(MART_PATH, EUROLEAGUE.name)
+    team_games = read_table(MART_PATH, "team_games", EUROLEAGUE.name)
+    stints = read_table(MART_PATH, "stints")
+    checks = read_table(MART_PATH, "stint_game_checks")
+    if team_games is None or stints is None or checks is None:
+        log.error(
+            "stints/stint_game_checks/team_games missing; run: eurohoops build / stints --mart"
+        )
+        raise typer.Exit(code=1)
+    player_games = build_box_games(EUROLEAGUE.raw_dir, games).players
+    report = run_m3_backtest(
+        games,
+        team_games,
+        player_games,
+        stints,
+        checks,
+        spec=M3,
+        tuned_m1=tuned_m1,
+        box_only_fn=partial(box_only_margins, grid=BoxGrid()),
+        pir_fn=pir_margins,
+        tuning_only=tuning_only,
+        score_test=score_test,
+    )
+    write_json(M3.report, report)
+    typer.echo(f"{M3.report}\n{format_m3_table(report)}")
+    run_id = log_m3_backtest(report, tracking_uri)
+    if run_id is not None:
+        typer.echo(f"MLflow parent run {run_id}")
+
+
 @app.command()
 def backtest(
+    *,
     competition: CompetitionOption = CompetitionName.euroleague,
     model: Annotated[
-        ModelName, typer.Option(help="elo (live model), m1, or m2 (EuroLeague shot model)")
+        ModelName, typer.Option(help="elo (live model), m1, m2 (shots) or m3 (player impact)")
     ] = ModelName.elo,
     score_test: Annotated[
         bool,
-        typer.Option(help="M1/M2: also score the test seasons (only after the gate verdict)"),
+        typer.Option(help="M1/M2/M3: also score the test seasons (only after the gate verdict)"),
+    ] = False,
+    tuning_only: Annotated[
+        bool,
+        typer.Option(help="M3: only the tuning grid and chosen variant (the verdict commit)"),
     ] = False,
     search: Annotated[
         bool,
@@ -387,12 +438,15 @@ def backtest(
     ] = False,
     tracking_uri: Annotated[
         str | None,
-        typer.Option(help="M1: MLflow tracking URI (default: SQLite store under ./mlruns)"),
+        typer.Option(help="M1/M3: MLflow tracking URI (default: SQLite store under ./mlruns)"),
     ] = None,
 ) -> None:
     """Tune and score a model vs its baselines; the Elo live report holds the live parameters."""
     if model is ModelName.m2:
         research.backtest_m2(score_test, search, tracking_uri or default_tracking_uri())
+        return
+    if model is ModelName.m3:
+        _backtest_m3(competition, score_test, tuning_only, tracking_uri or default_tracking_uri())
         return
     comp = COMPETITIONS[competition]
     games = read_games(MART_PATH, comp.name)
