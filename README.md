@@ -63,17 +63,10 @@ comes from [`reports/`](reports/) (`backtest_elo*.json`, `backtest_m1*.json`), a
 
 ## How it works
 
-```mermaid
-flowchart LR
-    A[EuroLeague API<br/>ESAKE.gr HTML] -->|ingest + raw cache| B[Staging Parquet<br/>pandera schemas]
-    B -->|build| C[(DuckDB marts)]
-    C --> D[Backtest<br/>walk-forward]
-    C --> E[Predict<br/>Elo · M1]
-    E -->|append-only| F[predictions/*.csv]
-    F --> G[Score vs baseline<br/>and market odds]
-    G --> H[Publish JSON]
-    H --> I[Astro static site<br/>GitHub Pages]
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/pipeline-dark.svg">
+  <img alt="EuroHoops daily pipeline: ingest, parse, DuckDB marts, predict (tuned by walk-forward backtests), append-only forecast log committed before tip-off, score against baseline and market odds, static site" src="docs/assets/pipeline-light.svg" width="100%">
+</picture>
 
 | Stage | Code | Output |
 |---|---|---|
