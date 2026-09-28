@@ -232,6 +232,11 @@ def tune_rapm(data: Data, spec: M3Backtest, inputs: RapmFitInputs) -> TunedRapm:
     games_tuning = data.games[sub_mask].reset_index(drop=True)
     tuning_mask = data.split["tuning"][sub_mask]
     actual = data.margin[sub_mask]
+    # Precomputed once: every grid point re-solves the fit, but never needs shares/possessions
+    # rows outside this truncated frame, so filtering here (not inside the closure) keeps the
+    # per-game-lookup loop in rapm_margins from scanning validation/test rows on every combo.
+    tuning_game_ids = set(games_tuning["game_id"].astype(str))
+    shares_tuning = data.shares[data.shares["game_id"].astype(str).isin(tuning_game_ids)]
 
     def rmse_for(half_life: float, ridge_o: float, ridge_d: float) -> float:
         wf = fit_walk_forward(
@@ -242,7 +247,7 @@ def tune_rapm(data: Data, spec: M3Backtest, inputs: RapmFitInputs) -> TunedRapm:
             ridge_o=ridge_o,
             ridge_d=ridge_d,
         )
-        pred = rapm_margins(games_tuning, wf, data.shares, data.possessions)
+        pred = rapm_margins(games_tuning, wf, shares_tuning, data.possessions)
         return _finite_rmse(pred, actual, tuning_mask)
 
     shared = [
@@ -457,9 +462,10 @@ def run_m3_backtest(
         "grid": grid_report,
         "chosen": chosen_block,
     }
-    if tuning_only:
-        return report
 
+    # The full walk-forward fit and every comparison model: needed for tuning metrics even in
+    # tuning_only mode (H5's verdict commit reports tuning numbers), validation/test are simply
+    # not written to the report in that mode (no validation or test metric anywhere).
     wf, _columns = fit_chosen_variant(data, inputs, chosen)
     rapm_margin = rapm_margins(data.games, wf, data.shares, data.possessions)
     oracle_margin = rapm_margins(data.games, wf, data.oracle, data.possessions)
@@ -469,7 +475,10 @@ def run_m3_backtest(
     box_result = box_only_fn(data.games, player_games, data.shares, data.possessions, tuning_bool)
     pir_result = pir_fn(data.games, player_games, data.shares, data.possessions, tuning_bool)
 
-    splits = ("tuning", "validation", *(("test",) if score_test else ()))
+    if tuning_only:
+        splits: tuple[str, ...] = ("tuning",)
+    else:
+        splits = ("tuning", "validation", *(("test",) if score_test else ()))
     finite = {
         "rapm": np.isfinite(rapm_margin),
         "box_only": np.isfinite(box_result.margin),
@@ -506,6 +515,8 @@ def run_m3_backtest(
         "label": "oracle, not a forecast",
         **{split: _model_metrics(oracle_margin, data, oracle_scored)[split] for split in splits},
     }
+    if tuning_only:
+        return report  # no validation or test metric anywhere (H5: the verdict commit)
 
     validation_scored = scored["validation"]
     chosen_residual = (data.margin - rapm_margin)[validation_scored]

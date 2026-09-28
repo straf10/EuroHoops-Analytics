@@ -210,3 +210,57 @@ def log_m2_backtest(report: dict[str, Any], tracking_uri: str) -> str | None:
                 mlflow.log_metric("trial_value", trial["value"], step=trial["number"])
     run_id: str = parent.info.run_id
     return run_id
+
+
+EXPERIMENT_M3 = "m3-backtest"
+
+
+def log_m3_backtest(report: dict[str, Any], tracking_uri: str) -> str | None:
+    """Log one M3 backtest (week 9-12 H1): a parent run (params, data hash, commit, every
+    numeric report value, the report JSON) and one nested child per declared RAPM variant
+    (``report["grid"]``'s keys). None when MLflow is not installed, like the M1/M2 loggers."""
+    try:
+        import mlflow  # noqa: PLC0415 - optional dev dependency, only on the backtest path
+    except ImportError:
+        log.warning("MLflow is not installed (dev dependency): backtest not tracked")
+        return None
+    commit, dirty = git_state()
+    shared = {
+        "competition": "euroleague",
+        "data_sha256": report["data_sha256"],
+        "git_commit": commit,
+        "git_dirty": str(dirty).lower(),
+        "model_version": report["model_version"],
+    }
+    params = {
+        **shared,
+        "chosen_variant": report["chosen"]["variant"],
+        "chosen_half_life_days": report["chosen"]["half_life_days"],
+        "chosen_ridge_o": report["chosen"]["ridge_o"],
+        "chosen_ridge_d": report["chosen"]["ridge_d"],
+        **{f"seasons.{k}": ",".join(map(str, v)) for k, v in report["seasons"].items()},
+        "tuning_only": report["tuning_only"],
+        "test_scored": report["test_scored"],
+    }
+    mlflow.set_tracking_uri(tracking_uri)
+    experiment_id = _experiment(mlflow.MlflowClient(), EXPERIMENT_M3, tracking_uri)
+    name = f"m3 {report['model_version']}"
+    with mlflow.start_run(experiment_id=experiment_id, run_name=name) as parent:
+        mlflow.log_params(params)
+        mlflow.set_tags(shared)
+        mlflow.log_metrics(flatten_metrics({k: v for k, v in report.items() if k != "grid"}))
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "backtest_m3.json"
+            path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+            mlflow.log_artifact(str(path))
+        for variant, grid_block in report["grid"].items():
+            with mlflow.start_run(
+                experiment_id=experiment_id, run_name=f"{name} {variant}", nested=True
+            ):
+                mlflow.log_params(
+                    {**shared, "variant": variant, "chosen": variant == report["chosen"]["variant"]}
+                )
+                mlflow.set_tags(shared)
+                mlflow.log_metrics(flatten_metrics(grid_block))
+    run_id: str = parent.info.run_id
+    return run_id

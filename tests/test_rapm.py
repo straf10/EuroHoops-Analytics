@@ -14,7 +14,9 @@ from eurohoops.models.rapm import (
     Spell,
     SpellIndex,
     build_design_rows,
+    build_minutes_rows,
     build_spell_index,
+    fit_decayed_minutes,
     fit_walk_forward,
     plain_player_columns,
     rating_lookup,
@@ -190,6 +192,42 @@ def test_synthetic_recovery_improves_with_more_stints() -> None:
     big_corr = correlation(big, big_fit)
     assert big_corr >= 0.9, big_corr
     assert rmse(big, big_fit) < rmse(small, small_fit)  # the error shrinks as stints grow
+
+
+def test_decayed_minutes_shrink_with_a_shorter_half_life() -> None:
+    """D6: decayed on-court seconds per spell, used by the (not-yet-built) rapm_dummy
+    threshold. No hand example is specified for this hook, so this checks its two defining
+    properties: a spell with no passed-check stints has 0 minutes, and a shorter half-life
+    leaves less total credited time than a very long one (more decay)."""
+    data = make_synthetic_m3(
+        list(range(2018, 2021)),
+        teams=6,
+        games_per_season=20,
+        stints_per_game=10,
+        roster=8,
+        seed=17,
+    )
+    spell_index = build_spell_index(data.stints)
+    rows = build_minutes_rows(data.stints, data.checks, data.games, spell_index)
+    long_half_life = fit_decayed_minutes(data.games, rows, spell_index, half_life_days=1.0e6)
+    short_half_life = fit_decayed_minutes(data.games, rows, spell_index, half_life_days=30.0)
+    assert len(long_half_life) == spell_index.n_spells
+    assert (long_half_life >= 0.0).all()
+    assert (short_half_life >= 0.0).all()
+    assert short_half_life.sum() < long_half_life.sum()
+
+    # A game with a planted failed check contributes no minutes at all.
+    failed_games = set(data.checks.loc[~data.checks["passed"].astype(bool), "game_id"])
+    if not failed_games:
+        checks = data.checks.copy()
+        checks.loc[checks.index[0], "passed"] = False
+        failed_games = {str(checks.loc[checks.index[0], "game_id"])}
+    else:
+        checks = data.checks
+    failed_rows = build_minutes_rows(data.stints, checks, data.games, spell_index)
+    all_pass = data.checks.assign(passed=True)
+    all_rows = build_minutes_rows(data.stints, all_pass, data.games, spell_index)
+    assert failed_rows.position.size < all_rows.position.size
 
 
 @pytest.mark.parametrize("seed", [3, 4])

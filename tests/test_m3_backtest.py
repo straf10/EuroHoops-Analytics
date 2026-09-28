@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from eurohoops import cli
 from eurohoops.config import M3Backtest, M3Grid
 from eurohoops.eval.m3_backtest import (
     BaselineResult,
@@ -91,9 +92,11 @@ def test_tuning_only_report_has_no_validation_or_test_metric(data: SyntheticM3) 
     assert report["tuning_only"] is True
     assert not report["validation_scored"]
     assert not report["test_scored"]
-    assert "metrics" not in report
+    assert list(report["metrics"]) == ["tuning"]  # tuning numbers only, per H5
+    assert list(report["games_per_split"]) == ["tuning"]
+    assert set(report["metrics"]["tuning"]) == {"rapm", "box_only", "pir", "m1", "b0"}
     assert "gate" not in report
-    assert "validation" not in json.dumps(report["seasons"]) or True  # seasons list is fine
+    assert "comparisons" not in report
     assert report["chosen"]["variant"] in report["grid"]
 
 
@@ -188,3 +191,12 @@ def test_format_m3_table_runs_for_both_modes(data: SyntheticM3, report: dict[str
     )
     assert "chosen" in format_m3_table(tuning_only)
     assert "gate" in format_m3_table(report)
+
+
+def test_cli_declares_m3_and_soft_imports_box_impact() -> None:
+    """``eurohoops backtest --model m3`` exists and its box_impact wiring degrades cleanly
+    when subagent B's ``models/box_impact.py`` (written in a parallel branch) is not merged
+    into this worktree yet -- exercised directly (not through ``test_cli.py``, which this
+    subagent does not own) so the CLI plumbing itself is covered."""
+    assert cli.ModelName.m3 == "m3"
+    assert cli._box_impact() is None  # box_impact.py does not exist in this worktree
