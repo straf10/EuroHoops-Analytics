@@ -16,6 +16,7 @@ wins, else the spline baseline) must meet F-f.
 
 import hashlib
 import json
+import multiprocessing
 import time
 from collections.abc import Callable, Sequence
 from concurrent.futures import ProcessPoolExecutor
@@ -117,14 +118,18 @@ class FitPool:
     LightGBM with ``deterministic=True`` and a fixed ``num_threads`` gives byte-identical
     predictions whether fits run one at a time or in parallel processes (verified,
     reports/week7-10b_progress.md; ``test_parallel_fits_equal_sequential_fits``), so this is a
-    number-preserving speed-up."""
+    number-preserving speed-up. Workers are spawned, never forked: a fork after LightGBM has
+    run in this process inherits its OpenMP thread pool mid-state and hangs (as on Linux CI)."""
 
     def __init__(
         self, shots: pd.DataFrame, later: pd.DataFrame, development: Sequence[int], workers: int
     ) -> None:
         self.shots, self.later = shots, later
         self.executor = ProcessPoolExecutor(
-            workers, initializer=_init_worker, initargs=(shots, later, tuple(development))
+            workers,
+            mp_context=multiprocessing.get_context("spawn"),
+            initializer=_init_worker,
+            initargs=(shots, later, tuple(development)),
         )
 
     def run(self, fit: Fitter, jobs: Sequence[Job]) -> list[list[FloatArray]]:

@@ -18,7 +18,7 @@ from eurohoops.ingest.http import Fetcher
 SCHEDULE_URL = "https://api-live.euroleague.net/v2/competitions/E/seasons/E{season}/games"
 DETAIL_URL = "https://live.euroleague.net/api/{endpoint}?gamecode={game_code}&seasoncode=E{season}"
 DETAIL_ENDPOINTS = ("Boxscore", "PlaybyPlay", "Points")
-MIN_INTERVAL_S = 0.5
+MIN_INTERVAL_S = 1.0
 
 log = logging.getLogger(__name__)
 
