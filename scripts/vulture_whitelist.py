@@ -5,6 +5,7 @@ Remove an entry as soon as the pipeline uses the name.
 - config.py M3 specs and models/minutes.py: M3 backtest (week 9-12 H1-H8), wired in wave 1
 """
 
+from eurohoops import research
 from eurohoops.config import GBL_STINTS_REPORT, M3, M3_GBL, M3_PLAYERS_REPORT, M3Backtest, M3Grid
 from eurohoops.models.minutes import expected_possessions, oracle_shares, projected_shares
 from eurohoops.standings import EUROLEAGUE_2026, GBL_2026, Format, Series, rank
@@ -34,3 +35,8 @@ GBL_STINTS_REPORT
 projected_shares
 oracle_shares
 expected_possessions
+
+# week 9-12 subagent C (H3: GBL stints)
+# research.gbl_stints is cli.py's job to register (app.command(name="gbl-stints")(...)),
+# owned by another subagent; until that merge it has no caller in src/.
+research.gbl_stints
