@@ -1,0 +1,71 @@
+# Weeks 9–12 progress: M3 player impact (RAPM → Bayesian RAPM → SPM prior → GBL transfer)
+
+Task file: `docs/history/prompts/week-9-12.md`. Branch `week-9-12` (from `main` 2bbfafc).
+
+## §0 sub-decisions (confirmed by the owner, 2026-09-28)
+All defaults accepted as written (H-a … H-j). H-g: closed-form conjugate Gaussian posterior,
+not PyMC (PLAN §5.4 says "in PyMC"; the owner chose closed form; recorded as a deviation from
+PLAN wording, no PLAN value changed).
+
+| # | Decision |
+|---|---|
+| H-a | EuroLeague warm-up 2011–2014, tuning 2015–2022, validation 2023, test 2024–2025 (once, after the verdict commit). 2026-27 untouched. |
+| H-b | Stint-side rows, O block (+1 offense five) and D block (−1 defense five), target points per 100, weight possessions, home column + intercept; 0-possession sides dropped; λ (shared or O/D) and decay half-life chosen on tuning by future-margin RMSE. |
+| H-c | Walk forward by round; margin = P/100 · (h + Σ_home f·r − Σ_away f·r); projected minutes = previous 5 team games (first round: last season with the team, 0 for new players); oracle-minutes variant reported, never gated. |
+| H-d | Gate: bootstrap 95% CI (1,000, seed 20261001) of RMSE(chosen RAPM) − RMSE(box-only) on validation has upper bound < 0. MAE and log loss (Normal, σ from tuning) reported; M1 and PIR reported, not gated. |
+| H-e | Box-only: shrunk per-100 box rates (PTS, 2PA, 3PA, FTA, OREB, DREB, AST, STL, BLK, TOV, PF), ridge-combined, fitted on tuning with the future-margin target; PIR per minute as the naive baseline. |
+| H-f | `rapm_dummy`: players under {0, 50, 100, 200, 400} minutes share a replacement column per team-season; kept only if it wins on tuning. |
+| H-g | Closed form: posterior mean = ridge solution, covariance σ²(XᵀWX + Λ)⁻¹, 90% intervals. |
+| H-h | SPM = regression of RAPM on per-100 box rates (minutes-weighted); `rapm_spm` shrinks toward it. See decision D2 for the fitting window. |
+| H-i | GBL stints from `gbl_pbp`; SPM transfer vs GBL box-only vs PIR on the `config.GBL.m1` splits; GBL RAPM only if ≥ 95% of games pass. |
+| H-j | `backtest --model m3` < 1,800 s on a quiet machine (item 36). |
+
+## §3 findings (2026-09-28, real data; re-checked by `scripts/checks/m3_facts.py`, item 33)
+1. **Players:** 1,727 distinct EuroLeague players have stints 2011–2025 (4,577 player-seasons;
+   242–357 per season). Total on-court minutes: 10% < 12, 25% < 95, median 330, 75% 1,189,
+   90% 2,944. Players under 50 / 100 / 200 / 400 total minutes: 310 / 443 / 656 / 928.
+   A dense posterior inverse is ≈ 3,456 × 3,456 (95 MB): fine.
+2. **Ids stable:** 905 ids span several seasons; 84 ids carry more than one spelling (e.g.
+   P000956 ANDUSIC/ANDJUSIC), which is the same id. Only two names map to two ids: Omer
+   Yurtseven (P005353 in 2014, P005983 in 2015: one player split in two) and Marko Simonovic
+   (RED 2013 `PLRU`, RED 2023 P012711: two different players). Ids are used as they are.
+3. **Minutes:** box seconds and stint on-court seconds agree within 60 s for 99.997% of
+   89,289 player-games of passing games (max gap 92 s); 99.84% over all games.
+4. **GBL box rates:** every cached ESAKE box score 2018–2025 (2,524 team box scores) has the
+   same 17 columns: P, 2PM-A, 3PM-A, FTM-A, REBS, D.REBS, O.REBS, AST, BLK, BLK-A, FOULS F,
+   FOULS M, STL, TO, TIM.PL., RANK. FOULS M = fouls committed and FOULS F = fouls drawn, and
+   RANK = PIR (checked on `tests/fixtures/esake/box_8FC479F6.html`: PIR = PTS + REB + AST + STL
+   + BLK + FD − missed FG − missed FT − TO − BLK-A − PF holds for the rows checked). 2018 and
+   2019 have 52 and 26 cached pages without box tables (the known gaps). The staged
+   `player_box` keeps only points/shots/seconds, so H-e needs a new parser of the full rows.
+5. **GBL play-by-play is cached for 2018 and 2019 only** (203 and 139 games). See D4.
+
+## Decisions this file did not cover
+- **D1 (shared interface, orchestrator).** `models/minutes.py` (projected and oracle shares,
+  expected possessions, round cutoffs) written in H0, so subagents A and B build on one
+  interface. Share = seconds on court / game seconds (a team's shares add to 5). P = mean of
+  the two teams' season-to-date pace (`poss_game · 40 / minutes`), falling back to the team's
+  previous season, then the league mean of all earlier team-games.
+- **D2 (SPM window).** H-h says leave-one-season-out on 2011–2022; §1 ("no … SPM coefficient
+  used to predict a game may depend on that game or any later one") and item 34 forbid
+  coefficients that use later seasons. The SPM used for season s is therefore fitted on RAPM
+  of seasons < s only (expanding window). It still never uses season s (H6's test) and is
+  stricter than LOSO.
+- **D3 (file ownership).** The posterior (H4, subagent D) lives in `models/rapm_posterior.py`
+  so that no two subagents edit `models/rapm.py`.
+- **D4 (GBL RAPM).** GBL stints can be built only for 2018–2019 (the cached play-by-play).
+  GBL validation/test (2023–2025) have none, so GBL RAPM cannot be evaluated there; H8 reports
+  SPM transfer vs box-only vs PIR alone (H-i fallback). Back-filling 2020–2025 play-by-play
+  would re-stage `gbl_pbp` and move `reports/possessions.json` (§1: existing reports don't
+  move): not done; open question for the owner.
+- **D5 (M1 comparison).** M1 margins are recomputed from the committed `tuned` block of
+  `reports/backtest_m1.json` (no re-tuning, M1 untouched).
+- **D6 (dummy threshold).** "Minutes in the fitting window" = the player's time-decayed
+  on-court minutes in fitted stints before the cutoff (same decay as the rows).
+- **D7 (grids, declared in `config.M3Grid` before any run).** Half-life {182, 365, 730, 1,460}
+  days × shared ridge {250 … 8,000} possessions; then separate O/D ridges by one-dimensional
+  search at the best half-life (kept only if they lower tuning RMSE); dummy thresholds with the
+  chosen half-life and ridge.
+
+## Iterations
+iteration | deliverable | checks run | result | commit

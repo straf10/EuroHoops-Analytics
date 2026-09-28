@@ -212,6 +212,54 @@ M2_CHARTS_DIR = Path("docs/models/m2")
 # and the three players with the most validation-season FGA.
 M2_CHART_TEAMS = ("PAN", "OLY", "MAD")
 M2_CHART_PLAYERS = 3
+
+
+@dataclass(frozen=True)
+class M3Grid:
+    """M3 hyperparameters, all chosen on the tuning seasons by future-margin RMSE (H-b, H-f).
+
+    ``ridge`` is in possessions of evidence (the penalty added to each player column of the
+    possession-weighted normal equations). The search: every (half-life, shared ridge) pair,
+    then one-dimensional searches of a separate offense and defense ridge at the best
+    half-life; ``dummy_minutes`` (0 = off) is searched with the chosen half-life and ridge.
+    """
+
+    half_life_days: tuple[float, ...] = (182.0, 365.0, 730.0, 1460.0)
+    ridge: tuple[float, ...] = (250.0, 500.0, 1000.0, 2000.0, 4000.0, 8000.0)
+    dummy_minutes: tuple[float, ...] = (0.0, 50.0, 100.0, 200.0, 400.0)
+
+
+@dataclass(frozen=True)
+class M3Backtest:
+    """M3 player-impact backtest (week 9-12 §0): walk forward by round, projected minutes."""
+
+    report: Path
+    warmup: tuple[int, ...]
+    tuning: tuple[int, ...]
+    validation: tuple[int, ...]
+    test: tuple[int, ...]
+    grid: M3Grid = M3Grid()
+    projection_games: int = 5  # H-c: minutes share over the team's previous 5 games
+    bootstrap_resamples: int = 1000  # H-d
+    bootstrap_seed: int = 20261001
+
+
+M3 = M3Backtest(
+    Path("reports/backtest_m3.json"),
+    warmup=_seasons(2011, 2014),
+    tuning=_seasons(2015, 2022),
+    validation=(2023,),
+    test=(2024, 2025),
+)
+M3_GBL = M3Backtest(
+    Path("reports/backtest_m3_gbl.json"),
+    warmup=_seasons(2018, 2020),
+    tuning=(2021, 2022),
+    validation=(2023,),
+    test=(2024, 2025),
+)
+M3_PLAYERS_REPORT = Path("reports/m3_players.json")
+GBL_STINTS_REPORT = Path("reports/gbl_stints.json")
 GBL_PLAYER_BOX = Path("data/staging/gbl_player_box.parquet")
 GBL_TEAM_BOX = Path("data/staging/gbl_team_box.parquet")
 GBL_BOX_FILL = Path("data/staging/gbl_box_fill.parquet")
