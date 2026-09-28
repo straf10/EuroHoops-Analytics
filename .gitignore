@@ -33,8 +33,8 @@ web/.astro/
 web/src/data/site.json
 web/src/data/stats/
 
-# Impeccable scratch (screenshots, decision-page state); DESIGN.md, design.json and briefs are kept
-.impeccable/review/
-.impeccable/questions/
-.impeccable/mocks/
+# AI agent tooling (Claude Code config, skill state); local only, not part of the repo
+.claude/
+.impeccable/
+skills-lock.json
 mlruns/

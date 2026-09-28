@@ -1,5 +1,5 @@
 // Fantasy-style jersey backs: surname and number across the back of a plain two-colour shirt.
-// Club colours are the site's one bounded exception to Colour-Is-Data (DESIGN.md): they live
+// Club colours are the site's one bounded exception to Colour-Is-Data (docs/DESIGN.md): they live
 // here, apart from the chart palette, and only ever paint a shirt's body and trim. No crests,
 // sponsor marks or kit patterns; the cut is one generic sleeveless shirt for every club.
 
