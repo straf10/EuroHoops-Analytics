@@ -77,3 +77,5 @@ iteration | deliverable | checks run | result | commit
 ## Owner instructions, 2026-09-28 23:20 (going AFK)
 - Work autonomously to the stop condition; then merge `week-9-12` into `main`, push `origin/main` and delete the subagent worktree branches (this overrides §1 "do not push / do not merge").
 - If M3 does not beat the current best model, look for legitimate improvements. Interpreted as: extra variants are explored and chosen on **tuning seasons only**, before the verdict commit; anything tried after the verdict is labelled post-hoc and never changes the gate; test is still scored once; leakage tests cover every variant.
+5 | H1 RAPM + harness (subagent A, 1 round) merged; B's baselines wired (one BaselineResult, CLI binds BoxGrid) | full pytest 518 passed, cov 95.32%; ruff, format, mypy, vulture | green | edd7361
+   note: team_eff._epoch (B's flag) is correct on real data: read_games gives datetime64[ns, UTC] (pandas 3.0.6); M1 unaffected.
