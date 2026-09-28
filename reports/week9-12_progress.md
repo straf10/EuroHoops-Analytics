@@ -71,3 +71,4 @@ PLAN wording, no PLAN value changed).
 iteration | deliverable | checks run | result | commit
 1 | H0 branch, progress, §3 facts, minutes module, M3 config | ruff, format, mypy, test_minutes, vulture, m3_facts.py (real data) | green | c059836, 5e7b32a
 2 | H4 posterior (subagent D, 1 round) merged | test_rapm_posterior (10 passed, coverage 88.38%), ruff, format, mypy, vulture in main tree; fast gate deferred (items 11/17 touch data/ while A, B, C run) | green | a2ebeab
+3 | H3 GBL stints (subagent C, 1 round) merged; gbl-stints registered in cli.py | test_gbl_stints + test_cli (27 passed), ruff, format, mypy, vulture; real-data run deferred until A, B finish | green | 9a4daee
