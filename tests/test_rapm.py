@@ -248,3 +248,20 @@ def test_solve_is_deterministic_across_warm_start_seeds(seed: int) -> None:
             continue
         assert a.o == b.o
         assert a.d == b.d
+
+
+def test_spell_index_keeps_full_ids_when_a_failing_game_lists_no_players() -> None:
+    """Real stints of a failing game can list nobody (E2015_23): ids must survive intact."""
+    stints = pd.DataFrame(
+        {
+            "season": [2015, 2015],
+            "home": ["AAA", "AAA"],
+            "away": ["BBB", "BBB"],
+            "home_players": [np.array(["P000001", "P000002"]), np.array([], dtype=str)],
+            "away_players": [np.array(["P000003"]), np.array(["P000004"])],
+        }
+    )
+    index = build_spell_index(stints)
+    assert sorted(s.player_id for s in index.spells) == ["P000001", "P000002", "P000003", "P000004"]
+    columns = plain_player_columns(index)
+    assert set(columns.o_labels) == {"P000001", "P000002", "P000003", "P000004"}

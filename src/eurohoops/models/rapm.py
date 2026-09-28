@@ -116,6 +116,9 @@ def build_spell_index(stints: pd.DataFrame) -> SpellIndex:
     sides = []
     for team_col, players_col in (("home", "home_players"), ("away", "away_players")):
         exploded = stints[[team_col, "season", players_col]].explode(players_col)
+        # A stint of a failing game can list no players (E2015_23 has no starters flagged):
+        # explode turns the empty list into a missing value, which is not a player.
+        exploded = exploded[exploded[players_col].notna()]
         sides.append(
             pd.DataFrame(
                 {
@@ -127,12 +130,14 @@ def build_spell_index(stints: pd.DataFrame) -> SpellIndex:
         )
     combined = pd.concat(sides, ignore_index=True).drop_duplicates()
     combined = combined.sort_values(["player_id", "team", "season"]).reset_index(drop=True)
-    players = combined["player_id"].to_numpy(dtype=str)
-    combined_teams = combined["team"].to_numpy(dtype=str)
-    combined_seasons = combined["season"].to_numpy(dtype=np.int64)
     spells = tuple(
-        Spell(p, t, int(s))
-        for p, t, s in zip(players, combined_teams, combined_seasons, strict=True)
+        Spell(str(p), str(t), int(s))
+        for p, t, s in zip(
+            combined["player_id"].tolist(),
+            combined["team"].tolist(),
+            combined["season"].tolist(),
+            strict=True,
+        )
     )
     positions = {spell: i for i, spell in enumerate(spells)}
     lookup = combined.assign(pos=np.arange(len(combined), dtype=np.int64))
