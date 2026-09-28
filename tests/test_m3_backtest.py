@@ -17,6 +17,7 @@ from eurohoops.eval.m3_backtest import (
     BaselineResult,
     format_m3_table,
     m1_margins,
+    m1_margins_for,
     run_m3_backtest,
 )
 from eurohoops.models.elo import FloatArray
@@ -174,6 +175,18 @@ def test_m1_margins_equal_team_eff_forecast_with_the_committed_params(data: Synt
     expected = team_eff_forecast(history, rating, pace).margin
     got = m1_margins(frame, data.team_games, TUNED_M1)
     np.testing.assert_array_equal(got, expected)
+
+
+def test_m1_margins_for_a_later_frame_replay_every_game(data: SyntheticM3) -> None:
+    """M1 warms up before the M3 frame starts: the frame's margins are M1 over every game,
+    aligned by game id, not M1 restarted at the frame's first season."""
+    everything = data.games.sort_values("tipoff_utc").reset_index(drop=True)
+    full = pd.Series(m1_margins(everything, data.team_games, TUNED_M1), index=everything["game_id"])
+    later = everything[everything["season"] >= SPEC.tuning[0]].iloc[::-1]
+    got = m1_margins_for(later, data.games, data.team_games, TUNED_M1)
+    np.testing.assert_array_equal(got, full.reindex(later["game_id"]).to_numpy())
+    restarted = m1_margins(later.iloc[::-1].reset_index(drop=True), data.team_games, TUNED_M1)
+    assert not np.allclose(got[::-1], restarted, equal_nan=True)
 
 
 def test_format_m3_table_runs_for_both_modes(data: SyntheticM3, report: dict[str, Any]) -> None:

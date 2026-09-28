@@ -3,7 +3,7 @@
 Every RAPM hyperparameter (half-life, ridge) is chosen on the tuning seasons only, by
 future-margin RMSE: every (half-life, shared ridge) pair, then a one-dimensional search of a
 separate offense and defense ridge at the best half-life, each kept only if it lowers tuning
-RMSE (D7). ``VARIANT_TUNERS`` is a registry of declared RAPM variants (name -> its own tuner);
+RMSE (D7). ``VARIANTS`` is a registry of declared RAPM variants (name -> its tuner and fit);
 this module declares only the plain ``rapm`` variant. Subagents E and F (``rapm_dummy``,
 ``rapm_spm``) add their own entries and their own extra grid axis to this same registry, so the
 tuning loop and the report stay generic over however many variants are declared. The chosen
@@ -29,7 +29,7 @@ import hashlib
 import json
 import math
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from importlib.metadata import version
 from typing import Any, Protocol
 
@@ -45,7 +45,6 @@ from eurohoops.models.elo import FloatArray
 from eurohoops.models.minutes import expected_possessions, oracle_shares, projected_shares
 from eurohoops.models.rapm import (
     DesignRows,
-    ModelColumns,
     SpellIndex,
     WalkForward,
     build_design_rows,
@@ -210,10 +209,11 @@ class TunedRapm:
     ridge_d: float
     tuning_rmse: float
     grid: dict[str, Any]
+    extra: dict[str, Any] = field(default_factory=dict)  # a variant's own chosen params
 
 
 def tune_rapm(data: Data, spec: M3Backtest, inputs: RapmFitInputs) -> TunedRapm:
-    """The ``rapm`` variant's grid search (D7): declared here so ``VARIANT_TUNERS["rapm"]`` has
+    """The ``rapm`` variant's grid search (D7): declared here so ``VARIANTS["rapm"]`` has
     the same shape every other variant's tuner does."""
     grid: M3Grid = spec.grid
     columns = plain_player_columns(inputs.spell_index)
@@ -283,24 +283,27 @@ def tune_rapm(data: Data, spec: M3Backtest, inputs: RapmFitInputs) -> TunedRapm:
     return TunedRapm(best_half_life, ridge_o, ridge_d, final_rmse, grid_report)
 
 
-VariantTuner = Callable[[Data, M3Backtest, RapmFitInputs], TunedRapm]
-VARIANT_TUNERS: dict[str, VariantTuner] = {"rapm": tune_rapm}  # E/F append rapm_dummy/rapm_spm
-
-
-def fit_chosen_variant(
-    data: Data, inputs: RapmFitInputs, tuned: TunedRapm
-) -> tuple[WalkForward, ModelColumns]:
-    """The chosen variant's full walk-forward fit (warmup..test), for validation/test/oracle."""
-    columns = plain_player_columns(inputs.spell_index)
-    wf = fit_walk_forward(
-        data.games,
+def fit_rapm(games: pd.DataFrame, inputs: RapmFitInputs, tuned: TunedRapm) -> WalkForward:
+    """The plain ``rapm`` variant's walk-forward fit over ``games`` with tuned parameters."""
+    return fit_walk_forward(
+        games,
         inputs.rows,
-        columns,
+        plain_player_columns(inputs.spell_index),
         half_life_days=tuned.half_life_days,
         ridge_o=tuned.ridge_o,
         ridge_d=tuned.ridge_d,
     )
-    return wf, columns
+
+
+@dataclass(frozen=True)
+class Variant:
+    """A declared RAPM variant: its tuner (tuning seasons only) and its walk-forward fit."""
+
+    tune: Callable[[Data, M3Backtest, RapmFitInputs], TunedRapm]
+    fit: Callable[[pd.DataFrame, RapmFitInputs, TunedRapm], WalkForward]
+
+
+VARIANTS: dict[str, Variant] = {"rapm": Variant(tune_rapm, fit_rapm)}
 
 
 # --- Comparison models: m1, b0 ------------------------------------------------------------------
@@ -316,6 +319,22 @@ def m1_margins(
     history = prepare_history(games, team_games)
     forecast = team_eff_forecast(history, rating, pace)
     return forecast.margin
+
+
+def m1_margins_for(
+    frame: pd.DataFrame,
+    all_games: pd.DataFrame,
+    team_games: pd.DataFrame,
+    tuned_m1: dict[str, Any],
+) -> FloatArray:
+    """M1 margins for ``frame``'s games, replayed over every game of the competition (M1 warms
+    up from 2007, before the M3 frame starts) and aligned by ``game_id``."""
+    ordered = all_games.sort_values("tipoff_utc", kind="stable").reset_index(drop=True)
+    margin = pd.Series(
+        m1_margins(ordered, team_games, tuned_m1), index=ordered["game_id"].astype(str)
+    )
+    aligned: FloatArray = np.asarray(margin.reindex(frame["game_id"].astype(str)), dtype=np.float64)
+    return aligned
 
 
 def b0_margin(data: Data) -> tuple[FloatArray, float]:
@@ -394,6 +413,7 @@ def model_version(tuned: TunedRapm, chosen: str) -> str:
             "half_life_days": tuned.half_life_days,
             "ridge_o": tuned.ridge_o,
             "ridge_d": tuned.ridge_d,
+            **tuned.extra,
         },
         sort_keys=True,
     )
@@ -424,7 +444,7 @@ def run_m3_backtest(
     data = prepare_data(games, team_games, player_games, stints, checks, spec=spec)
     inputs = build_rapm_inputs(stints, checks, data.games)
 
-    tuned = {name: tuner(data, spec, inputs) for name, tuner in VARIANT_TUNERS.items()}
+    tuned = {name: variant.tune(data, spec, inputs) for name, variant in VARIANTS.items()}
     chosen_name = min(tuned, key=lambda name: tuned[name].tuning_rmse)
     chosen = tuned[chosen_name]
 
@@ -435,6 +455,7 @@ def run_m3_backtest(
         "ridge_o": chosen.ridge_o,
         "ridge_d": chosen.ridge_d,
         "tuning_rmse": _round(chosen.tuning_rmse),
+        **chosen.extra,
     }
     report: dict[str, Any] = {
         "model": "m3",
@@ -456,10 +477,10 @@ def run_m3_backtest(
     # The full walk-forward fit and every comparison model: needed for tuning metrics even in
     # tuning_only mode (H5's verdict commit reports tuning numbers), validation/test are simply
     # not written to the report in that mode (no validation or test metric anywhere).
-    wf, _columns = fit_chosen_variant(data, inputs, chosen)
+    wf = VARIANTS[chosen_name].fit(data.games, inputs, chosen)
     rapm_margin = rapm_margins(data.games, wf, data.shares, data.possessions)
     oracle_margin = rapm_margins(data.games, wf, data.oracle, data.possessions)
-    m1_margin = m1_margins(data.games, team_games, tuned_m1)
+    m1_margin = m1_margins_for(data.games, games, team_games, tuned_m1)
     b0_margins, b0_home_margin = b0_margin(data)
     tuning_bool = data.split["tuning"]
     box_result = box_only_fn(data.games, player_games, data.shares, data.possessions, tuning_bool)
