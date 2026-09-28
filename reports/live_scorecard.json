@@ -1,5 +1,5 @@
 {
-  "rows_in_log": 13,
+  "rows_in_log": 21,
   "rows_excluded_late": 0,
   "rows_not_provable": 2,
   "games_not_provable": [
@@ -7,12 +7,12 @@
     "E2026_3"
   ],
   "elo": {
-    "n": 5,
-    "log_loss": 0.555067,
-    "brier": 0.184475,
-    "accuracy": 0.6,
-    "margin_mae": 9.18,
-    "ece": 0.17092,
+    "n": 8,
+    "log_loss": 0.529419,
+    "brier": 0.17381,
+    "accuracy": 0.625,
+    "margin_mae": 7.6775,
+    "ece": 0.245375,
     "reliability": [
       {
         "low": 0.0,
@@ -52,16 +52,16 @@
       {
         "low": 0.5,
         "high": 0.6,
-        "n": 0,
-        "mean_p": null,
-        "observed": null
+        "n": 1,
+        "mean_p": 0.5403,
+        "observed": 0.0
       },
       {
         "low": 0.6,
         "high": 0.7,
-        "n": 3,
-        "mean_p": 0.661833,
-        "observed": 0.666667
+        "n": 4,
+        "mean_p": 0.65385,
+        "observed": 0.75
       },
       {
         "low": 0.7,
@@ -73,9 +73,9 @@
       {
         "low": 0.8,
         "high": 0.9,
-        "n": 0,
-        "mean_p": null,
-        "observed": null
+        "n": 1,
+        "mean_p": 0.802,
+        "observed": 1.0
       },
       {
         "low": 0.9,
@@ -85,15 +85,15 @@
         "observed": null
       }
     ],
-    "margin_crps": 5.949388
+    "margin_crps": 5.374127
   },
   "b0": {
-    "n": 5,
-    "log_loss": 0.675253,
-    "brier": 0.241054,
-    "accuracy": 0.6,
-    "margin_mae": 11.055743,
-    "ece": 0.032466,
+    "n": 8,
+    "log_loss": 0.661683,
+    "brier": 0.234431,
+    "accuracy": 0.625,
+    "margin_mae": 9.944679,
+    "ece": 0.007466,
     "reliability": [
       {
         "low": 0.0,
@@ -140,9 +140,9 @@
       {
         "low": 0.6,
         "high": 0.7,
-        "n": 5,
+        "n": 8,
         "mean_p": 0.632466,
-        "observed": 0.6
+        "observed": 0.625
       },
       {
         "low": 0.7,
@@ -166,20 +166,20 @@
         "observed": null
       }
     ],
-    "margin_crps": 7.42543
+    "margin_crps": 6.557452
   },
   "totals": {
-    "n": 5,
-    "mae": 11.022678
+    "n": 8,
+    "mae": 12.653347
   },
   "all_rows": {
     "elo": {
-      "n": 7,
-      "log_loss": 0.653732,
-      "brier": 0.231462,
-      "accuracy": 0.571429,
-      "margin_mae": 7.692857,
-      "ece": 0.284786,
+      "n": 10,
+      "log_loss": 0.603615,
+      "brier": 0.208833,
+      "accuracy": 0.6,
+      "margin_mae": 6.937,
+      "ece": 0.13719,
       "reliability": [
         {
           "low": 0.0,
@@ -219,16 +219,16 @@
         {
           "low": 0.5,
           "high": 0.6,
-          "n": 1,
-          "mean_p": 0.5051,
-          "observed": 1.0
+          "n": 2,
+          "mean_p": 0.5227,
+          "observed": 0.5
         },
         {
           "low": 0.6,
           "high": 0.7,
-          "n": 4,
-          "mean_p": 0.664625,
-          "observed": 0.5
+          "n": 5,
+          "mean_p": 0.65768,
+          "observed": 0.6
         },
         {
           "low": 0.7,
@@ -240,9 +240,9 @@
         {
           "low": 0.8,
           "high": 0.9,
-          "n": 0,
-          "mean_p": null,
-          "observed": null
+          "n": 1,
+          "mean_p": 0.802,
+          "observed": 1.0
         },
         {
           "low": 0.9,
@@ -252,15 +252,15 @@
           "observed": null
         }
       ],
-      "margin_crps": 5.273785
+      "margin_crps": 5.016257
     },
     "b0": {
-      "n": 7,
-      "log_loss": 0.690762,
-      "brier": 0.248624,
-      "accuracy": 0.571429,
-      "margin_mae": 9.103041,
-      "ece": 0.061037,
+      "n": 10,
+      "log_loss": 0.675253,
+      "brier": 0.241054,
+      "accuracy": 0.6,
+      "margin_mae": 8.8,
+      "ece": 0.032466,
       "reliability": [
         {
           "low": 0.0,
@@ -307,9 +307,9 @@
         {
           "low": 0.6,
           "high": 0.7,
-          "n": 7,
+          "n": 10,
           "mean_p": 0.632466,
-          "observed": 0.571429
+          "observed": 0.6
         },
         {
           "low": 0.7,
@@ -333,11 +333,11 @@
           "observed": null
         }
       ],
-      "margin_crps": 6.279252
+      "margin_crps": 5.928723
     },
     "totals": {
-      "n": 7,
-      "mae": 10.048595
+      "n": 10,
+      "mae": 11.645355
     }
   },
   "rolling": {
@@ -346,13 +346,13 @@
   },
   "warnings": [],
   "market": {
-    "n": 0,
-    "log_loss": null,
-    "elo_log_loss": null,
-    "b0_log_loss": null
+    "n": 3,
+    "log_loss": 0.492036,
+    "elo_log_loss": 0.486674,
+    "b0_log_loss": 0.639066
   },
   "m1": {
-    "rows_in_log": 0,
+    "rows_in_log": 8,
     "rows_excluded_late": 0,
     "m1": {
       "n": 0,
