@@ -7,6 +7,7 @@ Remove an entry as soon as the pipeline uses the name.
 
 from eurohoops.config import GBL_STINTS_REPORT, M3, M3_GBL, M3_PLAYERS_REPORT, M3Backtest, M3Grid
 from eurohoops.models.minutes import expected_possessions, oracle_shares, projected_shares
+from eurohoops.models.rapm_posterior import Posterior, noise_variance, posterior, ridge_solution
 from eurohoops.standings import EUROLEAGUE_2026, GBL_2026, Format, Series, rank
 
 Series.best_of
@@ -34,3 +35,12 @@ GBL_STINTS_REPORT
 projected_shares
 oracle_shares
 expected_possessions
+
+# week 9-12 subagent D (H4: models/rapm_posterior.py, the closed-form Bayesian RAPM posterior).
+# `posterior_from_normal_equations` (the function subagent A's walk-forward fit calls once
+# merged) is already called from `posterior()` within the same module, so vulture sees it as
+# used; these are its other public entry points, not yet called from src until A wires them in.
+Posterior.interval
+posterior
+ridge_solution
+noise_variance
