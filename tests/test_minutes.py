@@ -49,12 +49,19 @@ def lines(game_id: str, team: str, seconds: dict[str, int], game_sec: int = 2400
 
 @pytest.fixture
 def player_games() -> pd.DataFrame:
+    """Each team-game's seconds add up to 5 x the game (12,000 s; 13,500 s with an overtime)."""
+    full = {"f1": 2400, "f2": 2400, "f3": 2400}
     rows = [
-        *lines("G0", "AAA", {"p1": 2400, "p2": 1200, "old": 1200}),
-        *lines("G1", "AAA", {"p1": 2000, "p2": 400}),
-        *lines("G2", "AAA", {"p1": 1000, "p3": 1400}, game_sec=2700),
+        *lines("G0", "AAA", {"p1": 2400, "p2": 1200, "old": 1200, **full}),
+        *lines("G1", "AAA", {"p1": 2000, "p2": 400, "f4": 2400, **full}),
+        *lines(
+            "G2",
+            "AAA",
+            {"p1": 1000, "p3": 1400, "f1": 2700, "f2": 2700, "f3": 2700, "f4": 3000},
+            game_sec=2700,
+        ),
         *lines("G3", "AAA", {"p1": 9, "p3": 9}),  # the game itself: never read before it
-        *lines("G1", "BBB", {"q1": 2400}),
+        *lines("G1", "BBB", {"q1": 12000}),  # a broken line: capped at the whole game
     ]
     return pd.DataFrame(rows)
 
@@ -62,6 +69,10 @@ def player_games() -> pd.DataFrame:
 def shares(frame: pd.DataFrame, game_id: str, side: str) -> dict[str, float]:
     rows = frame[(frame["game_id"] == game_id) & (frame["side"] == side)]
     return dict(zip(rows["player_id"], rows["share"], strict=True))
+
+
+def some(got: dict[str, float], keys: tuple[str, ...]) -> dict[str, float]:
+    return {k: got[k] for k in keys}
 
 
 def test_round_cutoff_is_the_first_tipoff_of_the_round(games: pd.DataFrame) -> None:
@@ -73,20 +84,24 @@ def test_first_game_uses_last_seasons_shares(
     games: pd.DataFrame, player_games: pd.DataFrame
 ) -> None:
     got = shares(projected_shares(games, player_games), "G1", "home")
-    assert got == pytest.approx({"p1": 1.0, "p2": 0.5, "old": 0.5})
+    assert got == pytest.approx({"p1": 1.0, "p2": 0.5, "old": 0.5, "f1": 1.0, "f2": 1.0, "f3": 1.0})
+    assert sum(got.values()) == pytest.approx(5.0)
 
 
 def test_hand_example_of_the_previous_games(
     games: pd.DataFrame, player_games: pd.DataFrame
 ) -> None:
     got = shares(projected_shares(games, player_games), "G3", "home")
-    # G1 and G2: p1 (2000 + 1000) / (2400 + 2700), p2 400 / 5100, p3 1400 / 5100
-    assert got == pytest.approx({"p1": 3000 / 5100, "p2": 400 / 5100, "p3": 1400 / 5100})
+    # G1 and G2: the team recorded 12,000 + 13,500 s; p1 played 2,000 + 1,000 s
+    expected = {"p1": 5 * 3000 / 25500, "p2": 5 * 400 / 25500, "p3": 5 * 1400 / 25500}
+    assert some(got, ("p1", "p2", "p3")) == pytest.approx(expected)
+    assert got["f4"] == 1.0  # 5 x 5,400 / 25,500 > 1: capped at the whole game
 
 
 def test_only_the_last_n_games_count(games: pd.DataFrame, player_games: pd.DataFrame) -> None:
     got = shares(projected_shares(games, player_games, n_games=1), "G3", "home")
-    assert got == pytest.approx({"p1": 1000 / 2700, "p3": 1400 / 2700})
+    assert some(got, ("p1", "p3")) == pytest.approx({"p1": 5000 / 13500, "p3": 7000 / 13500})
+    assert "p2" not in got
 
 
 def test_a_team_without_history_gets_no_players(
@@ -109,7 +124,9 @@ def test_editing_the_game_or_later_changes_no_projection(
 
 def test_oracle_shares_are_the_games_own(games: pd.DataFrame, player_games: pd.DataFrame) -> None:
     got = shares(oracle_shares(games, player_games), "G2", "away")
-    assert got == pytest.approx({"p1": 1000 / 2700, "p3": 1400 / 2700})
+    assert some(got, ("p1", "p3")) == pytest.approx({"p1": 5000 / 13500, "p3": 7000 / 13500})
+    assert got["f4"] == 1.0  # 3,000 s of a 2,700 s game: capped
+    assert shares(oracle_shares(games, player_games), "G1", "away") == {"q1": 1.0}
 
 
 def test_expected_possessions(games: pd.DataFrame) -> None:

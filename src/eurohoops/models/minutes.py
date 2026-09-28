@@ -1,13 +1,16 @@
 """Projected on-court shares and expected possessions for player-based margin forecasts (M3).
 
-A player's *share* is the fraction of the game he is on court (seconds / game seconds), so a
-team's shares add up to 5. Week 9-12 H-c:
+A player's *share* is the fraction of the game he is on court: 5 x his seconds / his team's
+recorded seconds (H-c: his share of the team's minutes, times the five on court), capped at 1.
+A team's shares add up to 5 whatever the box score's recording quirks: old box scores record
+overtime and team totals inconsistently (team seconds run from 4.4 to 6.0 x the game length),
+and one 2016-17 line gives a player more seconds than the game had (E2016_19). Week 9-12 H-c:
 
 - **Projected share** for a game: the player's seconds over the team's previous
   ``n_games`` games of the same season with player rows, all of which tipped off before the
-  game's round cutoff (the first tip-off of its ``(season, phase, round)``), divided by those
-  games' seconds. Before the team's first such game: its share over the whole previous season
-  with that team; players who were not on the team then get nothing (0).
+  game's round cutoff (the first tip-off of its ``(season, phase, round)``), as a share of the
+  team's seconds in those games. Before the team's first such game: its share over the whole
+  previous season with that team; players who were not on the team then get nothing (0).
 - **Oracle share**: the game's own seconds (labelled "oracle, not a forecast"; never gated).
 - **Expected possessions** P (per 40 minutes): the mean of the two teams' season-to-date pace
   (``poss_game · 40 / minutes``) over games before the cutoff; a team without such games uses
@@ -26,6 +29,7 @@ from eurohoops.models.elo import FloatArray
 from eurohoops.parse.schemas import validated
 
 MINUTES_PER_GAME = 40.0
+ON_COURT = 5
 SIDES = ("home", "away")
 
 SHARES_SCHEMA = pa.DataFrameSchema(
@@ -62,18 +66,22 @@ def _rated(games: pd.DataFrame) -> pd.DataFrame:
 
 
 def _team_games(games: pd.DataFrame, player_games: pd.DataFrame) -> pd.DataFrame:
-    """One row per (rated game with player rows, team): season, tip-off, game seconds."""
+    """One row per (rated game with player rows, team): season, tip-off, the team's recorded
+    seconds (``team_sec``, the sum of its players' seconds)."""
     rated = _rated(games)[["game_id", "season", "tipoff_utc"]]
-    seconds = player_games.groupby(["game_id", "team"], as_index=False)["game_sec"].first()
+    seconds = player_games.groupby(["game_id", "team"], as_index=False).agg(team_sec=("sec", "sum"))
+    seconds = seconds[seconds["team_sec"] > 0]
     out = seconds.merge(rated, on="game_id")
     out["time"] = _epoch(out["tipoff_utc"])
     ordered: pd.DataFrame = out.sort_values(["time", "game_id", "team"]).reset_index(drop=True)
     return ordered
 
 
-def _shares(rows: pd.DataFrame, seconds: float) -> dict[str, float]:
+def _shares(rows: pd.DataFrame, team_seconds: float) -> dict[str, float]:
     by_player = rows.groupby("player_id")["sec"].sum().sort_index()
-    return {str(p): float(s) / seconds for p, s in by_player.items() if s > 0}
+    return {
+        str(p): min(1.0, ON_COURT * float(s) / team_seconds) for p, s in by_player.items() if s > 0
+    }
 
 
 def projected_shares(
@@ -81,8 +89,7 @@ def projected_shares(
 ) -> pd.DataFrame:
     """Projected shares of both sides of every game in ``games`` (see the module docstring).
 
-    ``player_games``: one row per player per game with ``game_id, team, player_id, sec,
-    game_sec`` (the game's length in seconds).
+    ``player_games``: one row per player per game with ``game_id, team, player_id, sec``.
     """
     team_games = _team_games(games, player_games)
     rows_by = {key: frame for key, frame in player_games.groupby(["game_id", "team"])}
@@ -103,7 +110,7 @@ def projected_shares(
                 earlier = by_team.get((team, season - 1))
             if earlier is None or earlier.empty:
                 continue
-            seconds = float(earlier["game_sec"].sum())
+            seconds = float(earlier["team_sec"].sum())
             rows = pd.concat([rows_by[(g, team)] for g in earlier["game_id"]])
             for player, share in _shares(rows, seconds).items():
                 out.append(
@@ -126,8 +133,10 @@ def oracle_shares(games: pd.DataFrame, player_games: pd.DataFrame) -> pd.DataFra
             for side in SIDES
         ]
     )
-    rows = player_games[player_games["sec"] > 0].merge(sides, on=["game_id", "team"])
-    rows = rows.assign(share=rows["sec"] / rows["game_sec"])
+    team_sec = player_games.groupby(["game_id", "team"])["sec"].transform("sum")
+    rows = player_games.assign(team_sec=team_sec)
+    rows = rows[rows["sec"] > 0].merge(sides, on=["game_id", "team"])
+    rows = rows.assign(share=(ON_COURT * rows["sec"] / rows["team_sec"]).clip(upper=1.0))
     frame = rows[list(SHARES_SCHEMA.columns)].sort_values(["game_id", "side", "player_id"])
     return validated(frame.reset_index(drop=True), SHARES_SCHEMA)
 
