@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # The phase checklist, top to bottom (weeks 5-7 §6 items 1-20, weeks 7-10 items 21-30, weeks
-# 7-10b items 31-32). Prints PASS/FAIL per
+# 7-10b items 31-32, weeks 9-12 items 33-37). Prints PASS/FAIL per
 # item; the exit code is the number of FAILs. Run from anywhere: `bash scripts/checklist.sh`.
 #
 #   BASE      git ref the predictions and the stint sample are compared with (default origin/main)
@@ -118,4 +118,13 @@ skip 32 "G1 outcome coding" || {
   uv run python "$CHECKS/m2_outcome_coding.py"
   res $?
 }
+skip 33 "M3 unit tests + facts" || { item "33 M3 unit tests, §3 facts"; bash "$CHECKS/m3_units.sh"; res $?; }
+skip 34 "M3 leakage" || {
+  item "34 M3 leakage (RAPM, dummy, SPM, box-only, minutes, GBL)"
+  uv run pytest -q -p no:cacheprovider -p no:warnings tests/test_m3_leakage.py tests/test_minutes.py     tests/test_box_impact.py tests/test_rapm_dummy.py tests/test_spm.py tests/test_m3_gbl.py     -k "leak or edit or planted or never" 2>&1 | tail -1
+  res "${PIPESTATUS[0]}"
+}
+skip 35 "M3 report" || { item "35 backtest_m3.json + gate, two runs identical, verdict < validation < test"; bash "$CHECKS/m3_reports.sh"; res $?; }
+skip 36 "M3 runtime" || { item "36 backtest --model m3 runtime < 1,800 s"; bash "$CHECKS/m3_runtime.sh"; res $?; }
+skip 37 "M3 card + GBL stints" || { item "37 m3.md numbers = reports; gbl_stints.json pass rates, two builds identical"; bash "$CHECKS/m3_card_gbl.sh"; res $?; }
 echo; echo "FAILS: $fails (end $(date -u +%H:%MZ))"; exit "$fails"
