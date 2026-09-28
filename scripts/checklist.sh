@@ -30,7 +30,7 @@ skip 5 "pytest + coverage" || {
   uv run pytest -q --cov=eurohoops --cov-fail-under=85 -p no:cacheprovider 2>&1 | tail -3
   res "${PIPESTATUS[0]}"
 }
-skip 6 "vulture" || { item "6 vulture"; uv run vulture src vulture_whitelist.py --min-confidence 60; res $?; }
+skip 6 "vulture" || { item "6 vulture"; uv run vulture src scripts/vulture_whitelist.py --min-confidence 60; res $?; }
 skip 7 "web build from the fixture" || { item "7 web build from the fixture (copy of web/)"; bash "$CHECKS/web_build.sh"; res $?; }
 skip 8 "Elo backtests reproduce the committed reports" || {
   item "8 Elo backtests reproduce the committed reports"

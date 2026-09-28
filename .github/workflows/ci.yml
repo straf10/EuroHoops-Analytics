@@ -26,7 +26,7 @@ jobs:
       - name: Tests
         run: uv run pytest -q --cov=eurohoops --cov-fail-under=85
       - name: Dead code
-        run: uv run vulture src vulture_whitelist.py --min-confidence 60
+        run: uv run vulture src scripts/vulture_whitelist.py --min-confidence 60
 
   # Builds the Astro site from the committed fixtures (tests/fixtures/site.json and stats/, kept
   # in step with the real schema by tests/test_site_fixture.py and tests/test_stats.py), so a
