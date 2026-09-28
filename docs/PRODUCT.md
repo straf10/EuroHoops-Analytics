@@ -42,7 +42,7 @@ Name: EuroHoops Analytics. No gambling framing (no odds-style presentation, no "
 
 - `predictions/*_2026-27.csv` (pre-registered log), `reports/live_scorecard*.json`, `reports/backtest_elo*.json` (19 EuroLeague seasons 2007-2026, GBL backtest), DuckDB marts with games and teams.
 - No team logos or player photos are licensed; do not use them. No testimonials or press.
-- Club colours: one bounded exception (owner decision, 2026-09-26). Leaders and Compare draw players as generic SVG jersey backs in their club's two colours with surname and number; no crests, sponsors, kit copies or likenesses. Everywhere else colour stays data-only (DESIGN.md, Club-Colour Exception).
+- Club colours: one bounded exception (owner decision, 2026-09-26). Leaders and Compare draw players as generic SVG jersey backs in their club's two colours with surname and number; no crests, sponsors, kit copies or likenesses. Everywhere else colour stays data-only (docs/DESIGN.md, Club-Colour Exception).
 
 ## Product Principles
 
