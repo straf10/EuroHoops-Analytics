@@ -338,6 +338,9 @@ app.command()(research.shots)
 app.command(name="free-throws")(research.free_throws)
 
 
+app.command(name="gbl-stints")(research.gbl_stints)
+
+
 @app.command()
 def possessions() -> None:
     """Validate ``team_games``: coverage, points, box vs play-by-play possessions."""

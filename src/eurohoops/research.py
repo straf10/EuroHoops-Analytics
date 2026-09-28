@@ -1,16 +1,21 @@
-"""The local M2 research commands (``eurohoops shots``, ``free-throws``, ``shot-quality``,
-``shot-charts`` and ``backtest --model m2``): the daily workflow never runs them. cli.py registers
-them under their names; nothing here is fetched, everything reads the marts and the raw cache."""
+"""The local M2 and M3 research commands (``eurohoops shots``, ``free-throws``, ``shot-quality``,
+``shot-charts``, ``backtest --model m2`` and ``gbl-stints``): the daily workflow never runs them.
+cli.py registers them under their names; nothing here is fetched, everything reads the marts and
+the raw cache."""
 
 import json
 import logging
 import time
 
+import pandas as pd
 import typer
 
 from eurohoops.config import (
     EUROLEAGUE,
     FREE_THROWS_REPORT,
+    GBL,
+    GBL_PBP,
+    GBL_STINTS_REPORT,
     M2_CHART_PLAYERS,
     M2_CHART_TEAMS,
     M2_CHARTS_DIR,
@@ -30,6 +35,8 @@ from eurohoops.eval.tracking import log_m2_backtest
 from eurohoops.logs import write_json
 from eurohoops.marts import read_games, read_table, write_tables
 from eurohoops.parse.free_throws import LEVEL_CHECK, build_ft_team_games, ft_report
+from eurohoops.parse.gbl_stints import H_I_THRESHOLD, build_gbl_stints_mart
+from eurohoops.parse.gbl_stints import mart_report as gbl_stints_report
 from eurohoops.parse.shot_table import build_shot_table, reconcile, shot_report
 from eurohoops.publish import DISPLAY_CODES
 
@@ -222,3 +229,36 @@ def shot_charts() -> None:
         )
         typer.echo(f"player {shooter} {names.get(shooter, '')}: {top[shooter]} FGA")
     typer.echo(f"wrote charts to {M2_CHARTS_DIR}")
+
+
+def gbl_stints() -> None:
+    """Build the GBL ``gbl_stints``/``gbl_stint_game_checks`` marts (H3, weeks 9-12) from the
+    staged GBL play-by-play (``config.GBL_PBP``) and write reports/gbl_stints.json: pass rates
+    per check and season, and whether the H-i rule (>= 95% of games pass) holds.
+
+    Local only, like ``possessions`` and ``stints --mart``: the daily workflow never runs it.
+    Play-by-play is cached for 2018 and 2019 only (D4, reports/week9-12_progress.md), so only
+    those seasons get stints; GBL RAPM (H-i) is attempted only if the H-i rule holds.
+    """
+    if not GBL_PBP.exists():
+        log.error("no staged GBL play-by-play; run: eurohoops ingest --competition gbl --pbp")
+        raise typer.Exit(code=1)
+    team_games = read_table(MART_PATH, "team_games", GBL.name)
+    if team_games is None:
+        log.error("no team_games in the marts; run: eurohoops build")
+        raise typer.Exit(code=1)
+    pbp = pd.read_parquet(GBL_PBP)
+    games = read_games(MART_PATH, GBL.name)
+    mart = build_gbl_stints_mart(pbp, games, team_games)
+    write_tables(MART_PATH, {"gbl_stints": mart.stints, "gbl_stint_game_checks": mart.checks})
+    report = gbl_stints_report(mart)
+    write_json(GBL_STINTS_REPORT, report)
+    for season, block in sorted(report["seasons"].items()):
+        typer.echo(
+            f"{season}: {block['passed']}/{block['games']} games passed "
+            f"({block['pass_rate']:.2%}); by check {block['pass_rate_by_check']}"
+        )
+    typer.echo(
+        f"overall pass rate {report['overall_pass_rate']}; H-i (>= {H_I_THRESHOLD:.0%}) holds: "
+        f"{report['h_i_rule_holds']}; wrote {GBL_STINTS_REPORT}"
+    )
