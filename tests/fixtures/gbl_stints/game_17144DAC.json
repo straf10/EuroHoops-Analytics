@@ -1,0 +1,53 @@
+{
+  "game": {
+    "game_id": "GBL2018_17144DAC",
+    "season": 2018,
+    "game_code": 387206572,
+    "phase": "RS",
+    "round": 1,
+    "tipoff_utc": "2018-10-06 12:45:00+00",
+    "home": "0000000A",
+    "away": "2A25C696",
+    "home_score": 68,
+    "away_score": 83,
+    "played": true,
+    "forfeit": false,
+    "neutral": false
+  },
+  "team_games": [
+    {
+      "season": 2018,
+      "game_id": "GBL2018_17144DAC",
+      "team": "0000000A",
+      "opponent": "2A25C696",
+      "home": true,
+      "points": 68,
+      "fga": 55,
+      "fta": 28,
+      "oreb": 10,
+      "dreb": 17,
+      "tov": 13,
+      "minutes": 40.0,
+      "poss_raw": 69.76,
+      "poss_game": 70.45,
+      "source": "esake_box"
+    },
+    {
+      "season": 2018,
+      "game_id": "GBL2018_17144DAC",
+      "team": "2A25C696",
+      "opponent": "0000000A",
+      "home": false,
+      "points": 83,
+      "fga": 58,
+      "fta": 17,
+      "oreb": 8,
+      "dreb": 22,
+      "tov": 14,
+      "minutes": 40.0,
+      "poss_raw": 71.14,
+      "poss_game": 70.45,
+      "source": "esake_box"
+    }
+  ]
+}
