@@ -73,3 +73,7 @@ iteration | deliverable | checks run | result | commit
 2 | H4 posterior (subagent D, 1 round) merged | test_rapm_posterior (10 passed, coverage 88.38%), ruff, format, mypy, vulture in main tree; fast gate deferred (items 11/17 touch data/ while A, B, C run) | green | a2ebeab
 3 | H3 GBL stints (subagent C, 1 round) merged; gbl-stints registered in cli.py | test_gbl_stints + test_cli (27 passed), ruff, format, mypy, vulture; real-data run deferred until A, B finish | green | 9a4daee
 4 | H2 box-only/PIR baselines + GBL box-line parser (subagent B, 1 round) merged | test_box_impact + test_gbl_box_lines (23 passed), ruff, format, mypy, vulture; B flagged team_eff._epoch assumes ns timestamps (M1, out of scope: to check on real data, report only) | green | 6ec3a46
+
+## Owner instructions, 2026-09-28 23:20 (going AFK)
+- Work autonomously to the stop condition; then merge `week-9-12` into `main`, push `origin/main` and delete the subagent worktree branches (this overrides §1 "do not push / do not merge").
+- If M3 does not beat the current best model, look for legitimate improvements. Interpreted as: extra variants are explored and chosen on **tuning seasons only**, before the verdict commit; anything tried after the verdict is labelled post-hoc and never changes the gate; test is still scored once; leakage tests cover every variant.
