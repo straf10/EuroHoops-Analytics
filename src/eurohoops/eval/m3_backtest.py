@@ -212,9 +212,13 @@ class TunedRapm:
     extra: dict[str, Any] = field(default_factory=dict)  # a variant's own chosen params
 
 
-def tune_rapm(data: Data, spec: M3Backtest, inputs: RapmFitInputs) -> TunedRapm:
-    """The ``rapm`` variant's grid search (D7): declared here so ``VARIANTS["rapm"]`` has
-    the same shape every other variant's tuner does."""
+def tune_rapm(
+    data: Data, spec: M3Backtest, inputs: RapmFitInputs, earlier: dict[str, TunedRapm]
+) -> TunedRapm:
+    """The ``rapm`` variant's grid search (D7). ``earlier`` (the variants tuned before this
+    one) is unused: ``rapm`` is tuned first, and later variants search their own axis at its
+    chosen half-life and ridge."""
+    del earlier
     grid: M3Grid = spec.grid
     columns = plain_player_columns(inputs.spell_index)
     last_tuning_season = max(spec.tuning)
@@ -297,9 +301,10 @@ def fit_rapm(games: pd.DataFrame, inputs: RapmFitInputs, tuned: TunedRapm) -> Wa
 
 @dataclass(frozen=True)
 class Variant:
-    """A declared RAPM variant: its tuner (tuning seasons only) and its walk-forward fit."""
+    """A declared RAPM variant: its tuner (tuning seasons only; receives the variants tuned
+    before it, in ``VARIANTS`` order) and its walk-forward fit."""
 
-    tune: Callable[[Data, M3Backtest, RapmFitInputs], TunedRapm]
+    tune: Callable[[Data, M3Backtest, RapmFitInputs, dict[str, TunedRapm]], TunedRapm]
     fit: Callable[[pd.DataFrame, RapmFitInputs, TunedRapm], WalkForward]
 
 
@@ -444,7 +449,9 @@ def run_m3_backtest(
     data = prepare_data(games, team_games, player_games, stints, checks, spec=spec)
     inputs = build_rapm_inputs(stints, checks, data.games)
 
-    tuned = {name: variant.tune(data, spec, inputs) for name, variant in VARIANTS.items()}
+    tuned: dict[str, TunedRapm] = {}
+    for name, variant in VARIANTS.items():
+        tuned[name] = variant.tune(data, spec, inputs, dict(tuned))
     chosen_name = min(tuned, key=lambda name: tuned[name].tuning_rmse)
     chosen = tuned[chosen_name]
 
