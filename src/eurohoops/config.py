@@ -224,7 +224,9 @@ class M3Grid:
     half-life; ``dummy_minutes`` (0 = off) is searched with the chosen half-life and ridge.
     """
 
-    half_life_days: tuple[float, ...] = (182.0, 365.0, 730.0, 1460.0)
+    # half-life widened once on 2026-09-28 before the verdict (tuning only): the first tuning
+    # run chose 1,460 days, the grid edge (reports/week9-12_progress.md, iteration 7).
+    half_life_days: tuple[float, ...] = (182.0, 365.0, 730.0, 1460.0, 2920.0, 5840.0)
     ridge: tuple[float, ...] = (250.0, 500.0, 1000.0, 2000.0, 4000.0, 8000.0)
     dummy_minutes: tuple[float, ...] = (0.0, 50.0, 100.0, 200.0, 400.0)
 

@@ -58,9 +58,11 @@ class BoxGrid:
     season-out CV of margin RMSE. ``k`` is in minutes of shrinkage evidence, ``ridge`` is the
     ridge penalty on ``beta`` (``h`` is unpenalised)."""
 
+    # Widened once on 2026-09-28 before the verdict (tuning only): the first tuning run chose
+    # half-life 182 and ridge 300, both grid edges (reports/week9-12_progress.md, iteration 7).
     k: tuple[float, ...] = (100.0, 250.0, 500.0, 1000.0)
-    half_life_days: tuple[float, ...] = (182.0, 365.0, 730.0, 1460.0)
-    ridge: tuple[float, ...] = (1.0, 3.0, 10.0, 30.0, 100.0, 300.0)
+    half_life_days: tuple[float, ...] = (45.0, 91.0, 182.0, 365.0, 730.0, 1460.0)
+    ridge: tuple[float, ...] = (1.0, 3.0, 10.0, 30.0, 100.0, 300.0, 1000.0, 3000.0, 10000.0)
 
 
 @dataclass(frozen=True)
