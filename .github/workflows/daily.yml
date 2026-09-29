@@ -89,7 +89,7 @@ jobs:
       - name: Export the site data
         run: |
           uv run --no-dev eurohoops publish
-          uv run --no-dev eurohoops export-stats
+          uv run --no-dev eurohoops export-stats --from-cache
       - uses: actions/upload-artifact@v4
         with:
           name: site-data
