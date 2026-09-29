@@ -588,11 +588,14 @@ def build_minutes_rows(
     position = np.concatenate([home_pos, away_pos], axis=1)  # (n, 10)
     seconds = np.repeat(duration[:, None], 2 * N_ON_COURT, axis=1)
     time_rep = np.repeat(time[:, None], 2 * N_ON_COURT, axis=1)
-    return MinutesRows(
-        position.ravel(),
-        seconds.ravel().astype(np.float64),
-        time_rep.ravel().astype(np.float64),
-    )
+    position_flat = position.ravel()
+    seconds_flat = seconds.ravel().astype(np.float64)
+    time_flat = time_rep.ravel().astype(np.float64)
+    # `fit_decayed_minutes` (and any walk-forward caller) uses `searchsorted` on `time`, which
+    # needs ascending order; rows come out in `stints`' own row order above, not tip-off order
+    # (D6/H6 known issue), so sort here once, stably (ties keep the stint's own row order).
+    order = np.argsort(time_flat, kind="stable")
+    return MinutesRows(position_flat[order], seconds_flat[order], time_flat[order])
 
 
 class DecayedMinutes:
