@@ -41,6 +41,7 @@ team-level model this design mirrors (documented ambiguity, see the H1 report).
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 
 import numpy as np
@@ -514,6 +515,9 @@ def _round_groups(games: pd.DataFrame) -> list[tuple[float, int, IntArray]]:
     return out
 
 
+PriorFn = Callable[[float, int, ModelColumns], "FloatArray | None"]
+
+
 def fit_walk_forward(
     games: pd.DataFrame,
     rows: DesignRows,
@@ -523,9 +527,25 @@ def fit_walk_forward(
     ridge_o: float,
     ridge_d: float,
     prior_mean: FloatArray | None = None,
+    prior_fn: PriorFn | None = None,
 ) -> WalkForward:
     """Fit RAPM walk-forward by round (H-c): a game's rating comes only from stints of games
-    that tipped off before the first tip-off of its (season, phase, round)."""
+    that tipped off before the first tip-off of its (season, phase, round).
+
+    ``prior_mean`` is a single array used at every cutoff (the existing behaviour: 0 for a
+    player with no column yet, H-c's ``RatingLookup`` docstring). ``prior_fn`` (week 9-12
+    subagent F, H-h/D2) is an optional per-cutoff prior provider -- called as
+    ``prior_fn(cutoff_time, season, columns)`` and returning a full model-column-space array (or
+    ``None`` for "no prior yet", e.g. a season before any earlier rating exists) -- for a variant
+    whose prior mean depends on the cutoff (``rapm_spm``: a box-score SPM fitted walk-forward on
+    each season's own cutoff). When given, it *replaces* ``prior_mean`` for every round (the two
+    are not combined), and a player whose column has no data yet at a cutoff is reported at the
+    prior instead of 0 (a plain ridge-toward-0 solve leaves an unused column's ``theta`` at 0
+    regardless of the prior passed to ``solve``, since ``aggregated_system`` restricts the solve
+    to columns some row has touched -- the posterior equals the prior with no data, so an unused
+    column is filled with the prior directly instead of the solver's default 0). Passing neither
+    argument, or ``prior_fn=None``, reproduces every existing result exactly (module docstring,
+    H1's byte-identical-report done-when check)."""
     n_base = rows.n_base if len(rows.cols) else BASE_OFFSET
     model = DecayedRidgeSparse(n_base, half_life_days, columns)
     n_games = len(games)
@@ -533,7 +553,7 @@ def fit_walk_forward(
     lookups: list[RatingLookup | None] = [None] * n_games
     theta = np.zeros(columns.n_model)
     added = 0
-    for time, _season, game_idx in _round_groups(games):
+    for time, season, game_idx in _round_groups(games):
         model.advance(time)
         stop = int(np.searchsorted(rows.time, time, side="left"))
         if stop > added:
@@ -548,9 +568,15 @@ def fit_walk_forward(
             added = stop
         if not added:
             continue
-        theta = model.solve(ridge_o, ridge_d, prior_mean, x0=theta)
+        if prior_fn is not None:
+            pm = prior_fn(time, season, columns)
+            theta = model.solve(ridge_o, ridge_d, pm, x0=theta)
+            filled = theta if pm is None else np.where(model.model_seen, theta, pm)
+        else:
+            theta = model.solve(ridge_o, ridge_d, prior_mean, x0=theta)
+            filled = theta
         coef = 2.0 * theta[HOME_COL]
-        lookup = rating_lookup(theta, columns)
+        lookup = rating_lookup(filled, columns)
         home_coef[game_idx] = coef
         for g in game_idx:
             lookups[g] = lookup

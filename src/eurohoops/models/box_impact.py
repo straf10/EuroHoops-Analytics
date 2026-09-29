@@ -393,6 +393,19 @@ def box_only_margins(  # noqa: PLR0917 -- the harness calls this exact signature
     return BaselineResult(margin.astype(np.float64), params)
 
 
+# --- Public aliases (week 9-12 subagent F): the SPM prior (``models/spm.py``) reuses this
+# module's decayed, shrunk per-100 rate machinery -- same half-life, same shrinkage shape, same
+# numbers -- rather than a second implementation. The private names above are untouched (every
+# existing call and test keeps working unchanged); these are the same objects under public names.
+RoundSnapshot = _RoundSnapshot
+RateSpec = _RateSpec
+player_index = _player_index
+rows_from_player_games = _rows
+round_batches = _round_batches
+round_snapshots = _round_snapshots
+features = _features
+
+
 def pir_margins(
     games: pd.DataFrame,
     player_games: pd.DataFrame,
