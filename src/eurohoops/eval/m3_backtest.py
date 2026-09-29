@@ -52,6 +52,7 @@ from eurohoops.models.rapm import (
     fit_walk_forward,
     plain_player_columns,
 )
+from eurohoops.models.spm import fit_spm, tune_spm  # week 9-12 subagent F (H6, H-h)
 from eurohoops.models.team_eff import DecayParams, prepare_history
 from eurohoops.models.team_eff import forecast as team_eff_forecast
 
@@ -101,6 +102,7 @@ class Data:
     oracle: pd.DataFrame  # oracle_shares (reported, never gated)
     possessions: pd.Series
     snapshot: str
+    player_games: pd.DataFrame  # week 9-12 subagent F: rapm_spm's box-rate features (H-h)
 
 
 def prepare_data(
@@ -136,6 +138,7 @@ def prepare_data(
         oracle=oracle_shares(frame, player_games),
         possessions=expected_possessions(frame, team_games),
         snapshot=_data_sha256(frame, team_games, player_games, stints, checks),
+        player_games=player_games,
     )
 
 
@@ -150,14 +153,20 @@ class RapmFitInputs:
 
     spell_index: SpellIndex
     rows: DesignRows
+    # week 9-12 subagent F: rapm_spm's own walk-forward fit (``Variant.fit``, called with only
+    # ``(games, inputs, tuned)`` -- no ``Data``) needs the same box lines ``tune()`` sees through
+    # ``Data.player_games`` to recompute each round's box-rate features; threaded through here
+    # (the ambiguity the task flagged -- "Data (add a field) or the tuner/fit inputs" -- resolved
+    # as both, since only ``inputs`` reaches ``fit``) rather than through a wider API change.
+    player_games: pd.DataFrame
 
 
 def build_rapm_inputs(
-    stints: pd.DataFrame, checks: pd.DataFrame, games: pd.DataFrame
+    stints: pd.DataFrame, checks: pd.DataFrame, games: pd.DataFrame, player_games: pd.DataFrame
 ) -> RapmFitInputs:
     spell_index = build_spell_index(stints)
     rows = build_design_rows(stints, checks, games, spell_index)
-    return RapmFitInputs(spell_index, rows)
+    return RapmFitInputs(spell_index, rows, player_games)
 
 
 def rapm_margins(
@@ -309,6 +318,7 @@ class Variant:
 
 
 VARIANTS: dict[str, Variant] = {"rapm": Variant(tune_rapm, fit_rapm)}
+VARIANTS["rapm_spm"] = Variant(tune_spm, fit_spm)  # week 9-12 subagent F (H6, H-h)
 
 
 # --- Comparison models: m1, b0 ------------------------------------------------------------------
@@ -447,7 +457,7 @@ def run_m3_backtest(
     the verdict (which variant is chosen) must be committed before validation is scored (H5).
     ``score_test``: also score the test seasons (only after the verdict commit)."""
     data = prepare_data(games, team_games, player_games, stints, checks, spec=spec)
-    inputs = build_rapm_inputs(stints, checks, data.games)
+    inputs = build_rapm_inputs(stints, checks, data.games, player_games)
 
     tuned: dict[str, TunedRapm] = {}
     for name, variant in VARIANTS.items():
