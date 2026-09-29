@@ -26,6 +26,7 @@ from eurohoops.config import (
     GBL_TEAM_BOX,
     LIVE_SEASON,
     M3,
+    M3_GBL,
     MART_PATH,
     ODDS_CALLS,
     ODDS_RAW_DIR,
@@ -41,6 +42,7 @@ from eurohoops.config import (
 from eurohoops.eval.backtest import TunedModel, format_table, load_tuned_model, run_backtest
 from eurohoops.eval.m1_backtest import format_m1_table, run_m1_backtest
 from eurohoops.eval.m3_backtest import format_m3_table, run_m3_backtest
+from eurohoops.eval.m3_gbl_backtest import el_spm_models, format_m3_gbl_table, run_m3_gbl_backtest
 from eurohoops.eval.scorecard import build_scorecard
 from eurohoops.eval.tracking import default_tracking_uri, log_backtest, log_m3_backtest
 from eurohoops.ingest import euroleague, gbl
@@ -68,6 +70,7 @@ from eurohoops.parse.games import (
     build_teams_table,
     write_table,
 )
+from eurohoops.parse.gbl_box_lines import build_gbl_player_games
 from eurohoops.parse.gbl_pbp import build_pbp_table
 from eurohoops.parse.possession_report import possession_report
 from eurohoops.parse.stints import validate_sample
@@ -376,12 +379,67 @@ def possessions() -> None:
     )
 
 
+def _backtest_m3_gbl(score_test: bool, tuning_only: bool) -> None:
+    """``backtest --model m3 --competition gbl`` (week 9-12 H8): EL SPM transfer to GBL.
+
+    Requires the committed EuroLeague M3 verdict (``reports/backtest_m3.json``) and GBL M1
+    parameters. No MLflow logging for GBL."""
+    if tuning_only:
+        log.error("m3 GBL backtest has no variant choice; --tuning-only is not supported")
+        raise typer.Exit(code=1)
+    if not M3.report.exists():
+        log.error("no committed M3 report; run: eurohoops backtest --model m3")
+        raise typer.Exit(code=1)
+    m3_report = json.loads(M3.report.read_text(encoding="utf-8"))
+    chosen = m3_report.get("chosen")
+    if not chosen or chosen.get("variant") != "rapm_spm":
+        log.error("M3 chosen variant must be rapm_spm (see reports/backtest_m3.json)")
+        raise typer.Exit(code=1)
+    if GBL.m1 is None or not GBL.m1.report.exists():
+        log.error(
+            "no committed GBL M1 report; run: eurohoops backtest --model m1 --competition gbl"
+        )
+        raise typer.Exit(code=1)
+    tuned_m1 = json.loads(GBL.m1.report.read_text(encoding="utf-8"))["tuned"]
+    el_games = read_games(MART_PATH, EUROLEAGUE.name)
+    stints = read_table(MART_PATH, "stints")
+    checks = read_table(MART_PATH, "stint_game_checks")
+    if stints is None or checks is None:
+        log.error("stints/stint_game_checks missing; run: eurohoops stints --mart")
+        raise typer.Exit(code=1)
+    el_player_games = build_box_games(EUROLEAGUE.raw_dir, el_games).players
+    gbl_games = read_games(MART_PATH, GBL.name)
+    gbl_team_games = read_table(MART_PATH, "team_games", GBL.name)
+    if gbl_team_games is None:
+        log.error("no GBL team_games in the marts; run: eurohoops build")
+        raise typer.Exit(code=1)
+    gbl_box = build_gbl_player_games(GBL.raw_dir, gbl_games, gbl_team_games)
+    el = el_spm_models(el_games, el_player_games, stints, checks, chosen)
+    report = run_m3_gbl_backtest(
+        gbl_games,
+        gbl_team_games,
+        gbl_box.table,
+        spec=M3_GBL,
+        el=el,
+        tuned_m1=tuned_m1,
+        box_only_fn=partial(box_only_margins, grid=BoxGrid()),
+        pir_fn=pir_margins,
+        box_pages_skipped=gbl_box.skipped,
+        score_test=score_test,
+    )
+    write_json(M3_GBL.report, report)
+    typer.echo(f"{M3_GBL.report}\n{format_m3_gbl_table(report)}")
+
+
 def _backtest_m3(
     competition: CompetitionName, score_test: bool, tuning_only: bool, tracking_uri: str
 ) -> None:
-    """``backtest --model m3`` (week 9-12 H1): EuroLeague only for now."""
+    """``backtest --model m3`` (week 9-12 H1/H8): EuroLeague or GBL SPM transfer."""
+    if competition is CompetitionName.gbl:
+        _backtest_m3_gbl(score_test, tuning_only)
+        return
     if competition is not CompetitionName.euroleague:
-        log.error("m3 backtest is EuroLeague only for now (week 9-12 H1)")
+        log.error("m3 backtest supports EuroLeague and GBL only")
         raise typer.Exit(code=1)
     if EUROLEAGUE.m1 is None or not EUROLEAGUE.m1.report.exists():
         log.error("no committed M1 report; run: eurohoops backtest --model m1")
