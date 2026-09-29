@@ -92,3 +92,5 @@ Priority order: (1) finish E and F, tuning grid, verdict commit; (2) score valid
 
 ## Verdict (H5)
 Chosen variant **rapm_spm**: half-life 5,840 days, ridge 4,000 (O and D), SPM alpha 1.0, k 250 minutes; SPM targets from plain rapm (half-life 5,840, ridge 2,000). Tuning RMSE 11.723402 vs box_only 11.902464 and m1 11.852977. The committed `reports/backtest_m3.json` at this commit is tuning-only (`validation_scored: false`).
+
+VERDICT b09d19a
