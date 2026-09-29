@@ -1,0 +1,69 @@
+name: seed-el-history
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: daily-predictions
+  cancel-in-progress: false
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Restore EuroLeague raw cache
+        uses: actions/cache/restore@v4
+        with:
+          path: data/raw/euroleague
+          key: euroleague-raw-${{ github.run_id }}
+          restore-keys: euroleague-raw-
+      - name: Download history seed archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download data-el-raw-2007-2022 \
+            --repo "${{ github.repository }}" \
+            --pattern 'euroleague-raw-2007-2022.tar.gz' \
+            --dir /tmp/seed-el
+      - name: Extract seed (do not overwrite newer cache)
+        run: |
+          tar -xzf /tmp/seed-el/euroleague-raw-2007-2022.tar.gz --skip-old-files
+      - name: Sanity check season folders
+        run: |
+          set -euo pipefail
+          root="data/raw/euroleague"
+          missing=0
+          for year in $(seq 2007 2022); do
+            tag="E${year}"
+            for sub in boxscore playbyplay points; do
+              dir="${root}/${sub}/${tag}"
+              if [[ ! -d "$dir" ]]; then
+                echo "::error::Missing directory ${dir}"
+                missing=1
+                continue
+              fi
+              n=$(find "$dir" -type f | wc -l)
+              echo "${sub}/${tag}: ${n} files"
+            done
+            sched="${root}/schedule/${tag}.json.gz"
+            if [[ ! -f "$sched" ]]; then
+              echo "::error::Missing ${sched}"
+              missing=1
+            else
+              echo "schedule/${tag}.json.gz: present"
+            fi
+          done
+          if [[ "$missing" -ne 0 ]]; then
+            exit 1
+          fi
+      - name: Save EuroLeague raw cache
+        uses: actions/cache/save@v4
+        with:
+          path: data/raw/euroleague
+          key: euroleague-raw-${{ github.run_id }}
