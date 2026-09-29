@@ -86,3 +86,4 @@ iteration | deliverable | checks run | result | commit
 
 ## Owner decision, 2026-09-29 (weekly usage limit)
 Priority order: (1) finish E and F, tuning grid, verdict commit; (2) score validation once; (3) commit and push to origin/main with an honest INCOMPLETE closeout; (4) after the Oct 1 reset: test (once), GBL transfer H8, full model card H9, full checklist run.
+10 | H6 SPM + rapm_spm (subagent F, 2 rounds incl. the usage-limit resume) merged: SPM for season s fitted on data before s only (D2); declared k=250, alpha=1.0; per-cutoff prior_fn | test_spm (13) + m3/box/rapm tests 39 passed; ruff, mypy, vulture | green | 5ed8609
