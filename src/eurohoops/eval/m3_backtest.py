@@ -45,9 +45,11 @@ from eurohoops.models.elo import FloatArray
 from eurohoops.models.minutes import expected_possessions, oracle_shares, projected_shares
 from eurohoops.models.rapm import (
     DesignRows,
+    MinutesRows,
     SpellIndex,
     WalkForward,
     build_design_rows,
+    build_minutes_rows,
     build_spell_index,
     fit_walk_forward,
     plain_player_columns,
@@ -149,7 +151,10 @@ def prepare_data(
 class RapmFitInputs:
     """The base (spell-level) design, shared by every RAPM variant's grid search: building it
     once and reusing it across hyperparameter combinations (and, for E/F, across variants) is
-    what keeps a full tuning grid affordable (H-j)."""
+    what keeps a full tuning grid affordable (H-j). ``minutes`` (week 9-12 subagent E): the same
+    games' spell-level on-court minutes rows (``rapm.build_minutes_rows``), built once alongside
+    ``rows`` so ``rapm_dummy``'s decayed-minutes threshold (H-f/D6) reuses it instead of
+    rebuilding it per variant or per grid point."""
 
     spell_index: SpellIndex
     rows: DesignRows
@@ -159,6 +164,7 @@ class RapmFitInputs:
     # (the ambiguity the task flagged -- "Data (add a field) or the tuner/fit inputs" -- resolved
     # as both, since only ``inputs`` reaches ``fit``) rather than through a wider API change.
     player_games: pd.DataFrame
+    minutes: MinutesRows
 
 
 def build_rapm_inputs(
@@ -166,7 +172,8 @@ def build_rapm_inputs(
 ) -> RapmFitInputs:
     spell_index = build_spell_index(stints)
     rows = build_design_rows(stints, checks, games, spell_index)
-    return RapmFitInputs(spell_index, rows, player_games)
+    minutes = build_minutes_rows(stints, checks, games, spell_index)
+    return RapmFitInputs(spell_index, rows, player_games, minutes)
 
 
 def rapm_margins(
@@ -319,6 +326,13 @@ class Variant:
 
 VARIANTS: dict[str, Variant] = {"rapm": Variant(tune_rapm, fit_rapm)}
 VARIANTS["rapm_spm"] = Variant(tune_spm, fit_spm)  # week 9-12 subagent F (H6, H-h)
+
+# week 9-12 subagent E: rapm_dummy (H-f) -- a deferred import (inside rapm_dummy.py's own
+# functions, not at its module top level) breaks what would otherwise be a circular import,
+# since rapm_dummy.py needs Data/RapmFitInputs/TunedRapm/rapm_margins, all defined above.
+from eurohoops.models.rapm_dummy import fit_rapm_dummy, tune_rapm_dummy  # noqa: E402
+
+VARIANTS["rapm_dummy"] = Variant(tune_rapm_dummy, fit_rapm_dummy)
 
 
 # --- Comparison models: m1, b0 ------------------------------------------------------------------
