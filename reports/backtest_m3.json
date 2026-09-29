@@ -27,9 +27,9 @@
     ]
   },
   "data_sha256": "12dd4cb4e8a368add244865432dde1cf96b6243014621d7d874619943fa693a5",
-  "tuning_only": true,
+  "tuning_only": false,
   "test_scored": false,
-  "validation_scored": false,
+  "validation_scored": true,
   "grid": {
     "rapm": {
       "half_life_days": [
@@ -789,6 +789,11 @@
       "rated": 2236,
       "scored": 2236,
       "dropped": 0
+    },
+    "validation": {
+      "rated": 331,
+      "scored": 331,
+      "dropped": 0
     }
   },
   "metrics": {
@@ -826,6 +831,43 @@
         "rmse": 12.794244,
         "mae": 10.083233,
         "log_loss": 0.662257,
+        "sigma": 12.794244
+      }
+    },
+    "validation": {
+      "rapm": {
+        "n": 331,
+        "rmse": 11.476889,
+        "mae": 8.904287,
+        "log_loss": 0.586366,
+        "sigma": 11.723402
+      },
+      "box_only": {
+        "n": 331,
+        "rmse": 11.748359,
+        "mae": 9.171809,
+        "log_loss": 0.60023,
+        "sigma": 11.902464
+      },
+      "pir": {
+        "n": 331,
+        "rmse": 11.836898,
+        "mae": 9.239137,
+        "log_loss": 0.604345,
+        "sigma": 12.108292
+      },
+      "m1": {
+        "n": 331,
+        "rmse": 11.677135,
+        "mae": 8.958392,
+        "log_loss": 0.589663,
+        "sigma": 11.852977
+      },
+      "b0": {
+        "n": 331,
+        "rmse": 12.391726,
+        "mae": 9.683165,
+        "log_loss": 0.652333,
         "sigma": 12.794244
       }
     }
@@ -2164,6 +2206,53 @@
       "mae": 9.270382,
       "log_loss": 0.6031,
       "sigma": 11.759759
+    },
+    "validation": {
+      "n": 331,
+      "rmse": 11.470474,
+      "mae": 8.971454,
+      "log_loss": 0.583964,
+      "sigma": 11.759759
+    }
+  },
+  "gate": {
+    "rule": "bootstrap 95% CI of RMSE(chosen RAPM) - RMSE(box_only) on validation, upper bound < 0",
+    "metric": "validation margin RMSE",
+    "variant": "rapm_spm",
+    "reference": "box_only",
+    "rmse_diff": {
+      "mean": -0.27147,
+      "ci95": [
+        -0.560519,
+        -0.001924
+      ],
+      "resamples": 1000,
+      "seed": 20261001
+    },
+    "passed": true
+  },
+  "comparisons": {
+    "m1": {
+      "rmse_diff": {
+        "mean": -0.200246,
+        "ci95": [
+          -0.408079,
+          -0.004595
+        ],
+        "resamples": 1000,
+        "seed": 20261001
+      }
+    },
+    "pir": {
+      "rmse_diff": {
+        "mean": -0.36001,
+        "ci95": [
+          -0.758166,
+          0.027586
+        ],
+        "resamples": 1000,
+        "seed": 20261001
+      }
     }
   }
 }
