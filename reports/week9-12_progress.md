@@ -96,3 +96,4 @@ Chosen variant **rapm_spm**: half-life 5,840 days, ridge 4,000 (O and D), SPM al
 VERDICT b09d19a
 13 | H7 validation scored once (787 s): 331 games (2023), none dropped. RMSE rapm_spm 11.476889, m1 11.677135, box_only 11.748359, pir 11.836898, b0 12.391726; oracle minutes 11.470474 (not a forecast). **Gate PASS**: RMSE(rapm_spm) − RMSE(box_only) −0.271470, 95% CI [−0.560519, −0.001924] (1,000 resamples, seed 20261001). Not gated: vs m1 −0.200246 [−0.408079, −0.004595]; vs pir −0.360010 [−0.758166, +0.027586]. Log loss rapm_spm 0.586366 vs m1 0.589663. | full backtest (tuning + validation) | PASS | (this commit)
 RUNTIME 787
+VALIDATION e58ae3e
