@@ -98,3 +98,12 @@ VERDICT b09d19a
 RUNTIME 787
 VALIDATION e58ae3e
 14 | pre-push checks after E and F: full pytest 551 passed, coverage 95.49%; vulture clean; mypy clean. INCOMPLETE closeout written (owner's priority order). | pytest, vulture, mypy | green | (this commit)
+
+## Weeks 9-12b: closeout after the Oct 1 reset (branch `week-9-12b` from `main` 3d16ee4)
+Remaining work in the owner's order: test once, H8 GBL transfer, `m3_players.json`, H9 card, full checklist. Local marts unchanged since the validation run (written 2026-09-28 23:51), so `data_sha256` is the validation run's.
+
+Commit attribution: Cursor appends `Co-authored-by: Cursor` to agent commits; every commit on this branch has it stripped (`git filter-branch --msg-filter` over `main..week-9-12b`, local commits only) before its sha is cited anywhere.
+
+15 | H7 test scored once (875 s, CPU load 26% at start, no other python/node): 732 games (2024-2025), none dropped. RMSE rapm_spm 11.677554, box_only 11.680438, m1 11.656481, pir 11.756645, b0 12.358628; MAE rapm_spm 9.134311 vs m1 9.093181; log loss rapm_spm 0.623116 vs m1 0.623171. The validation edge over box-only does not carry to test (−0.003 RMSE), and M1 is slightly better on test RMSE. Reported as is; the gate (validation) is unchanged: PASS. | full backtest `--score-test` | scored | 33ec255
+RUNTIME 875
+TEST 33ec255
