@@ -36,6 +36,7 @@ little, re-run, keep the best number. EuroHoops is built so that it can't do tha
 |---|---|
 | 🏀 **Two live forecasting models** | A FiveThirtyEight-style **MOV-adjusted Elo** and **M1**, a possession-based team-efficiency model ([model card](docs/models/m1.md)) that also forecasts game totals |
 | 🎯 **Shot-quality model** | **M2**, an expected-points-per-shot model (LightGBM vs. a spline baseline, isotonic calibration) that powers the shot charts ([model card](docs/models/m2.md)) |
+| 🧮 **Player-impact model** | **M3**, lineup-adjusted plus-minus (RAPM) shrunk toward a box-score prior, with a 90% interval for every EuroLeague player-season since 2011-12; research only, not live ([model card](docs/models/m3.md)) |
 | 📊 **20 seasons of EuroLeague stats** | Player and team pages from 2007-08 to today: game logs, per-36 / per-100 views, leaders, a five-player **Compare**, shot charts and a Shots explorer |
 | 🧬 **Shot Profile Twin** | Matches a player's last *X* games against every EuroLeague player-season since 2007-08 to find who shot the same way |
 | 🇬🇷 **Greek Basket League** | Scraped from ESAKE.gr HTML (politely throttled and fully cached), with play-by-play used to fill gaps in the box scores |
