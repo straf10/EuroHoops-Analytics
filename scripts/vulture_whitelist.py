@@ -1,7 +1,7 @@
 """Code built ahead of the pipeline step that will use it; vulture reads this file as usage.
 
 Remove an entry as soon as the pipeline uses the name.
-- standings.py: season simulator, PLAN Â§5.8
+- standings.py: season simulator, PLAN §5.8
 - config.py GBL_STINTS_REPORT and M3Grid.dummy_minutes: read by later M3 deliverables
   (H6 dummy variant), not H1.
 """
@@ -11,6 +11,18 @@ from eurohoops.models.box_impact import box_only_margins, pir_margins
 from eurohoops.models.minutes import expected_possessions, oracle_shares, projected_shares
 from eurohoops.models.rapm import ModelColumns, build_minutes_rows, fit_decayed_minutes
 from eurohoops.models.rapm_posterior import Posterior, noise_variance, posterior, ridge_solution
+from eurohoops.models.translation_pairs import (
+    MAX_OTHER,
+    MIN_FROM,
+    MIN_TO,
+    PAIR_TYPES,
+    PAIRS_SCHEMA,
+    SEASON_RATES_SCHEMA,
+    TEAM_NET_SCHEMA,
+    build_pairs,
+    season_rates,
+    team_net,
+)
 from eurohoops.standings import EUROLEAGUE_2026, GBL_2026, Format, Series, rank
 
 Series.best_of
@@ -64,3 +76,15 @@ M4Backtest.translation_report
 M4Backtest.min_validation_movers
 M4Backtest.shrink_minutes
 M4Backtest.sd_min_minutes
+
+# week 12-14 I6 (subagent D): pair tables, read by I7 translation fit / I8 backtest
+MIN_FROM
+MAX_OTHER
+MIN_TO
+PAIR_TYPES
+SEASON_RATES_SCHEMA
+TEAM_NET_SCHEMA
+PAIRS_SCHEMA
+season_rates
+team_net
+build_pairs
