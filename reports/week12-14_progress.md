@@ -67,6 +67,27 @@ All defaults accepted as written (I-a … I-l). The owner's answers to the open 
   **hidden**, maximising F1 subject to silver precision ≥ 0.99.
 - **D4 (club map).** The GBL ↔ EL club map lives in `config.GREEK_EL_CLUBS` (used by the bio
   fetch order and the matcher) instead of a separate `entity/clubs.csv`: one source of truth.
+- **D6 (GBL jersey `0`).** ESAKE prints `#0` for 313 GBL name rows 2018–2025, up to 12 players
+  of one team-season: a placeholder, so it counts as no jersey. EuroLeague `Dorsal` `0` is kept.
+- **D7 (wave 2 early).** D (pairs) and E (translation model) started before I4, on fixed column
+  contracts and synthetic data only; they read no data and no matcher output.
+- **D8 (label strata).** I-g's strata "best candidate score ≥ threshold / below" become
+  {Greek-script, Latin-only} × {matched, not matched by the frozen matcher}: the same split,
+  measured on the decision itself. The sheet with birth dates is written to
+  `data/entity/labels_todo.csv` (never committed); only `gbl_id, stratum, stratum_size,
+  el_id_true` go into `entity/labels.csv`.
+- **D9 (birth dates disagree between sources; before the matcher commit, no label read).** With
+  every GBL bio cached (993/993; EL 2,591), the first tuning run showed silver precision capped
+  at 0.955 at every grid point. The capped pairs are silver "negatives" that are the same person
+  with dates a few days or a month apart (Gist −2 d, Mitrou-Long −5 d, Abosi −1 d, Petrusev
+  −4 d, Balcerowski one month), and equal dates can be teammates' coincidences (GBL Papapetrou
+  and EL Lekavičius share one). Changes: a `near` status (≤ 31 days, day/month swapped, or year
+  off by one); silver positives = equal **or near** dates. Thresholds from the name scores of all
+  316 equal-date and 894 near-date candidate pairs (no label; bimodal: coincidences up to 0.778
+  for equal dates and 0.918 for near ones, true pairs from 0.771 and 0.871): `t_dob` 0.78,
+  `t_near` 0.95 (loses e.g. Moses Wright at 0.871 to keep precision). The silver search now
+  tunes only the missing-date branch (582 pairs, 220 EL ids without a date); its `t_nodob` and
+  `b_club` grid was widened once (the first run chose the 0.86 / 0.08 edges).
 - **D5 (translit fixture).** I0's pairs file starts with 17 pairs checked by eye (same
   club-season); it is extended to 40 with equal-birth-date PAO/OLY pairs once their bios are
   cached. Written from source ids by script, so the Latin look-alike letters are exact.

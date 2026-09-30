@@ -5,9 +5,10 @@ Rule (``reports/week12-14_progress.md`` D3). For a GBL id ``g`` and EuroLeague i
 - ``name_score`` = max(w·surname_sim + (1−w)·first_sim, full_sim), each sim the best
   Jaro-Winkler over transliteration variants (injected). Empty first → surname only; a
   one-letter first that equals the other's first letter scores 1.0.
-- Birth dates equal → accept iff ``name_score ≥ t_dob``; different → never; unknown →
-  accept iff ``name_score + b_club·same_club_season + b_jersey·same_jersey ≥ t_nodob``.
-- Assignment score adds +1.0 when dates are equal so equal-date pairs outrank unknowns.
+- Birth dates equal → accept iff ``name_score ≥ t_dob``; near (D9: ESAKE and the EuroLeague
+  disagree by days, a month, a swap or a year) → iff ``name_score ≥ t_near``; different →
+  never; unknown → iff ``name_score + b_club·same_club_season + b_jersey·same_jersey ≥ t_nodob``.
+- Assignment score adds +1.0 for equal dates and +0.5 for near ones, so they outrank unknowns.
 - Blocking (cheap, recall-safe): career windows ``[first−window, last+window]`` overlap,
   and at least one of same club-season, equal birth date, or matching surname first letter
   (latin_key of EL vs some variant of GBL). Only GBL×EL pairs are scored.
@@ -34,11 +35,13 @@ Similarity = Callable[[str, str], float]
 @dataclass(frozen=True)
 class MatchParams:
     w_surname: float = 0.6
-    t_dob: float = 0.70
+    t_dob: float = 0.78
+    t_near: float = 0.95
     t_nodob: float = 0.92
     b_club: float = 0.05
     b_jersey: float = 0.03
     window: int = 2
+    near_days: int = 31
 
 
 def careers(names: pd.DataFrame) -> pd.DataFrame:
@@ -128,10 +131,20 @@ def _same_jersey(names: pd.DataFrame) -> set[tuple[str, str]]:
     return pairs
 
 
-def _dob_status(g_dob: date | None, e_dob: date | None) -> str:
+def dob_status(g_dob: date | None, e_dob: date | None, near_days: int) -> str:
+    """``equal``, ``near`` (the sources disagree slightly: within ``near_days``, day and month
+    swapped, or the year off by one), ``different`` or ``unknown`` (D9)."""
     if g_dob is None or e_dob is None:
         return "unknown"
-    return "equal" if g_dob == e_dob else "different"
+    if g_dob == e_dob:
+        return "equal"
+    swapped = (g_dob.day, g_dob.month, g_dob.year) == (e_dob.month, e_dob.day, e_dob.year)
+    year_off = (g_dob.day, g_dob.month) == (e_dob.day, e_dob.month) and abs(
+        g_dob.year - e_dob.year
+    ) == 1
+    if abs((g_dob - e_dob).days) <= near_days or swapped or year_off:
+        return "near"
+    return "different"
 
 
 def candidate_pairs(  # noqa: PLR0917 -- fixed matcher API (names, bios, clubs, fns, params)
@@ -166,9 +179,9 @@ def candidate_pairs(  # noqa: PLR0917 -- fixed matcher API (names, bios, clubs, 
         for j in np.flatnonzero((g_lo <= el_last) & (el_first <= g_hi)):
             e_id = el_ids[j]
             same_club = (g_id, e_id) in club_pairs
-            dob = _dob_status(g_dob, el_dobs[j])
+            dob = dob_status(g_dob, el_dobs[j], params.near_days)
             letter_hit = el_letters[j] in g_letters
-            if not (same_club or dob == "equal" or letter_hit):
+            if not (same_club or dob in {"equal", "near"} or letter_hit):
                 continue
             rows.append(
                 {
@@ -293,6 +306,9 @@ def score_pairs(  # noqa: PLR0917 -- fixed matcher API (pairs, names, injectable
         if dob == "equal":
             accepted = name_score >= params.t_dob
             score = name_score + 1.0
+        elif dob == "near":
+            accepted = name_score >= params.t_near
+            score = name_score + 0.5
         elif dob == "different":
             accepted = False
             score = name_score

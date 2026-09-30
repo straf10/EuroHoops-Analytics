@@ -6,12 +6,14 @@ import difflib
 from datetime import date
 
 import pandas as pd
+import pytest
 
 from eurohoops.entity.match import (
     MatchParams,
     assign,
     candidate_pairs,
     careers,
+    dob_status,
     score_pairs,
 )
 
@@ -216,6 +218,50 @@ def test_swapped_name_order_matches_via_full_sim() -> None:
     assert list(zip(matched["gbl_id"], matched["el_id"], strict=True)) == [("0000S001", "P00S001")]
 
 
+@pytest.mark.parametrize(
+    ("a", "b", "status"),
+    [
+        (date(1990, 1, 1), date(1990, 1, 1), "equal"),
+        (date(1986, 10, 24), date(1986, 10, 26), "near"),  # Gist: ESAKE and EL 2 days apart
+        (date(2000, 10, 19), date(2000, 11, 19), "near"),  # Balcerowski: a month off
+        (date(1990, 3, 4), date(1990, 4, 3), "near"),  # day and month swapped
+        (date(1990, 3, 4), date(1991, 3, 4), "near"),  # year off by one
+        (date(1990, 1, 1), date(1990, 3, 1), "different"),
+        (None, date(1990, 1, 1), "unknown"),
+    ],
+)
+def test_dob_status(a: date | None, b: date | None, status: str) -> None:
+    assert dob_status(a, b, MatchParams().near_days) == status
+
+
+def test_near_dates_need_the_stricter_name_threshold() -> None:
+    names = _names(
+        [
+            _row("gbl", "0000N001", 2022, "00000001", "WALKER", "KEMBA"),
+            _row("euroleague", "P00N001", 2022, "PAN", "WALKER", "KEMBA"),
+            _row("gbl", "0000N002", 2022, "00000001", "WALKER", "KEMBO"),
+            _row("euroleague", "P00N002", 2022, "PAN", "WALKER", "KEMBA"),
+        ]
+    )
+    bios = _bios(
+        [
+            {"competition": c, "source_id": s, "birth_date": d, "country": None}
+            for c, s, d in [
+                ("gbl", "0000N001", date(1990, 1, 1)),
+                ("euroleague", "P00N001", date(1990, 1, 4)),
+                ("gbl", "0000N002", date(1980, 5, 5)),
+                ("euroleague", "P00N002", date(1980, 5, 9)),
+            ]
+        ]
+    )
+    _, scored, matched = _run(names, bios)
+    near = scored[scored["dob"] == "near"].set_index(["gbl_id", "el_id"])
+    assert near.loc[("0000N001", "P00N001"), "accepted"]
+    assert not near.loc[("0000N002", "P00N002"), "accepted"]
+    assert near.loc[("0000N002", "P00N002"), "name_score"] >= MatchParams().t_dob
+    assert list(zip(matched["gbl_id"], matched["el_id"], strict=True)) == [("0000N001", "P00N001")]
+
+
 def test_dob_different_never_matches() -> None:
     names = _names(
         [
@@ -234,7 +280,7 @@ def test_dob_different_never_matches() -> None:
             {
                 "competition": "euroleague",
                 "source_id": "P00D001",
-                "birth_date": date(1991, 1, 1),
+                "birth_date": date(1993, 6, 15),
                 "country": None,
             },
         ]

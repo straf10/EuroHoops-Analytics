@@ -111,11 +111,19 @@ def test_read_overrides_missing_file_is_empty(tmp_path: Path) -> None:
     assert read_overrides(tmp_path / "none.csv").empty
 
 
-def test_tune_picks_a_grid_point_and_t_dob_from_equal_date_positives() -> None:
+def test_tune_picks_a_grid_point_and_keeps_the_birth_date_thresholds() -> None:
     grid = {"w_surname": (0.6,), "t_nodob": (0.9, 0.95), "b_club": (0.0, 0.05), "b_jersey": (0.0,)}
     result = tune(NAMES, BIOS, CLUBS, grid)
     assert result["silver"] == {"positives": 2, "negatives": 2}
     assert result["chosen_silver_hidden_dates"]["precision"] == 1.0
-    assert 0.9 <= result["chosen"]["t_dob"] <= 1.0
+    assert result["chosen_silver_visible_dates"]["precision"] == 1.0
+    chosen = MatchParams(**result["chosen"])
+    assert (chosen.t_dob, chosen.t_near) == (MatchParams().t_dob, MatchParams().t_near)
     assert len(result["table"]) == 4
-    assert MatchParams(**{**result["chosen"], "window": 2})
+
+
+def test_near_birth_dates_are_silver_positives() -> None:
+    bios = BIOS.copy()
+    bios.loc[bios["source_id"] == "P001926", "birth_date"] = date(1990, 1, 3)  # 2 days off
+    pos, _ = silver_set(NAMES, bios, CLUBS)
+    assert ("0000000A", "P001926") in pos

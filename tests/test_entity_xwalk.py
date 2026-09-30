@@ -86,7 +86,7 @@ def test_match_override_links_rejected_pair_and_two_el_ids() -> None:
             {
                 "competition": "euroleague",
                 "source_id": "P00X001",
-                "birth_date": date(1991, 1, 1),
+                "birth_date": date(1993, 6, 15),
                 "country": None,
             },
         ]

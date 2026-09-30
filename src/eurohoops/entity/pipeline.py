@@ -3,13 +3,15 @@
 The matcher (``entity.match``) reads names through the injected transliteration
 (``entity.translit``) and similarity (``entity.similarity``). The silver set (D2 of
 reports/week12-14_progress.md) is built without names: a GBL id and a EuroLeague id on the same
-Greek club in the same season with the same known birth date are positives, every other pair of
-that club-season with two known, different birth dates a negative. ``ENTITY_PARAMS`` were chosen
-on it by the D3 rule, before any label existed; ``tune`` reproduces the choice.
+Greek club in the same season with equal or near birth dates (D9) are positives, every other
+pair of that club-season with two known, different birth dates a negative. The birth-date
+thresholds ``t_dob`` and ``t_near`` were set by D9 from the name scores of all equal- and
+near-date candidate pairs (label-free); the missing-date branch (``w_surname``, ``t_nodob``,
+``b_club``, ``b_jersey``) is chosen on the silver set with birth dates hidden by ``tune``, before
+any label existed.
 """
 
 import itertools
-import math
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, replace
 from pathlib import Path
@@ -17,7 +19,14 @@ from typing import Any, cast
 
 import pandas as pd
 
-from eurohoops.entity.match import MatchParams, assign, candidate_pairs, careers, score_pairs
+from eurohoops.entity.match import (
+    MatchParams,
+    assign,
+    candidate_pairs,
+    careers,
+    dob_status,
+    score_pairs,
+)
 from eurohoops.entity.similarity import jaro_winkler
 from eurohoops.entity.translit import latin_key, variants
 from eurohoops.entity.xwalk import build_xwalk, entity_report, pair_metrics, wilson
@@ -41,8 +50,9 @@ OVERRIDE_COLUMNS = [
 ]
 TUNING_GRID: dict[str, tuple[float, ...]] = {
     "w_surname": (0.5, 0.6, 0.7, 0.8),
-    "t_nodob": (0.86, 0.88, 0.90, 0.92, 0.94, 0.96),
-    "b_club": (0.0, 0.03, 0.05, 0.08),
+    # widened once (2026-09-30, D9) after the first run chose the 0.86 / 0.08 edges
+    "t_nodob": (0.80, 0.82, 0.84, 0.86, 0.88, 0.90, 0.92, 0.94, 0.96),
+    "b_club": (0.0, 0.03, 0.05, 0.08, 0.10),
     "b_jersey": (0.0, 0.03),
 }
 
@@ -96,12 +106,14 @@ def run_entity(
 def silver_set(
     names: pd.DataFrame, bios: pd.DataFrame, clubs: Mapping[str, str]
 ) -> tuple[set[tuple[str, str]], set[tuple[str, str]]]:
-    """(positives, negatives) as (GBL id, EL id), per D2."""
+    """(positives, negatives) as (GBL id, EL id), per D2 and D9: equal or near birth dates are
+    positives, different ones negatives."""
     born = {
         (c, s): d
         for c, s, d in bios[["competition", "source_id", "birth_date"]].itertuples(index=False)
         if pd.notna(d)
     }
+    near_days = ENTITY_PARAMS.near_days
     pos: set[tuple[str, str]] = set()
     neg: set[tuple[str, str]] = set()
     for gbl_team, el_team in clubs.items():
@@ -114,7 +126,8 @@ def silver_set(
                 dg, de = born.get(("gbl", g)), born.get(("euroleague", e))
                 if dg is None or de is None:
                     continue
-                (pos if dg == de else neg).add((g, e))
+                same = dob_status(dg, de, near_days) in {"equal", "near"}
+                (pos if same else neg).add((g, e))
     return pos, neg - pos
 
 
@@ -289,9 +302,10 @@ def tune(
     clubs: Mapping[str, str],
     grid: Mapping[str, Sequence[float]] = TUNING_GRID,
 ) -> dict[str, Any]:
-    """The D3 rule on the silver set: ``t_dob`` = the largest grid value that keeps every
-    equal-date silver positive; the rest maximise F1 with birth dates hidden, subject to silver
-    precision >= 0.99 (ties: the earlier grid point)."""
+    """The missing-date branch (D3, D9) on the silver set with birth dates hidden: maximise F1
+    subject to silver precision >= 0.99 (if no grid point meets it: the best F1; ties: the
+    earlier grid point). ``t_dob``/``t_near`` stay as set by D9; the chosen parameters are then
+    also scored on the silver set with birth dates visible."""
     pos, neg = silver_set(names, bios, clubs)
     none = pd.DataFrame(columns=OVERRIDE_COLUMNS, dtype=str)
     base = ENTITY_PARAMS
@@ -321,16 +335,13 @@ def tune(
     chosen = MatchParams(**{**asdict(base), **{k: float(best[k]) for k in keys}})
     pairs = candidate_pairs(sub, bios, clubs, variants, latin_key, chosen)
     scored = score_pairs(pairs, sub, variants, latin_key, jaro_winkler, chosen)
-    equal = scored[scored["dob"] == "equal"]
-    is_pos = [(g, e) in pos for g, e in zip(equal["gbl_id"], equal["el_id"], strict=True)]
-    pos_scores = equal[is_pos]
-    lowest = float(pos_scores["name_score"].min()) if not pos_scores.empty else base.t_dob
-    t_dob = math.floor(lowest * 100.0) / 100.0
+    visible = silver_metrics(assign(scored, none), pos, neg)
     return {
         "silver": {"positives": len(pos), "negatives": len(neg)},
         "grid": {k: list(v) for k, v in grid.items()},
-        "chosen": {**{k: float(best[k]) for k in keys}, "t_dob": t_dob},
+        "chosen": asdict(chosen),
         "chosen_silver_hidden_dates": {k: float(best[k]) for k in ("precision", "recall", "f1")},
+        "chosen_silver_visible_dates": {k: visible[k] for k in ("precision", "recall", "f1")},
         "precision_rule_met": not ok.empty,
         "table": table.round(6).to_dict("records"),
     }
