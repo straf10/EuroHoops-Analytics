@@ -91,11 +91,72 @@
           "translate_team": null
         }
       }
+    },
+    "validation": {
+      "n": 1,
+      "seasons": {
+        "2023": 1
+      },
+      "loss": {
+        "same_stats": 0.586152,
+        "team_offset": 0.593316,
+        "shrunk_same_stats": 0.517075,
+        "translate": 0.699677,
+        "translate_team": 0.712428
+      },
+      "per_season": {
+        "2023": {
+          "same_stats": 0.586152,
+          "team_offset": 0.593316,
+          "shrunk_same_stats": 0.517075,
+          "translate": 0.699677,
+          "translate_team": 0.712428
+        }
+      }
     }
   },
-  "validation_scored": false,
+  "validation_scored": true,
   "test_scored": false,
-  "gate": null,
+  "gate": {
+    "rule": "chosen translation variant beats same_stats iff the person-level bootstrap 95% CI (1,000 resamples, seed 20261015) of loss(chosen) - loss(same_stats) on validation has upper bound < 0; loss = EL-minutes-weighted mean of the per-mover mean over 11 stats of the squared error standardised by the stat's EL between-player sd (tuning seasons)",
+    "metric": "standardised squared error, minutes-weighted",
+    "variant": "translate",
+    "reference": "same_stats",
+    "pooled": true,
+    "seasons": [
+      2019,
+      2020,
+      2021,
+      2022,
+      2023
+    ],
+    "n_movers": 6,
+    "loss_diff": {
+      "mean": -0.137504,
+      "ci95": [
+        -0.429934,
+        0.018067
+      ],
+      "resamples": 1000,
+      "seed": 20261015
+    },
+    "passed": false
+  },
+  "el_to_gbl": {
+    "label": "reported, not gated",
+    "seasons": [
+      2019,
+      2020,
+      2021,
+      2022,
+      2023
+    ],
+    "n": 18,
+    "loss": {
+      "same_stats": 0.594056,
+      "translate": 0.537019
+    }
+  },
   "pairs": {
     "dual": 107,
     "el_to_gbl": 36,
