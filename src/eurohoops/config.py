@@ -271,6 +271,33 @@ PLAYER_BIOS = Path("data/staging/player_bios.parquet")
 BIO_EL_SEASONS = tuple(range(2007, 2026))
 # GBL team id -> EuroLeague code of the same club (the only GBL clubs in the EuroLeague 2007-2025)
 GREEK_EL_CLUBS = {"00000001": "PAN", "00000002": "OLY"}
+GBL_PLAYER_NAMES = Path("data/staging/gbl_player_names.parquet")
+EL_PLAYER_NAMES = Path("data/staging/euroleague_player_names.parquet")
+ENTITY_SEASONS = tuple(range(2007, 2026))  # I-a: the live season is not touched
+ENTITY_OVERRIDES = Path("entity/overrides.csv")
+ENTITY_LABELS = Path("entity/labels.csv")
+ENTITY_LABELS_TODO = Path("data/entity/labels_todo.csv")  # shows birth dates: never committed
+ENTITY_REPORT = Path("reports/entity_resolution.json")
+ENTITY_TUNING_REPORT = Path("reports/entity_tuning.json")
+
+
+@dataclass(frozen=True)
+class M4Backtest:
+    """M4 league translation (weeks 12-14 I-h): walk forward by EuroLeague target season."""
+
+    report: Path = Path("reports/backtest_m4.json")
+    translation_report: Path = Path("reports/m4_translation.json")
+    tuning: tuple[int, ...] = _seasons(2019, 2022)
+    validation: tuple[int, ...] = (2023,)
+    test: tuple[int, ...] = (2024, 2025)
+    min_validation_movers: int = 20  # below it the gate pools 2019-2023 with `translate` declared
+    shrink_minutes: float = 250.0  # `shrunk_same_stats` prior weight, fixed (not tuned)
+    sd_min_minutes: float = 300.0  # EL player-seasons that set each stat's sd
+    bootstrap_resamples: int = 1000
+    bootstrap_seed: int = 20261015
+
+
+M4 = M4Backtest()
 GBL_BOX_GAPS = Path("reports/gbl_box_gaps.csv")
 ODDS_CALLS = Path("odds/api_calls.csv")
 ODDS_TEAMS = Path("odds/euroleague_teams.csv")

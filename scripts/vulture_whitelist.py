@@ -1,27 +1,16 @@
 """Code built ahead of the pipeline step that will use it; vulture reads this file as usage.
 
 Remove an entry as soon as the pipeline uses the name.
-- standings.py: season simulator, PLAN §5.8
+- standings.py: season simulator, PLAN Â§5.8
 - config.py GBL_STINTS_REPORT and M3Grid.dummy_minutes: read by later M3 deliverables
   (H6 dummy variant), not H1.
 """
 
-from eurohoops.config import GBL_STINTS_REPORT, M3, M3Backtest, M3Grid
-from eurohoops.entity.match import MatchParams, assign, candidate_pairs, careers, score_pairs
-from eurohoops.entity.similarity import jaro_winkler
-from eurohoops.entity.translit import latin_key, variants
-from eurohoops.entity.xwalk import (
-    XWALK_SCHEMA,
-    build_xwalk,
-    entity_report,
-    pair_metrics,
-    wilson,
-)
+from eurohoops.config import GBL_STINTS_REPORT, M3, M4, M3Backtest, M3Grid, M4Backtest
 from eurohoops.models.box_impact import box_only_margins, pir_margins
 from eurohoops.models.minutes import expected_possessions, oracle_shares, projected_shares
 from eurohoops.models.rapm import ModelColumns, build_minutes_rows, fit_decayed_minutes
 from eurohoops.models.rapm_posterior import Posterior, noise_variance, posterior, ridge_solution
-from eurohoops.parse.player_names import euroleague_names, gbl_names, pbp_links
 from eurohoops.standings import EUROLEAGUE_2026, GBL_2026, Format, Series, rank
 
 Series.best_of
@@ -69,24 +58,9 @@ ModelColumns.M  # the general sparse aggregation matrix, exposed for D's posteri
 build_minutes_rows  # D6: decayed on-court minutes per spell, exposed for E's rapm_dummy
 fit_decayed_minutes  # D6: convenience snapshot on top of build_minutes_rows, same hook
 
-# week 12-14 I1 (orchestrator): name tables, read by `eurohoops entity` once the matcher (I3) is in
-gbl_names
-euroleague_names
-pbp_links
-
-# weeks 12-14 I2: transliteration + similarity; matcher (I3) and entity CLI call these next.
-jaro_winkler  # I-e surname/first-name similarity over variants
-latin_key  # EuroLeague-side name normaliser for blocking/scoring
-variants  # GBL→Latin candidate spellings for the matcher
-
-# weeks 12-14 I3: entity matcher + crosswalk; CLI / I4 wire these later
-MatchParams
-careers
-candidate_pairs
-score_pairs
-assign
-XWALK_SCHEMA
-build_xwalk
-entity_report
-pair_metrics
-wilson
+# weeks 12-14 I8: read by eval/m4_backtest.py and the `backtest --model m4` command (next step)
+M4
+M4Backtest.translation_report
+M4Backtest.min_validation_movers
+M4Backtest.shrink_minutes
+M4Backtest.sd_min_minutes

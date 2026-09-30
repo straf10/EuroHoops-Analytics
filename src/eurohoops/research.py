@@ -6,16 +6,27 @@ the raw cache."""
 import json
 import logging
 import time
+from typing import Annotated
 
 import pandas as pd
 import typer
 
 from eurohoops.config import (
+    EL_PLAYER_NAMES,
+    ENTITY_LABELS,
+    ENTITY_LABELS_TODO,
+    ENTITY_OVERRIDES,
+    ENTITY_REPORT,
+    ENTITY_SEASONS,
+    ENTITY_TUNING_REPORT,
     EUROLEAGUE,
     FREE_THROWS_REPORT,
     GBL,
     GBL_PBP,
+    GBL_PLAYER_BOX,
+    GBL_PLAYER_NAMES,
     GBL_STINTS_REPORT,
+    GREEK_EL_CLUBS,
     M2_CHART_PLAYERS,
     M2_CHART_TEAMS,
     M2_CHARTS_DIR,
@@ -28,6 +39,15 @@ from eurohoops.config import (
     MART_PATH,
     SHOTS_REPORT,
 )
+from eurohoops.entity.pipeline import (
+    draft_labels,
+    label_metrics,
+    read_overrides,
+    run_entity,
+    silver_metrics,
+    silver_set,
+    tune,
+)
 from eurohoops.eval.m2_backtest import run_m2_backtest
 from eurohoops.eval.m2_backtest import search as m2_search
 from eurohoops.eval.m3_backtest import TunedRapm, build_rapm_inputs, prepare_data
@@ -36,11 +56,14 @@ from eurohoops.eval.shot_making import player_report
 from eurohoops.eval.team_shot_quality import shots_with_xpts, team_report
 from eurohoops.eval.team_shot_quality import team_games as team_shot_games
 from eurohoops.eval.tracking import log_m2_backtest
+from eurohoops.ingest.bios import build_bios
 from eurohoops.logs import write_json
 from eurohoops.marts import read_games, read_table, write_tables
 from eurohoops.parse.free_throws import LEVEL_CHECK, build_ft_team_games, ft_report
+from eurohoops.parse.games import write_table
 from eurohoops.parse.gbl_stints import H_I_THRESHOLD, build_gbl_stints_mart
 from eurohoops.parse.gbl_stints import mart_report as gbl_stints_report
+from eurohoops.parse.player_names import euroleague_names, gbl_names
 from eurohoops.parse.shot_table import build_shot_table, reconcile, shot_report
 from eurohoops.publish import DISPLAY_CODES
 from eurohoops.stats.box import build_box_games
@@ -288,6 +311,67 @@ def shot_charts() -> None:
         )
         typer.echo(f"player {shooter} {names.get(shooter, '')}: {top[shooter]} FGA")
     typer.echo(f"wrote charts to {M2_CHARTS_DIR}")
+
+
+def entity(
+    tune_params: Annotated[
+        bool, typer.Option("--tune", help="D3 search on the silver set (entity_tuning.json)")
+    ] = False,
+    draft: Annotated[
+        bool, typer.Option("--draft-labels", help="Write the owner's label sheet (I5) to data/")
+    ] = False,
+) -> None:
+    """Weeks 12-14 I3-I5: player names of both competitions (``player_names`` mart and staging),
+    the cross-league matcher and the ``player_xwalk`` mart, and reports/entity_resolution.json
+    (counts, silver-set metrics, and precision/recall on entity/labels.csv once it exists).
+
+    ``--tune`` runs the D3 search on the silver set and writes reports/entity_tuning.json
+    instead; ``--draft-labels`` writes the label sheet. Local only: reads the marts, the raw
+    cache and the cached bios (``ingest-bios``).
+    """
+    start = time.monotonic()
+    player_box = pd.read_parquet(GBL_PLAYER_BOX)
+    player_box = player_box[player_box["game_id"].str.slice(3, 7).astype(int).isin(ENTITY_SEASONS)]
+    games = read_games(MART_PATH, EUROLEAGUE.name)
+    games = games[games["season"].isin(ENTITY_SEASONS)]
+    gbl = gbl_names(GBL.raw_dir, player_box)
+    el = euroleague_names(build_box_games(EUROLEAGUE.raw_dir, games).players)
+    write_table(gbl, GBL_PLAYER_NAMES)
+    write_table(el, EL_PLAYER_NAMES)
+    names = pd.concat([el, gbl], ignore_index=True)
+    bios = build_bios(GBL.raw_dir, EUROLEAGUE.raw_dir)
+    if tune_params:
+        result = tune(names, bios, GREEK_EL_CLUBS)
+        write_json(ENTITY_TUNING_REPORT, result)
+        typer.echo(
+            f"silver {result['silver']}; chosen {result['chosen']} "
+            f"(dates hidden: {result['chosen_silver_hidden_dates']}); wrote {ENTITY_TUNING_REPORT}"
+        )
+        return
+    overrides = read_overrides(ENTITY_OVERRIDES)
+    if draft:
+        sheet = draft_labels(names, bios, overrides, GREEK_EL_CLUBS)
+        ENTITY_LABELS_TODO.parent.mkdir(parents=True, exist_ok=True)
+        sheet.to_csv(ENTITY_LABELS_TODO, index=False, encoding="utf-8-sig")
+        typer.echo(f"{len(sheet)} ids {sheet['stratum'].value_counts().to_dict()}")
+        typer.echo(f"wrote {ENTITY_LABELS_TODO}")
+        return
+    run = run_entity(names, bios, overrides, GREEK_EL_CLUBS)
+    write_tables(MART_PATH, {"player_names": names, "player_xwalk": run.xwalk})
+    report = run.report
+    pos, neg = silver_set(names, bios, GREEK_EL_CLUBS)
+    report["silver"] = silver_metrics(run.matches, pos, neg)
+    report["bios"] = {
+        c: int(group["birth_date"].notna().sum()) for c, group in bios.groupby("competition")
+    }
+    if ENTITY_LABELS.exists():
+        report["labels"] = label_metrics(run, overrides, pd.read_csv(ENTITY_LABELS, dtype=str))
+    write_json(ENTITY_REPORT, report)
+    typer.echo(
+        f"{len(run.matches)} cross-league matches, {run.xwalk['person_id'].nunique()} persons; "
+        f"silver precision {report['silver']['precision']} recall {report['silver']['recall']}; "
+        f"wrote {ENTITY_REPORT}\nRUNTIME {time.monotonic() - start:.0f} s"
+    )
 
 
 def gbl_stints() -> None:
