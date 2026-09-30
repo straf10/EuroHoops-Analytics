@@ -11,6 +11,7 @@ from eurohoops.models.box_impact import box_only_margins, pir_margins
 from eurohoops.models.minutes import expected_possessions, oracle_shares, projected_shares
 from eurohoops.models.rapm import ModelColumns, build_minutes_rows, fit_decayed_minutes
 from eurohoops.models.rapm_posterior import Posterior, noise_variance, posterior, ridge_solution
+from eurohoops.models.translation import StatFit, fit_translation, fits_report, to_el, to_gbl
 from eurohoops.parse.player_names import euroleague_names, gbl_names, pbp_links
 from eurohoops.standings import EUROLEAGUE_2026, GBL_2026, Format, Series, rank
 
@@ -63,3 +64,11 @@ fit_decayed_minutes  # D6: convenience snapshot on top of build_minutes_rows, sa
 gbl_names
 euroleague_names
 pbp_links
+
+# week 12-14 I7 (subagent E): M4 translation model, called by eval/m4_backtest once I8 lands
+fit_translation
+to_el
+to_gbl
+fits_report
+StatFit.delta_lo90  # 90% interval written into reports/m4_translation.json by I8
+StatFit.delta_hi90
