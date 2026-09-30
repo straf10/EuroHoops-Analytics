@@ -41,7 +41,7 @@ class MatchParams:
     b_club: float = 0.05
     b_jersey: float = 0.03
     window: int = 2
-    near_days: int = 31
+    near_days: int = 7
 
 
 def careers(names: pd.DataFrame) -> pd.DataFrame:
@@ -132,17 +132,18 @@ def _same_jersey(names: pd.DataFrame) -> set[tuple[str, str]]:
 
 
 def dob_status(g_dob: date | None, e_dob: date | None, near_days: int) -> str:
-    """``equal``, ``near`` (the sources disagree slightly: within ``near_days``, day and month
-    swapped, or the year off by one), ``different`` or ``unknown`` (D9)."""
+    """``equal``, ``near`` (the sources disagree like a typo: within ``near_days``, the same day
+    one month apart, day and month swapped, or the year off by one), ``different`` or
+    ``unknown`` (D9)."""
     if g_dob is None or e_dob is None:
         return "unknown"
     if g_dob == e_dob:
         return "equal"
     swapped = (g_dob.day, g_dob.month, g_dob.year) == (e_dob.month, e_dob.day, e_dob.year)
-    year_off = (g_dob.day, g_dob.month) == (e_dob.day, e_dob.month) and abs(
-        g_dob.year - e_dob.year
-    ) == 1
-    if abs((g_dob - e_dob).days) <= near_days or swapped or year_off:
+    same_day = g_dob.day == e_dob.day
+    month_off = same_day and g_dob.year == e_dob.year and abs(g_dob.month - e_dob.month) == 1
+    year_off = same_day and g_dob.month == e_dob.month and abs(g_dob.year - e_dob.year) == 1
+    if abs((g_dob - e_dob).days) <= near_days or swapped or month_off or year_off:
         return "near"
     return "different"
 

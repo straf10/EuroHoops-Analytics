@@ -81,13 +81,18 @@ All defaults accepted as written (I-a … I-l). The owner's answers to the open 
   at 0.955 at every grid point. The capped pairs are silver "negatives" that are the same person
   with dates a few days or a month apart (Gist −2 d, Mitrou-Long −5 d, Abosi −1 d, Petrusev
   −4 d, Balcerowski one month), and equal dates can be teammates' coincidences (GBL Papapetrou
-  and EL Lekavičius share one). Changes: a `near` status (≤ 31 days, day/month swapped, or year
-  off by one); silver positives = equal **or near** dates. Thresholds from the name scores of all
-  316 equal-date and 894 near-date candidate pairs (no label; bimodal: coincidences up to 0.778
-  for equal dates and 0.918 for near ones, true pairs from 0.771 and 0.871): `t_dob` 0.78,
-  `t_near` 0.95 (loses e.g. Moses Wright at 0.871 to keep precision). The silver search now
-  tunes only the missing-date branch (582 pairs, 220 EL ids without a date); its `t_nodob` and
-  `b_club` grid was widened once (the first run chose the 0.86 / 0.08 edges).
+  and EL Lekavičius share one). Changes: a `near` status for typo-like disagreements (≤ 7 days,
+  the same day one month apart, day/month swapped, or the year off by one; a first version with
+  ≤ 31 days made 166 silver positives out of teammates born within a month of each other, so it
+  was narrowed to the forms observed: 140 positives); silver positives = equal **or near**
+  dates. Thresholds from the name scores of all 316 equal-date and 894 (±31-day) near-date
+  candidate pairs (no label; bimodal: coincidences up to 0.778 for equal dates and 0.918 for
+  near ones, true pairs from 0.771 and 0.871): `t_dob` 0.78, `t_near` 0.95 (loses e.g. Moses
+  Wright at 0.871 to keep precision). The silver search now tunes only the missing-date branch
+  (582 pairs, 220 EL ids without a date); its `t_nodob` and `b_club` grid was widened once (the
+  first run chose the 0.86 / 0.08 edges). Result (dates hidden): `w_surname` 0.5 (the grid's
+  lower edge, not widened again), `t_nodob` 0.82, `b_club` 0.08, `b_jersey` 0; silver precision
+  1.0, recall 0.864.
 - **D5 (translit fixture).** I0's pairs file starts with 17 pairs checked by eye (same
   club-season); it is extended to 40 with equal-birth-date PAO/OLY pairs once their bios are
   cached. Written from source ids by script, so the Latin look-alike letters are exact.

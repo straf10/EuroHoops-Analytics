@@ -227,6 +227,7 @@ def test_swapped_name_order_matches_via_full_sim() -> None:
         (date(1990, 3, 4), date(1990, 4, 3), "near"),  # day and month swapped
         (date(1990, 3, 4), date(1991, 3, 4), "near"),  # year off by one
         (date(1990, 1, 1), date(1990, 3, 1), "different"),
+        (date(1990, 1, 1), date(1990, 1, 20), "different"),  # 19 days: not a typo form
         (None, date(1990, 1, 1), "unknown"),
     ],
 )

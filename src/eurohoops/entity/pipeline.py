@@ -32,7 +32,9 @@ from eurohoops.entity.translit import latin_key, variants
 from eurohoops.entity.xwalk import build_xwalk, entity_report, pair_metrics, wilson
 from eurohoops.parse.player_names import pbp_links
 
-ENTITY_PARAMS = MatchParams()
+# `tune` on the silver set (reports/entity_tuning.json); t_dob and t_near from D9
+ENTITY_PARAMS = MatchParams(w_surname=0.5, t_nodob=0.82, b_club=0.08, b_jersey=0.0)
+TUNING_BASE = MatchParams()
 PBP_NAME_THRESHOLD = 0.9
 LABEL_MIN_MINUTES = 100.0
 LABEL_PER_STRATUM = 50
@@ -308,7 +310,7 @@ def tune(
     also scored on the silver set with birth dates visible."""
     pos, neg = silver_set(names, bios, clubs)
     none = pd.DataFrame(columns=OVERRIDE_COLUMNS, dtype=str)
-    base = ENTITY_PARAMS
+    base = TUNING_BASE
     silver_ids = {g for g, _ in pos | neg} | {e for _, e in pos | neg}
     sub = names[names["source_id"].isin(silver_ids)]
     hidden = bios.iloc[0:0]
