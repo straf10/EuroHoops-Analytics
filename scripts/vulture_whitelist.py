@@ -11,6 +11,18 @@ from eurohoops.models.box_impact import box_only_margins, pir_margins
 from eurohoops.models.minutes import expected_possessions, oracle_shares, projected_shares
 from eurohoops.models.rapm import ModelColumns, build_minutes_rows, fit_decayed_minutes
 from eurohoops.models.rapm_posterior import Posterior, noise_variance, posterior, ridge_solution
+from eurohoops.models.translation_pairs import (
+    MAX_OTHER,
+    MIN_FROM,
+    MIN_TO,
+    PAIR_TYPES,
+    PAIRS_SCHEMA,
+    SEASON_RATES_SCHEMA,
+    TEAM_NET_SCHEMA,
+    build_pairs,
+    season_rates,
+    team_net,
+)
 from eurohoops.parse.player_names import euroleague_names, gbl_names, pbp_links
 from eurohoops.standings import EUROLEAGUE_2026, GBL_2026, Format, Series, rank
 
@@ -63,3 +75,15 @@ fit_decayed_minutes  # D6: convenience snapshot on top of build_minutes_rows, sa
 gbl_names
 euroleague_names
 pbp_links
+
+# week 12-14 I6 (subagent D): pair tables, read by I7 translation fit / I8 backtest
+MIN_FROM
+MAX_OTHER
+MIN_TO
+PAIR_TYPES
+SEASON_RATES_SCHEMA
+TEAM_NET_SCHEMA
+PAIRS_SCHEMA
+season_rates
+team_net
+build_pairs
