@@ -127,4 +127,21 @@ skip 34 "M3 leakage" || {
 skip 35 "M3 report" || { item "35 backtest_m3.json + gate, two runs identical, verdict < validation < test"; bash "$CHECKS/m3_reports.sh"; res $?; }
 skip 36 "M3 runtime" || { item "36 backtest --model m3 runtime < 1,800 s"; bash "$CHECKS/m3_runtime.sh"; res $?; }
 skip 37 "M3 card + GBL stints" || { item "37 m3.md numbers = reports; gbl_stints.json pass rates, two builds identical"; bash "$CHECKS/m3_card_gbl.sh"; res $?; }
+skip 38 "entity" || { item "38 entity: unit tests, two builds identical, runtime, matcher < labels < label overrides"; bash "$CHECKS/m4_entity.sh"; res $?; }
+skip 39 "crosswalk invariants" || {
+  item "39 crosswalk invariants: every box id in one person, overrides held"
+  PYTHONIOENCODING=utf-8 uv run python "$CHECKS/entity_xwalk.py"
+  res $?
+}
+skip 40 "M4 units + leakage" || {
+  item "40 M4 unit and leakage tests (pairs, translation model, backtest)"
+  uv run pytest -q -p no:cacheprovider tests/test_translation_pairs.py tests/test_translation.py tests/test_m4_backtest.py 2>&1 | tail -1
+  res "${PIPESTATUS[0]}"
+}
+skip 41 "M4 report" || { item "41 backtest_m4.json + gate, two runs identical, verdict < validation < test, runtime"; bash "$CHECKS/m4_reports.sh"; res $?; }
+skip 42 "M4 card + entity doc" || {
+  item "42 docs/models/m4.md and docs/data/entity.md numbers = reports"
+  uv run pytest -q -p no:cacheprovider tests/test_model_card_m4.py 2>&1 | tail -1
+  res "${PIPESTATUS[0]}"
+}
 echo; echo "FAILS: $fails (end $(date -u +%H:%MZ))"; exit "$fails"

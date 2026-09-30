@@ -143,6 +143,10 @@ iteration | deliverable | checks run | result | commit
 12 | I8 validation scored once; gate (pooled 2019–2023, 6 movers) FAIL: translate − same_stats −0.138, 95% CI [−0.430, 0.018] | backtest (19 s) | ok (gate outcome FAIL, allowed) | 04afe68
 13 | I8 test scored once: 0 GBL→EL movers in 2024–2025; EL→GBL (26, reported) translate 0.613 vs same_stats 0.616; team offset 20.2 [16.9, 23.6] per 100 | backtest --score-test (20 s) | ok | (this commit)
 
+## Runtimes (I-l; quiet machine not guaranteed: subagents were running)
+RUNTIME entity 71
+RUNTIME m4 20
+
 ## Pre-registration order
 MATCHER d17fc3a
 VERDICT 044f670

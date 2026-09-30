@@ -42,5 +42,20 @@ _Avoid_: team id
 **Display code**:
 The real-life abbreviation the site shows in place of a source code (`FBT`, `PAO`).
 
+## Players across leagues
+
+**Person id**:
+One player across the EuroLeague and the GBL (`P:<EuroLeague id>`, else `G:<ESAKE id>`), from the `player_xwalk` mart; source ids stay the keys of every other table.
+_Avoid_: player id (that is a source id)
+
+**Dual season**:
+A season a player played at least 300 minutes in both leagues (in practice for Panathinaikos or Olympiacos).
+
+**Mover**:
+A player with at least 300 minutes in one league in a season, under 100 in the other, and at least 300 in the other the next season.
+
+**Silver pair**:
+A GBL id and a EuroLeague id on the same Greek club in the same season, with equal or near birth dates; matcher tuning data, never a label.
+
 **Confirmed time**:
 A tip-off time the source has published. A game without one (in the GBL it sits at local midnight of its date) is never forecast; it is the next tip-off only by its date ("time TBC"), when no game ahead has a confirmed time.
