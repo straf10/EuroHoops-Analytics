@@ -5,7 +5,8 @@ folds minority-script look-alike letters into the majority script (ties → Gree
 
 ``variants`` yields up to 64 distinct Latin spellings of a folded name: ELOT 743 first, then
 reverse-phonetic alternatives for foreign names written in Greek (ΜΠ/ΝΤ/ΓΚ, ΟΥ→W, Ι→J before
-a vowel, …). Each spelling is the Latin tokens sorted and joined by one space.
+a vowel, word-initial ΓΟΥ+vowel→W, ΑΪ diaeresis→AI/I/Y, …). Each spelling is the Latin
+tokens sorted and joined by one space. Diaeresis on iota is read before ``fold`` strips it.
 
 ``latin_key`` is the EuroLeague-side normaliser: fold, keep A–Z and spaces, sort tokens.
 """
@@ -63,6 +64,9 @@ _SOFT_AFTER_GAMMA = frozenset("ΙΕΗΥ")
 
 _PUNCT_TO_SPACE = str.maketrans({c: " " for c in "-'’.,"})
 
+# Private-use sentinel: Α + Ι with dialytika (ΑΪ), marked before fold strips Mn marks.
+_AI_DIERESIS = "\ue000"
+
 # Digraph / trigraph units: (greek, start_only | None, options with ELOT first).
 # start_only True → only at word start; False → only inside; None → anywhere.
 _MULTI_UNITS: list[tuple[str, bool | None, list[tuple[str, float]]]] = [
@@ -87,6 +91,20 @@ _MULTI_UNITS: list[tuple[str, bool | None, list[tuple[str, float]]]] = [
     ("ΟΙ", None, [("OI", 1.0), ("I", 0.8), ("OY", 0.6)]),
     ("ΑΥ", None, [("AV", 1.0), ("AF", 0.8), ("AU", 0.6), ("AW", 0.5)]),
     ("ΕΥ", None, [("EV", 1.0), ("EF", 0.8), ("EU", 0.6)]),
+]
+
+# ΑΪ (dialytika): ELOT AI first, then English long-i / GUY-style UY.
+_AI_DIERESIS_OPTIONS: list[tuple[str, float]] = [
+    ("AI", 1.0),
+    ("I", 0.9),
+    ("Y", 0.85),
+    ("UY", 0.8),
+]
+# ΑΪΤ → ITE covers WHITE from ΟΥΑΪΤ (W+ITE) without special-casing the name.
+_AI_DIERESIS_T_OPTIONS: list[tuple[str, float]] = [
+    ("ITE", 0.95),
+    ("IT", 0.7),
+    ("AIT", 0.6),
 ]
 
 _DOUBLES = {
@@ -148,14 +166,36 @@ def latin_key(text: str) -> str:
 
 def variants(name: str) -> tuple[str, ...]:
     """Up to 64 distinct Latin spellings of ``name`` (sorted tokens, best weight first)."""
-    return _variants_cached(fold(name))
+    return _variants_cached(_prepare_for_variants(name))
+
+
+def _prepare_for_variants(name: str) -> str:
+    """Like ``fold``, but mark ΑΪ (iota dialytika) before Mn marks are stripped."""
+    if not name:
+        return ""
+    upper = name.upper().replace("ς", "Σ").replace("Ϲ", "Σ")
+    nfd = unicodedata.normalize("NFD", upper)
+    marked: list[str] = []
+    i = 0
+    while i < len(nfd):
+        ch = nfd[i]
+        # Α/A + Ι + combining diaeresis (from Ϊ) → sentinel; plain ΑΙ is untouched.
+        if ch in ("Α", "A") and i + 2 < len(nfd) and nfd[i + 1] == "Ι" and nfd[i + 2] == "\u0308":
+            marked.append(_AI_DIERESIS)
+            i += 3
+            continue
+        marked.append(ch)
+        i += 1
+    stripped = "".join(ch for ch in marked if unicodedata.category(ch) != "Mn")
+    spaced = stripped.translate(_PUNCT_TO_SPACE)
+    return " ".join(_fold_token(tok) for tok in spaced.split())
 
 
 @lru_cache(maxsize=4096)
-def _variants_cached(folded: str) -> tuple[str, ...]:
-    if not folded:
+def _variants_cached(prepared: str) -> tuple[str, ...]:
+    if not prepared:
         return ()
-    tokens = folded.split()
+    tokens = prepared.split()
     if all(_is_latin_token(t) for t in tokens):
         key = " ".join(sorted(t for t in tokens if t))
         return (key,) if key else ()
@@ -192,7 +232,7 @@ def _is_latin_token(token: str) -> bool:
 
 
 def _has_greek(token: str) -> bool:
-    return any(ch in _GREEK_LETTERS for ch in token)
+    return any(ch in _GREEK_LETTERS or ch == _AI_DIERESIS for ch in token)
 
 
 def _fold_token(token: str) -> str:
@@ -269,6 +309,21 @@ def _units_at(token: str, i: int) -> list[tuple[int, list[tuple[str, float]]]]:
     rest = token[i:]
     out: list[tuple[int, list[tuple[str, float]]]] = []
 
+    # Word-initial ΓΟΥ + vowel: English W (ΓΟΥΙΛΙΑΜΣ, ΓΟΥΕΝΙΕΝ, ΓΟΥΑΙΤ).
+    if (
+        start
+        and rest.startswith("ΓΟΥ")
+        and len(rest) > 3
+        and (rest[3] in _VOWELS_GREEK or rest[3] == _AI_DIERESIS)
+    ):
+        out.append((3, [("W", 1.0), ("GOU", 0.5), ("GU", 0.4)]))
+
+    # ΑΪ marked before accent strip; distinct from plain ΑΙ (ELOT AI/E/AY).
+    if rest.startswith(_AI_DIERESIS):
+        out.append((1, _AI_DIERESIS_OPTIONS))
+        if len(rest) > 1 and rest[1] == "Τ":
+            out.append((2, _AI_DIERESIS_T_OPTIONS))
+
     for greek, start_only, options in _MULTI_UNITS:
         if not rest.startswith(greek):
             continue
@@ -282,6 +337,9 @@ def _units_at(token: str, i: int) -> list[tuple[int, list[tuple[str, float]]]]:
         if rest.startswith(dig):
             out.append((2, [(latin * 2, 1.0), (latin, 0.7)]))
 
+    if rest[:1] == _AI_DIERESIS:
+        return out
+
     following = token[i + 1] if i + 1 < len(token) else ""
     out.append((1, _single_options(token[i], following, start=start)))
     return out
@@ -293,7 +351,7 @@ def _single_options(ch: str, following: str, *, start: bool) -> list[tuple[str, 
         soft = following in _SOFT_AFTER_GAMMA
         return [("G", 1.0), ("Y", 0.85 if soft else 0.5)]
     if ch == "Ι":
-        before_vowel = following in _VOWELS_GREEK
+        before_vowel = following in _VOWELS_GREEK or following == _AI_DIERESIS
         # Ι→E covers reverse-phonetic foreign spellings (ΠΙΤΕΡΣ → PETERS).
         return (
             [("I", 1.0), ("J", 0.9), ("Y", 0.7), ("E", 0.65)]
