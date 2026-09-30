@@ -8,7 +8,8 @@ reverse-phonetic alternatives for foreign names written in Greek (ΜΠ/ΝΤ/ΓΚ
 a vowel, word-initial ΓΟΥ+vowel→W, ΑΪ diaeresis→AI/I/Y, …). Each spelling is the Latin
 tokens sorted and joined by one space. Diaeresis on iota is read before ``fold`` strips it.
 
-``latin_key`` is the EuroLeague-side normaliser: fold, keep A–Z and spaces, sort tokens.
+``latin_key`` is the EuroLeague-side normaliser: fold, keep A–Z and spaces, drop generational
+suffix tokens (JR/SR/II/III/IV when not the only token), sort tokens.
 """
 
 from __future__ import annotations
@@ -61,6 +62,8 @@ _GREEK_LETTERS = frozenset("ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ")
 _LATIN_LETTERS = frozenset("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 _VOWELS_GREEK = frozenset("ΑΕΗΙΟΥΩ")
 _SOFT_AFTER_GAMMA = frozenset("ΙΕΗΥ")
+# Dropped from multi-token latin_key spellings; a lone suffix token is kept.
+_GENERATIONAL = frozenset({"JR", "SR", "II", "III", "IV"})
 
 _PUNCT_TO_SPACE = str.maketrans({c: " " for c in "-'’.,"})
 
@@ -125,7 +128,6 @@ _SINGLE: dict[str, list[tuple[str, float]]] = {
     "Δ": [("D", 1.0), ("TH", 0.5)],
     "Ε": [("E", 1.0), ("A", 0.7)],
     "Ζ": [("Z", 1.0)],
-    "Η": [("I", 1.0), ("E", 0.7), ("EE", 0.4)],
     "Θ": [("TH", 1.0), ("T", 0.5)],
     "Κ": [("K", 1.0), ("C", 0.7), ("CK", 0.4), ("Q", 0.3)],
     "Λ": [("L", 1.0)],
@@ -134,7 +136,6 @@ _SINGLE: dict[str, list[tuple[str, float]]] = {
     "Ο": [("O", 1.0), ("OO", 0.4)],
     "Π": [("P", 1.0)],
     "Ρ": [("R", 1.0)],
-    "Σ": [("S", 1.0), ("SS", 0.5), ("Z", 0.4), ("C", 0.35)],
     "Τ": [("T", 1.0)],
     "Υ": [("Y", 1.0), ("I", 0.7)],
     "Φ": [("F", 1.0), ("PH", 0.7)],
@@ -157,10 +158,12 @@ def fold(text: str) -> str:
 
 
 def latin_key(text: str) -> str:
-    """Fold ``text``, keep A–Z and spaces, sort tokens, join with one space."""
+    """Fold ``text``, keep A–Z and spaces, drop generational suffixes, sort tokens."""
     folded = fold(text)
     cleaned = "".join(ch if ch in _LATIN_LETTERS or ch == " " else "" for ch in folded)
     tokens = [t for t in cleaned.split() if t]
+    if len(tokens) > 1:
+        tokens = [t for t in tokens if t not in _GENERATIONAL]
     return " ".join(sorted(tokens))
 
 
@@ -347,19 +350,39 @@ def _units_at(token: str, i: int) -> list[tuple[int, list[tuple[str, float]]]]:
 
 def _single_options(ch: str, following: str, *, start: bool) -> list[tuple[str, float]]:
     """ELOT-first romanisation options for one Greek letter."""
+    word_final = not following
+    special: dict[str, list[tuple[str, float]]] = {}
     if ch == "Γ":
         soft = following in _SOFT_AFTER_GAMMA
-        return [("G", 1.0), ("Y", 0.85 if soft else 0.5)]
-    if ch == "Ι":
-        before_vowel = following in _VOWELS_GREEK or following == _AI_DIERESIS
-        # Ι→E covers reverse-phonetic foreign spellings (ΠΙΤΕΡΣ → PETERS).
-        return (
-            [("I", 1.0), ("J", 0.9), ("Y", 0.7), ("E", 0.65)]
-            if before_vowel
-            else [("I", 1.0), ("Y", 0.7), ("E", 0.65), ("J", 0.4)]
+        special[ch] = [("G", 1.0), ("Y", 0.85 if soft else 0.5)]
+    elif ch == "Ι":
+        if word_final:
+            special[ch] = [("I", 1.0), ("EE", 0.9), ("Y", 0.85), ("E", 0.65), ("J", 0.4)]
+        else:
+            before_vowel = following in _VOWELS_GREEK or following == _AI_DIERESIS
+            # Ι→E covers reverse-phonetic foreign spellings (ΠΙΤΕΡΣ → PETERS).
+            special[ch] = (
+                [("I", 1.0), ("J", 0.9), ("Y", 0.7), ("E", 0.65)]
+                if before_vowel
+                else [("I", 1.0), ("Y", 0.7), ("E", 0.65), ("J", 0.4)]
+            )
+    elif ch == "Η":
+        special[ch] = (
+            [("I", 1.0), ("EE", 0.9), ("Y", 0.85), ("E", 0.7)]
+            if word_final
+            else [("I", 1.0), ("E", 0.7), ("EE", 0.4)]
         )
-    if ch == "Ν":
-        return [("N", 1.0), ("NT", 0.55)] if start else [("N", 1.0)]
+    elif ch == "Ν":
+        special[ch] = [("N", 1.0), ("NT", 0.55)] if start else [("N", 1.0)]
+    elif ch == "Σ":
+        # Word-final Σ→CE/SE for English -ce/-se (ΡΑΪΣ→RICE, ΠΡΙΝΣ→PRINCE).
+        special[ch] = (
+            [("S", 1.0), ("CE", 0.85), ("SE", 0.8), ("SS", 0.5), ("Z", 0.4), ("C", 0.35)]
+            if word_final
+            else [("S", 1.0), ("SS", 0.5), ("Z", 0.4), ("C", 0.35)]
+        )
+    if ch in special:
+        return special[ch]
     if ch in _SINGLE:
         return _SINGLE[ch]
     if ch in _LATIN_LETTERS:
