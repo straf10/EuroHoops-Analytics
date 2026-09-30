@@ -11,6 +11,7 @@ from eurohoops.models.box_impact import box_only_margins, pir_margins
 from eurohoops.models.minutes import expected_possessions, oracle_shares, projected_shares
 from eurohoops.models.rapm import ModelColumns, build_minutes_rows, fit_decayed_minutes
 from eurohoops.models.rapm_posterior import Posterior, noise_variance, posterior, ridge_solution
+from eurohoops.parse.player_names import euroleague_names, gbl_names, pbp_links
 from eurohoops.standings import EUROLEAGUE_2026, GBL_2026, Format, Series, rank
 
 Series.best_of
@@ -57,3 +58,8 @@ GBL_STINTS_REPORT  # H3: GBL stints mart report, subagent C
 ModelColumns.M  # the general sparse aggregation matrix, exposed for D's posterior (rapm.py)
 build_minutes_rows  # D6: decayed on-court minutes per spell, exposed for E's rapm_dummy
 fit_decayed_minutes  # D6: convenience snapshot on top of build_minutes_rows, same hook
+
+# week 12-14 I1 (orchestrator): name tables, read by `eurohoops entity` once the matcher (I3) is in
+gbl_names
+euroleague_names
+pbp_links
