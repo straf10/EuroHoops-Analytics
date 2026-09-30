@@ -20,8 +20,11 @@ cache and the cached bios). Reports: `reports/entity_resolution.json`,
 ## Transliteration and similarity (`entity/translit.py`, `entity/similarity.py`)
 Per token, the majority script wins and look-alikes are folded into it; accents and diaeresis
 are removed after the diaeresis has been read (`ΑΪ` is not `ΑΙ`). Greek tokens get ELOT 743 plus
-reverse-phonetic variants for foreign names (ΜΠ→B, ΝΤ→D, ΓΚ→G, ΤΖ→J, word-initial ΓΟΥ→W, …),
-at most 64, tokens sorted so name order does not matter. Similarity is Jaro-Winkler.
+reverse-phonetic variants for foreign names (ΜΠ→B, ΝΤ→D, ΓΚ→G, ΤΖ→J, word-initial ΓΟΥ→W,
+word-final Σ→CE/SE, word-final Ι/Η→EE, …), at most 64, tokens sorted so name order does not
+matter. `latin_key` drops generational suffixes (JR/SR/II/III/IV). Similarity is Jaro-Winkler.
+The 40-pair fixture gate is ≥ 38 surnames at Jaro-Winkler 0.95; Papathanasiou→Papas and
+Ogkast→Auguste stay below.
 
 ## Matcher (`entity/match.py`, D3 and D9)
 - Blocking: career windows within 2 seasons, and the same Greek club-season, equal or near
