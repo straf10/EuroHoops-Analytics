@@ -113,10 +113,40 @@
           "translate_team": 0.712428
         }
       }
+    },
+    "test": {
+      "n": 0,
+      "seasons": {
+        "2024": 0,
+        "2025": 0
+      },
+      "loss": {
+        "same_stats": null,
+        "team_offset": null,
+        "shrunk_same_stats": null,
+        "translate": null,
+        "translate_team": null
+      },
+      "per_season": {
+        "2024": {
+          "same_stats": null,
+          "team_offset": null,
+          "shrunk_same_stats": null,
+          "translate": null,
+          "translate_team": null
+        },
+        "2025": {
+          "same_stats": null,
+          "team_offset": null,
+          "shrunk_same_stats": null,
+          "translate": null,
+          "translate_team": null
+        }
+      }
     }
   },
   "validation_scored": true,
-  "test_scored": false,
+  "test_scored": true,
   "gate": {
     "rule": "chosen translation variant beats same_stats iff the person-level bootstrap 95% CI (1,000 resamples, seed 20261015) of loss(chosen) - loss(same_stats) on validation has upper bound < 0; loss = EL-minutes-weighted mean of the per-mover mean over 11 stats of the squared error standardised by the stat's EL between-player sd (tuning seasons)",
     "metric": "standardised squared error, minutes-weighted",
@@ -149,12 +179,14 @@
       2020,
       2021,
       2022,
-      2023
+      2023,
+      2024,
+      2025
     ],
-    "n": 18,
+    "n": 26,
     "loss": {
-      "same_stats": 0.594056,
-      "translate": 0.537019
+      "same_stats": 0.616018,
+      "translate": 0.613446
     }
   },
   "pairs": {
