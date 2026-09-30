@@ -23,11 +23,15 @@ from eurohoops.config import (
     M2_REPORT,
     M2_SEASONS,
     M2_TEAMS_REPORT,
+    M3,
+    M3_PLAYERS_REPORT,
     MART_PATH,
     SHOTS_REPORT,
 )
 from eurohoops.eval.m2_backtest import run_m2_backtest
 from eurohoops.eval.m2_backtest import search as m2_search
+from eurohoops.eval.m3_backtest import TunedRapm, build_rapm_inputs, prepare_data
+from eurohoops.eval.m3_players import season_end_players
 from eurohoops.eval.shot_making import player_report
 from eurohoops.eval.team_shot_quality import shots_with_xpts, team_report
 from eurohoops.eval.team_shot_quality import team_games as team_shot_games
@@ -39,6 +43,7 @@ from eurohoops.parse.gbl_stints import H_I_THRESHOLD, build_gbl_stints_mart
 from eurohoops.parse.gbl_stints import mart_report as gbl_stints_report
 from eurohoops.parse.shot_table import build_shot_table, reconcile, shot_report
 from eurohoops.publish import DISPLAY_CODES
+from eurohoops.stats.box import build_box_games
 
 log = logging.getLogger("eurohoops")
 
@@ -189,6 +194,60 @@ def shot_quality() -> None:
         f"(90% CI {stability['year_to_year']['shrunk_shot_making']['ci90']}), split-half "
         f"{stability['split_half']['r']}: {stability['verdict']}; wrote {M2_TEAMS_REPORT}, "
         f"{M2_PLAYERS_REPORT}"
+    )
+
+
+def m3_players() -> None:
+    """Per-player-season RAPM ratings and uncertainty at each season's last-round cutoff (H7)."""
+    if not M3.report.is_file():
+        log.error("missing %s; run: eurohoops backtest --model m3", M3.report)
+        raise typer.Exit(code=1)
+    bt_report = json.loads(M3.report.read_text(encoding="utf-8"))
+    chosen = bt_report["chosen"]
+    variant = str(chosen["variant"])
+    skip = ("variant", "half_life_days", "ridge_o", "ridge_d", "tuning_rmse", "spm")
+    extra = {k: v for k, v in chosen.items() if k not in skip}
+    tuned = TunedRapm(
+        half_life_days=float(chosen["half_life_days"]),
+        ridge_o=float(chosen["ridge_o"]),
+        ridge_d=float(chosen["ridge_d"]),
+        tuning_rmse=float(chosen["tuning_rmse"]),
+        grid={},
+        extra=extra,
+    )
+    games = read_games(MART_PATH, EUROLEAGUE.name)
+    team_games = read_table(MART_PATH, "team_games", EUROLEAGUE.name)
+    stints = read_table(MART_PATH, "stints")
+    checks = read_table(MART_PATH, "stint_game_checks")
+    missing = [
+        n
+        for n, t in (
+            ("team_games", team_games),
+            ("stints", stints),
+            ("stint_game_checks", checks),
+        )
+        if t is None
+    ]
+    if missing:
+        log.error("missing marts %s; run: eurohoops build", missing)
+        raise typer.Exit(code=1)
+    assert team_games is not None and stints is not None and checks is not None
+    player_games = build_box_games(EUROLEAGUE.raw_dir, games).players
+    data = prepare_data(games, team_games, player_games, stints, checks, spec=M3)
+    if data.snapshot != bt_report["data_sha256"]:
+        log.error(
+            "marts changed since backtest (snapshot %s != report %s); re-run backtest --model m3",
+            data.snapshot,
+            bt_report["data_sha256"],
+        )
+        raise typer.Exit(code=1)
+    inputs = build_rapm_inputs(stints, checks, data.games, player_games)
+    out = season_end_players(data.games, inputs, player_games, tuned, variant, M3, data.snapshot)
+    write_json(M3_PLAYERS_REPORT, out)
+    summary = out["summary"]
+    typer.echo(
+        f"{M3_PLAYERS_REPORT}: {summary['player_seasons']} player-seasons, "
+        f"Spearman(sd_total, minutes)={summary['sd_total_minutes_spearman']}"
     )
 
 

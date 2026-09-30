@@ -531,6 +531,7 @@ def backtest(
 
 
 app.command(name="shot-quality")(research.shot_quality)
+app.command(name="m3-players")(research.m3_players)
 
 
 app.command(name="shot-charts")(research.shot_charts)

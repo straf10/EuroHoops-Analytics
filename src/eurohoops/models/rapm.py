@@ -516,6 +516,7 @@ def _round_groups(games: pd.DataFrame) -> list[tuple[float, int, IntArray]]:
 
 
 PriorFn = Callable[[float, int, ModelColumns], "FloatArray | None"]
+CutoffFn = Callable[[float, int, DecayedRidgeSparse, FloatArray, FloatArray | None], None]
 
 
 def fit_walk_forward(
@@ -528,6 +529,7 @@ def fit_walk_forward(
     ridge_d: float,
     prior_mean: FloatArray | None = None,
     prior_fn: PriorFn | None = None,
+    on_cutoff: CutoffFn | None = None,
 ) -> WalkForward:
     """Fit RAPM walk-forward by round (H-c): a game's rating comes only from stints of games
     that tipped off before the first tip-off of its (season, phase, round).
@@ -545,7 +547,13 @@ def fit_walk_forward(
     to columns some row has touched -- the posterior equals the prior with no data, so an unused
     column is filled with the prior directly instead of the solver's default 0). Passing neither
     argument, or ``prior_fn=None``, reproduces every existing result exactly (module docstring,
-    H1's byte-identical-report done-when check)."""
+    H1's byte-identical-report done-when check).
+
+    ``on_cutoff`` (H7 player report) is an optional hook called as
+    ``on_cutoff(cutoff_time, season, model, filled_theta, prior)`` immediately after each round's
+    solve (only rounds where a solve happens). ``filled_theta`` is the rating vector used for
+    ``rating_lookup`` at that cutoff; ``prior`` is the prior-mean array passed to that solve
+    (``pm`` when ``prior_fn`` is set, else ``prior_mean``). Default ``None`` changes nothing."""
     n_base = rows.n_base if len(rows.cols) else BASE_OFFSET
     model = DecayedRidgeSparse(n_base, half_life_days, columns)
     n_games = len(games)
@@ -572,9 +580,13 @@ def fit_walk_forward(
             pm = prior_fn(time, season, columns)
             theta = model.solve(ridge_o, ridge_d, pm, x0=theta)
             filled = theta if pm is None else np.where(model.model_seen, theta, pm)
+            prior_used = pm
         else:
             theta = model.solve(ridge_o, ridge_d, prior_mean, x0=theta)
             filled = theta
+            prior_used = prior_mean
+        if on_cutoff is not None:
+            on_cutoff(time, season, model, filled, prior_used)
         coef = 2.0 * theta[HOME_COL]
         lookup = rating_lookup(filled, columns)
         home_coef[game_idx] = coef

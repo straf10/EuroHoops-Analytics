@@ -63,6 +63,7 @@ from eurohoops.models.box_impact import STAT_COLUMNS, UNPENALISED
 from eurohoops.models.elo import FloatArray
 from eurohoops.models.minutes import round_cutoffs
 from eurohoops.models.rapm import (
+    CutoffFn,
     ModelColumns,
     PriorFn,
     WalkForward,
@@ -422,7 +423,13 @@ def tune_spm(
     )
 
 
-def fit_spm(games: pd.DataFrame, inputs: RapmFitInputs, tuned: TunedRapm) -> WalkForward:
+def fit_spm(
+    games: pd.DataFrame,
+    inputs: RapmFitInputs,
+    tuned: TunedRapm,
+    *,
+    on_cutoff: CutoffFn | None = None,
+) -> WalkForward:
     """``rapm_spm``'s walk-forward fit over ``games`` with tuned parameters. Rebuilds every
     season's ``SpmModel`` from ``inputs.player_games`` (module docstring: ``fit`` has no ``Data``
     to read ``player_games`` from directly) using the *target*-fit hyperparameters stashed in
@@ -450,4 +457,5 @@ def fit_spm(games: pd.DataFrame, inputs: RapmFitInputs, tuned: TunedRapm) -> Wal
         ridge_o=tuned.ridge_o,
         ridge_d=tuned.ridge_d,
         prior_fn=prior_fn,
+        on_cutoff=on_cutoff,
     )

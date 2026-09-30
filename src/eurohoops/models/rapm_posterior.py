@@ -36,9 +36,12 @@ from dataclasses import dataclass
 from typing import cast
 
 import numpy as np
+import numpy.typing as npt
 from scipy import linalg, sparse, special
 
 from eurohoops.models.elo import FloatArray
+
+IntArray = npt.NDArray[np.int64]
 
 # A dense p x p Cholesky (and its inverse) is the whole point at RAPM's scale: ~3,456 columns
 # (1,727 players x O/D) is ~95 MB and a few seconds (reports/week9-12_progress.md §3.1). Above
@@ -119,6 +122,45 @@ def posterior_from_normal_equations(
     variance = noise_var * np.diag(inverse)
     sd = np.sqrt(np.clip(variance, 0.0, None))
     return Posterior(mean=mean, sd=sd)
+
+
+def posterior_with_pair_covariance(  # noqa: PLR0917 -- mirrors posterior_from_normal_equations
+    gram: sparse.spmatrix | FloatArray,
+    rhs: FloatArray,
+    penalty: FloatArray,
+    prior_mean: FloatArray,
+    noise_var: float,
+    pairs: IntArray,
+) -> tuple[Posterior, FloatArray]:
+    """Same posterior as ``posterior_from_normal_equations``, plus O/D pair covariances.
+
+    Uses one Cholesky factorisation and returns ``noise_var * inverse[pairs[:,0], pairs[:,1]]``
+    for each (column, column) pair in ``pairs`` (needed for the sd of total = O + D).
+    """
+    p = rhs.shape[0]
+    if penalty.shape != (p,) or prior_mean.shape != (p,):
+        raise ValueError(
+            f"shape mismatch: rhs {rhs.shape}, penalty {penalty.shape}, "
+            f"prior_mean {prior_mean.shape}"
+        )
+    if gram.shape != (p, p):
+        raise ValueError(f"gram shape {gram.shape} does not match rhs length {p}")
+    if p > MAX_DENSE_PARAMS:
+        raise ValueError(
+            f"posterior_with_pair_covariance: p={p} exceeds the dense limit "
+            f"({MAX_DENSE_PARAMS}); a sparse/CG solve is needed at this scale"
+        )
+    if pairs.ndim != 2 or pairs.shape[1] != 2:
+        raise ValueError(f"pairs must be (n, 2), got {pairs.shape}")
+    system = _as_dense(gram) + np.diag(penalty)
+    adjusted_rhs = rhs + penalty * prior_mean
+    factor = linalg.cho_factor(system, lower=True)
+    mean: FloatArray = linalg.cho_solve(factor, adjusted_rhs)
+    inverse: FloatArray = linalg.cho_solve(factor, np.eye(p))
+    variance = noise_var * np.diag(inverse)
+    sd = np.sqrt(np.clip(variance, 0.0, None))
+    pair_cov: FloatArray = noise_var * inverse[pairs[:, 0], pairs[:, 1]]
+    return Posterior(mean=mean, sd=sd), pair_cov
 
 
 def posterior(

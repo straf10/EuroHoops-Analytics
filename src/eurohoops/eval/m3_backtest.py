@@ -44,6 +44,7 @@ from eurohoops.models.box_impact import BaselineResult
 from eurohoops.models.elo import FloatArray
 from eurohoops.models.minutes import expected_possessions, oracle_shares, projected_shares
 from eurohoops.models.rapm import (
+    CutoffFn,
     DesignRows,
     MinutesRows,
     SpellIndex,
@@ -303,7 +304,13 @@ def tune_rapm(
     return TunedRapm(best_half_life, ridge_o, ridge_d, final_rmse, grid_report)
 
 
-def fit_rapm(games: pd.DataFrame, inputs: RapmFitInputs, tuned: TunedRapm) -> WalkForward:
+def fit_rapm(
+    games: pd.DataFrame,
+    inputs: RapmFitInputs,
+    tuned: TunedRapm,
+    *,
+    on_cutoff: CutoffFn | None = None,
+) -> WalkForward:
     """The plain ``rapm`` variant's walk-forward fit over ``games`` with tuned parameters."""
     return fit_walk_forward(
         games,
@@ -312,6 +319,7 @@ def fit_rapm(games: pd.DataFrame, inputs: RapmFitInputs, tuned: TunedRapm) -> Wa
         half_life_days=tuned.half_life_days,
         ridge_o=tuned.ridge_o,
         ridge_d=tuned.ridge_d,
+        on_cutoff=on_cutoff,
     )
 
 
