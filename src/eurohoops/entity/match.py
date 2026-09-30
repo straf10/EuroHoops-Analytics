@@ -15,12 +15,14 @@ Rule (``reports/week12-14_progress.md`` D3). For a GBL id ``g`` and EuroLeague i
 
 from __future__ import annotations
 
+import functools
 from collections import defaultdict
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from typing import Any, cast
 
+import numpy as np
 import pandas as pd
 from scipy.optimize import linear_sum_assignment
 
@@ -126,12 +128,6 @@ def _same_jersey(names: pd.DataFrame) -> set[tuple[str, str]]:
     return pairs
 
 
-def _windows_overlap(g_first: int, g_last: int, e_first: int, e_last: int, window: int) -> bool:
-    g_lo, g_hi = g_first - window, g_last + window
-    e_lo, e_hi = e_first - window, e_last + window
-    return g_lo <= e_hi and e_lo <= g_hi
-
-
 def _dob_status(g_dob: date | None, e_dob: date | None) -> str:
     if g_dob is None or e_dob is None:
         return "unknown"
@@ -154,36 +150,24 @@ def candidate_pairs(  # noqa: PLR0917 -- fixed matcher API (names, bios, clubs, 
     club_pairs = _same_club_season(names, clubs)
     jersey_pairs = _same_jersey(names)
 
-    variant_cache: dict[str, tuple[str, ...]] = {}
-
-    def cached(sid: str, surname: str) -> tuple[str, ...]:
-        hit = variant_cache.get(sid)
-        if hit is None:
-            hit = variants(surname)
-            variant_cache[sid] = hit
-        return hit
+    el_ids = [str(s) for s in el["source_id"]]
+    el_letters = [(latin_key(str(s)) or " ")[0] for s in el["surname"]]
+    el_dobs = [bios_map.get(("euroleague", e_id)) for e_id in el_ids]
+    el_first = el["first_season"].to_numpy(dtype=np.int64) - params.window
+    el_last = el["last_season"].to_numpy(dtype=np.int64) + params.window
 
     rows: list[dict[str, object]] = []
     for g in gbl.itertuples(index=False):
         g_id = str(g.source_id)
-        g_vars = cached(g_id, str(g.surname))
-        g_letters = {v[0] for v in g_vars if v}
+        g_letters = {v[0] for v in variants(str(g.surname)) if v}
         g_dob = bios_map.get(("gbl", g_id))
-        for e in el.itertuples(index=False):
-            e_id = str(e.source_id)
-            if not _windows_overlap(
-                int(cast(Any, g.first_season)),
-                int(cast(Any, g.last_season)),
-                int(cast(Any, e.first_season)),
-                int(cast(Any, e.last_season)),
-                params.window,
-            ):
-                continue
+        g_lo = int(cast(Any, g.first_season)) - params.window
+        g_hi = int(cast(Any, g.last_season)) + params.window
+        for j in np.flatnonzero((g_lo <= el_last) & (el_first <= g_hi)):
+            e_id = el_ids[j]
             same_club = (g_id, e_id) in club_pairs
-            e_dob = bios_map.get(("euroleague", e_id))
-            dob = _dob_status(g_dob, e_dob)
-            e_key = latin_key(str(e.surname))
-            letter_hit = bool(e_key) and e_key[0] in g_letters
+            dob = _dob_status(g_dob, el_dobs[j])
+            letter_hit = el_letters[j] in g_letters
             if not (same_club or dob == "equal" or letter_hit):
                 continue
             rows.append(
@@ -260,10 +244,18 @@ def score_pairs(  # noqa: PLR0917 -- fixed matcher API (pairs, names, injectable
     latin_key: LatinKey,
     similarity: Similarity,
     params: MatchParams,
+    *,
+    skip_different: bool = True,
 ) -> pd.DataFrame:
-    """Add name sims, ``name_score``, ``accepted``, and assignment ``score``."""
+    """Add name sims, ``name_score``, ``accepted``, and assignment ``score``.
+
+    Pairs whose birth dates differ can never be accepted; with ``skip_different`` (the matcher
+    run) their name features are left NaN, which saves most of the scoring time (≈ 64% of the
+    real candidate pairs, 2026-09-30). The label sheet scores them with ``skip_different=False``.
+    """
     cards = careers(names)
     by_id = {(str(r.competition), str(r.source_id)): r for r in cards.itertuples(index=False)}
+    latin_key = functools.lru_cache(maxsize=None)(latin_key)
     variant_cache: dict[str, tuple[str, ...]] = {}
 
     def v_cached(sid: str, text: str) -> tuple[str, ...]:
@@ -278,23 +270,26 @@ def score_pairs(  # noqa: PLR0917 -- fixed matcher API (pairs, names, injectable
     for row in pairs.itertuples(index=False):
         g = by_id[("gbl", str(row.gbl_id))]
         e = by_id[("euroleague", str(row.el_id))]
-
-        def g_variants(text: str, sid: str = str(row.gbl_id)) -> tuple[str, ...]:
-            return v_cached(sid, text)
-
-        surname_sim, first_sim, full_sim, name_score = _name_features(
-            str(g.surname),
-            str(g.first),
-            str(e.surname),
-            str(e.first),
-            g_variants,
-            latin_key,
-            similarity,
-            params,
-        )
         dob = str(row.dob)
         club = bool(row.same_club_season)
         jersey = bool(row.same_jersey)
+        if skip_different and dob == "different":
+            surname_sim = first_sim = full_sim = name_score = float("nan")
+        else:
+
+            def g_variants(text: str, sid: str = str(row.gbl_id)) -> tuple[str, ...]:
+                return v_cached(sid, text)
+
+            surname_sim, first_sim, full_sim, name_score = _name_features(
+                str(g.surname),
+                str(g.first),
+                str(e.surname),
+                str(e.first),
+                g_variants,
+                latin_key,
+                similarity,
+                params,
+            )
         if dob == "equal":
             accepted = name_score >= params.t_dob
             score = name_score + 1.0

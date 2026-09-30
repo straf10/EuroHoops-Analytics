@@ -239,9 +239,14 @@ def test_dob_different_never_matches() -> None:
             },
         ]
     )
-    _, scored, matched = _run(names, bios)
-    assert scored.iloc[0]["name_score"] >= 0.99
+    pairs, scored, matched = _run(names, bios)
+    assert pd.isna(scored.iloc[0]["name_score"])  # skipped: it can never be accepted
     assert not scored.iloc[0]["accepted"]
+    full = score_pairs(
+        pairs, names, variants, latin_key, similarity, MatchParams(), skip_different=False
+    )
+    assert full.iloc[0]["name_score"] >= 0.99
+    assert not full.iloc[0]["accepted"]
     assert matched.empty
 
 
