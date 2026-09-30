@@ -1,0 +1,59 @@
+{
+  "by_method": {
+    "rule": 379,
+    "override": 2,
+    "pbp": 0,
+    "none": 2808
+  },
+  "by_competition": {
+    "euroleague": 2188,
+    "gbl": 1001
+  },
+  "candidate_pairs": 94049,
+  "accepted_pairs": 196,
+  "matched_gbl_ids": 190,
+  "persons": 2998,
+  "name_rows": 7907,
+  "params": {
+    "w_surname": 0.5,
+    "t_dob": 0.78,
+    "t_near": 0.95,
+    "t_nodob": 0.82,
+    "b_club": 0.08,
+    "b_jersey": 0.0,
+    "window": 2,
+    "near_days": 7
+  },
+  "pbp_links": {
+    "keys": 8,
+    "linked": 0,
+    "unlinked": {
+      "pbp:0:Gabe York": "no jersey in the key",
+      "pbp:0:Sterling Gibbs": "no jersey in the key",
+      "pbp:23:Demetric Austin": "0 ids with jersey 23, 0 with the name",
+      "pbp:23:Giorgos Aggelou": "0 ids with jersey 23, 0 with the name",
+      "pbp:30:Brandon Wood": "0 ids with jersey 30, 0 with the name",
+      "pbp:33:Stefan Jankovic": "1 ids with jersey 33, 0 with the name",
+      "pbp:44:Tyrone Outlaw": "0 ids with jersey 44, 0 with the name",
+      "pbp:6:Giannis Gkavasiadis": "0 ids with jersey 6, 0 with the name"
+    }
+  },
+  "silver": {
+    "tp": 117,
+    "fp": 0,
+    "fn": 23,
+    "precision": 1.0,
+    "recall": 0.8357142857142857,
+    "f1": 0.9105058365758755,
+    "positives": 140,
+    "negatives": 3055,
+    "recall_ci95": [
+      0.765535600502882,
+      0.8879616646880443
+    ]
+  },
+  "bios": {
+    "euroleague": 2591,
+    "gbl": 993
+  }
+}

@@ -48,7 +48,30 @@ All defaults accepted as written (I-a … I-l). The owner's answers to the open 
    I-f is noisy:** of its 44 unique pairs, 10 are different people by eye (e.g. `CALATHES
    NICK` ↔ `THOMAS, DESHAUN`, `ΣΛΟΥΚAΣ` ↔ `FALL, MOUSTAPHA`): players often wear another
    number in the other league. See D2.
-5. **Mover counts:** measured in I4 (after the matcher commit), as planned.
+5. **Mover counts (I4, after the tuning and before any M4 fit; `models/translation_pairs` on the
+   crosswalk, I-h thresholds):** GBL→EL movers by EuroLeague target season: 2019: 1, 2020: 1,
+   2021: 3, 2023: 1 — **6 in all, 1 in validation (2023), 0 in test (2024–2025)**. EL→GBL movers
+   by GBL season: 2018: 10, 2021: 7, 2022: 8, 2023: 3, 2024: 2, 2025: 6 (36). Duals (same
+   season, ≥ 300 minutes in both): 107 (6–17 per season). So the I-h small-sample rule applies
+   (1 < 20 validation movers): the gate pools 2019–2023 (6 movers) with `translate` declared, no
+   choice on data. It has almost no power, and test has no GBL→EL mover to score; this is
+   reported as it is, not re-specified after seeing the counts.
+
+## I4: matcher (frozen at the matcher commit)
+- `ENTITY_PARAMS`: `w_surname` 0.5, `t_dob` 0.78, `t_near` 0.95, `t_nodob` 0.82, `b_club` 0.08,
+  `b_jersey` 0, window ± 2 seasons, near = typo forms (D9). Tuning re-run after the I2
+  transliteration fix (word-initial ΓΟΥ → W, ΑΪ): same choice (`reports/entity_tuning.json`).
+- Real run (`eurohoops entity`, 71 s): 94,049 candidate pairs, 196 accepted, **190 GBL ids
+  matched**, 2,998 persons; overrides: the two EuroLeague duplicates.
+- Silver (dates visible): precision 1.0, recall 0.836 (117/140). By eye, 18 of the 23 misses
+  are silver noise, not matcher errors: teammates with equal or ≤ 7-day birth dates (e.g.
+  OSMAN ↔ KOUZELOGLOU, the Kalaitzakis twins), each GBL id matched to its own EuroLeague id.
+  The 5 true misses: Vezenkov (first names ALEXANTER / ALEKSANDAR, 0.77), McKissic (0.699),
+  George Papas (ESAKE `ΠΑΠΑΘΑΝΑΣΙΟΥ ΤΖΟΡΤΖ ΠΙΤΕΡΣ`, 0.741), Moses Wright (near date, 0.862),
+  Thomas Walkup (near date, 0.873). No override added for them before the labels (that would
+  be labelling by eye); they stay known misses unless the owner's labels or review add them.
+- The 8 `pbp:` keys link to no ESAKE id: their team-seasons have no official line with that
+  jersey (ESAKE's `#0` placeholder, D6) and a matching name, so they stay their own persons.
 
 ## Silver set and match rule, fixed before any tuning (2026-09-30)
 - **D2 (silver set re-keyed, deviation from I-f).** Positives: a GBL id and an EL id on the same
@@ -107,4 +130,11 @@ All defaults accepted as written (I-a … I-l). The owner's answers to the open 
 iteration | deliverable | checks run | result | commit
 ---|---|---|---|---
 1 | branch, task file, progress file with §0 | none (docs only) | ok | cf1dc86
-2 | §3 spikes; `ingest/bios.py` + `eurohoops ingest-bios`; seed translit fixture; D2–D5 | ruff, format, mypy, pytest (573; `test_workflow.py` needs Git Bash first on PATH: 12/12 then), vulture | ok | (this commit)
+2 | §3 spikes; `ingest/bios.py` + `eurohoops ingest-bios`; seed translit fixture; D2–D5 | ruff, format, mypy, pytest (573; `test_workflow.py` needs Git Bash first on PATH: 12/12 then), vulture | ok | 3cb9e93
+3 | I1 name tables (orchestrator) | test_player_names, real-data coverage (1,001 GBL / 2,188 EL ids) | ok | 8f5c5b7
+4 | wave 1 B (I2) merged; real-name check; ΓΟΥ/ΑΪ rules sent back | I2 tests re-run (38) | ok | 0ce44e9
+5 | wave 1 C (I3) merged; matcher speed-up (240 → 88 s) | I3 tests re-run (16) | ok | 04acc91, fb435f0
+6 | entity pipeline + `eurohoops entity`; D8 | entity tests (31) | ok | d5a5aeb
+7 | bios complete (993/993 GBL); D9 near dates; tuning | entity tests (32), tuning run | ok | 44f198c, b405c44
+8 | B's fix, D (I6), E (I7) merged; re-tuning; real run; mover counts | 90 merged tests, mypy | ok | 614a249
+9 | I4 matcher commit | real run, silver metrics | ok | (this commit, MATCHER)
