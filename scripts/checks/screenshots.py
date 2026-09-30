@@ -1,5 +1,6 @@
-"""Checklist item 20: screenshots of the EuroLeague scorecard (with the M1 row) at 1440 and 390 px,
-light and dark, plus the horizontal overflow. Usage: screenshots.py <built site dir> <out dir>."""
+"""Checklist item 20: screenshots of the EuroLeague scorecard (with the M1 line) at 1440 and 390
+px, light and dark, plus the horizontal overflow. Usage: screenshots.py <built site dir> <out dir>.
+"""
 
 import functools
 import http.server
@@ -34,10 +35,12 @@ with sync_playwright() as p:
             overflow = page.evaluate(
                 "document.documentElement.scrollWidth - document.documentElement.clientWidth"
             )
-            row = page.locator(f"{scorecard} tr.m1")
+            row = page.locator(f"{scorecard} .m1")
             visible = row.count() == 1 and row.is_visible()
             page.locator(scorecard).screenshot(path=str(out / f"scorecard_m1_{width}_{scheme}.png"))
-            print(f"{scheme} {width}: horizontal overflow {overflow} px; M1 row visible: {visible}")
+            print(
+                f"{scheme} {width}: horizontal overflow {overflow} px; M1 line visible: {visible}"
+            )
             ok &= overflow == 0 and visible
             page.close()
     browser.close()
