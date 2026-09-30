@@ -3,7 +3,8 @@
 The progress file names them on lines ``DECLARATION <sha>``, ``VERDICT <sha>`` and
 ``TEST <sha>``. The declaration commit has no M2 report (so no validation number existed), the
 verdict commit's report has not scored the test seasons, and each commit is an ancestor of the
-next and of HEAD.
+next and of HEAD, or of the ``archive/pre-rewrite`` tag: the M2 commits predate the history
+rewrite that stripped attribution trailers, and that tag keeps the SHAs the progress file cites.
 """
 
 import json
@@ -44,9 +45,13 @@ if declaration is not None and verdict is not None:
     ok &= at_verdict is not None and not at_verdict["test_scored"]
     current = json.loads(Path("reports/backtest_m2.json").read_text(encoding="utf-8"))
     if current["test_scored"]:
-        in_history = subprocess.run(
-            ["git", "merge-base", "--is-ancestor", str(test), "HEAD"], check=False
+        in_history = any(
+            subprocess.run(
+                ["git", "merge-base", "--is-ancestor", str(test), ref], check=False
+            ).returncode
+            == 0
+            for ref in ("HEAD", "archive/pre-rewrite")
         )
-        ok &= test is not None and ancestor(verdict, test) and in_history.returncode == 0
+        ok &= test is not None and ancestor(verdict, test) and in_history
 print("declaration < verdict < test:", "yes" if ok else "NO")
 sys.exit(0 if ok else 1)
