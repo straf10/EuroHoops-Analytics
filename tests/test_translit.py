@@ -85,3 +85,21 @@ def test_variants_deterministic() -> None:
 def test_latin_input_is_single_latin_key() -> None:
     assert variants("WARD") == ("WARD",)
     assert variants("SKORDILIS GAIOS") == ("GAIOS SKORDILIS",)
+
+
+@pytest.mark.parametrize(
+    ("gbl", "el", "min_jw"),
+    [
+        ("ΓΟΥΙΛΙΑΜΣ", "WILLIAMS", 0.95),
+        ("ΓΟΥΙΛΙAΜΣ", "WILLIAMS", 0.95),  # Latin A look-alike inside
+        ("ΟΥΑΪΤ", "WHITE", 0.90),
+        ("ΟΥAΪΤ", "WHITE", 0.90),
+        ("ΓΚΑΪ", "GUY", 0.85),
+    ],
+)
+def test_gou_w_and_ai_diaeresis(gbl: str, el: str, min_jw: float) -> None:
+    target = latin_key(el)
+    cands = variants(gbl)
+    assert cands and len(cands) <= 64
+    best = max(jaro_winkler(v, target) for v in cands)
+    assert best >= min_jw, f"{gbl!r}→{target!r} best={best:.4f} sample={cands[:12]}"
