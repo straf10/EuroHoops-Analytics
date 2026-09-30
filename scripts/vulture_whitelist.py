@@ -7,8 +7,16 @@ Remove an entry as soon as the pipeline uses the name.
 """
 
 from eurohoops.config import GBL_STINTS_REPORT, M3, M3Backtest, M3Grid
+from eurohoops.entity.match import MatchParams, assign, candidate_pairs, careers, score_pairs
 from eurohoops.entity.similarity import jaro_winkler
 from eurohoops.entity.translit import latin_key, variants
+from eurohoops.entity.xwalk import (
+    XWALK_SCHEMA,
+    build_xwalk,
+    entity_report,
+    pair_metrics,
+    wilson,
+)
 from eurohoops.models.box_impact import box_only_margins, pir_margins
 from eurohoops.models.minutes import expected_possessions, oracle_shares, projected_shares
 from eurohoops.models.rapm import ModelColumns, build_minutes_rows, fit_decayed_minutes
@@ -70,3 +78,15 @@ pbp_links
 jaro_winkler  # I-e surname/first-name similarity over variants
 latin_key  # EuroLeague-side name normaliser for blocking/scoring
 variants  # GBL→Latin candidate spellings for the matcher
+
+# weeks 12-14 I3: entity matcher + crosswalk; CLI / I4 wire these later
+MatchParams
+careers
+candidate_pairs
+score_pairs
+assign
+XWALK_SCHEMA
+build_xwalk
+entity_report
+pair_metrics
+wilson
