@@ -100,6 +100,7 @@ class ModelName(StrEnum):
     m1 = "m1"
     m2 = "m2"
     m3 = "m3"
+    m4 = "m4"
 
 
 CompetitionOption = Annotated[
@@ -545,6 +546,9 @@ def backtest(
         return
     if model is ModelName.m3:
         _backtest_m3(competition, score_test, tuning_only, tracking_uri or default_tracking_uri())
+        return
+    if model is ModelName.m4:
+        research.backtest_m4(score_test=score_test, tuning_only=tuning_only)
         return
     comp = COMPETITIONS[competition]
     games = read_games(MART_PATH, comp.name)

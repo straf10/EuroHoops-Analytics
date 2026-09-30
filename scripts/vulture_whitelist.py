@@ -6,23 +6,12 @@ Remove an entry as soon as the pipeline uses the name.
   (H6 dummy variant), not H1.
 """
 
-from eurohoops.config import GBL_STINTS_REPORT, M3, M4, M3Backtest, M3Grid, M4Backtest
+from eurohoops.config import GBL_STINTS_REPORT, M3, M3Backtest, M3Grid
 from eurohoops.models.box_impact import box_only_margins, pir_margins
 from eurohoops.models.minutes import expected_possessions, oracle_shares, projected_shares
 from eurohoops.models.rapm import ModelColumns, build_minutes_rows, fit_decayed_minutes
 from eurohoops.models.rapm_posterior import Posterior, noise_variance, posterior, ridge_solution
-from eurohoops.models.translation_pairs import (
-    MAX_OTHER,
-    MIN_FROM,
-    MIN_TO,
-    PAIR_TYPES,
-    PAIRS_SCHEMA,
-    SEASON_RATES_SCHEMA,
-    TEAM_NET_SCHEMA,
-    build_pairs,
-    season_rates,
-    team_net,
-)
+from eurohoops.models.translation import StatFit
 from eurohoops.standings import EUROLEAGUE_2026, GBL_2026, Format, Series, rank
 
 Series.best_of
@@ -70,21 +59,6 @@ ModelColumns.M  # the general sparse aggregation matrix, exposed for D's posteri
 build_minutes_rows  # D6: decayed on-court minutes per spell, exposed for E's rapm_dummy
 fit_decayed_minutes  # D6: convenience snapshot on top of build_minutes_rows, same hook
 
-# weeks 12-14 I8: read by eval/m4_backtest.py and the `backtest --model m4` command (next step)
-M4
-M4Backtest.translation_report
-M4Backtest.min_validation_movers
-M4Backtest.shrink_minutes
-M4Backtest.sd_min_minutes
-
-# week 12-14 I6 (subagent D): pair tables, read by I7 translation fit / I8 backtest
-MIN_FROM
-MAX_OTHER
-MIN_TO
-PAIR_TYPES
-SEASON_RATES_SCHEMA
-TEAM_NET_SCHEMA
-PAIRS_SCHEMA
-season_rates
-team_net
-build_pairs
+# weeks 12-14 I7: interval fields reach reports/m4_translation.json through fits_report's asdict
+StatFit.delta_lo90
+StatFit.delta_hi90

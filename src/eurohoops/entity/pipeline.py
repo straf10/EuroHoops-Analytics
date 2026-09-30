@@ -156,15 +156,16 @@ def _frozen_overrides(overrides: pd.DataFrame) -> pd.DataFrame:
     return overrides[~overrides["reason"].str.startswith(LABEL_OVERRIDE_PREFIX)]
 
 
-def _careers_text(names: pd.DataFrame, competition: str) -> dict[str, str]:
+def _careers_text(
+    names: pd.DataFrame, competition: str, team_names: Mapping[str, str]
+) -> dict[str, str]:
     rows = names[names["competition"] == competition].sort_values(["source_id", "season", "team"])
     out: dict[str, list[str]] = {}
     for r in rows.itertuples(index=False):
         jersey = "" if pd.isna(r.jersey) else f" #{r.jersey!s}"
         minutes = float(cast(Any, r.minutes))
-        out.setdefault(str(r.source_id), []).append(
-            f"{r.season!s} {r.team!s}{jersey} {minutes:.0f}m"
-        )
+        team = team_names.get(str(r.team), str(r.team))
+        out.setdefault(str(r.source_id), []).append(f"{r.season!s} {team}{jersey} {minutes:.0f}m")
     return {k: "; ".join(v) for k, v in out.items()}
 
 
@@ -173,7 +174,9 @@ def draft_labels(
     bios: pd.DataFrame,
     overrides: pd.DataFrame,
     clubs: Mapping[str, str],
+    *,
     params: MatchParams = ENTITY_PARAMS,
+    team_names: Mapping[str, str] | None = None,
 ) -> pd.DataFrame:
     """The owner's label sheet (I-g, D8): GBL ids with >= ``LABEL_MIN_MINUTES`` minutes in 4
     strata {Greek-script, Latin-only name} x {matched, not matched by the frozen matcher},
@@ -204,7 +207,9 @@ def draft_labels(
         for c, s, d in bios[["competition", "source_id", "birth_date"]].itertuples(index=False)
     }
     el_names = careers(names[names["competition"] == "euroleague"]).set_index("source_id")
-    gbl_text, el_text = _careers_text(names, "gbl"), _careers_text(names, "euroleague")
+    shown = team_names or {}
+    gbl_text = _careers_text(names, "gbl", shown)
+    el_text = _careers_text(names, "euroleague", shown)
     rows = []
     for g in sample.itertuples(index=False):
         own = scored[scored["gbl_id"] == g.source_id].sort_values(

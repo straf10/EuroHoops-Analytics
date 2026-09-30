@@ -3,6 +3,7 @@
 cli.py registers them under their names; nothing here is fetched, everything reads the marts and
 the raw cache."""
 
+import hashlib
 import json
 import logging
 import time
@@ -36,6 +37,7 @@ from eurohoops.config import (
     M2_TEAMS_REPORT,
     M3,
     M3_PLAYERS_REPORT,
+    M4,
     MART_PATH,
     SHOTS_REPORT,
 )
@@ -52,6 +54,7 @@ from eurohoops.eval.m2_backtest import run_m2_backtest
 from eurohoops.eval.m2_backtest import search as m2_search
 from eurohoops.eval.m3_backtest import TunedRapm, build_rapm_inputs, prepare_data
 from eurohoops.eval.m3_players import season_end_players
+from eurohoops.eval.m4_backtest import net_offset, run_m4_backtest
 from eurohoops.eval.shot_making import player_report
 from eurohoops.eval.team_shot_quality import shots_with_xpts, team_report
 from eurohoops.eval.team_shot_quality import team_games as team_shot_games
@@ -59,8 +62,10 @@ from eurohoops.eval.tracking import log_m2_backtest
 from eurohoops.ingest.bios import build_bios
 from eurohoops.logs import write_json
 from eurohoops.marts import read_games, read_table, write_tables
+from eurohoops.models.translation_pairs import build_pairs, season_rates, team_net
 from eurohoops.parse.free_throws import LEVEL_CHECK, build_ft_team_games, ft_report
 from eurohoops.parse.games import write_table
+from eurohoops.parse.gbl_box_lines import build_gbl_player_games
 from eurohoops.parse.gbl_stints import H_I_THRESHOLD, build_gbl_stints_mart
 from eurohoops.parse.gbl_stints import mart_report as gbl_stints_report
 from eurohoops.parse.player_names import euroleague_names, gbl_names
@@ -350,7 +355,9 @@ def entity(
         return
     overrides = read_overrides(ENTITY_OVERRIDES)
     if draft:
-        sheet = draft_labels(names, bios, overrides, GREEK_EL_CLUBS)
+        teams = read_table(MART_PATH, "teams")
+        team_names = {} if teams is None else dict(zip(teams["team"], teams["name"], strict=True))
+        sheet = draft_labels(names, bios, overrides, GREEK_EL_CLUBS, team_names=team_names)
         ENTITY_LABELS_TODO.parent.mkdir(parents=True, exist_ok=True)
         sheet.to_csv(ENTITY_LABELS_TODO, index=False, encoding="utf-8-sig")
         typer.echo(f"{len(sheet)} ids {sheet['stratum'].value_counts().to_dict()}")
@@ -371,6 +378,60 @@ def entity(
         f"{len(run.matches)} cross-league matches, {run.xwalk['person_id'].nunique()} persons; "
         f"silver precision {report['silver']['precision']} recall {report['silver']['recall']}; "
         f"wrote {ENTITY_REPORT}\nRUNTIME {time.monotonic() - start:.0f} s"
+    )
+
+
+def backtest_m4(*, score_test: bool, tuning_only: bool) -> None:
+    """``backtest --model m4`` (weeks 12-14 I8): GBL->EL translation on the movers, walk
+    forward by EuroLeague target season; writes reports/backtest_m4.json and
+    reports/m4_translation.json. Needs ``eurohoops entity`` first (the ``player_xwalk`` mart)."""
+    start = time.monotonic()
+    xwalk = read_table(MART_PATH, "player_xwalk")
+    team_games = read_table(MART_PATH, "team_games")
+    if xwalk is None or team_games is None:
+        log.error("player_xwalk/team_games missing; run: eurohoops build, then eurohoops entity")
+        raise typer.Exit(code=1)
+    team_games = team_games[team_games["season"].isin(ENTITY_SEASONS)]
+    el_games = read_games(MART_PATH, EUROLEAGUE.name)
+    el_games = el_games[el_games["season"].isin(ENTITY_SEASONS)]
+    gbl_games = read_games(MART_PATH, GBL.name)
+    gbl_games = gbl_games[gbl_games["season"].isin(ENTITY_SEASONS)]
+    player_games = {
+        "euroleague": build_box_games(EUROLEAGUE.raw_dir, el_games).players,
+        "gbl": build_gbl_player_games(
+            GBL.raw_dir, gbl_games, team_games[team_games["competition"] == GBL.name]
+        ).table,
+    }
+    rates = pd.concat(
+        [season_rates(games, comp, xwalk) for comp, games in player_games.items()],
+        ignore_index=True,
+    )
+    net = team_net(team_games)
+    pairs = build_pairs(rates, net)
+    report, translation = run_m4_backtest(
+        pairs,
+        rates,
+        player_games,
+        spec=M4,
+        clubs=GREEK_EL_CLUBS,
+        tuning_only=tuning_only,
+        score_test=score_test,
+    )
+    report["data_sha256"] = hashlib.sha256(pairs.to_csv(index=False).encode()).hexdigest()
+    translation["team_offset"] = net_offset(
+        net, GREEK_EL_CLUBS, M4.bootstrap_resamples, M4.bootstrap_seed
+    )
+    write_json(M4.report, report)
+    write_json(M4.translation_report, translation)
+    for split, block in report["metrics"].items():
+        losses = " ".join(f"{m} {v}" for m, v in block["loss"].items())
+        typer.echo(f"{split} ({block['n']} movers): {losses}")
+    gate = report["gate"]
+    if gate is not None:
+        verdict = "PASS" if gate["passed"] else "FAIL"
+        typer.echo(f"gate {gate['variant']} vs same_stats: {verdict} {gate['loss_diff']}")
+    typer.echo(
+        f"wrote {M4.report}, {M4.translation_report}\nRUNTIME {time.monotonic() - start:.0f} s"
     )
 
 
