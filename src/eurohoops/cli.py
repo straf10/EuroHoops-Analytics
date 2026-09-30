@@ -15,6 +15,7 @@ import typer
 
 from eurohoops import research
 from eurohoops.config import (
+    BIO_EL_SEASONS,
     BOX_INVARIANTS_REPORT,
     COMPETITIONS,
     EUROLEAGUE,
@@ -24,6 +25,7 @@ from eurohoops.config import (
     GBL_PBP,
     GBL_PLAYER_BOX,
     GBL_TEAM_BOX,
+    GREEK_EL_CLUBS,
     LIVE_SEASON,
     M3,
     M3_GBL,
@@ -31,6 +33,7 @@ from eurohoops.config import (
     ODDS_CALLS,
     ODDS_RAW_DIR,
     ODDS_TEAMS,
+    PLAYER_BIOS,
     POSSESSION_REPORT,
     SITE_DATA,
     SQL_DIR,
@@ -46,6 +49,7 @@ from eurohoops.eval.m3_gbl_backtest import el_spm_models, format_m3_gbl_table, r
 from eurohoops.eval.scorecard import build_scorecard
 from eurohoops.eval.tracking import default_tracking_uri, log_backtest, log_m3_backtest
 from eurohoops.ingest import euroleague, gbl
+from eurohoops.ingest.bios import build_bios, ingest_bios
 from eurohoops.ingest.http import Fetcher, make_client
 from eurohoops.live_m1 import load_m1, predict_upcoming_m1
 from eurohoops.logs import write_json
@@ -212,6 +216,39 @@ def ingest(
     write_table(team_seasons, comp.staging_team_seasons)
     log.info(
         "wrote %d games (%d played) to %s", len(games), games["played"].sum(), comp.staging_games
+    )
+
+
+@app.command("ingest-bios")
+def ingest_bios_command() -> None:
+    """Cache player bios for entity resolution (ESAKE player pages for every staged GBL player,
+    EuroLeague season people 2007-2025) and stage their birth dates and countries.
+
+    Local backfill, like ``ingest --pbp``: never run in CI. Needs the GBL box scores staged.
+    """
+    if not GBL_PLAYER_BOX.exists():
+        log.error("no staged GBL box scores; run: eurohoops ingest --competition gbl --details")
+        raise typer.Exit(code=1)
+    box = pd.read_parquet(GBL_PLAYER_BOX, columns=["player_id", "team", "seconds"])
+    per_player = box.assign(big_two=box["team"].isin(GREEK_EL_CLUBS)).groupby("player_id")
+    order = per_player.agg(big_two=("big_two", "any"), seconds=("seconds", "sum"))
+    # the Greek EuroLeague clubs' players first (the silver set), then by GBL minutes
+    gbl_ids = order.sort_values(["big_two", "seconds"], ascending=False, kind="stable").index
+    with make_client() as client:
+        fetched = ingest_bios(
+            Fetcher(client, gbl.MIN_INTERVAL_S),
+            Fetcher(client, euroleague.MIN_INTERVAL_S),
+            gbl_raw=GBL.raw_dir,
+            el_raw=EUROLEAGUE.raw_dir,
+            gbl_ids=gbl_ids,
+            el_seasons=BIO_EL_SEASONS,
+        )
+    bios = build_bios(GBL.raw_dir, EUROLEAGUE.raw_dir)
+    write_table(bios, PLAYER_BIOS)
+    dated = bios.groupby("competition")["birth_date"].apply(lambda s: int(s.notna().sum()))
+    typer.echo(
+        f"fetched {fetched[0]} ESAKE pages, {fetched[1]} EuroLeague seasons; "
+        f"{len(bios)} bios, with a birth date: {dated.to_dict()}; wrote {PLAYER_BIOS}"
     )
 
 

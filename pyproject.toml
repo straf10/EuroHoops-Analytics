@@ -55,6 +55,9 @@ ignore = ["PLR0913", "PLR2004"]
 [tool.ruff.lint.per-file-ignores]
 # Greek text is data here (month names, table labels), not a confusable typo.
 "src/eurohoops/parse/esake.py" = ["RUF001", "RUF002", "RUF003"]
+"src/eurohoops/ingest/bios.py" = ["RUF001", "RUF002", "RUF003"]
+"src/eurohoops/parse/player_names.py" = ["RUF001", "RUF002", "RUF003"]
+"src/eurohoops/entity/*.py" = ["RUF001", "RUF002", "RUF003"]
 "scripts/vulture_whitelist.py" = ["B018"]  # bare names are how vulture whitelists mark usage
 "tests/**" = ["RUF001", "RUF002", "RUF003"]
 "scripts/**" = ["T20"]  # checklist helpers report to stdout

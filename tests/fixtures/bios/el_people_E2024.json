@@ -1,0 +1,5 @@
+{"data": [
+  {"person": {"code": "900001", "name": "TESTER, ANNA", "birthDate": "1992-05-01T00:00:00", "country": {"code": "LTU", "name": "Lithuania"}}, "type": "A", "typeName": "Assistant coach"},
+  {"person": {"code": "900002", "name": "PLAYER, ONE", "birthDate": "1998-11-24T00:00:00", "country": {"code": "GRE", "name": "Greece"}}, "type": "J", "typeName": "Player", "dorsal": "7"},
+  {"person": {"code": "900003", "name": "PLAYER, TWO", "birthDate": null, "country": null}, "type": "J", "typeName": "Player", "dorsal": "11"}
+], "total": 3}
