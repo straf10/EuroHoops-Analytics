@@ -137,4 +137,9 @@ iteration | deliverable | checks run | result | commit
 6 | entity pipeline + `eurohoops entity`; D8 | entity tests (31) | ok | d5a5aeb
 7 | bios complete (993/993 GBL); D9 near dates; tuning | entity tests (32), tuning run | ok | 44f198c, b405c44
 8 | B's fix, D (I6), E (I7) merged; re-tuning; real run; mover counts | 90 merged tests, mypy | ok | 614a249
-9 | I4 matcher commit | real run, silver metrics | ok | (this commit, MATCHER)
+9 | I4 matcher commit | real run, silver metrics | ok | d17fc3a
+10 | I5 label sheet drafted (186 ids; `latin/matched` has 36 in all); I8 code | test_m4_backtest (6), mypy | ok | 6e2643e
+11 | I8 verdict: tuning only (5 movers); variant `translate` declared by the small-sample rule | backtest --tuning-only (18 s) | ok | (this commit)
+
+## Pre-registration order
+MATCHER d17fc3a

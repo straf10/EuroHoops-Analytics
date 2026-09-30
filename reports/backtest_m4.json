@@ -1,0 +1,105 @@
+{
+  "model": "m4",
+  "seasons": {
+    "tuning": [
+      2019,
+      2020,
+      2021,
+      2022
+    ],
+    "validation": [
+      2023
+    ],
+    "test": [
+      2024,
+      2025
+    ]
+  },
+  "movers_gbl_to_el": {
+    "2019": 1,
+    "2020": 1,
+    "2021": 3,
+    "2023": 1
+  },
+  "sd": {
+    "pts": 5.864991,
+    "fg2a": 4.044009,
+    "fg3a": 4.053706,
+    "fta": 2.346638,
+    "oreb": 1.821287,
+    "dreb": 2.155167,
+    "ast": 3.157425,
+    "stl": 0.67465,
+    "blk": 0.795526,
+    "tov": 1.393514,
+    "pf": 1.737014
+  },
+  "chosen": {
+    "variant": "translate",
+    "rule": "declared: 1 validation movers < 20, so the gate pools tuning and validation with translate",
+    "tuning_loss": {
+      "same_stats": 0.700906,
+      "team_offset": 0.570378,
+      "shrunk_same_stats": 0.612898,
+      "translate": 0.505893,
+      "translate_team": 0.490682
+    }
+  },
+  "metrics": {
+    "tuning": {
+      "n": 5,
+      "seasons": {
+        "2019": 1,
+        "2020": 1,
+        "2021": 3,
+        "2022": 0
+      },
+      "loss": {
+        "same_stats": 0.700906,
+        "team_offset": 0.570378,
+        "shrunk_same_stats": 0.612898,
+        "translate": 0.505893,
+        "translate_team": 0.490682
+      },
+      "per_season": {
+        "2019": {
+          "same_stats": 0.455016,
+          "team_offset": 0.362139,
+          "shrunk_same_stats": 0.732625,
+          "translate": 0.259872,
+          "translate_team": 0.255535
+        },
+        "2020": {
+          "same_stats": 1.185978,
+          "team_offset": 0.97205,
+          "shrunk_same_stats": 1.113771,
+          "translate": 0.870681,
+          "translate_team": 0.879166
+        },
+        "2021": {
+          "same_stats": 0.61926,
+          "team_offset": 0.50353,
+          "shrunk_same_stats": 0.467075,
+          "translate": 0.454552,
+          "translate_team": 0.431585
+        },
+        "2022": {
+          "same_stats": null,
+          "team_offset": null,
+          "shrunk_same_stats": null,
+          "translate": null,
+          "translate_team": null
+        }
+      }
+    }
+  },
+  "validation_scored": false,
+  "test_scored": false,
+  "gate": null,
+  "pairs": {
+    "dual": 107,
+    "el_to_gbl": 36,
+    "gbl_to_el": 6
+  },
+  "data_sha256": "7080936bcb14298c51e3c9a454390510832f537b8b9d7aef23bbd6394d004c5c"
+}
