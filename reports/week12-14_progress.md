@@ -143,6 +143,8 @@ iteration | deliverable | checks run | result | commit
 12 | I8 validation scored once; gate (pooled 2019–2023, 6 movers) FAIL: translate − same_stats −0.138, 95% CI [−0.430, 0.018] | backtest (19 s) | ok (gate outcome FAIL, allowed) | 04afe68
 13 | I8 test scored once: 0 GBL→EL movers in 2024–2025; EL→GBL (26, reported) translate 0.613 vs same_stats 0.616; team offset 20.2 [16.9, 23.6] per 100 | backtest --score-test (20 s) | ok | 4c7a89f
 14 | I2 follow-up: latin_key drops JR/SR/II/III/IV; word-final Σ→CE/SE and Ι/Η→EE; fixture gate ≥38/40 (Papas, Auguste miss) | test_translit + similarity + match + pipeline (52) | ok | 635b917
+15 | I5: labels (186, ids rebuilt from ESAKE urls), scored as frozen (P 1.0, R 0.9885), Vezenkov `label:` override, after overrides 1.0/1.0; M4 reads `player_xwalk_frozen` | entity (71-116 s), backtest m4 byte-identical, 19 tests, model-card tests | ok | 2799c49, fee1eae, 96a4d65, 7fd1003
+16 | closeout; checklist 1-12 and 38-42 (13-37 skipped by the owner) | checklist parts A and B | ok | see git log
 
 ## Runtimes (I-l; quiet machine not guaranteed: subagents were running)
 RUNTIME entity 71

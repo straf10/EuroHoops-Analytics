@@ -1,0 +1,162 @@
+Weeks 12-14 checklist run, 2026-10-02 (scripts/checklist.sh, Git Bash on PATH; times UTC)
+
+Not one uninterrupted pass over 1-42. The owner chose this record (2026-10-02): items that
+nothing in this phase touches are not re-run.
+- Part A ran items 1-12 on HEAD ad2ea65 (after merging origin/main into the branch: the first
+  attempt failed item 9 only because the branch lacked main's two newer daily-prediction commits,
+  so 20 prediction lines looked removed; with the merge: 0). Stopped by the owner's decision
+  after item 12.
+- Items 13-37 (M1, M2, M3 checks) SKIPPED: this phase changed no M1/M2/M3 code, data or report.
+- Part B ran items 38-42 on the same HEAD (SKIP = 1-37).
+Result: every run item passes (FAILS: 0 in part B; part A items 1-12 PASS).
+
+##### PART A (items 1-12)
+HEAD ad2ea65, base origin/main, scratch <scratch>/chk, start 09:38Z
+
+===== 1 uv sync --frozen =====
+Checked 137 packages in 14ms
+PASS
+
+===== 2 ruff check =====
+All checks passed!
+PASS
+
+===== 3 ruff format --check =====
+208 files already formatted
+PASS
+
+===== 4 mypy src =====
+Success: no issues found in 76 source files
+PASS
+
+===== 5 pytest + coverage =====
+38 files skipped due to complete coverage.
+Required test coverage of 85% reached. Total coverage: 93.50%
+668 passed, 1 warning in 409.95s (0:06:49)
+PASS
+
+===== 6 vulture =====
+PASS
+
+===== 7 web build from the fixture (copy of web/) =====
+npm warn allow-scripts Run `npm approve-scripts --allow-scripts-pending` to review, or `npm approve-scripts <pkg>` to allow.
+[2m12:46:48[22m [34m[build][39m 2268 page(s) built in [1m28.37s[22m
+[2m12:46:48[22m [34m[build][39m [1mComplete![22m
+built 8 entries into site/
+PASS
+
+===== 8 Elo backtests reproduce the committed reports =====
+5 passed in 0.09s
+PASS
+
+===== 9 predictions append-only vs origin/main, Elo model_version unchanged =====
+removed/changed lines vs origin/main: 0
+reports/backtest_elo.json base=0.2.0+425e6393 now=0.2.0+425e6393
+reports/backtest_elo_gbl.json base=0.2.0+df05260c now=0.2.0+df05260c
+PASS
+
+===== 10 stint sample reproduces origin/main =====
+50 games: all checks 100% (five_on_court 100%, seconds 100%, minutes 100%, points 100%); wrote reports\stint_validation.json
+identical
+PASS
+
+===== 11 team_games coverage, points, possessions =====
+12 games missing, 0 points mismatches; EuroLeague sample within 2: 94.0% of teams; wrote reports\possessions.json
+rated games: 6390 with rows: 6378 missing (listed with reasons): 12
+points = games scores for every row
+EL sample: 50 games, within �2: 94.0% of team-games, 88.0% of games; mean gap 0.024; FT weight matching PBP 0.4213
+PASS
+
+===== 12 stints mart thresholds, two builds identical =====
+4246 games, 141625 stints; pass rate 2011-14 95.9%, 2015+ 98.9%; wrote reports\stints_mart.json
+stints 4d6c6b5412e607b5ca2b4a66ef235076e700f3eb8c2c1a1d0ff07e4cfd87322c
+stint_game_checks 061f7825cb225cba3a9dbe80c2005e8ca9d6558b950cafbb02cf64bc051fec6c
+two builds: stored tables identical
+two builds: report byte-identical
+2011-14 0.9587 (>= 0.95); 2015+ 0.9894 (>= 0.985)
+passing games where stint points miss the final: []
+PASS
+
+##### PART B (items 38-42)
+HEAD ad2ea65, base origin/main, scratch <scratch>/chkB, start 10:06Z
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===== 38 entity: unit tests, two builds identical, runtime, matcher < labels < label overrides =====
+67 passed in 3.58s
+reports/entity_resolution.json: two builds byte-identical
+marts identical:
+player_names 7907 fecc928fe2ee12be4508f11e65d75649ae831bff5ab88c479fef663eb6ab0883
+player_xwalk 3189 3d03d405d103fad311a70fa77dde40e17bee980ffd36474fc376d017edbbd838
+player_xwalk_frozen 3189 557319d8606895fa0344abae428394c935c50b8c57a9b1f431c099dec982f5bf
+reports/entity_resolution.json: equals the committed report
+entity RUNTIME 106 s (limit 300 s)
+matcher d17fc3a, labels 2799c49
+first label override 96a4d65
+matcher < labels < label overrides: yes
+PASS
+
+===== 39 crosswalk invariants: every box id in one person, overrides held =====
+crosswalk rows 3189, persons 2997, duplicate ids 0
+GBL player_box ids without a person: 0; EL box ids: 0
+override P005353 match P005983: held
+override PLRU no_match P012711: held
+override 00000069 match P003469: held
+crosswalk invariants: hold
+PASS
+
+===== 40 M4 unit and leakage tests (pairs, translation model, backtest) =====
+27 passed in 50.90s
+PASS
+
+===== 41 backtest_m4.json + gate, two runs identical, verdict < validation < test, runtime =====
+reports/backtest_m4.json: two runs byte-identical
+reports/backtest_m4.json: equals the committed report
+reports/m4_translation.json: two runs byte-identical
+reports/m4_translation.json: equals the committed report
+  gate translate FAIL -0.137504 [-0.429934, 0.018067] pooled 6 movers
+verdict 044f670, validation 04afe68, test 4c7a89f
+verdict < validation < test: yes
+RUNTIME 28 s (limit 600 s); recorded RUNTIME m4 20 s
+PASS
+
+===== 42 docs/models/m4.md and docs/data/entity.md numbers = reports =====
+4 passed in 0.07s
+PASS
+
+FAILS: 0 (end 10:13Z)
