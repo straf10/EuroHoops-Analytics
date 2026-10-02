@@ -9,7 +9,7 @@
     "euroleague": 2188,
     "gbl": 1001
   },
-  "candidate_pairs": 94049,
+  "candidate_pairs": 93344,
   "accepted_pairs": 196,
   "matched_gbl_ids": 190,
   "persons": 2998,
@@ -55,5 +55,168 @@
   "bios": {
     "euroleague": 2591,
     "gbl": 993
+  },
+  "labels": {
+    "as_frozen": {
+      "strata": {
+        "greek/matched": {
+          "n": 50,
+          "predicted": 50,
+          "true_matches": 50,
+          "correct": 50,
+          "precision": 1.0,
+          "recall": 1.0,
+          "precision_ci95": [
+            0.9286523998213858,
+            0.9999999999999998
+          ],
+          "recall_ci95": [
+            0.9286523998213858,
+            0.9999999999999998
+          ]
+        },
+        "greek/unmatched": {
+          "n": 50,
+          "predicted": 0,
+          "true_matches": 0,
+          "correct": 0,
+          "precision": null,
+          "recall": null,
+          "precision_ci95": [
+            0.0,
+            1.0
+          ],
+          "recall_ci95": [
+            0.0,
+            1.0
+          ]
+        },
+        "latin/matched": {
+          "n": 36,
+          "predicted": 36,
+          "true_matches": 36,
+          "correct": 36,
+          "precision": 1.0,
+          "recall": 1.0,
+          "precision_ci95": [
+            0.9035813700311206,
+            1.0
+          ],
+          "recall_ci95": [
+            0.9035813700311206,
+            1.0
+          ]
+        },
+        "latin/unmatched": {
+          "n": 50,
+          "predicted": 0,
+          "true_matches": 1,
+          "correct": 0,
+          "precision": null,
+          "recall": 0.0,
+          "precision_ci95": [
+            0.0,
+            1.0
+          ],
+          "recall_ci95": [
+            0.0,
+            0.7934506882081973
+          ]
+        }
+      },
+      "precision": 1.0,
+      "recall": 0.988506,
+      "precision_ci95": [
+        0.9572418020685576,
+        1.0
+      ],
+      "recall_ci95": [
+        0.937728020996087,
+        0.9979680922848639
+      ],
+      "precision_weighted": 1.0,
+      "recall_weighted": 0.993377
+    },
+    "after_overrides": {
+      "strata": {
+        "greek/matched": {
+          "n": 50,
+          "predicted": 50,
+          "true_matches": 50,
+          "correct": 50,
+          "precision": 1.0,
+          "recall": 1.0,
+          "precision_ci95": [
+            0.9286523998213858,
+            0.9999999999999998
+          ],
+          "recall_ci95": [
+            0.9286523998213858,
+            0.9999999999999998
+          ]
+        },
+        "greek/unmatched": {
+          "n": 50,
+          "predicted": 0,
+          "true_matches": 0,
+          "correct": 0,
+          "precision": null,
+          "recall": null,
+          "precision_ci95": [
+            0.0,
+            1.0
+          ],
+          "recall_ci95": [
+            0.0,
+            1.0
+          ]
+        },
+        "latin/matched": {
+          "n": 36,
+          "predicted": 36,
+          "true_matches": 36,
+          "correct": 36,
+          "precision": 1.0,
+          "recall": 1.0,
+          "precision_ci95": [
+            0.9035813700311206,
+            1.0
+          ],
+          "recall_ci95": [
+            0.9035813700311206,
+            1.0
+          ]
+        },
+        "latin/unmatched": {
+          "n": 50,
+          "predicted": 0,
+          "true_matches": 1,
+          "correct": 0,
+          "precision": null,
+          "recall": 0.0,
+          "precision_ci95": [
+            0.0,
+            1.0
+          ],
+          "recall_ci95": [
+            0.0,
+            0.7934506882081973
+          ]
+        }
+      },
+      "precision": 1.0,
+      "recall": 0.988506,
+      "precision_ci95": [
+        0.9572418020685576,
+        1.0
+      ],
+      "recall_ci95": [
+        0.937728020996087,
+        0.9979680922848639
+      ],
+      "precision_weighted": 1.0,
+      "recall_weighted": 0.993377,
+      "label": "fitted on the labels (overrides added from them)"
+    }
   }
 }
