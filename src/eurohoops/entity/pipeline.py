@@ -80,6 +80,7 @@ class EntityRun:
     links: pd.DataFrame
     xwalk: pd.DataFrame
     report: dict[str, Any]
+    xwalk_frozen: pd.DataFrame  # without the overrides added from the owner's labels (M4 input)
 
 
 def run_entity(
@@ -102,7 +103,9 @@ def run_entity(
         "linked": len(linked),
         "unlinked": dict(zip(unlinked["source_id"], unlinked["reason"], strict=True)),
     }
-    return EntityRun(scored, matches, links, xwalk, report)
+    frozen = _frozen_overrides(overrides)
+    xwalk_frozen = build_xwalk(names, assign(scored, frozen), frozen, linked)
+    return EntityRun(scored, matches, links, xwalk, report, xwalk_frozen)
 
 
 def silver_set(

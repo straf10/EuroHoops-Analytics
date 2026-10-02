@@ -364,7 +364,10 @@ def entity(
         typer.echo(f"wrote {ENTITY_LABELS_TODO}")
         return
     run = run_entity(names, bios, overrides, GREEK_EL_CLUBS)
-    write_tables(MART_PATH, {"player_names": names, "player_xwalk": run.xwalk})
+    write_tables(
+        MART_PATH,
+        {"player_names": names, "player_xwalk": run.xwalk, "player_xwalk_frozen": run.xwalk_frozen},
+    )
     report = run.report
     pos, neg = silver_set(names, bios, GREEK_EL_CLUBS)
     report["silver"] = silver_metrics(run.matches, pos, neg)
@@ -384,12 +387,16 @@ def entity(
 def backtest_m4(*, score_test: bool, tuning_only: bool) -> None:
     """``backtest --model m4`` (weeks 12-14 I8): GBL->EL translation on the movers, walk
     forward by EuroLeague target season; writes reports/backtest_m4.json and
-    reports/m4_translation.json. Needs ``eurohoops entity`` first (the ``player_xwalk`` mart)."""
+    reports/m4_translation.json. Needs ``eurohoops entity`` first. Reads ``player_xwalk_frozen``
+    (the crosswalk without the overrides added from the owner's labels), so the pre-registered
+    M4 scores do not move when labels fix the matcher's misses."""
     start = time.monotonic()
-    xwalk = read_table(MART_PATH, "player_xwalk")
+    xwalk = read_table(MART_PATH, "player_xwalk_frozen")
     team_games = read_table(MART_PATH, "team_games")
     if xwalk is None or team_games is None:
-        log.error("player_xwalk/team_games missing; run: eurohoops build, then eurohoops entity")
+        log.error(
+            "player_xwalk_frozen/team_games missing; run: eurohoops build, then eurohoops entity"
+        )
         raise typer.Exit(code=1)
     team_games = team_games[team_games["season"].isin(ENTITY_SEASONS)]
     el_games = read_games(MART_PATH, EUROLEAGUE.name)

@@ -105,6 +105,13 @@ def test_label_sheet_and_metrics_as_frozen_and_after_overrides() -> None:
     assert (frozen["precision"], frozen["recall"]) == (1.0, round(2 / 3, 6))
     assert (after["precision"], after["recall"]) == (1.0, 1.0)
     assert frozen["strata"]["greek/unmatched"]["correct"] == 0
+    # the M4 input crosswalk ignores label overrides: C stays its own person there
+    persons = lambda x: x.set_index(["competition", "source_id"])["person_id"]  # noqa: E731
+    assert persons(run.xwalk)[("gbl", "0000000C")] == persons(run.xwalk)[("euroleague", "P009999")]
+    assert (
+        persons(run.xwalk_frozen)[("gbl", "0000000C")]
+        != persons(run.xwalk_frozen)[("euroleague", "P009999")]
+    )
 
 
 def test_read_overrides_missing_file_is_empty(tmp_path: Path) -> None:

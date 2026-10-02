@@ -6,7 +6,7 @@ import hashlib
 from eurohoops.config import MART_PATH
 from eurohoops.marts import read_table
 
-for table in ("player_names", "player_xwalk"):
+for table in ("player_names", "player_xwalk", "player_xwalk_frozen"):
     frame = read_table(MART_PATH, table)
     if frame is None:
         raise SystemExit(f"{table} missing; run: eurohoops entity")
