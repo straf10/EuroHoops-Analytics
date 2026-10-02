@@ -1,9 +1,9 @@
 {
   "by_method": {
     "rule": 379,
-    "override": 2,
+    "override": 4,
     "pbp": 0,
-    "none": 2808
+    "none": 2806
   },
   "by_competition": {
     "euroleague": 2188,
@@ -11,8 +11,8 @@
   },
   "candidate_pairs": 93344,
   "accepted_pairs": 196,
-  "matched_gbl_ids": 190,
-  "persons": 2998,
+  "matched_gbl_ids": 191,
+  "persons": 2997,
   "name_rows": 7907,
   "params": {
     "w_surname": 0.5,
@@ -189,33 +189,33 @@
         },
         "latin/unmatched": {
           "n": 50,
-          "predicted": 0,
+          "predicted": 1,
           "true_matches": 1,
-          "correct": 0,
-          "precision": null,
-          "recall": 0.0,
+          "correct": 1,
+          "precision": 1.0,
+          "recall": 1.0,
           "precision_ci95": [
-            0.0,
+            0.20654931179180275,
             1.0
           ],
           "recall_ci95": [
-            0.0,
-            0.7934506882081973
+            0.20654931179180275,
+            1.0
           ]
         }
       },
       "precision": 1.0,
-      "recall": 0.988506,
+      "recall": 1.0,
       "precision_ci95": [
-        0.9572418020685576,
+        0.9577124924169734,
         1.0
       ],
       "recall_ci95": [
-        0.937728020996087,
-        0.9979680922848639
+        0.9577124924169734,
+        1.0
       ],
       "precision_weighted": 1.0,
-      "recall_weighted": 0.993377,
+      "recall_weighted": 1.0,
       "label": "fitted on the labels (overrides added from them)"
     }
   }
