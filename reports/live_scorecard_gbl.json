@@ -4,12 +4,12 @@
   "rows_not_provable": 0,
   "games_not_provable": [],
   "elo": {
-    "n": 0,
-    "log_loss": null,
-    "brier": null,
-    "accuracy": null,
-    "margin_mae": null,
-    "ece": null,
+    "n": 6,
+    "log_loss": 0.441357,
+    "brier": 0.141186,
+    "accuracy": 0.833333,
+    "margin_mae": 6.921667,
+    "ece": 0.16415,
     "reliability": [
       {
         "low": 0.0,
@@ -42,9 +42,9 @@
       {
         "low": 0.4,
         "high": 0.5,
-        "n": 0,
-        "mean_p": null,
-        "observed": null
+        "n": 3,
+        "mean_p": 0.4685,
+        "observed": 0.333333
       },
       {
         "low": 0.5,
@@ -56,9 +56,9 @@
       {
         "low": 0.6,
         "high": 0.7,
-        "n": 0,
-        "mean_p": null,
-        "observed": null
+        "n": 1,
+        "mean_p": 0.6511,
+        "observed": 1.0
       },
       {
         "low": 0.7,
@@ -70,27 +70,27 @@
       {
         "low": 0.8,
         "high": 0.9,
-        "n": 0,
-        "mean_p": null,
-        "observed": null
+        "n": 1,
+        "mean_p": 0.8557,
+        "observed": 1.0
       },
       {
         "low": 0.9,
         "high": 1.0,
-        "n": 0,
-        "mean_p": null,
-        "observed": null
+        "n": 1,
+        "mean_p": 0.9138,
+        "observed": 1.0
       }
     ],
-    "margin_crps": null
+    "margin_crps": 4.685104
   },
   "b0": {
-    "n": 0,
-    "log_loss": null,
-    "brier": null,
-    "accuracy": null,
-    "margin_mae": null,
-    "ece": null,
+    "n": 6,
+    "log_loss": 0.638075,
+    "brier": 0.222933,
+    "accuracy": 0.666667,
+    "margin_mae": 11.891,
+    "ece": 0.026667,
     "reliability": [
       {
         "low": 0.0,
@@ -137,9 +137,9 @@
       {
         "low": 0.6,
         "high": 0.7,
-        "n": 0,
-        "mean_p": null,
-        "observed": null
+        "n": 6,
+        "mean_p": 0.64,
+        "observed": 0.666667
       },
       {
         "low": 0.7,
@@ -163,20 +163,20 @@
         "observed": null
       }
     ],
-    "margin_crps": null
+    "margin_crps": 8.112179
   },
   "totals": {
-    "n": 0,
-    "mae": null
+    "n": 6,
+    "mae": 10.602941
   },
   "all_rows": {
     "elo": {
-      "n": 0,
-      "log_loss": null,
-      "brier": null,
-      "accuracy": null,
-      "margin_mae": null,
-      "ece": null,
+      "n": 6,
+      "log_loss": 0.441357,
+      "brier": 0.141186,
+      "accuracy": 0.833333,
+      "margin_mae": 6.921667,
+      "ece": 0.16415,
       "reliability": [
         {
           "low": 0.0,
@@ -209,9 +209,9 @@
         {
           "low": 0.4,
           "high": 0.5,
-          "n": 0,
-          "mean_p": null,
-          "observed": null
+          "n": 3,
+          "mean_p": 0.4685,
+          "observed": 0.333333
         },
         {
           "low": 0.5,
@@ -223,9 +223,9 @@
         {
           "low": 0.6,
           "high": 0.7,
-          "n": 0,
-          "mean_p": null,
-          "observed": null
+          "n": 1,
+          "mean_p": 0.6511,
+          "observed": 1.0
         },
         {
           "low": 0.7,
@@ -237,27 +237,27 @@
         {
           "low": 0.8,
           "high": 0.9,
-          "n": 0,
-          "mean_p": null,
-          "observed": null
+          "n": 1,
+          "mean_p": 0.8557,
+          "observed": 1.0
         },
         {
           "low": 0.9,
           "high": 1.0,
-          "n": 0,
-          "mean_p": null,
-          "observed": null
+          "n": 1,
+          "mean_p": 0.9138,
+          "observed": 1.0
         }
       ],
-      "margin_crps": null
+      "margin_crps": 4.685104
     },
     "b0": {
-      "n": 0,
-      "log_loss": null,
-      "brier": null,
-      "accuracy": null,
-      "margin_mae": null,
-      "ece": null,
+      "n": 6,
+      "log_loss": 0.638075,
+      "brier": 0.222933,
+      "accuracy": 0.666667,
+      "margin_mae": 11.891,
+      "ece": 0.026667,
       "reliability": [
         {
           "low": 0.0,
@@ -304,9 +304,9 @@
         {
           "low": 0.6,
           "high": 0.7,
-          "n": 0,
-          "mean_p": null,
-          "observed": null
+          "n": 6,
+          "mean_p": 0.64,
+          "observed": 0.666667
         },
         {
           "low": 0.7,
@@ -330,11 +330,11 @@
           "observed": null
         }
       ],
-      "margin_crps": null
+      "margin_crps": 8.112179
     },
     "totals": {
-      "n": 0,
-      "mae": null
+      "n": 6,
+      "mae": 10.602941
     }
   },
   "rolling": {
@@ -347,12 +347,12 @@
     "rows_in_log": 7,
     "rows_excluded_late": 0,
     "m1": {
-      "n": 0,
-      "log_loss": null,
-      "brier": null,
-      "accuracy": null,
-      "margin_mae": null,
-      "ece": null,
+      "n": 6,
+      "log_loss": 0.471958,
+      "brier": 0.155787,
+      "accuracy": 0.833333,
+      "margin_mae": 8.776667,
+      "ece": 0.191917,
       "reliability": [
         {
           "low": 0.0,
@@ -378,23 +378,23 @@
         {
           "low": 0.3,
           "high": 0.4,
-          "n": 0,
-          "mean_p": null,
-          "observed": null
+          "n": 1,
+          "mean_p": 0.3366,
+          "observed": 0.0
         },
         {
           "low": 0.4,
           "high": 0.5,
-          "n": 0,
-          "mean_p": null,
-          "observed": null
+          "n": 2,
+          "mean_p": 0.44945,
+          "observed": 0.5
         },
         {
           "low": 0.5,
           "high": 0.6,
-          "n": 0,
-          "mean_p": null,
-          "observed": null
+          "n": 1,
+          "mean_p": 0.5369,
+          "observed": 1.0
         },
         {
           "low": 0.6,
@@ -413,26 +413,26 @@
         {
           "low": 0.8,
           "high": 0.9,
-          "n": 0,
-          "mean_p": null,
-          "observed": null
+          "n": 1,
+          "mean_p": 0.822,
+          "observed": 1.0
         },
         {
           "low": 0.9,
           "high": 1.0,
-          "n": 0,
-          "mean_p": null,
-          "observed": null
+          "n": 1,
+          "mean_p": 0.9273,
+          "observed": 1.0
         }
       ],
-      "margin_crps": null,
-      "totals_mae": null,
-      "totals_crps": null
+      "margin_crps": 5.720715,
+      "totals_mae": 11.238333,
+      "totals_crps": 7.446502
     },
     "same_games_as_elo": {
-      "n": 0,
-      "m1_log_loss": null,
-      "elo_log_loss": null
+      "n": 6,
+      "m1_log_loss": 0.471958,
+      "elo_log_loss": 0.441357
     },
     "rolling": {
       "window": 50,

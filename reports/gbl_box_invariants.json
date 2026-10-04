@@ -617,6 +617,19 @@
           "minutes_off"
         ]
       }
+    },
+    "2026": {
+      "games": 6,
+      "passed": 6,
+      "pass_rate": 1.0,
+      "failures_by_reason": {
+        "missing_box": 0,
+        "points_mismatch": 0,
+        "minutes_off": 0,
+        "bad_shot_lines": 0,
+        "bad_point_lines": 0
+      },
+      "failed_games": {}
     }
   },
   "pbp_fill": {
