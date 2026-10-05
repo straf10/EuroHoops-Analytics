@@ -619,8 +619,8 @@
       }
     },
     "2026": {
-      "games": 6,
-      "passed": 6,
+      "games": 7,
+      "passed": 7,
       "pass_rate": 1.0,
       "failures_by_reason": {
         "missing_box": 0,
