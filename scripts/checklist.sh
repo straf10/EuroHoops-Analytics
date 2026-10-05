@@ -157,4 +157,9 @@ skip 44 "M5 leakage" || {
 }
 skip 45 "M5 report" || { item "45 backtest_m5.json + gate/oracle/gap, two runs identical, GBL fixed choice, verdict < validation < test"; bash "$CHECKS/m5_reports.sh"; res $?; }
 skip 46 "M5 runtime" || { item "46 backtest --model m5 runtime: EL < 1,800 s, GBL < 600 s"; bash "$CHECKS/m5_runtime.sh"; res $?; }
+skip 47 "M5 card" || {
+  item "47 docs/models/m5.md numbers = reports; CONTEXT terms"
+  uv run pytest -q -p no:cacheprovider tests/test_model_card_m5.py 2>&1 | tail -1
+  res "${PIPESTATUS[0]}"
+}
 echo; echo "FAILS: $fails (end $(date -u +%H:%MZ))"; exit "$fails"

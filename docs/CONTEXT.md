@@ -27,6 +27,19 @@ The home-win baseline: a constant home-win rate and home margin, 0.5 and 0 at a 
 **M0 / M1 / M2**:
 The models: M0 is the Elo rating (the live forecast), M1 the possession-based team efficiency model, M2 the shot-quality model (expected points per shot).
 
+**Projected roster**:
+Each player's expected share of a game's minutes, from the team's games before the round's first tip-off; M5's forecast input.
+_Avoid_: lineup, starting five
+
+**Oracle roster**:
+The minutes players actually played in the game; an upper bound for a roster-aware model, never a forecast and never logged.
+
+**Team residual**:
+What a team's results show beyond the sum of its players' ratings (coaching, system, fit), fitted walk-forward in M5.
+
+**Rest difference**:
+Home minus away of a rest feature (days since the previous game in either competition, short rest, games in the last 7 days, previous game in the other competition).
+
 ## Games and teams
 
 **Rated game**:
