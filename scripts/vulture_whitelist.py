@@ -6,8 +6,8 @@ Remove an entry as soon as the pipeline uses the name.
   (H6 dummy variant), not H1.
 """
 
-from eurohoops.config import GBL_STINTS_REPORT, M3, M5, M5_GBL, M3Backtest, M3Grid, M5Backtest
-from eurohoops.eval.m5_backtest import format_m5_table, predict_games, run_m5_backtest
+from eurohoops.config import GBL_STINTS_REPORT, M3, M3Backtest, M3Grid
+from eurohoops.eval.m5_backtest import predict_games
 from eurohoops.models.box_impact import box_only_margins, pir_margins
 from eurohoops.models.m5 import (
     ResidualFit,
@@ -92,11 +92,6 @@ p_cover
 # week 14-16 J2: called by eval/m5_backtest.py (J4, wave 2)
 projected_shares_variant
 
-# week 14-16 J4: called by cli.py and eval/tracking.py (the orchestrator wires them), and by the
-# leakage suite (predict_games)
+# week 14-16 J4: predict_games is the public per-choice entry point the leakage suite (J5) and
+# the J8 gap recomputation test call; src does not call it
 predict_games
-run_m5_backtest
-format_m5_table
-M5
-M5_GBL
-M5Backtest.games_report

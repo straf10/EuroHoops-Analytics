@@ -3,6 +3,7 @@
 import json
 import logging
 import os
+import time
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
@@ -29,6 +30,8 @@ from eurohoops.config import (
     LIVE_SEASON,
     M3,
     M3_GBL,
+    M5,
+    M5_GBL,
     MART_PATH,
     ODDS_CALLS,
     ODDS_RAW_DIR,
@@ -41,13 +44,26 @@ from eurohoops.config import (
     STINTS_MART_REPORT,
     TEAM_CONTINUITY_REPORT,
     Competition,
+    M5Backtest,
 )
 from eurohoops.eval.backtest import TunedModel, format_table, load_tuned_model, run_backtest
 from eurohoops.eval.m1_backtest import format_m1_table, run_m1_backtest
-from eurohoops.eval.m3_backtest import format_m3_table, run_m3_backtest
+from eurohoops.eval.m3_backtest import (
+    TunedRapm,
+    build_rapm_inputs,
+    format_m3_table,
+    rapm_margins,
+    run_m3_backtest,
+)
 from eurohoops.eval.m3_gbl_backtest import el_spm_models, format_m3_gbl_table, run_m3_gbl_backtest
+from eurohoops.eval.m5_backtest import M5Inputs, PlayerPartFn, format_m5_table, run_m5_backtest
 from eurohoops.eval.scorecard import build_scorecard
-from eurohoops.eval.tracking import default_tracking_uri, log_backtest, log_m3_backtest
+from eurohoops.eval.tracking import (
+    default_tracking_uri,
+    log_backtest,
+    log_m3_backtest,
+    log_m5_backtest,
+)
 from eurohoops.ingest import euroleague, gbl
 from eurohoops.ingest.bios import build_bios, ingest_bios
 from eurohoops.ingest.http import Fetcher, make_client
@@ -63,6 +79,9 @@ from eurohoops.marts import (
     write_tables,
 )
 from eurohoops.models.box_impact import BoxGrid, box_only_margins, pir_margins
+from eurohoops.models.elo import FloatArray
+from eurohoops.models.minutes import expected_possessions
+from eurohoops.models.spm import fit_spm
 from eurohoops.odds import OddsApiError, OddsPaths, api_key, record_odds
 from eurohoops.parse.box import build_box_tables
 from eurohoops.parse.continuity import continuity_report
@@ -101,6 +120,7 @@ class ModelName(StrEnum):
     m2 = "m2"
     m3 = "m3"
     m4 = "m4"
+    m5 = "m5"
 
 
 CompetitionOption = Annotated[
@@ -516,6 +536,127 @@ def _backtest_m3(
         typer.echo(f"MLflow parent run {run_id}")
 
 
+def _m5_inputs(
+    comp: Competition, other: Competition, spec: M5Backtest, club_map: dict[str, str]
+) -> tuple[M5Inputs, pd.DataFrame]:
+    """M5's inputs for ``comp``: every game up to the last test season (the live season never
+    enters, so the daily log cannot move the report), the other competition's games for rest,
+    M1's committed parameters and comparison Elo. Also returns the backtest frame (M3's order)."""
+    if comp.m1 is None or not comp.m1.report.exists():
+        log.error("no committed M1 report for %s; run: eurohoops backtest --model m1", comp.name)
+        raise typer.Exit(code=1)
+    m1_report = json.loads(comp.m1.report.read_text(encoding="utf-8"))
+    last = spec.test[-1]
+    games = read_games(MART_PATH, comp.name)
+    games = games[games["season"] <= last].reset_index(drop=True)
+    other_games = read_games(MART_PATH, other.name)
+    other_games = other_games[other_games["season"] <= last].reset_index(drop=True)
+    team_games = read_table(MART_PATH, "team_games", comp.name)
+    if team_games is None:
+        log.error("no team_games in the marts; run: eurohoops build")
+        raise typer.Exit(code=1)
+    team_games = team_games[team_games["game_id"].isin(set(games["game_id"]))]
+    if comp is EUROLEAGUE:
+        player_games = build_box_games(comp.raw_dir, games).players
+    else:
+        player_games = build_gbl_player_games(comp.raw_dir, games, team_games).table
+    inputs = M5Inputs(
+        games=games,
+        team_games=team_games.reset_index(drop=True),
+        player_games=player_games,
+        other_games=other_games,
+        club_map=club_map,
+        tuned_m1=m1_report["tuned"],
+        elo=m1_report["comparison_elo"],
+    )
+    frame = (
+        games[games["season"].between(spec.warmup[0], last)]
+        .sort_values("tipoff_utc")
+        .reset_index(drop=True)
+    )
+    return inputs, frame
+
+
+def _same_frame(expected: pd.DataFrame, frame: pd.DataFrame) -> None:
+    if not frame["game_id"].astype(str).equals(expected["game_id"].astype(str)):
+        raise ValueError("the player part was fitted on a different frame than the harness's")
+
+
+def _m5_player_part_el(inputs: M5Inputs, frame: pd.DataFrame) -> PlayerPartFn:
+    """M3's committed ``rapm_spm`` (``reports/backtest_m3.json`` ``chosen``, never re-tuned),
+    fitted walk-forward once over the frame; the player part is H-c's ``rapm_margins``."""
+    chosen = json.loads(M3.report.read_text(encoding="utf-8"))["chosen"]
+    if chosen["variant"] != "rapm_spm":
+        log.error("M3 chosen variant must be rapm_spm (see reports/backtest_m3.json)")
+        raise typer.Exit(code=1)
+    stints = read_table(MART_PATH, "stints")
+    checks = read_table(MART_PATH, "stint_game_checks")
+    if stints is None or checks is None:
+        log.error("stints/stint_game_checks missing; run: eurohoops stints --mart")
+        raise typer.Exit(code=1)
+    extra = {k: chosen[k] for k in ("target_half_life_days", "target_ridge_o", "target_ridge_d")}
+    tuned = TunedRapm(
+        chosen["half_life_days"],
+        chosen["ridge_o"],
+        chosen["ridge_d"],
+        chosen["tuning_rmse"],
+        grid={},
+        extra={**extra, "k": chosen["k"], "alpha": chosen["alpha"]},
+    )
+    rapm_inputs = build_rapm_inputs(stints, checks, frame, inputs.player_games)
+    wf = fit_spm(frame, rapm_inputs, tuned)
+    possessions = expected_possessions(frame, inputs.team_games)
+
+    def player_part(games: pd.DataFrame, shares: pd.DataFrame) -> FloatArray:
+        _same_frame(frame, games)
+        return rapm_margins(games, wf, shares, possessions)
+
+    return player_part
+
+
+def _m5_player_part_gbl(inputs: M5Inputs, frame: pd.DataFrame, spec: M5Backtest) -> PlayerPartFn:
+    """GBL box-only player ratings (J-g: no GBL RAPM), tuned on the tuning seasons per call."""
+    possessions = expected_possessions(frame, inputs.team_games)
+    rated = (frame["played"] & ~frame["forfeit"]).to_numpy()
+    tuning = rated & frame["season"].isin(spec.tuning).to_numpy()
+
+    def player_part(games: pd.DataFrame, shares: pd.DataFrame) -> FloatArray:
+        _same_frame(frame, games)
+        result = box_only_margins(
+            games, inputs.player_games, shares, possessions, tuning, grid=BoxGrid()
+        )
+        return result.margin
+
+    return player_part
+
+
+def _backtest_m5(
+    competition: CompetitionName, score_test: bool, tuning_only: bool, tracking_uri: str
+) -> None:
+    """``backtest --model m5`` (week 14-16 J4): the roster-aware predictor vs M1, Elo and B0."""
+    if competition is CompetitionName.euroleague:
+        spec, comp, other, club_map = M5, EUROLEAGUE, GBL, dict(GREEK_EL_CLUBS)
+    else:
+        spec, comp, other = M5_GBL, GBL, EUROLEAGUE
+        club_map = {el: gbl_id for gbl_id, el in GREEK_EL_CLUBS.items()}
+    started = time.perf_counter()
+    inputs, frame = _m5_inputs(comp, other, spec, club_map)
+    if comp is EUROLEAGUE:
+        player_part = _m5_player_part_el(inputs, frame)
+    else:
+        player_part = _m5_player_part_gbl(inputs, frame, spec)
+    report, predictions = run_m5_backtest(
+        inputs, spec=spec, player_part=player_part, tuning_only=tuning_only, score_test=score_test
+    )
+    write_json(spec.report, report)
+    predictions.to_csv(spec.games_report, index=False, lineterminator="\n")
+    typer.echo(f"{spec.report}\n{format_m5_table(report)}")
+    typer.echo(f"RUNTIME backtest m5 {comp.name}: {time.perf_counter() - started:.0f} s")
+    run_id = log_m5_backtest(report, comp.name, tracking_uri)
+    if run_id is not None:
+        typer.echo(f"MLflow run {run_id}")
+
+
 @app.command()
 def backtest(
     *,
@@ -549,6 +690,9 @@ def backtest(
         return
     if model is ModelName.m4:
         research.backtest_m4(score_test=score_test, tuning_only=tuning_only)
+        return
+    if model is ModelName.m5:
+        _backtest_m5(competition, score_test, tuning_only, tracking_uri or default_tracking_uri())
         return
     comp = COMPETITIONS[competition]
     games = read_games(MART_PATH, comp.name)

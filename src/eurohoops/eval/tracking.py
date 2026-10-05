@@ -264,3 +264,45 @@ def log_m3_backtest(report: dict[str, Any], tracking_uri: str) -> str | None:
                 mlflow.log_metrics(flatten_metrics(grid_block))
     run_id: str = parent.info.run_id
     return run_id
+
+
+EXPERIMENT_M5 = "m5-backtest"
+
+
+def log_m5_backtest(report: dict[str, Any], competition: str, tracking_uri: str) -> str | None:
+    """Log one M5 backtest (week 14-16 J4): one run with the chosen candidate as params, the data
+    hash and commit, every numeric report value (the grid's candidate losses included) and the
+    report JSON. None when MLflow is not installed, like the other loggers."""
+    try:
+        import mlflow  # noqa: PLC0415 - optional dev dependency, only on the backtest path
+    except ImportError:
+        log.warning("MLflow is not installed (dev dependency): backtest not tracked")
+        return None
+    commit, dirty = git_state()
+    shared = {
+        "competition": competition,
+        "data_sha256": report["data_sha256"],
+        "git_commit": commit,
+        "git_dirty": str(dirty).lower(),
+        "model_version": report["model_version"],
+    }
+    params = {
+        **shared,
+        **{f"chosen.{k}": v for k, v in report["chosen"]["choice"].items()},
+        **{f"seasons.{k}": ",".join(map(str, v)) for k, v in report["seasons"].items()},
+        "tuning_only": report["tuning_only"],
+        "test_scored": report["test_scored"],
+    }
+    mlflow.set_tracking_uri(tracking_uri)
+    experiment_id = _experiment(mlflow.MlflowClient(), EXPERIMENT_M5, tracking_uri)
+    name = f"m5 {competition} {report['model_version']}"
+    with mlflow.start_run(experiment_id=experiment_id, run_name=name) as run:
+        mlflow.log_params(params)
+        mlflow.set_tags(shared)
+        mlflow.log_metrics(flatten_metrics(report))
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / f"backtest_m5_{competition}.json"
+            path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+            mlflow.log_artifact(str(path))
+    run_id: str = run.info.run_id
+    return run_id
