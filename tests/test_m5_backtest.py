@@ -485,13 +485,20 @@ def test_choose_candidate_breaks_ties_toward_the_simpler_candidate() -> None:
     assert choose_candidate(tied[:3], 0.0005) == 2  # simplest form beats simpler shares
     # outside the tolerance the lower loss wins whatever its complexity
     assert choose_candidate([(_candidate("proj_hc", "core"), 0.6006), tied[0]], 0.0005) == 1
-    # shares rule decides within a form, then the grid position
+    # shares rule decides within a form, then the lower loss (D10), not the grid position
     same_form = [
         (_candidate("proj_avail", "core"), 0.6),
         (_candidate("proj_decay", "core"), 0.6001),
         (_candidate("proj_decay", "core"), 0.6),
     ]
-    assert choose_candidate(same_form, 0.0005) == 1
+    assert choose_candidate(same_form, 0.0005) == 2
+    # D10: within the simplest model, the lowest loss wins, not the earlier grid point
+    same_model = [
+        (_candidate("proj_hc", "core"), 0.6004),
+        (_candidate("proj_hc", "core"), 0.6001),
+        (_candidate("proj_avail", "core"), 0.6),
+    ]
+    assert choose_candidate(same_model, 0.0005) == 1
     # a non-finite loss never wins
     assert choose_candidate([(_candidate("proj_hc", "core"), float("nan")), tied[0]], 0.0) == 1
     with pytest.raises(ValueError, match="finite"):

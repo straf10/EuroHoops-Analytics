@@ -156,7 +156,9 @@ def candidate_key(choice: Choice) -> str:
 def choose_candidate(table: Sequence[tuple[Choice, float]], tolerance: float) -> int:
     """Index of the winner of a table of (candidate, tuning log loss) in grid order: the lowest
     loss, or, among every candidate within ``tolerance`` of it (difference < tolerance), the
-    simplest by form (``FORMS``), then shares rule (``SHARES``), then grid position."""
+    simplest by form (``FORMS``), then shares rule (``SHARES``), then the lowest loss within that
+    model, then grid position. Grid values (half-lives, ridges) are not a complexity order, so
+    they never break a tie (D10)."""
     finite = [(i, loss) for i, (_, loss) in enumerate(table) if math.isfinite(loss)]
     if not finite:
         raise ValueError("no candidate has a finite tuning log loss")
@@ -164,7 +166,12 @@ def choose_candidate(table: Sequence[tuple[Choice, float]], tolerance: float) ->
     tied = [i for i, loss in finite if loss == best or loss - best < tolerance]
     return min(
         tied,
-        key=lambda i: (FORMS.index(table[i][0].form), SHARES.index(table[i][0].shares), i),
+        key=lambda i: (
+            FORMS.index(table[i][0].form),
+            SHARES.index(table[i][0].shares),
+            table[i][1],
+            i,
+        ),
     )
 
 

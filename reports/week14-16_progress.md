@@ -116,6 +116,11 @@ Facts 1–3 and 6 are re-checked by `scripts/checks/m5_facts.py` (checklist item
   it the decay clock (shifts ~1e-5). E's delete edit keeps that game and deletes the other round mates and later games.
   That is a change of the cutoff's definition, not information from the future.
 
+- **D10 (tie-break):** J-i says ties go to "the simpler model". The J4 rule continued to grid position after form and
+  shares, so a half-life listed earlier won a tie against a lower-loss point of the same model. Grid values are not a
+  complexity order. Fixed: form, then shares, then the lowest tuning loss, and grid position only for exact equality.
+  Found on tuning run 2 (the widened grid put d120 before d180); no validation number existed.
+
 ## Iterations
 iteration | deliverable | checks run | result | commit
 1 | J0 branch, §0, §3 probes, D1–D5, interfaces | m5_facts.py PASS; ruff | green | 3c603b5
@@ -124,4 +129,5 @@ iteration | deliverable | checks run | result | commit
 4 | J2 shares (subagent B, round 1) merged; wave-1 real-data sanity | diff reviewed; full suite 711 passed, cov 93.61%; ruff, mypy, vulture. Real EL 2011–2025: rest_features 0.2 s, short_rest 15.1% of team-games, PAN/OLY other_comp_prev 31.9%; one days_rest < 1.5 (E2021_300 OLY–UNK, unplayed voided game: never rated, fact 2 holds). Shares: every team-side sums to 5.000 (proj_avail min 4.593: caps); runtimes proj_hc 23 s, proj_decay 89 s, proj_avail 101 s | green | fbe6b8d
 5 | J4 harness (subagent D, round 1) merged; CLI `backtest --model m5` + `log_m5_backtest` (orchestrator) | diff reviewed; inputs cut at test[-1] so the daily log cannot move data_sha256; tracking test added | green | cf47d6a, d1a620b
 6 | J5 leakage suite (subagent E, round 1) merged; Platt leak D8 fixed by orchestrator; checklist items 43–44 | full suite 782 passed, cov 93.17%; ruff, mypy, vulture | green | 8c3af23
-7 | J6 tuning run 1 (EL, tuning only; a different project's training job held ~33% CPU, so this RUNTIME 750 s is not used for item 46) | chosen proj_hc\|core\|d180\|r40, no Platt, total_m1_rest; tuning LL 0.599344 vs M1 0.6060, Elo 0.6090; best overall proj_avail@2\|core\|d180\|r40 0.599296 (within the 0.0005 tie, so the simpler wins). Edges: residual half-life 180 = lower edge, half_life_games 2 = lower edge (best candidate). **Grid widened once** (J6 rule: the best on an edge, before the verdict): half_life_games + 1, residual_half_life_days + 60, 120. Oracle tuning LL 0.6006 > projected: the same as M3 (oracle 0.6031 vs rapm 0.6011), where actual minutes carry blowout garbage time; reported, not a bug | widened, rerun | (this commit)
+7 | J6 tuning run 1 (EL, tuning only; a different project's training job held ~33% CPU, so this RUNTIME 750 s is not used for item 46) | chosen proj_hc\|core\|d180\|r40, no Platt, total_m1_rest; tuning LL 0.599344 vs M1 0.6060, Elo 0.6090; best overall proj_avail@2\|core\|d180\|r40 0.599296 (within the 0.0005 tie, so the simpler wins). Edges: residual half-life 180 = lower edge, half_life_games 2 = lower edge (best candidate). **Grid widened once** (J6 rule: the best on an edge, before the verdict): half_life_games + 1, residual_half_life_days + 60, 120. Oracle tuning LL 0.6006 > projected: the same as M3 (oracle 0.6031 vs rapm 0.6011), where actual minutes carry blowout garbage time; reported, not a bug | widened, rerun | 6b428a0
+8 | J6 tuning run 2 (widened grid, 414 candidates; RUNTIME 968 s, load ~40% from the other job: not used for item 46) | no axis on an edge; best proj_avail@1\|core\|d180\|r40 0.599292; the rule chose proj_hc\|core\|d120\|r40 0.599638 by grid position → D10 tie-break fix + test | fixed, rerun | (this commit)
