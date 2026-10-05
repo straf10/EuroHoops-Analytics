@@ -510,24 +510,8 @@ def test_tuning_only_verdict_cannot_see_validation_or_test() -> None:
     pd.testing.assert_frame_equal(frame_after, frame_before)
 
 
-def test_tuning_only_report_differs_only_in_platt_coefficients_of_later_seasons() -> None:
-    """Isolates what the strict test above reports: apart from ``chosen.platt.coefficients`` of
-    the seasons after tuning (fitted on the validation and test outcomes of the seasons before
-    them), the tuning-only report and its frame are identical. Not a weaker replacement of that
-    test: it pins down exactly how far the leak goes (the choice and every tuning number are
-    unaffected)."""
-    report_before, frame_before = _base_tuning_only()
-    report_after, frame_after = _tuning_only_after_later_outcomes()
-    before, after = json.loads(report_before), json.loads(report_after)
-    for report in (before, after):
-        for season in [s for s in report["chosen"]["platt"]["coefficients"] if int(s) > 2019]:
-            del report["chosen"]["platt"]["coefficients"][season]
-    assert after == before
-    pd.testing.assert_frame_equal(frame_after, frame_before)
-
-
 def test_tuning_only_report_does_see_tuning_outcomes() -> None:
-    """Control for the test above: rewriting tuning outcomes does change the report."""
+    """Control for the verdict test above: rewriting tuning outcomes does change the report."""
     base = _base()
     games = base.games
     tuning = _ids(games, games["season"].isin(SPEC.tuning))

@@ -330,7 +330,19 @@ def test_tuning_only_puts_no_validation_or_test_anywhere(
     # the verdict (the choice and every tuning number) is the one the full run reports
     full, _ = full_run
     assert report["grid"] == full["grid"]
-    assert report["chosen"] == full["chosen"]
+    # Platt (a, b) of a season are fitted on all earlier outcomes: the tuning-only report keeps
+    # only warm-up and tuning seasons (the leak J5 found), the rest of the verdict is identical
+    platt = report["chosen"]["platt"]
+    full_platt = full["chosen"]["platt"]
+    kept = {str(s) for s in (*SPEC.warmup, *SPEC.tuning)}
+    assert platt["coefficients"] == {
+        s: ab for s, ab in full_platt["coefficients"].items() if s in kept
+    }
+    assert {k: v for k, v in platt.items() if k != "coefficients"} == {
+        k: v for k, v in full_platt.items() if k != "coefficients"
+    }
+    without_platt = {k: v for k, v in report["chosen"].items() if k != "platt"}
+    assert without_platt == {k: v for k, v in full["chosen"].items() if k != "platt"}
     assert report["metrics"]["tuning"] == full["metrics"]["tuning"]
     assert report["oracle"]["tuning"] == full["oracle"]["tuning"]
     assert report["segments"]["tuning"] == full["segments"]["tuning"]

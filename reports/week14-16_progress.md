@@ -107,9 +107,20 @@ def p_cover(margin: FloatArray, model: MarginModel, line: float | FloatArray) ->
 
 Facts 1–3 and 6 are re-checked by `scripts/checks/m5_facts.py` (checklist item 43). Facts 4 and 5 are tested in J3/J4.
 
+- **D8 (Platt leak, found by J5):** the tuning-only report carried Platt (a, b) for validation and test seasons. Each
+  of those is fit on all earlier outcomes, which include validation. Fixed: the report lists Platt coefficients only for
+  warm-up seasons and the scored splits. The choice and the tuning numbers were never affected. D's test that required
+  tuning-only `chosen` to equal the full run's (which encoded the leak) now asserts the restricted equality. E's
+  "differs only in Platt" test was redundant after the fix and was removed.
+- **D9 (leakage-suite delete edit):** deleting the game that defines g's round cutoff moves the cutoff itself, and with
+  it the decay clock (shifts ~1e-5). E's delete edit keeps that game and deletes the other round mates and later games.
+  That is a change of the cutoff's definition, not information from the future.
+
 ## Iterations
 iteration | deliverable | checks run | result | commit
 1 | J0 branch, §0, §3 probes, D1–D5, interfaces | m5_facts.py PASS; ruff | green | 3c603b5
 2 | J1 rest (subagent A, round 1) merged | diff reviewed (no leak: searchsorted side=left; scores unread); test_rest 13 passed; ruff, mypy | green | merge of 8b4b01a
 3 | J3 model core (subagent C, round 1) merged | diff reviewed (cutoff rows strictly before; blend on seasons < s; tolerances derived from the design, not the output); vulture whitelist conflict resolved by hand; test_m5 + test_rest 25 passed; ruff, mypy, vulture | green | 545112c
 4 | J2 shares (subagent B, round 1) merged; wave-1 real-data sanity | diff reviewed; full suite 711 passed, cov 93.61%; ruff, mypy, vulture. Real EL 2011–2025: rest_features 0.2 s, short_rest 15.1% of team-games, PAN/OLY other_comp_prev 31.9%; one days_rest < 1.5 (E2021_300 OLY–UNK, unplayed voided game: never rated, fact 2 holds). Shares: every team-side sums to 5.000 (proj_avail min 4.593: caps); runtimes proj_hc 23 s, proj_decay 89 s, proj_avail 101 s | green | fbe6b8d
+5 | J4 harness (subagent D, round 1) merged; CLI `backtest --model m5` + `log_m5_backtest` (orchestrator) | diff reviewed; inputs cut at test[-1] so the daily log cannot move data_sha256; tracking test added | green | cf47d6a, d1a620b
+6 | J5 leakage suite (subagent E, round 1) merged; Platt leak D8 fixed by orchestrator; checklist items 43–44 | full suite 782 passed, cov 93.17%; ruff, mypy, vulture | green | (this commit)

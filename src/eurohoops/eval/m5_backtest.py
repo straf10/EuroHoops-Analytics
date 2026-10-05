@@ -1056,6 +1056,12 @@ def run_m5_backtest(
     splits: tuple[str, ...] = ("tuning",)
     if not tuning_only:
         splits = (*splits, "validation", *(("test",) if score_test else ()))
+    # Platt (a, b) of season s are fitted on every earlier season's outcomes: report only the
+    # seasons of the scored splits, so the verdict commit holds nothing fitted on validation.
+    reported = {str(s) for split in splits for s in getattr(spec, split)} | {
+        str(s) for s in spec.warmup
+    }
+    platt_reported = {s: ab for s, ab in m5.platt.items() if s in reported}
     sc = _score(
         ctx,
         spec,
@@ -1097,7 +1103,7 @@ def run_m5_backtest(
                 "kept": final.platt,
                 "log_loss_with": _round(decision.platt_loss["with"]),
                 "log_loss_without": _round(decision.platt_loss["without"]),
-                "coefficients": m5.platt,
+                "coefficients": platt_reported,
             },
             "total": {
                 "variant": final.total,
