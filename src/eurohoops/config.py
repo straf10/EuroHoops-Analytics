@@ -308,8 +308,11 @@ ODDS_RAW_DIR = Path("data/raw/odds/euroleague")
 class M5Grid:
     """M5 grids (week 14-16 J-c, J-d, J-e), every value chosen on tuning only."""
 
-    half_life_games: tuple[float, ...] = (2.0, 4.0, 8.0)
-    residual_half_life_days: tuple[float, ...] = (180.0, 365.0, 730.0)
+    # Both widened once on 2026-10-05 before the verdict (tuning only): the first tuning run's
+    # best residual half-life was 180 days and the best candidate overall used 2 games, each the
+    # lower grid edge (reports/week14-16_progress.md, iteration 7).
+    half_life_games: tuple[float, ...] = (1.0, 2.0, 4.0, 8.0)
+    residual_half_life_days: tuple[float, ...] = (60.0, 120.0, 180.0, 365.0, 730.0)
     residual_ridge: tuple[float, ...] = (10.0, 40.0, 160.0)
     rest_ridge: tuple[float, ...] = (25.0, 100.0)
 
