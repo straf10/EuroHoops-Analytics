@@ -9,7 +9,7 @@ timed() {  # $1 = competition, $2 = cache file
   if [ -s "$SCRATCH/$2" ]; then cat "$SCRATCH/$2"; return; fi
   start=$(date +%s)
   uv run eurohoops backtest --model m5 --competition "$1" $flag \
-    --tracking-uri "sqlite:///$SCRATCH/mlflow_m5.db" >/dev/null 2>&1 || { echo 99999; return; }
+    --tracking-uri "sqlite:///$(cygpath -m "$SCRATCH")/mlflow_m5.db" >/dev/null 2>&1 || { echo 99999; return; }
   echo $(( $(date +%s) - start ))
 }
 el=$(timed euroleague m5_runtime_s)

@@ -9,7 +9,7 @@ if [ -s "$SCRATCH/m3_runtime_s" ]; then
 else
   flag=$(uv run python -c "import json;print('--score-test' if json.load(open('reports/backtest_m3.json')).get('test_scored') else '')")
   start=$(date +%s)
-  uv run eurohoops backtest --model m3 $flag --tracking-uri "sqlite:///$SCRATCH/mlflow_m3.db" >/dev/null 2>&1 || exit 1
+  uv run eurohoops backtest --model m3 $flag --tracking-uri "sqlite:///$(cygpath -m "$SCRATCH")/mlflow_m3.db" >/dev/null 2>&1 || exit 1
   secs=$(( $(date +%s) - start ))
   git checkout -q -- reports/backtest_m3.json
 fi

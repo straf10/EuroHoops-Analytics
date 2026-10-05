@@ -4,7 +4,7 @@
 cd "$ROOT" || exit 1
 f=reports/backtest_m3.json
 flag=$(uv run python -c "import json;print('--score-test' if json.load(open('$f')).get('test_scored') else '')")
-uri="sqlite:///$SCRATCH/mlflow_m3.db"
+uri="sqlite:///$(cygpath -m "$SCRATCH")/mlflow_m3.db"  # a drive path: MLflow needs an absolute Windows path
 start=$(date +%s)
 uv run eurohoops backtest --model m3 $flag --tracking-uri "$uri" >/dev/null 2>&1 || exit 1
 echo $(( $(date +%s) - start )) > "$SCRATCH/m3_runtime_s"

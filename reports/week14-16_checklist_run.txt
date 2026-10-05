@@ -1,0 +1,378 @@
+Weeks 14-16 checklist run, 2026-10-05 (scripts/checklist.sh, Git Bash; times UTC)
+
+Fast gate by owner decision (another project's training job held ~40% CPU): items 1-19 and 43-47;
+items 20-42 skipped (owner runs the full pass later). Pass A ran 1-19 and 43-47; items 45-46 failed there on
+a check-script bug (MLflow rejects the Git Bash /tmp scratch path), fixed with cygpath -m; pass B reran 45-47.
+Pass B's only red, item 45's order line, was a missing 'TEST 2401d15' record in the progress file; added, and
+scripts/checks/m5_order.py rerun alone: 'verdict 5baa7c1, validation cf84a68, test 2401d15 / yes'.
+
+===== Pass A =====
+HEAD 2ad21ca, base origin/main, scratch /tmp/tmp.g44SgoICiD, start 18:11Z
+
+===== 1 uv sync --frozen =====
+Checked 137 packages in 14ms
+PASS
+
+===== 2 ruff check =====
+All checks passed!
+PASS
+
+===== 3 ruff format --check =====
+228 files already formatted
+PASS
+
+===== 4 mypy src =====
+Success: no issues found in 81 source files
+PASS
+
+===== 5 pytest + coverage =====
+41 files skipped due to complete coverage.
+Required test coverage of 85% reached. Total coverage: 92.98%
+794 passed, 1 warning in 749.85s (0:12:29)
+PASS
+
+===== 6 vulture =====
+PASS
+
+===== 7 web build from the fixture (copy of web/) =====
+npm notice
+[2m21:25:36[22m [34m[build][39m 2268 page(s) built in [1m21.92s[22m
+[2m21:25:36[22m [34m[build][39m [1mComplete![22m
+built 8 entries into site/
+PASS
+
+===== 8 Elo backtests reproduce the committed reports =====
+5 passed in 0.08s
+PASS
+
+===== 9 predictions append-only vs origin/main, Elo model_version unchanged =====
+removed/changed lines vs origin/main: 0
+reports/backtest_elo.json base=0.2.0+425e6393 now=0.2.0+425e6393
+reports/backtest_elo_gbl.json base=0.2.0+df05260c now=0.2.0+df05260c
+PASS
+
+===== 10 stint sample reproduces origin/main =====
+50 games: all checks 100% (five_on_court 100%, seconds 100%, minutes 100%, points 100%); wrote reports\stint_validation.json
+identical
+PASS
+
+===== 11 team_games coverage, points, possessions =====
+12 games missing, 0 points mismatches; EuroLeague sample within 2: 94.0% of teams; wrote reports\possessions.json
+rated games: 6390 with rows: 6378 missing (listed with reasons): 12
+points = games scores for every row
+EL sample: 50 games, within ±2: 94.0% of team-games, 88.0% of games; mean gap 0.024; FT weight matching PBP 0.4213
+PASS
+
+===== 12 stints mart thresholds, two builds identical =====
+4246 games, 141625 stints; pass rate 2011-14 95.9%, 2015+ 98.9%; wrote reports\stints_mart.json
+stints 4d6c6b5412e607b5ca2b4a66ef235076e700f3eb8c2c1a1d0ff07e4cfd87322c
+stint_game_checks 061f7825cb225cba3a9dbe80c2005e8ca9d6558b950cafbb02cf64bc051fec6c
+two builds: stored tables identical
+two builds: report byte-identical
+2011-14 0.9587 (>= 0.95); 2015+ 0.9894 (>= 0.985)
+passing games where stint points miss the final: []
+PASS
+
+===== 13 M1 unit tests, EuroLeague backtest runtime =====
+28 passed in 1.68s
+full EuroLeague M1 backtest (--score-test): 1204 s (limit 600 s)
+FAIL
+
+===== 14 leakage tests =====
+26 passed in 4.85s
+PASS
+
+===== 15 M1 reports complete and reproducible =====
+reports/backtest_m1.json: two runs byte-identical
+reports/backtest_m1.json: equals the committed report
+  gate student_t_const passed -0.000796 [-0.007725, 0.007076]
+reports/backtest_m1_gbl.json: two runs byte-identical
+reports/backtest_m1_gbl.json: equals the committed report
+  gate student_t_pace passed -0.006488 [-0.036953, 0.020842]
+PASS
+
+===== 16 MLflow parent + children; no-dev run skips tracking =====
+mlruns/ is gitignored
+euroleague: parent 42dd494eb7824ccdaf4818111b58f8a8 (euroleague 0.2.0+m1.cbd9aaa3): 30 params, 831 metrics, data_sha256 5491ba42151e…, commit 2ad21ca0f1 dirty=true
+  child c501f69d20074530883f164c336af246 normal_const: 35 params, 36 metrics, validation log loss 0.589663
+  child 6a1e59d47a93489b84ac5c9eca01e1de normal_pace: 35 params, 37 metrics, validation log loss 0.589762
+  child 1b1f4017b31a48928dea41601b95f937 student_t_const: 35 params, 37 metrics, validation log loss 0.587714
+  child 246b77d12d8543349f3ce1f7a4e06d32 student_t_pace: 35 params, 38 metrics, validation log loss 0.587792
+gbl: parent 1f9ea4b21f2f40fcb3cf032489b6f344 (gbl 0.2.0+m1.51ab8739): 30 params, 818 metrics, data_sha256 ab1e0fe4cfcf…, commit 2ad21ca0f1 dirty=true
+  child 2c56e31fe3134982abdac6d416707c74 normal_const: 35 params, 36 metrics, validation log loss 0.431306
+  child d199265bfb754162beefb0a05d557896 normal_pace: 35 params, 37 metrics, validation log loss 0.430736
+  child ade19915c60f4ddcbf30f702622e6f28 student_t_const: 35 params, 37 metrics, validation log loss 0.430290
+  child 569d3e53daa74bbdb78e615e257dc638 student_t_pace: 35 params, 38 metrics, validation log loss 0.429759
+no-dev env: mlflow not installed
+WARNING eurohoops.eval.tracking: MLflow is not installed (dev dependency): backtest not tracked
+no-dev backtest: same report, tracking skipped with a warning
+PASS
+
+===== 17 live M1 dry run =====
+euroleague: clock 2026-09-29T06:00Z, first run 8 M1 rows, second run 0; log unchanged by run 2: True; Elo log byte-identical: True
+    game_id,season,round,phase,tipoff_utc,home,away,p_home,exp_margin,exp_total,margin_sigma,margin_df,total_sigma,model,model_version,predicted_at_utc
+    E2026_13,2026,2,RS,2026-09-29T16:00:00Z,DUB,BAR,0.5948,2.59,168.47,10.4024,7,16.5309,m1,0.2.0+m1.cbd9aaa3,2026-09-29T06:00:00Z
+    E2026_11,2026,2,RS,2026-09-29T17:00:00Z,IST,MAD,0.4163,-2.28,164.42,10.4024,7,16.5309,m1,0.2.0+m1.cbd9aaa3,2026-09-29T06:00:00Z
+gbl: clock 2026-09-16T23:15Z, first run 1 M1 rows, second run 0; log unchanged by run 2: True; Elo log byte-identical: True
+    game_id,season,round,phase,tipoff_utc,home,away,p_home,exp_margin,exp_total,margin_sigma,margin_df,total_sigma,model,model_version,predicted_at_utc
+    GBL2026_3690EC22,2026,26,RS,2026-09-17T09:15:00Z,BB4B460F,2A25C696,0.5650,1.93,170.98,11.6551,20,16.9827,m1,0.2.0+m1.51ab8739,2026-09-16T23:15:00Z
+PASS
+
+===== 18 build + score + publish twice leaves the tree unchanged =====
+unchanged on the second run
+PASS
+
+===== 19 actionlint =====
+clean
+PASS
+
+===== 20 screenshots =====
+SKIPPED
+
+===== 21 F1 shots =====
+SKIPPED
+
+===== 22 F2 free throws =====
+SKIPPED
+
+===== 23 F3/F4 models =====
+SKIPPED
+
+===== 24 F5 report =====
+SKIPPED
+
+===== 25 F6 teams =====
+SKIPPED
+
+===== 26 F7 players =====
+SKIPPED
+
+===== 27 F8 charts =====
+SKIPPED
+
+===== 28 F9 MLflow + leakage =====
+SKIPPED
+
+===== 29 F10 model card =====
+SKIPPED
+
+===== 30 no-dev build + predict =====
+SKIPPED
+
+===== 31 G5 level variants =====
+SKIPPED
+
+===== 32 G1 outcome coding =====
+SKIPPED
+
+===== 33 M3 unit tests + facts =====
+SKIPPED
+
+===== 34 M3 leakage =====
+SKIPPED
+
+===== 35 M3 report =====
+SKIPPED
+
+===== 36 M3 runtime =====
+SKIPPED
+
+===== 37 M3 card + GBL stints =====
+SKIPPED
+
+===== 38 entity =====
+SKIPPED
+
+===== 39 crosswalk invariants =====
+SKIPPED
+
+===== 40 M4 units + leakage =====
+SKIPPED
+
+===== 41 M4 report =====
+SKIPPED
+
+===== 42 M4 card + entity doc =====
+SKIPPED
+
+===== 43 M5 unit tests (rest, shares, model core, harness), minutes.py unchanged, section 3 facts =====
+PASS
+75 passed in 101.52s (0:01:41)
+PASS
+
+===== 44 M5 leakage suite (planted leaks detected) =====
+44 passed in 149.24s (0:02:29)
+PASS
+
+===== 45 backtest_m5.json + gate/oracle/gap, two runs identical, GBL fixed choice, verdict < validation < test =====
+FAIL
+
+===== 46 backtest --model m5 runtime: EL < 1,800 s, GBL < 600 s =====
+RUNTIME euroleague 99999 s (limit 1800 s), gbl 99999 s (limit 600 s)
+recorded RUNTIME euroleague 886 s, gbl 259 s
+FAIL
+
+===== 47 docs/models/m5.md numbers = reports; CONTEXT terms =====
+6 passed in 0.09s
+PASS
+
+FAILS: 3 (end 19:41Z)
+
+===== Pass B (items 45-47) =====
+HEAD 2ad21ca, base origin/main, scratch /tmp/tmp.egVTq5wcuT, start 19:44Z
+
+===== 1 uv sync --frozen =====
+SKIPPED
+
+===== 2 ruff check =====
+SKIPPED
+
+===== 3 ruff format --check =====
+SKIPPED
+
+===== 4 mypy src =====
+SKIPPED
+
+===== 5 pytest + coverage =====
+SKIPPED
+
+===== 6 vulture =====
+SKIPPED
+
+===== 7 web build from the fixture =====
+SKIPPED
+
+===== 8 Elo backtests reproduce the committed reports =====
+SKIPPED
+
+===== 9 predictions append-only =====
+SKIPPED
+
+===== 10 stint sample =====
+SKIPPED
+
+===== 11 team_games =====
+SKIPPED
+
+===== 12 stints mart =====
+SKIPPED
+
+===== 13 M1 unit tests + runtime =====
+SKIPPED
+
+===== 14 leakage tests =====
+SKIPPED
+
+===== 15 M1 reports =====
+SKIPPED
+
+===== 16 MLflow =====
+SKIPPED
+
+===== 17 live M1 dry run =====
+SKIPPED
+
+===== 18 build + score + publish twice =====
+SKIPPED
+
+===== 19 actionlint =====
+SKIPPED
+
+===== 20 screenshots =====
+SKIPPED
+
+===== 21 F1 shots =====
+SKIPPED
+
+===== 22 F2 free throws =====
+SKIPPED
+
+===== 23 F3/F4 models =====
+SKIPPED
+
+===== 24 F5 report =====
+SKIPPED
+
+===== 25 F6 teams =====
+SKIPPED
+
+===== 26 F7 players =====
+SKIPPED
+
+===== 27 F8 charts =====
+SKIPPED
+
+===== 28 F9 MLflow + leakage =====
+SKIPPED
+
+===== 29 F10 model card =====
+SKIPPED
+
+===== 30 no-dev build + predict =====
+SKIPPED
+
+===== 31 G5 level variants =====
+SKIPPED
+
+===== 32 G1 outcome coding =====
+SKIPPED
+
+===== 33 M3 unit tests + facts =====
+SKIPPED
+
+===== 34 M3 leakage =====
+SKIPPED
+
+===== 35 M3 report =====
+SKIPPED
+
+===== 36 M3 runtime =====
+SKIPPED
+
+===== 37 M3 card + GBL stints =====
+SKIPPED
+
+===== 38 entity =====
+SKIPPED
+
+===== 39 crosswalk invariants =====
+SKIPPED
+
+===== 40 M4 units + leakage =====
+SKIPPED
+
+===== 41 M4 report =====
+SKIPPED
+
+===== 42 M4 card + entity doc =====
+SKIPPED
+
+===== 43 M5 units + facts =====
+SKIPPED
+
+===== 44 M5 leakage =====
+SKIPPED
+
+===== 45 backtest_m5.json + gate/oracle/gap, two runs identical, GBL fixed choice, verdict < validation < test =====
+reports/backtest_m5.json, reports/backtest_m5_games.csv: two runs byte-identical
+reports/backtest_m5.json, reports/backtest_m5_games.csv: equal the committed files
+GBL M5 report equals the committed one
+  gate proj_hc|core|d180|r40 PASS -0.003948 [-0.014946, 0.006291]
+verdict 5baa7c1, validation cf84a68, test None
+verdict < validation < test: NO
+FAIL
+
+===== 46 backtest --model m5 runtime: EL < 1,800 s, GBL < 600 s =====
+RUNTIME euroleague 840 s (limit 1800 s), gbl 249 s (limit 600 s)
+recorded RUNTIME euroleague 886 s, gbl 259 s
+PASS
+
+===== 47 docs/models/m5.md numbers = reports; CONTEXT terms =====
+6 passed in 0.08s
+PASS
+
+FAILS: 1 (end 20:17Z)
+
+===== m5_order.py rerun after recording TEST =====
+verdict 5baa7c1, validation cf84a68, test 2401d15
+verdict < validation < test: yes

@@ -7,19 +7,19 @@ cd "$ROOT" || exit 1
 f=reports/backtest_m5.json
 g=reports/backtest_m5_games.csv
 flag=$(uv run python -c "import json;print('--score-test' if json.load(open('$f')).get('test_scored') else '')")
-uri="sqlite:///$SCRATCH/mlflow_m5.db"
+uri="sqlite:///$(cygpath -m "$SCRATCH")/mlflow_m5.db"  # a drive path: MLflow needs an absolute Windows path
 export MLFLOW_DISABLE_AGENT_HINT=1
 start=$(date +%s)
-uv run eurohoops backtest --model m5 $flag --tracking-uri "$uri" >/dev/null 2>&1 || exit 1
+uv run eurohoops backtest --model m5 $flag --tracking-uri "$uri" >"$SCRATCH/m5_out.txt" 2>&1 || { tail -5 "$SCRATCH/m5_out.txt"; exit 1; }
 echo $(( $(date +%s) - start )) > "$SCRATCH/m5_runtime_s"
 cp "$f" "$SCRATCH/m5_run1.json"; cp "$g" "$SCRATCH/m5_run1.csv"
-uv run eurohoops backtest --model m5 $flag --tracking-uri "$uri" >/dev/null 2>&1 || exit 1
+uv run eurohoops backtest --model m5 $flag --tracking-uri "$uri" >"$SCRATCH/m5_out.txt" 2>&1 || { tail -5 "$SCRATCH/m5_out.txt"; exit 1; }
 cmp -s "$f" "$SCRATCH/m5_run1.json" && cmp -s "$g" "$SCRATCH/m5_run1.csv" \
   && echo "$f, $g: two runs byte-identical" || { echo "M5 runs differ"; exit 1; }
 git diff --quiet -- "$f" "$g" && echo "$f, $g: equal the committed files" \
   || { echo "M5 report differs from the committed one"; exit 1; }
 start=$(date +%s)
-uv run eurohoops backtest --model m5 --competition gbl $flag --tracking-uri "$uri" >/dev/null 2>&1 || exit 1
+uv run eurohoops backtest --model m5 --competition gbl $flag --tracking-uri "$uri" >"$SCRATCH/m5_out.txt" 2>&1 || { tail -5 "$SCRATCH/m5_out.txt"; exit 1; }
 echo $(( $(date +%s) - start )) > "$SCRATCH/m5_gbl_runtime_s"
 git diff --quiet -- reports/backtest_m5_gbl.json reports/backtest_m5_gbl_games.csv \
   && echo "GBL M5 report equals the committed one" || { echo "GBL M5 report differs"; exit 1; }
