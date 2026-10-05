@@ -1156,6 +1156,8 @@ def run_m5_backtest(
         report.update(
             _validation_blocks(sc, selection.shares[option], oracle_frame, score_test=score_test)
         )
+        if fixed is not None:  # J-g: the same comparison, reported only
+            report["gate"]["gated"] = False
     return report, _scored_frame(sc)
 
 

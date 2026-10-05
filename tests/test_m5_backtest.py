@@ -525,6 +525,7 @@ def test_a_fixed_choice_is_scored_as_given(
     assert _choice(report) == fixed
     assert "EuroLeague verdict" in report["chosen"]["fixed"]
     assert "fixed" not in tuned["chosen"]  # an unfixed report keeps its format
+    assert report["gate"]["gated"] is False  # J-g: the GBL comparison is reported, not gated
     expected = predict_games(inputs, spec=SPEC, player_part=fake_player_part, choice=fixed)
     m5 = frame[(frame["model"] == "m5") & (frame["split"] == "tuning")]
     by_id = expected.set_index("game_id").loc[m5["game_id"]]
