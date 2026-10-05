@@ -145,7 +145,13 @@ iteration | deliverable | checks run | result | commit
   - Test: M5 0.4790 vs M1 0.4835, diff −0.0046 [−0.0259, +0.0165]; totals CRPS vs M1 −0.207 [−0.333, −0.077], vs Elo −0.685 [−1.127, −0.252].
   - Greek after an EL game: validation n 41 M5 0.273 vs M1 0.219; test n 87 0.166 vs 0.197.
   - m5_rest.json: EL residual on rest differences, every 90% interval spans 0 in every split. GBL tuning short_rest +5.55 [1.16, 9.95] but −3.0 on validation: no stable rest effect beyond M5 (consistent with core over core_rest).
-  - test_m5_gap 2 passed | green | (this commit)
+  - test_m5_gap 2 passed | green | e1d8684
+15 | J9 card, CONTEXT terms, item 47 | test_model_card_m5 6 passed | green | c5af2d6
+16 | Owner decision (2026-10-05): fast gate only now (items 1–19 and 43–47); the owner runs the full pass later, because another project's training job holds ~40% CPU. Merged origin/main (a8aabbc daily predictions) | — | — | 6a5774f
+
+Recorded runtimes (last real-data runs; each under the other project's ~33–42% CPU load, so upper bounds):
+RUNTIME euroleague 886
+RUNTIME gbl 259
 
 VERDICT 5baa7c1
 VALIDATION cf84a68
