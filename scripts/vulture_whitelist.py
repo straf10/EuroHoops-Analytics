@@ -22,6 +22,7 @@ from eurohoops.models.minutes import expected_possessions, oracle_shares, projec
 from eurohoops.models.rapm import ModelColumns, build_minutes_rows, fit_decayed_minutes
 from eurohoops.models.rapm_posterior import Posterior, noise_variance, posterior, ridge_solution
 from eurohoops.models.rest import rest_features
+from eurohoops.models.rotation import projected_shares_variant
 from eurohoops.models.translation import StatFit
 from eurohoops.standings import EUROLEAGUE_2026, GBL_2026, Format, Series, rank
 
@@ -86,3 +87,6 @@ fit_platt
 apply_platt
 p_over
 p_cover
+
+# week 14-16 J2: called by eval/m5_backtest.py (J4, wave 2)
+projected_shares_variant
