@@ -38,6 +38,9 @@ from eurohoops.config import (
     M3,
     M3_PLAYERS_REPORT,
     M4,
+    M5,
+    M5_GBL,
+    M5_REST_REPORT,
     MART_PATH,
     SHOTS_REPORT,
 )
@@ -55,6 +58,7 @@ from eurohoops.eval.m2_backtest import search as m2_search
 from eurohoops.eval.m3_backtest import TunedRapm, build_rapm_inputs, prepare_data
 from eurohoops.eval.m3_players import season_end_players
 from eurohoops.eval.m4_backtest import net_offset, run_m4_backtest
+from eurohoops.eval.m5_rest import rest_report
 from eurohoops.eval.shot_making import player_report
 from eurohoops.eval.team_shot_quality import shots_with_xpts, team_report
 from eurohoops.eval.team_shot_quality import team_games as team_shot_games
@@ -277,6 +281,30 @@ def m3_players() -> None:
         f"{M3_PLAYERS_REPORT}: {summary['player_seasons']} player-seasons, "
         f"Spearman(sd_total, minutes)={summary['sd_total_minutes_spearman']}"
     )
+
+
+def m5_rest() -> None:
+    """Rest beyond M5 (week 14-16 J7): residual on rest differences, rest-day distribution and
+    the Greek clubs' two-competition weeks, from the committed per-game M5 predictions."""
+    missing = [p for p in (M5.games_report, M5_GBL.games_report) if not p.is_file()]
+    if missing:
+        log.error("missing %s; run: eurohoops backtest --model m5 (both competitions)", missing)
+        raise typer.Exit(code=1)
+    el = read_games(MART_PATH, EUROLEAGUE.name)
+    gbl = read_games(MART_PATH, GBL.name)
+    el, gbl = (g[g["season"] <= M5.test[-1]].reset_index(drop=True) for g in (el, gbl))
+    to_gbl = {code: gbl_id for gbl_id, code in GREEK_EL_CLUBS.items()}
+    blocks = {}
+    for name, games, other, club_map, spec, greek in (
+        ("euroleague", el, gbl, dict(GREEK_EL_CLUBS), M5, tuple(GREEK_EL_CLUBS.values())),
+        ("gbl", gbl, el, to_gbl, M5_GBL, tuple(GREEK_EL_CLUBS)),
+    ):
+        predictions = pd.read_csv(spec.games_report, dtype={"game_id": str})
+        blocks[name] = rest_report(
+            games, other, club_map, predictions, tuning=spec.tuning, greek=greek
+        )
+    write_json(M5_REST_REPORT, blocks)
+    typer.echo(f"{M5_REST_REPORT}: euroleague, gbl")
 
 
 def shot_charts() -> None:

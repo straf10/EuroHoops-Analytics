@@ -345,6 +345,7 @@ M5 = M5Backtest(
     validation=(2023,),
     test=(2024, 2025),
 )
+M5_REST_REPORT = Path("reports/m5_rest.json")
 M5_GBL = M5Backtest(
     Path("reports/backtest_m5_gbl.json"),
     Path("reports/backtest_m5_gbl_games.csv"),
