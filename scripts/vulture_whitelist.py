@@ -11,6 +11,7 @@ from eurohoops.models.box_impact import box_only_margins, pir_margins
 from eurohoops.models.minutes import expected_possessions, oracle_shares, projected_shares
 from eurohoops.models.rapm import ModelColumns, build_minutes_rows, fit_decayed_minutes
 from eurohoops.models.rapm_posterior import Posterior, noise_variance, posterior, ridge_solution
+from eurohoops.models.rest import rest_features
 from eurohoops.models.translation import StatFit
 from eurohoops.standings import EUROLEAGUE_2026, GBL_2026, Format, Series, rank
 
@@ -62,3 +63,6 @@ fit_decayed_minutes  # D6: convenience snapshot on top of build_minutes_rows, sa
 # weeks 12-14 I7: interval fields reach reports/m4_translation.json through fits_report's asdict
 StatFit.delta_lo90
 StatFit.delta_hi90
+
+# week 14-16 J1: called by eval/m5_backtest.py (J4, wave 2)
+rest_features
