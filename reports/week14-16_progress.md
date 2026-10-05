@@ -139,7 +139,13 @@ iteration | deliverable | checks run | result | commit
   - vs Elo: LL −0.0047 [−0.0191, +0.0083], totals CRPS −1.093 [−1.519, −0.688];
   - oracle LL 0.5803; gap projected − oracle LL +0.0035 [−0.0085, +0.0140], missed_top3 n 20, RMSE gap +0.79 [0.07, 1.54] | validation | cf84a68
 12 | GBL labelled not gated; checklist items 45–46 | ruff, mypy, fixed test | green | 997fc3e
-13 | **J7 EL test scored once** (2024–2025, n 732; RUNTIME 886 s, load from the other job: not for item 46) | M5 LL **0.6232** vs M1 **0.6232** (diff −0.000015, CI [−0.0095, +0.0098]); Brier +0.0004; margin CRPS +0.026 [−0.055, +0.105]; RMSE 11.697 vs 11.656; totals CRPS −0.055 [−0.120, +0.015]; vs Elo LL −0.0014 [−0.0114, +0.0088], totals CRPS −0.914 [−1.220, −0.577]. **The validation edge does not carry to test** (the same as M3). Oracle 0.6201; gap +0.0031 [−0.0041, +0.0105]; missed_top3 n 31, RMSE gap +0.84 [0.08, 1.65]. Test segments: pan_oly n 163 M5 0.583 vs M1 0.593; short_rest n 193 0.597 vs 0.613 | test | (this commit = test commit)
+13 | **J7 EL test scored once** (2024–2025, n 732; RUNTIME 886 s, load from the other job: not for item 46) | M5 LL **0.6232** vs M1 **0.6232** (diff −0.000015, CI [−0.0095, +0.0098]); Brier +0.0004; margin CRPS +0.026 [−0.055, +0.105]; RMSE 11.697 vs 11.656; totals CRPS −0.055 [−0.120, +0.015]; vs Elo LL −0.0014 [−0.0114, +0.0088], totals CRPS −0.914 [−1.220, −0.577]. **The validation edge does not carry to test** (the same as M3). Oracle 0.6201; gap +0.0031 [−0.0041, +0.0105]; missed_top3 n 31, RMSE gap +0.84 [0.08, 1.65]. Test segments: pan_oly n 163 M5 0.583 vs M1 0.593; short_rest n 193 0.597 vs 0.613 | test | 2401d15
+14 | J7 GBL (EL verdict as a fixed choice, reported, not gated; RUNTIME 259 s under the other job's load) + `m5-rest` + J8 gap test | GBL n tuning 336 / validation 163 / test 340, none dropped; M1 GBL replay = committed 0.429759.
+  - Validation: M5 0.4748 vs M1 0.4298, diff +0.0450 [+0.0108, +0.0834] (**worse**).
+  - Test: M5 0.4790 vs M1 0.4835, diff −0.0046 [−0.0259, +0.0165]; totals CRPS vs M1 −0.207 [−0.333, −0.077], vs Elo −0.685 [−1.127, −0.252].
+  - Greek after an EL game: validation n 41 M5 0.273 vs M1 0.219; test n 87 0.166 vs 0.197.
+  - m5_rest.json: EL residual on rest differences, every 90% interval spans 0 in every split. GBL tuning short_rest +5.55 [1.16, 9.95] but −3.0 on validation: no stable rest effect beyond M5 (consistent with core over core_rest).
+  - test_m5_gap 2 passed | green | (this commit)
 
 VERDICT 5baa7c1
 VALIDATION cf84a68
