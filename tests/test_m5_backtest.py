@@ -8,7 +8,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from pathlib import Path
 from typing import Any
 
@@ -503,6 +503,53 @@ def test_choose_candidate_breaks_ties_toward_the_simpler_candidate() -> None:
     assert choose_candidate([(_candidate("proj_hc", "core"), float("nan")), tied[0]], 0.0) == 1
     with pytest.raises(ValueError, match="finite"):
         choose_candidate([(_candidate("proj_hc", "core"), float("nan"))], 0.0005)
+
+
+def test_a_fixed_choice_is_scored_as_given(
+    inputs: M5Inputs, tuning_run: tuple[dict[str, Any], pd.DataFrame]
+) -> None:
+    """J-g: the GBL scores the EuroLeague verdict. Fix a candidate the tuning did not choose,
+    with the opposite Platt and totals decisions, and check it is scored exactly as given."""
+    tuned, _ = tuning_run
+    winner = _choice(tuned)
+    other_key = next(
+        k for k in tuned["grid"]["candidates"] if k != tuned["chosen"]["key"] and "|blend|" not in k
+    )
+    fixed = next(
+        replace(c, platt=not winner.platt, total="total_m1_rest")
+        for c in _all_choices()
+        if candidate_key(c) == other_key
+    )
+    report, frame = run_m5_backtest(inputs, spec=SPEC, player_part=fake_player_part, fixed=fixed)
+    assert report["chosen"]["key"] == other_key
+    assert _choice(report) == fixed
+    assert "EuroLeague verdict" in report["chosen"]["fixed"]
+    assert "fixed" not in tuned["chosen"]  # an unfixed report keeps its format
+    expected = predict_games(inputs, spec=SPEC, player_part=fake_player_part, choice=fixed)
+    m5 = frame[(frame["model"] == "m5") & (frame["split"] == "tuning")]
+    by_id = expected.set_index("game_id").loc[m5["game_id"]]
+    np.testing.assert_array_equal(m5["p_home"].to_numpy(), by_id["p_home"].to_numpy())
+    missing = replace(fixed, residual_ridge=12345.0)
+    with pytest.raises(ValueError, match="not a candidate"):
+        run_m5_backtest(inputs, spec=SPEC, player_part=fake_player_part, fixed=missing)
+
+
+def _all_choices() -> list[Choice]:
+    """Every core/core_rest candidate of ``SPEC``'s grid (the blend's component is data-chosen)."""
+    grid = SPEC.grid
+    options = [("proj_hc", None)] + [
+        (s, h) for s in ("proj_decay", "proj_avail") for h in grid.half_life_games
+    ]
+    out = []
+    for shares, hl in options:
+        for d in grid.residual_half_life_days:
+            for r in grid.residual_ridge:
+                out.append(Choice(shares, hl, "core", d, r, None, False, "total_m1"))
+                out += [
+                    Choice(shares, hl, "core_rest", d, r, k, False, "total_m1")
+                    for k in grid.rest_ridge
+                ]
+    return out
 
 
 def test_candidate_keys_are_readable_and_unique() -> None:

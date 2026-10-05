@@ -56,7 +56,13 @@ from eurohoops.eval.m3_backtest import (
     run_m3_backtest,
 )
 from eurohoops.eval.m3_gbl_backtest import el_spm_models, format_m3_gbl_table, run_m3_gbl_backtest
-from eurohoops.eval.m5_backtest import M5Inputs, PlayerPartFn, format_m5_table, run_m5_backtest
+from eurohoops.eval.m5_backtest import (
+    Choice,
+    M5Inputs,
+    PlayerPartFn,
+    format_m5_table,
+    run_m5_backtest,
+)
 from eurohoops.eval.scorecard import build_scorecard
 from eurohoops.eval.tracking import (
     default_tracking_uri,
@@ -639,6 +645,12 @@ def _backtest_m5(
     else:
         spec, comp, other = M5_GBL, GBL, EUROLEAGUE
         club_map = {el: gbl_id for gbl_id, el in GREEK_EL_CLUBS.items()}
+    fixed = None
+    if comp is GBL:  # J-g: the EuroLeague verdict's choice, no GBL-specific choice
+        if tuning_only or not M5.report.exists():
+            log.error("GBL M5 scores the committed EuroLeague verdict; run the EuroLeague first")
+            raise typer.Exit(code=1)
+        fixed = Choice(**json.loads(M5.report.read_text(encoding="utf-8"))["chosen"]["choice"])
     started = time.perf_counter()
     inputs, frame = _m5_inputs(comp, other, spec, club_map)
     if comp is EUROLEAGUE:
@@ -646,7 +658,12 @@ def _backtest_m5(
     else:
         player_part = _m5_player_part_gbl(inputs, frame, spec)
     report, predictions = run_m5_backtest(
-        inputs, spec=spec, player_part=player_part, tuning_only=tuning_only, score_test=score_test
+        inputs,
+        spec=spec,
+        player_part=player_part,
+        tuning_only=tuning_only,
+        score_test=score_test,
+        fixed=fixed,
     )
     write_json(spec.report, report)
     predictions.to_csv(spec.games_report, index=False, lineterminator="\n")

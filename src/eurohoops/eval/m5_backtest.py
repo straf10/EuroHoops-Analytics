@@ -759,10 +759,24 @@ class _Selection:
         return self.candidates[self.index]
 
 
+def _fixed_index(table: Sequence[tuple[Choice, float]], fixed: Choice) -> int:
+    """Index of the candidate that ``fixed`` names (Platt and totals are decided separately)."""
+    keys = [candidate_key(choice) for choice, _ in table]
+    key = candidate_key(fixed)
+    if key not in keys:
+        raise ValueError(f"the fixed choice {key} is not a candidate of this grid")
+    return keys.index(key)
+
+
 def _select(
-    ctx: _Context, spec: M5Backtest, inputs: M5Inputs, player_part: PlayerPartFn
+    ctx: _Context,
+    spec: M5Backtest,
+    inputs: M5Inputs,
+    player_part: PlayerPartFn,
+    fixed: Choice | None = None,
 ) -> _Selection:
-    """Every shares frame and player part once, every candidate margin once, then the choice."""
+    """Every shares frame and player part once, every candidate margin once, then the choice
+    (``fixed``: the named candidate instead of the tuning winner)."""
     shares: dict[_Option, pd.DataFrame] = {}
     parts: dict[_Option, FloatArray] = {}
     candidates: list[_Candidate] = []
@@ -777,7 +791,9 @@ def _select(
         (c.choice, _mean_log_loss(ctx, _distribution(ctx, spec, c.margin)[1], common))
         for c in candidates
     ]
-    index = choose_candidate(table, spec.tie_tolerance)
+    index = (
+        choose_candidate(table, spec.tie_tolerance) if fixed is None else _fixed_index(table, fixed)
+    )
     return _Selection(candidates, table, common, index, shares, parts)
 
 
@@ -791,9 +807,12 @@ class _Decision:
     totals_sigma: dict[str, float]
 
 
-def _decide(ctx: _Context, spec: M5Backtest, selection: _Selection) -> _Decision:
+def _decide(
+    ctx: _Context, spec: M5Backtest, selection: _Selection, fixed: Choice | None = None
+) -> _Decision:
     """Platt is kept iff it lowers the common-tuning-set log loss; the totals variant is the one
-    with the lower tuning CRPS (Normal, tuning-RMS sigma) on the winner's tuning games."""
+    with the lower tuning CRPS (Normal, tuning-RMS sigma) on the winner's tuning games. With
+    ``fixed`` both decisions are taken from it; the evidence is still computed and reported."""
     chosen = selection.chosen
     losses = {
         name: _mean_log_loss(
@@ -815,6 +834,8 @@ def _decide(ctx: _Context, spec: M5Backtest, selection: _Selection) -> _Decision
         platt=losses["with"] < losses["without"],
         total=TOTALS[1] if crps[TOTALS[1]] < crps[TOTALS[0]] else TOTALS[0],
     )
+    if fixed is not None:
+        choice = replace(chosen.choice, platt=fixed.platt, total=fixed.total)
     return _Decision(choice, losses, crps, sigma)
 
 
@@ -1047,14 +1068,17 @@ def run_m5_backtest(
     player_part: PlayerPartFn,
     tuning_only: bool = False,
     score_test: bool = False,
+    fixed: Choice | None = None,
 ) -> tuple[dict[str, Any], pd.DataFrame]:
     """The M5 report and the per-game predictions of the scored splits (module docstring).
     ``tuning_only``: the grid, the choice and tuning metrics only -- no validation or test number
     anywhere, since the verdict must be committed before validation is scored. ``score_test``:
-    also score the test seasons (only after the validation commit)."""
+    also score the test seasons (only after the validation commit). ``fixed``: score this
+    choice (Platt and totals included) instead of choosing one (J-g: the GBL is scored with the
+    EuroLeague verdict, no GBL-specific choice)."""
     ctx = _prepare(inputs, spec)
-    selection = _select(ctx, spec, inputs, player_part)
-    decision = _decide(ctx, spec, selection)
+    selection = _select(ctx, spec, inputs, player_part, fixed)
+    decision = _decide(ctx, spec, selection, fixed)
     final = decision.choice
     option = _option_of(final)
     m5 = _forecast(ctx, spec, final, selection.chosen.margin)
@@ -1105,6 +1129,7 @@ def run_m5_backtest(
         "chosen": {
             "choice": asdict(final),
             "key": sc.key,
+            **({"fixed": "the EuroLeague verdict (J-g), not chosen here"} if fixed else {}),
             "tuning_log_loss": _round(selection.table[selection.index][1]),
             "platt": {
                 "kept": final.platt,
