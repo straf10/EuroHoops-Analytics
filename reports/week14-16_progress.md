@@ -137,6 +137,9 @@ iteration | deliverable | checks run | result | commit
   - M5 LL **0.583765** vs M1 **0.587714** (the replay equals M1's committed number exactly), diff −0.003948, CI [−0.014946, +0.006291] → **gate PASS** (point rule);
   - Brier diff −0.0010 [−0.0058, +0.0035], margin CRPS −0.044 [−0.147, +0.049], totals CRPS −0.082 [−0.178, +0.006];
   - vs Elo: LL −0.0047 [−0.0191, +0.0083], totals CRPS −1.093 [−1.519, −0.688];
-  - oracle LL 0.5803; gap projected − oracle LL +0.0035 [−0.0085, +0.0140], missed_top3 n 20, RMSE gap +0.79 [0.07, 1.54] | validation | (this commit = validation commit)
+  - oracle LL 0.5803; gap projected − oracle LL +0.0035 [−0.0085, +0.0140], missed_top3 n 20, RMSE gap +0.79 [0.07, 1.54] | validation | cf84a68
+12 | GBL labelled not gated; checklist items 45–46 | ruff, mypy, fixed test | green | 997fc3e
+13 | **J7 EL test scored once** (2024–2025, n 732; RUNTIME 886 s, load from the other job: not for item 46) | M5 LL **0.6232** vs M1 **0.6232** (diff −0.000015, CI [−0.0095, +0.0098]); Brier +0.0004; margin CRPS +0.026 [−0.055, +0.105]; RMSE 11.697 vs 11.656; totals CRPS −0.055 [−0.120, +0.015]; vs Elo LL −0.0014 [−0.0114, +0.0088], totals CRPS −0.914 [−1.220, −0.577]. **The validation edge does not carry to test** (the same as M3). Oracle 0.6201; gap +0.0031 [−0.0041, +0.0105]; missed_top3 n 31, RMSE gap +0.84 [0.08, 1.65]. Test segments: pan_oly n 163 M5 0.583 vs M1 0.593; short_rest n 193 0.597 vs 0.613 | test | (this commit = test commit)
 
 VERDICT 5baa7c1
+VALIDATION cf84a68
