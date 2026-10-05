@@ -302,3 +302,55 @@ GBL_BOX_GAPS = Path("reports/gbl_box_gaps.csv")
 ODDS_CALLS = Path("odds/api_calls.csv")
 ODDS_TEAMS = Path("odds/euroleague_teams.csv")
 ODDS_RAW_DIR = Path("data/raw/odds/euroleague")
+
+
+@dataclass(frozen=True)
+class M5Grid:
+    """M5 grids (week 14-16 J-c, J-d, J-e), every value chosen on tuning only."""
+
+    # Both widened once on 2026-10-05 before the verdict (tuning only): the first tuning run's
+    # best residual half-life was 180 days and the best candidate overall used 2 games, each the
+    # lower grid edge (reports/week14-16_progress.md, iteration 7).
+    half_life_games: tuple[float, ...] = (1.0, 2.0, 4.0, 8.0)
+    residual_half_life_days: tuple[float, ...] = (60.0, 120.0, 180.0, 365.0, 730.0)
+    residual_ridge: tuple[float, ...] = (10.0, 40.0, 160.0)
+    rest_ridge: tuple[float, ...] = (25.0, 100.0)
+
+
+@dataclass(frozen=True)
+class M5Backtest:
+    """M5 roster-aware game predictor backtest (week 14-16 J4): walk forward by round."""
+
+    report: Path
+    games_report: Path
+    warmup: tuple[int, ...]
+    tuning: tuple[int, ...]
+    validation: tuple[int, ...]
+    test: tuple[int, ...]
+    grid: M5Grid = M5Grid()
+    projection_games: int = 5  # proj_hc: minutes share over the team's previous 5 games
+    absent_games: int = 2  # proj_avail: absent from each of the last 2 games drops a player
+    margin_variant: str = "student_t_const"
+    tie_tolerance: float = 0.0005  # tuning log-loss difference below which the simpler wins
+    total_rest_ridge: float = 100.0  # ridge penalty of the totals rest regression
+    bootstrap_resamples: int = 1000
+    bootstrap_seed: int = 20261020
+
+
+M5 = M5Backtest(
+    Path("reports/backtest_m5.json"),
+    Path("reports/backtest_m5_games.csv"),
+    warmup=_seasons(2011, 2014),
+    tuning=_seasons(2015, 2022),
+    validation=(2023,),
+    test=(2024, 2025),
+)
+M5_REST_REPORT = Path("reports/m5_rest.json")
+M5_GBL = M5Backtest(
+    Path("reports/backtest_m5_gbl.json"),
+    Path("reports/backtest_m5_gbl_games.csv"),
+    warmup=_seasons(2018, 2020),
+    tuning=(2021, 2022),
+    validation=(2023,),
+    test=(2024, 2025),
+)

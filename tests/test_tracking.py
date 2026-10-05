@@ -9,14 +9,17 @@ import pandas as pd
 import pytest
 
 from eurohoops.eval.m1_backtest import run_m1_backtest
+from eurohoops.eval.m5_backtest import run_m5_backtest
 from eurohoops.eval.tracking import (
     data_hash,
     default_tracking_uri,
     flatten_metrics,
     git_state,
     log_backtest,
+    log_m5_backtest,
 )
 from tests.conftest import REPO, make_games, make_team_games
+from tests.m5_synthetic import build_inputs, fake_player_part, small_spec
 from tests.test_m1_backtest import SPEC
 
 
@@ -73,6 +76,26 @@ def test_one_parent_and_a_child_per_variant(tmp_path: Path, report: dict[str, An
     assert [a.path for a in artifacts] == ["backtest_m1_euroleague.json"]
     assert again != run_id
     assert not (REPO / "mlruns").exists() or not any((REPO / "mlruns").glob("**/*" + run_id + "*"))
+
+
+def test_m5_backtest_is_one_run_with_the_choice_and_the_report(tmp_path: Path) -> None:
+    import mlflow  # noqa: PLC0415 - the dev dependency under test
+
+    m5_report, _ = run_m5_backtest(
+        build_inputs(), spec=small_spec(), player_part=fake_player_part, tuning_only=True
+    )
+    uri = default_tracking_uri(tmp_path / "mlruns")
+    run_id = log_m5_backtest(m5_report, "euroleague", uri)
+    assert run_id is not None
+    mlflow.set_tracking_uri(uri)
+    runs = mlflow.search_runs(experiment_names=["m5-backtest"])
+    assert isinstance(runs, pd.DataFrame)
+    run = runs[runs["run_id"] == run_id].iloc[0]
+    assert run["params.data_sha256"] == m5_report["data_sha256"]
+    assert run["params.chosen.form"] == m5_report["chosen"]["choice"]["form"]
+    assert run["metrics.chosen.tuning_log_loss"] == m5_report["chosen"]["tuning_log_loss"]
+    artifacts = mlflow.MlflowClient().list_artifacts(run_id)
+    assert [a.path for a in artifacts] == ["backtest_m5_euroleague.json"]
 
 
 def test_tracking_is_skipped_without_mlflow(

@@ -144,4 +144,22 @@ skip 42 "M4 card + entity doc" || {
   uv run pytest -q -p no:cacheprovider tests/test_model_card_m4.py 2>&1 | tail -1
   res "${PIPESTATUS[0]}"
 }
+skip 43 "M5 units + facts" || {
+  item "43 M5 unit tests (rest, shares, model core, harness), minutes.py unchanged, section 3 facts"
+  PYTHONIOENCODING=utf-8 uv run python "$CHECKS/m5_facts.py" | tail -1 && \
+    uv run pytest -q -p no:cacheprovider tests/test_rest.py tests/test_rotation.py tests/test_m5.py tests/test_m5_backtest.py tests/test_m5_rest.py tests/test_m5_gap.py 2>&1 | tail -1
+  res "${PIPESTATUS[0]}"
+}
+skip 44 "M5 leakage" || {
+  item "44 M5 leakage suite (planted leaks detected)"
+  uv run pytest -q -p no:cacheprovider tests/test_m5_leakage.py 2>&1 | tail -1
+  res "${PIPESTATUS[0]}"
+}
+skip 45 "M5 report" || { item "45 backtest_m5.json + gate/oracle/gap, two runs identical, GBL fixed choice, verdict < validation < test"; bash "$CHECKS/m5_reports.sh"; res $?; }
+skip 46 "M5 runtime" || { item "46 backtest --model m5 runtime: EL < 1,800 s, GBL < 600 s"; bash "$CHECKS/m5_runtime.sh"; res $?; }
+skip 47 "M5 card" || {
+  item "47 docs/models/m5.md numbers = reports; CONTEXT terms"
+  uv run pytest -q -p no:cacheprovider tests/test_model_card_m5.py 2>&1 | tail -1
+  res "${PIPESTATUS[0]}"
+}
 echo; echo "FAILS: $fails (end $(date -u +%H:%MZ))"; exit "$fails"
