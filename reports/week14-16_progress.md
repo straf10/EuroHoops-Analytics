@@ -60,6 +60,15 @@ Prompt: `docs/history/prompts/week-14-16.md`. Branch `week-14-16` (from `main` d
   with all components finite). The fit is a probit with non-negative coefficients and no intercept,
   p = Φ(Σ b_k m_k), giving w = b/Σb. Distribution afterwards: `fit_margin_model("student_t_const", …)` on tuning
   (as M1). Platt is kept only if it lowers tuning log loss.
+- **D6 (distribution fit, leakage scope):** the margin distribution (Student-t scale and df) and the total σ are fit on
+  tuning games in-sample and then frozen, exactly as M1's gate model was. So the leakage guarantee is:
+  - exp_margin and exp_total of every game never depend on that game or later games;
+  - p_home of validation/test games never depends on any validation/test outcome.
+
+  A tuning game's p_home does depend on later tuning outcomes through the two frozen dispersion numbers. This is the
+  declared exception, and it only affects the tuning score.
+- **D7 (wave-2 order):** E (leakage suite) starts after D (harness) is merged, because E reuses D's synthetic-league
+  builder `tests/m5_synthetic.py`. Running them in parallel would mean two builders or a file shared by two subagents.
 
 ## Interfaces (fixed by the orchestrator, pasted into every subagent prompt)
 ```python
@@ -100,4 +109,7 @@ Facts 1–3 and 6 are re-checked by `scripts/checks/m5_facts.py` (checklist item
 
 ## Iterations
 iteration | deliverable | checks run | result | commit
-1 | J0 branch, §0, §3 probes, D1–D5, interfaces | m5_facts.py PASS; ruff | green | (this commit)
+1 | J0 branch, §0, §3 probes, D1–D5, interfaces | m5_facts.py PASS; ruff | green | 3c603b5
+2 | J1 rest (subagent A, round 1) merged | diff reviewed (no leak: searchsorted side=left; scores unread); test_rest 13 passed; ruff, mypy | green | merge of 8b4b01a
+3 | J3 model core (subagent C, round 1) merged | diff reviewed (cutoff rows strictly before; blend on seasons < s; tolerances derived from the design, not the output); vulture whitelist conflict resolved by hand; test_m5 + test_rest 25 passed; ruff, mypy, vulture | green | 545112c
+4 | J2 shares (subagent B, round 1) merged; wave-1 real-data sanity | diff reviewed; full suite 711 passed, cov 93.61%; ruff, mypy, vulture. Real EL 2011–2025: rest_features 0.2 s, short_rest 15.1% of team-games, PAN/OLY other_comp_prev 31.9%; one days_rest < 1.5 (E2021_300 OLY–UNK, unplayed voided game: never rated, fact 2 holds). Shares: every team-side sums to 5.000 (proj_avail min 4.593: caps); runtimes proj_hc 23 s, proj_decay 89 s, proj_avail 101 s | green | fbe6b8d
