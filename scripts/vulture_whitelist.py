@@ -8,6 +8,16 @@ Remove an entry as soon as the pipeline uses the name.
 
 from eurohoops.config import GBL_STINTS_REPORT, M3, M3Backtest, M3Grid
 from eurohoops.models.box_impact import box_only_margins, pir_margins
+from eurohoops.models.m5 import (
+    ResidualFit,
+    apply_platt,
+    blend_by_season,
+    fit_blend,
+    fit_platt,
+    fit_residual,
+    p_cover,
+    p_over,
+)
 from eurohoops.models.minutes import expected_possessions, oracle_shares, projected_shares
 from eurohoops.models.rapm import ModelColumns, build_minutes_rows, fit_decayed_minutes
 from eurohoops.models.rapm_posterior import Posterior, noise_variance, posterior, ridge_solution
@@ -62,3 +72,13 @@ fit_decayed_minutes  # D6: convenience snapshot on top of build_minutes_rows, sa
 # weeks 12-14 I7: interval fields reach reports/m4_translation.json through fits_report's asdict
 StatFit.delta_lo90
 StatFit.delta_hi90
+
+# week 14-16 J3: called by eval/m5_backtest.py (J4, wave 2)
+ResidualFit
+fit_residual
+fit_blend
+blend_by_season
+fit_platt
+apply_platt
+p_over
+p_cover
