@@ -1,5 +1,5 @@
 {
-  "rows_in_log": 33,
+  "rows_in_log": 34,
   "rows_excluded_late": 0,
   "rows_not_provable": 2,
   "games_not_provable": [
@@ -352,7 +352,7 @@
     "b0_log_loss": 0.583393
   },
   "m1": {
-    "rows_in_log": 20,
+    "rows_in_log": 21,
     "rows_excluded_late": 0,
     "m1": {
       "n": 20,
