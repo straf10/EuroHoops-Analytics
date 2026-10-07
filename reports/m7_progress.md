@@ -207,6 +207,9 @@ VERDICT 8b8fa8c
 7 | K7 validation scored once | gate block | FAIL (point_sim lower Brier) | c65e91c
 
 VALIDATION c65e91c
+8 | K7 test scored once | m7_order | sim_full level with point_sim on test | d885fc8
+
+TEST d885fc8
 
 ## K6: tuning and verdict (EuroLeague, tuning seasons 2016, 2017, 2018, 2020, 2022; 252 team-checkpoints)
 `uv run eurohoops backtest --model m7 --tuning-only` (quiet machine: CPU 12%, no other python jobs), 129 s.
