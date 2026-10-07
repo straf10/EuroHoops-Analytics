@@ -199,6 +199,31 @@ iteration | deliverable | checks run | result | commit
 1 | K0: progress file, §3 facts (`m7_facts.py`, fixtures), `sim/played.py` | ruff, format, mypy, vulture, test_sim_played, m7_facts | PASS | 291b312
 2 | wave 1: K2 formats (B, 1 round), K3 engine + `rank_by_wins` (C, 1 round), K1 posterior (A, 2 rounds: D7) merged | per-deliverable tests rerun after merge; fast gate | see iteration 3 | e273bdc, 84915fe
 3 | fast gate after wave 1 (HEAD 84915fe/d5bd175) | items 1-6, 9, 11, 14, 17, 19, 27-29, 32-34, 40, 42-44 | 2 FAIL: item 9 (origin/main had moved: 20 newer prediction rows missing on the branch; fixed by merging origin/main, be4a070, item 9 PASS, 0 changed lines); item 28 (its MLflow half reads the M2 runs item 24 writes in the same SCRATCH, and item 24 is in the fast-gate SKIP list; its leakage half passes, 7 passed). Item 5: 895 passed. All other run items PASS | be4a070
+4 | K4 harness (D, 1 round) merged; checklist items 48-51 added | ruff, format, mypy, vulture; 168 tests over the M7 + neighbouring files | PASS | 0b13d23 merge, 5cc64c2
+5 | K5 leakage suite (E, 1 round) merged; E's `checkpoint_inputs` refactor checked output-identical by the orchestrator (pre/post code on the synthetic league: EL default/tuning-only/test, GBL fixed; JSON + CSV byte-identical) | items 48, 49 | PASS (49: 32 passed) | merge of m7-e
+
+## K6: tuning and verdict (EuroLeague, tuning seasons 2016, 2017, 2018, 2020, 2022; 252 team-checkpoints)
+`uv run eurohoops backtest --model m7 --tuning-only` (quiet machine: CPU 12%, no other python jobs), 129 s.
+
+| model | Brier (direct cut) | RPS (final rank) | log loss | Spiegelhalter z |
+|---|---|---|---|---|
+| sim_full | 0.10932 | 0.078114 | 0.339104 | -0.42 |
+| sim_net | 0.109624 | 0.078228 | 0.339803 | -0.34 |
+| sim_inflate_1.5 | 0.110435 | 0.078799 | 0.342678 | -0.87 |
+| sim_inflate_2 | 0.111336 | 0.079439 | 0.346574 | -1.28 |
+| point_sim (baseline) | 0.108517 | 0.078143 | 0.33472 | 1.38 |
+| elo_sim (baseline) | 0.103419 | 0.077422 | 0.317801 | 0.62 |
+| standings_now (baseline) | 0.174603 | 0.121102 | 1.608237 | — (0/1 forecasts) |
+
+- **Choice (K-i): `sim_full`**, lowest tuning RPS among the variants (0.078114; sim_net +0.000114 is within the 0.002
+  tie tolerance, and the tie goes to the simpler sim_full anyway).
+- **Inflation grid edge:** RPS rises with c (1 < 1.5 < 2); the best variant is not the grid's largest c, so the grid
+  is not widened (`best_on_edge` false).
+- Observed on tuning, recorded before validation: the point-strength baseline has a lower Brier than sim_full
+  (difference sim_full − point_sim +0.0008, 95% CI [−0.0034, 0.0046]) and elo_sim is lower still (+0.0059,
+  CI [−0.0013, 0.0130]); sim_full beats standings_now (−0.0653, CI [−0.1110, −0.0232]). No re-tuning follows from this.
+- The tuning-only report and CSV hold no validation or test number (checked: seasons 2016–2022 only; the only "2023"
+  strings are 2022-23 cutoff dates).
 
 ## Subagent log
 - Worktrees: created by the orchestrator (`git worktree add C:\Python\EH-m7-{a,b,c} -b m7-{a,b,c} week-14-16-m7`), not by
@@ -211,3 +236,9 @@ iteration | deliverable | checks run | result | commit
 - Wave 1 B (K2 formats): 1 round, green, no changes requested.
 - Wave 1 C (K3 engine): 1 round, green. Measured: EL 20 teams / 369 games / 10k sims 9.1 s; 18-20 teams 4k sims 2-3 s.
   Merge conflicts in `scripts/vulture_whitelist.py` (three appended blocks) resolved by keeping all blocks.
+- Wave 2 D (K4 harness): 1 round, no changes requested; D could not finish the full suite on the loaded machine (ran the
+  touched test files); the orchestrator's fast gate covers it.
+- Wave 2b E (K5 leakage): 1 round. Reading of "a change to a game at or after the cutoff": result edits leave every
+  forecast and input bit-identical; schedule edits (deleting/adding a remaining fixture) leave the posterior, pace, Elo and
+  standings state identical while the simulated schedule (an allowed input, §1) changes. Planted leaks (sampler reading
+  the final table; posterior through the season end) are both detected.
