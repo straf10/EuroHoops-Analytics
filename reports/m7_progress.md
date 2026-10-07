@@ -72,6 +72,11 @@ Re-checked by `scripts/checks/m7_facts.py` (checklist item 48) against `tests/fi
 - **D6 (tie-break speed):** `standings` gains one function, `rank_by_wins` (new, `rank` untouched), so the engine
   passes only the games of tied teams; a test proves it equals `rank` on 1,000 random tables.
 
+- **D7 (σ² degrees of freedom, amends the K1 interface):** σ² = Σ d_i·poss_i·r_i² / (Σ d_i − p_eff) with
+  p_eff = tr((G + P)⁻¹ G), the standard ridge residual-variance estimator. The first definition (denominator Σ d_i)
+  is biased low by about (n − p)/n; K1's synthetic coverage test exposed it (subagent A, round 1). Fixed in the
+  estimator; the test's league size, seed and band stay as first designed.
+
 ## Interfaces (fixed before wave 1; pasted verbatim into every subagent prompt)
 
 ```python
@@ -184,3 +189,17 @@ def rank_by_wins(
 
 ## Iterations
 iteration | deliverable | checks run | result | commit
+1 | K0: progress file, §3 facts (`m7_facts.py`, fixtures), `sim/played.py` | ruff, format, mypy, vulture, test_sim_played, m7_facts | PASS | 291b312
+2 | wave 1: K2 formats (B, 1 round), K3 engine + `rank_by_wins` (C, 1 round), K1 posterior (A, 2 rounds: D7) merged | per-deliverable tests rerun after merge; fast gate | see iteration 3 | e273bdc, 84915fe
+
+## Subagent log
+- Worktrees: created by the orchestrator (`git worktree add C:\Python\EH-m7-{a,b,c} -b m7-{a,b,c} week-14-16-m7`), not by
+  the Agent tool's `isolation: "worktree"`, which would have created them inside `C:\Python\Sports_Project` (off limits
+  in this run). Same isolation; no merge-from-main step needed.
+- Wave 1 A (K1 posterior): round 1 passed the coverage test only after moving the synthetic league from 10 to 12
+  teams; rejected (test tuned to the observed result). Root cause: σ² without a degrees-of-freedom correction (D7).
+  Round 2: estimator fixed, test back to 10 teams / same seed / same band; green. Prompt glitch: A's first prompt
+  carried an unexpanded `{COMMON}` placeholder; the project rules were sent at once by message, before A's first commit.
+- Wave 1 B (K2 formats): 1 round, green, no changes requested.
+- Wave 1 C (K3 engine): 1 round, green. Measured: EL 20 teams / 369 games / 10k sims 9.1 s; 18-20 teams 4k sims 2-3 s.
+  Merge conflicts in `scripts/vulture_whitelist.py` (three appended blocks) resolved by keeping all blocks.
