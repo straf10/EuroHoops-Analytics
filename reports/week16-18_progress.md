@@ -362,10 +362,13 @@ is the one exception, written today by `logs.write_json` (indent 2): the `/site`
 
 ## Iterations
 iteration 1 | L0 branch, progress file, decisions, §3 facts, interfaces, `player_seasons.py`, M6 config, fastapi + pytest-xdist | m6_facts.py PASS (36 checks); fast gate (D8 skip list) FAILS 0 in 441 s; ruff/format/mypy/vulture clean | green | (this commit)
+iteration 2 | wave 1 merged: L1 (A), L2 (B, round 2), L3 (C), L4 (D), L5 (E) | each Done-when test file rerun in the main tree after merge (projection/aging/board/similarity/player_seasons 65 passed, API 85 passed), ruff, format, mypy, vulture clean, `docker compose config` valid; fast gate deferred while F runs | green | merges ff1bae2 310c5fb d69573c 3436934 fd9a628
 
 ## Subagent log
 | wave | subagent | deliverable | rounds | notes |
 |---|---|---|---|---|
 | 1 | D | L4 similarity | 1 | `tests/test_similarity.py` already existed (name matcher), so its tests are `tests/test_player_similarity.py`; self-retrieval through `self_retrieval_rate` (evaluation only) |
 | 1 | C | L3 board | 1 | whitelist merge conflict resolved (both blocks kept) |
+| 1 | A | L1 projection | 1 | coverage test on 7 of the 12 box stats with the true target exposure (real-data coverage is the L-h check); `fit_drift` gained an optional `impact` argument |
+| 1 | E | L5 read model + API | 1 | `docker build` not run (daemon off); `docker compose config` valid; `/simulations/latest` reason text built from the committed gate numbers (`passed` read from the report); `tests/api_tree.py` shared test helper outside its file list (accepted) |
 | 1 | B | L2 aging | 2 | round 1 narrowed the synthetic possession gap (1200 → 1000) after a failure (rejected); root cause: outcome-dependent weights → D10; original 1200/450 design passes unchanged; impact-stat test added |
