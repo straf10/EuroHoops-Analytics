@@ -101,3 +101,9 @@ from eurohoops.sim.played import regulation_scores, season_results  # noqa: E402
 
 regulation_scores
 season_results
+
+# week 14-16 M7 K2: used by eval/m7_backtest.py (K4) and live simulate (K8)
+from eurohoops.sim.formats import cut_lines, season_format  # noqa: E402
+
+cut_lines
+season_format
