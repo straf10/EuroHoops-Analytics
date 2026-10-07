@@ -228,6 +228,21 @@ VERDICT 8b8fa8c
 - The tuning-only report and CSV hold no validation or test number (checked: seasons 2016–2022 only; the only "2023"
   strings are 2022-23 cutoff dates).
 
+## K7: validation 2023 (scored once; 18 teams × 3 checkpoints = 54 team-checkpoints), 166 s
+| model | Brier | RPS | log loss | z |
+|---|---|---|---|---|
+| sim_full (chosen) | 0.091951 | 0.084036 | 0.294073 | -1.15 |
+| point_sim | 0.088277 | 0.0841 | 0.2868 | -0.81 |
+| elo_sim | 0.1042 | 0.0837 | 0.3271 | -0.09 |
+| standings_now | 0.148148 | 0.1285 | 1.3646 | — |
+
+**Gate: FAIL.** sim_full's validation Brier is below standings_now's (0.091951 < 0.148148) but not below point_sim's
+(0.088277); pooled tuning + validation Spiegelhalter z = −0.87 (|z| < 1.96, not miscalibrated). Bootstrap
+(18 team clusters): sim_full − point_sim +0.0037, 95% CI [−0.0039, +0.0106] (spans 0); − standings_now −0.0562
+[−0.1944, +0.0544]; − elo_sim −0.0122 [−0.0332, +0.0050]. point_sim is ahead at every checkpoint (25%: 0.1278 vs 0.1225;
+50%: 0.1015 vs 0.0969; 75%: 0.0465 vs 0.0455). Reliability (10 bins) shows no systematic over- or under-confidence
+(z −1.15 on validation). Consequence (K-j): `eurohoops simulate` is built but not added to the daily workflow.
+
 ## Subagent log
 - Worktrees: created by the orchestrator (`git worktree add C:\Python\EH-m7-{a,b,c} -b m7-{a,b,c} week-14-16-m7`), not by
   the Agent tool's `isolation: "worktree"`, which would have created them inside `C:\Python\Sports_Project` (off limits
