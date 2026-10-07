@@ -1,0 +1,142 @@
+{
+ "euroleague_2016": {
+  "teams": 16,
+  "rounds": 30,
+  "games": 240,
+  "games_per_team": [
+   30
+  ],
+  "played": 240,
+  "forfeits": 0
+ },
+ "euroleague_2017": {
+  "teams": 16,
+  "rounds": 30,
+  "games": 240,
+  "games_per_team": [
+   30
+  ],
+  "played": 240,
+  "forfeits": 0
+ },
+ "euroleague_2018": {
+  "teams": 16,
+  "rounds": 30,
+  "games": 240,
+  "games_per_team": [
+   30
+  ],
+  "played": 240,
+  "forfeits": 0
+ },
+ "euroleague_2020": {
+  "teams": 18,
+  "rounds": 34,
+  "games": 306,
+  "games_per_team": [
+   34
+  ],
+  "played": 306,
+  "forfeits": 0
+ },
+ "euroleague_2022": {
+  "teams": 18,
+  "rounds": 34,
+  "games": 306,
+  "games_per_team": [
+   34
+  ],
+  "played": 306,
+  "forfeits": 0
+ },
+ "euroleague_2023": {
+  "teams": 18,
+  "rounds": 34,
+  "games": 306,
+  "games_per_team": [
+   34
+  ],
+  "played": 306,
+  "forfeits": 0
+ },
+ "euroleague_2024": {
+  "teams": 18,
+  "rounds": 34,
+  "games": 306,
+  "games_per_team": [
+   34
+  ],
+  "played": 306,
+  "forfeits": 0
+ },
+ "euroleague_2025": {
+  "teams": 20,
+  "rounds": 38,
+  "games": 380,
+  "games_per_team": [
+   38
+  ],
+  "played": 380,
+  "forfeits": 0
+ },
+ "gbl_2020": {
+  "teams": 12,
+  "rounds": 22,
+  "games": 132,
+  "games_per_team": [
+   22
+  ],
+  "played": 132,
+  "forfeits": 0
+ },
+ "gbl_2021": {
+  "teams": 13,
+  "rounds": 26,
+  "games": 156,
+  "games_per_team": [
+   24
+  ],
+  "played": 156,
+  "forfeits": 0
+ },
+ "gbl_2022": {
+  "teams": 12,
+  "rounds": 22,
+  "games": 132,
+  "games_per_team": [
+   22
+  ],
+  "played": 132,
+  "forfeits": 0
+ },
+ "gbl_2023": {
+  "teams": 12,
+  "rounds": 22,
+  "games": 132,
+  "games_per_team": [
+   22
+  ],
+  "played": 132,
+  "forfeits": 0
+ },
+ "gbl_2024": {
+  "teams": 12,
+  "rounds": 22,
+  "games": 132,
+  "games_per_team": [
+   22
+  ],
+  "played": 132,
+  "forfeits": 0
+ },
+ "gbl_2025": {
+  "teams": 13,
+  "rounds": 26,
+  "games": 156,
+  "games_per_team": [
+   24
+  ],
+  "played": 156,
+  "forfeits": 0
+ }
+}

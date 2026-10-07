@@ -95,3 +95,9 @@ projected_shares_variant
 # week 14-16 J4: predict_games is the public per-choice entry point the leakage suite (J5) and
 # the J8 gap recomputation test call; src does not call it
 predict_games
+
+# week 14-16 M7 K0: played results for the M7 backtest (K4) and live simulate (K8)
+from eurohoops.sim.played import regulation_scores, season_results  # noqa: E402
+
+regulation_scores
+season_results
