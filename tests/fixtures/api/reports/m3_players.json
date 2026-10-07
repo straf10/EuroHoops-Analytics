@@ -1,0 +1,27 @@
+{
+  "model": "m3",
+  "variant": "rapm_spm",
+  "units": "points per 100 possessions (O + D = net)",
+  "interval": 0.9,
+  "snapshot": "Each season rating is the walk-forward fit using only stints before that season last round first tip-off.",
+  "seasons": {
+    "2023": {
+      "cutoff_utc": "2024-05-24T18:00:00+00:00",
+      "n_players": 2,
+      "n_seen": 2,
+      "players": [
+        {"player_id": "P013382", "o": 0.5, "d": 1.0, "total": 1.5, "sd_o": 1.0, "sd_d": 1.0, "sd_total": 1.4, "ci90_o": [-1.1, 2.1], "ci90_d": [-0.6, 2.6], "ci90_total": [-0.8, 3.8], "minutes": 700.0, "games": 33, "teams": ["TEL"], "seen": true},
+        {"player_id": "P006835", "o": 2.0, "d": -1.0, "total": 1.0, "sd_o": 1.1, "sd_d": 1.1, "sd_total": 1.5, "ci90_o": [0.2, 3.8], "ci90_d": [-2.8, 0.8], "ci90_total": [-1.5, 3.5], "minutes": 900.0, "games": 34, "teams": ["TEL"], "seen": true}
+      ]
+    },
+    "2024": {
+      "cutoff_utc": "2025-05-24T18:00:00+00:00",
+      "n_players": 2,
+      "n_seen": 2,
+      "players": [
+        {"player_id": "P013382", "o": 1.0, "d": 1.5, "total": 2.5, "sd_o": 0.9, "sd_d": 0.9, "sd_total": 1.2, "ci90_o": [-0.5, 2.5], "ci90_d": [0.0, 3.0], "ci90_total": [0.5, 4.5], "minutes": 1100.0, "games": 38, "teams": ["TEL"], "seen": true},
+        {"player_id": "P006835", "o": 3.0, "d": -0.5, "total": 2.5, "sd_o": 1.0, "sd_d": 1.0, "sd_total": 1.3, "ci90_o": [1.4, 4.6], "ci90_d": [-2.1, 1.1], "ci90_total": [0.4, 4.6], "minutes": 1200.0, "games": 39, "teams": ["TEL"], "seen": true}
+      ]
+    }
+  }
+}

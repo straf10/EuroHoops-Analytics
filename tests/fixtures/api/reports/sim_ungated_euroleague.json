@@ -1,0 +1,19 @@
+{
+  "competition": "euroleague",
+  "season": 2026,
+  "after_round": 1,
+  "cutoff_utc": "2026-10-08T18:00:00Z",
+  "simulated_at_utc": "2026-10-08T07:00:00Z",
+  "model": "m7-sim_full",
+  "model_version": "0.1.0+m7.fixture",
+  "n_sims": 10000,
+  "seed": 20261102,
+  "format": {"sources": ["fixture"], "unverified": []},
+  "teams": [
+    {"simulated_at_utc": "2026-10-08T07:00:00Z", "season": 2026, "after_round": 1, "team": "BAR", "p_direct_playoffs": "0.4000", "p_play_in": "0.3000", "p_top10": "0.7000", "p_final_four": "0.1500", "p_title": "0.0500", "expected_wins": "19.50", "rank_p10": 3, "rank_p50": 7, "rank_p90": 12, "model": "m7-sim_full", "model_version": "0.1.0+m7.fixture"}
+  ],
+  "p_playoffs": {"BAR": 0.7},
+  "p_final": {"BAR": 0.05},
+  "gated": false,
+  "gate": {"passed": false, "reason": "written by the ungated command"}
+}

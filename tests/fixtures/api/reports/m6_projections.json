@@ -1,0 +1,51 @@
+{
+  "model": "m6",
+  "variant": "proj_full",
+  "half_life": 2.0,
+  "gated": true,
+  "gate_passed": false,
+  "season": 2026,
+  "checkpoint": 0.0,
+  "data_sha256": "0123456789abcdef0123456789abcdef01234567",
+  "stats": ["pts", "fg3a", "fta", "ast", "tov", "oreb", "dreb", "stl", "blk", "ts", "fg3", "ft", "spm", "brapm"],
+  "players": [
+    {
+      "person_id": "P:P013382",
+      "competition": "euroleague",
+      "team": "TEL",
+      "name": "Levi Randolph",
+      "debut_season": 2016,
+      "stats": {
+        "pts": {"mean": 20.5, "lo80": 15.0, "hi80": 26.0},
+        "ts": {"mean": 0.55, "lo80": 0.5, "hi80": 0.6}
+      },
+      "exposure": 1800.0,
+      "n_seasons": 6,
+      "flags": []
+    },
+    {
+      "person_id": "G:ABCD1234",
+      "competition": "gbl",
+      "team": "00000005",
+      "name": "Nikos Papas",
+      "debut_season": 2023,
+      "stats": {"pts": {"mean": 18.0, "lo80": 11.0, "hi80": 25.0}},
+      "exposure": 900.0,
+      "n_seasons": 2,
+      "flags": ["no_age", "no_impact_input"]
+    }
+  ],
+  "undervalued": [
+    {
+      "person_id": "G:ABCD1234",
+      "team": "00000005",
+      "name": "Nikos Papas",
+      "seasons_since_debut": 2,
+      "minutes": 900.0,
+      "projected_brapm": null,
+      "projected_spm": 1.5,
+      "translated_el": {"pts": 16.2, "ast": 3.1},
+      "reason": "translated EuroLeague points rate is above the EuroLeague median"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+# One-command local run of the read-only API on the local data: `docker compose up`,
+# then http://localhost:8000/docs. Nothing is deployed publicly.
+services:
+  api:
+    build: .
+    image: eurohoops-api
+    ports:
+      - "8000:8000"
+    volumes:
+      # the repository's data, read-only: the API never writes a file
+      - ./data:/srv/eurohoops/data:ro
+      - ./reports:/srv/eurohoops/reports:ro
+      - ./predictions:/srv/eurohoops/predictions:ro
+    read_only: true
+    tmpfs:
+      - /tmp
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/openapi.json')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

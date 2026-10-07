@@ -1,0 +1,8 @@
+{
+  "model": "m6",
+  "season": 2025,
+  "dimensions": {"shot_making": {"stability": 0.31, "n_min": 100, "k": 120.0}},
+  "rows": [
+    {"person_id": "P:P013382", "competition": "euroleague", "season": 2025, "dimension": "shot_making", "observed": 4.0, "expected": 1.0, "gap": 3.0, "se": 2.0, "z": 1.5, "stability": 0.31, "persist": 0.9, "expected_next": 1.9, "n": 130, "label": "over", "name": "Levi Randolph", "team": "TEL"}
+  ]
+}
