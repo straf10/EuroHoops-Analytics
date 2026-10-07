@@ -64,6 +64,21 @@ already up to date on 2026-10-07). Orchestrator Opus 5.5; subagents Sonnet 5.5 i
   posterior variance. A weight that grows with the s+1 exposure under-represents the decliners (who get the short
   seasons), so the harmonic-mean weights of I3 left part of the survivor bias in (subagent B, round 1). With the
   correction off the uncorrected harmonic weights stay (the planted bias must show).
+- **D11 (loss standardisation, walk-forward and fixed):** each stat's between-player SD for the projection
+  loss (L-g) is the possession-weighted SD of that stat over player-seasons with ≥ 500 possessions in the seasons
+  before the first tuning target (EuroLeague 2008–2015; GBL 2018, the one box season before its first target).
+  One fixed SD per stat and competition for every target: comparable across targets and never touching a target
+  season (§1 walk-forward). Impact SDs: the same rule on the impact rows (EuroLeague BRAPM snapshots 2011–2015).
+- **D12 (rest-of-season targets):** checkpoint f of season t: k = ⌊f·R⌋ completed regular-season rounds (M7's
+  rule), cutoff = first tip-off of round k + 1. History = every game before the cutoff (the current season as a
+  `partial` row); truth = the player's rates over the regular-season games at or after the cutoff; scored set =
+  ≥ 500·(1 − f) possessions after the cutoff and a senior season before t (the L-g floor scaled to the window).
+  Reference exposure for the interval = the player's possessions before the cutoff in season t, scaled by
+  (1 − f)/f. Impact at checkpoints: SPM truth and inputs from box rates (D4); BRAPM not scored at checkpoints
+  (no snapshot exists at the cutoff; reported as not available).
+- **D13 (impact truth for next-season targets):** BRAPM truth = the target season's committed season-end snapshot
+  (`m3_players.json`, D4), scored with its own sd ignored; SPM truth = the SPM model fitted before the target
+  season applied to the target season's box rates. Both enter the loss and CRPS only for EuroLeague targets.
 
 ## §3 findings (L0, real data, HEAD 6b2239b; re-checked by `scripts/checks/m6_facts.py`, item 54)
 Fixture: `tests/fixtures/m6_facts.json`.
