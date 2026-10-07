@@ -2,7 +2,6 @@
 
 import math
 from dataclasses import replace
-from pathlib import Path
 
 import numpy as np
 import pytest
@@ -15,8 +14,10 @@ from eurohoops.models.team_eff import (
     DecayParams,
     History,
     RatingPosterior,
+    _cutoffs,
     forecast,
     pace_fits,
+    pace_penalty,
     pace_points,
     prepare_history,
     rating_design,
@@ -26,7 +27,6 @@ from eurohoops.models.team_eff import (
 )
 from tests.test_team_eff import league
 
-FIXTURE = Path(__file__).parent / "fixtures" / "m1_fits_reference.npz"
 RATING = DecayParams(half_life_days=90.0, carry=0.6, ridge=300.0)
 PACE = DecayParams(half_life_days=60.0, carry=1.0, ridge=2.0)
 
@@ -50,22 +50,94 @@ def reference_history() -> History:
     return prepare_history(games, rows)
 
 
-def test_m1_fits_are_byte_identical_to_the_reference_stored_before_the_refactor() -> None:
+def _old_rating_fits(history: History, params: DecayParams) -> tuple[FloatArray, FloatArray]:
+    """``rating_fits`` as it was before the K1 refactor (291b312), verbatim."""
+    n = len(history.teams)
+    model = DecayedRidge(rating_penalty(n, params.ridge), params)
+    columns, values = rating_design(history)
+    home_ortg = np.full(len(history.home), np.nan)
+    away_ortg = np.full(len(history.home), np.nan)
+    added = 0
+    for time, season, games in _cutoffs(history):
+        model.advance(time, season)
+        stop = int(np.searchsorted(history.row_time, time, side="left"))
+        if stop > added:
+            span = slice(added, stop)
+            model.add(
+                columns[span],
+                values[span],
+                target=history.row_ortg[span],
+                weight=history.row_poss[span],
+                time=history.row_time[span],
+                season=history.row_season[span],
+            )
+            added = stop
+        if not added:
+            continue
+        theta = model.solve()
+        mu, h = theta[0], theta[1]
+        off, dfn = theta[2 : 2 + n], theta[2 + n :]
+        hf = history.home_flag[games]
+        home, away = history.home[games], history.away[games]
+        home_ortg[games] = mu + h * hf + off[home] - dfn[away]
+        away_ortg[games] = mu - h * hf + off[away] - dfn[home]
+    return home_ortg, away_ortg
+
+
+def _old_pace_fits(history: History, params: DecayParams) -> FloatArray:
+    """``pace_fits`` as it was before the K1 refactor (291b312), verbatim."""
+    n = len(history.teams)
+    model = DecayedRidge(pace_penalty(n, params.ridge), params)
+    columns = np.stack(
+        [np.zeros_like(history.pace_home), 1 + history.pace_home, 1 + history.pace_away], axis=1
+    )
+    values = np.ones(columns.shape, dtype=np.float64)
+    weight = np.ones(len(history.pace_home))
+    pace = np.full(len(history.home), np.nan)
+    added = 0
+    for time, season, games in _cutoffs(history):
+        model.advance(time, season)
+        stop = int(np.searchsorted(history.pace_time, time, side="left"))
+        if stop > added:
+            span = slice(added, stop)
+            model.add(
+                columns[span],
+                values[span],
+                target=history.pace_poss40[span],
+                weight=weight[span],
+                time=history.pace_time[span],
+                season=history.pace_season[span],
+            )
+            added = stop
+        if not added:
+            continue
+        theta = model.solve()
+        pace[games] = theta[0] + theta[1 + history.home[games]] + theta[1 + history.away[games]]
+    return pace
+
+
+def test_m1_fits_are_byte_identical_to_the_pre_refactor_code() -> None:
+    """The K1 refactor (a shared walk-forward generator) changes no M1 output, bit for bit.
+
+    The reference is the pre-refactor code run on the same machine: a stored fixture would only
+    hold one platform's floating-point rounding (Windows and Linux BLAS/libm differ in the last
+    bits), so it cannot be compared exactly elsewhere.
+    """
     history = reference_history()
-    got = forecast(history, RATING, PACE)
+    old_home, old_away = _old_rating_fits(history, RATING)
+    old_pace = _old_pace_fits(history, PACE)
     home, away = rating_fits(history, RATING)
-    stored = np.load(FIXTURE)
-    arrays = {
-        "home_points": got.home_points,
-        "away_points": got.away_points,
-        "pace_forecast": got.pace,
-        "home_ortg": home,
-        "away_ortg": away,
-        "pace_fits": pace_fits(history, PACE),
+    got = forecast(history, RATING, PACE)
+    pairs = {
+        "home_ortg": (home, old_home),
+        "away_ortg": (away, old_away),
+        "pace_fits": (pace_fits(history, PACE), old_pace),
+        "home_points": (got.home_points, old_pace * old_home / 100.0),
+        "away_points": (got.away_points, old_pace * old_away / 100.0),
     }
-    assert set(stored.files) == set(arrays)
-    for name, array in arrays.items():
-        assert np.array_equal(stored[name], array, equal_nan=True), name
+    for name, (new, old) in pairs.items():
+        assert np.array_equal(new, old, equal_nan=True), name
+    assert np.isfinite(home).sum() > 10  # the comparison covers real forecasts, not only NaN
 
 
 def round_cutoffs(history: History) -> list[tuple[float, int]]:
