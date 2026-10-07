@@ -10,22 +10,30 @@ season >= the cutoff never enter any fit, prior or mean: walk-forward).
 Survivor correction. A player with fewer than ``min_poss`` possessions in s+1 was benched or left
 because he got worse; keeping only players who stay on court biases every delta upward. A pair
 whose season s has at least ``min_poss`` possessions but whose season s+1 has 0 < poss < min_poss
-is kept: its s+1 rate is shrunk toward the league mean of that competition-season by its exposure
-(empirical Bayes: the true-talent variance is the between-player variance of the qualified rows of
-the pre-cutoff seasons minus their sampling variance), so a short stretch of noise does not
-count as signal. A player with no s+1 row at all is not observable and cannot be paired: the
-correction recovers the short seasons, not the departures. ``survivor_correction=False`` drops the
-short-season pairs (the planted bias in the tests).
+is kept: its s+1 rate is shrunk (empirical Bayes) toward the exposure-weighted mean of the
+short s+1 rates of the same competition and age (the players who stayed on court are a different
+population, and so is every other age; a global mean would erase part of the decline). The
+true-talent variance is the spread of those short rates about their group means minus their
+sampling variance; a group with fewer than ``MIN_SHORT_ROWS`` pairs has no prior and is left out.
+A player with no s+1 row at all is not observable and cannot be paired: the correction recovers
+the short seasons, not the departures. ``survivor_correction=False`` drops the short-season pairs
+(the planted bias in the tests).
 
 Sampling variance of a rate: Poisson, 100 * mean / possessions, for per-100 counts; p(1-p) /
 attempts for percentages; the supplied sd squared for impact ratings. A pair's variance is the
-sum of its two seasons' (for a shrunk season, B times it, B being the shrinkage factor); its
-weight is 1 / (variance + tau_d^2), the inverse sum of the exposures (the harmonic-mean-of-
-exposure weight) plus a method-of-moments random effect for the spread of true changes between
-players. Per age the weighted mean is partially pooled toward a weighted quadratic through all
-ages (random effect across ages, DerSimonian-Laird), then smoothed with a least-squares quadratic
-spline (C1, three interior knots at most). The standard error is the spline's, propagated from the
-per-age sampling variances (the contraction from pooling is not credited: conservative).
+sum of its two seasons' (for a shrunk season, its posterior variance B * var, B being the
+shrinkage factor). Weights (D10): without the correction a pair is weighted by 1 / (variance +
+tau_d^2), the inverse sum of the two exposures (the harmonic-mean-of-exposure weight) plus a
+method-of-moments random effect for the spread of true changes between players. With the
+correction every pair is weighted by its season-s exposure only, 1 / (var_s + tau_d^2): season s
+is the qualified season, fixed before the outcome is known, whereas a weight that grows with the
+s+1 exposure would under-represent exactly the players who then lost minutes (the decliners).
+The standard error of a weighted age mean always uses the pairs' own variances (the posterior
+variance for a shrunk rate). Per age the weighted mean is partially pooled toward a weighted
+quadratic through all ages (random effect across ages, DerSimonian-Laird), then smoothed with a
+least-squares quadratic spline (C1, three interior knots at most). The standard error is the
+spline's, propagated from the per-age variances (the contraction from pooling is not credited:
+conservative).
 
 Ages come from ``player_ages`` (``models/player_seasons.py``, built from ``ingest/bios.py`` in
 memory); birth dates and exact ages never reach a committed file, a report or the site (L-e).
@@ -163,6 +171,7 @@ def _pairs(
             "age_int": pairs["age_int"],
             "delta": pairs["value_next"] - pairs["value"],
             "var": pairs["var"] + pairs["var_next"],
+            "wvar": pairs["var"] if survivors else pairs["var"] + pairs["var_next"],
         }
     )
 
@@ -202,11 +211,11 @@ def _fit_stat(grid: FloatArray, pairs: pd.DataFrame) -> tuple[FloatArray, FloatA
         )
     )
     tau2 = max((q - dof) / c, 0.0) if dof > 0 and c > 0 else 0.0
-    w = 1.0 / (v + tau2)
+    w = 1.0 / (pairs["wvar"].to_numpy(dtype="float64") + tau2)
     sw = np.bincount(idx, weights=w, minlength=len(grid))
     seen = count > 0
     m = np.bincount(idx, weights=w * d, minlength=len(grid))[seen] / sw[seen]
-    var_m = 1.0 / sw[seen]
+    var_m = np.bincount(idx, weights=w**2 * (v + tau2), minlength=len(grid))[seen] / sw[seen] ** 2
     x = grid[seen]
     # Partial pooling across ages toward a weighted quadratic through the age means.
     degree = min(2, len(x) - 1)
