@@ -173,3 +173,26 @@ from eurohoops.models.aging import MIN_AGE_PAIRS, aging_curve, apply  # noqa: E4
 MIN_AGE_PAIRS
 aging_curve
 apply
+
+# weeks 16-18 A: L1 projections, called by the L6 harness and `eurohoops project` (L9), wave 2
+from eurohoops.models.projection import (  # noqa: E402
+    FLAGS,
+    IMPACT_SCHEMA,
+    VARIANTS,
+    AgeAdjust,
+    ProjectionParams,
+    Translation,
+    fit_drift,
+    project,
+    variant_params,
+)
+
+FLAGS
+IMPACT_SCHEMA
+VARIANTS
+AgeAdjust
+ProjectionParams
+Translation
+fit_drift
+project
+variant_params
