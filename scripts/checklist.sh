@@ -180,4 +180,9 @@ skip 52 "simulate dry run" || {
   (PYTHONIOENCODING=utf-8 uv run python "$CHECKS/sim_dry_run.py"     && uvx --from actionlint-py actionlint .github/workflows/daily.yml && echo "daily.yml clean")
   res $?
 }
+skip 53 "M7 card" || {
+  item "53 docs/models/m7.md numbers = reports; CONTEXT terms"
+  uv run pytest -q -p no:cacheprovider tests/test_model_card_m7.py 2>&1 | tail -1
+  res "${PIPESTATUS[0]}"
+}
 echo; echo "FAILS: $fails (end $(date -u +%H:%MZ))"; exit "$fails"
