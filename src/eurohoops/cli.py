@@ -802,6 +802,10 @@ def predict(
                 typer.echo(f"{added} M5 predictions appended to {comp.m5_prediction_log}")
             except typer.Exit:  # a shadow model never blocks the Elo and M1 logs
                 log.warning("M5 skipped: its marts, stints or reports are missing here")
+            except LatePredictionError:
+                raise
+            except Exception:  # e.g. marts without the tuning seasons: still never blocks
+                log.exception("M5 skipped: its forecast failed; nothing appended to its log")
     except LatePredictionError as exc:
         log.error("refusing to log: %s", exc)
         raise typer.Exit(code=1) from exc
