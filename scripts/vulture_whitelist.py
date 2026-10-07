@@ -166,3 +166,10 @@ retention_backtest
 shot_making_observations
 stability
 RetentionBacktest.contrast_z  # read by the report writer and the board test
+
+# weeks 16-18 B: the aging curve, called by the projection (L1) and the L6 harness (wave 2)
+from eurohoops.models.aging import MIN_AGE_PAIRS, aging_curve, apply  # noqa: E402
+
+MIN_AGE_PAIRS
+aging_curve
+apply
