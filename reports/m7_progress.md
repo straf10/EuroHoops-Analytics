@@ -265,6 +265,17 @@ The gate stays FAIL (decided on validation, the point rule).
 
 RUNTIME m7 euroleague 231
 
+## K7: GBL (reported, not gated; the EuroLeague verdict `sim_full` as a fixed choice; tuning 2020-2022, test 2025)
+| split | sim_full | point_sim | elo_sim | standings_now | sim_full z |
+|---|---|---|---|---|---|
+| tuning (111) | 0.1031 | 0.1082 | 0.1135 | 0.1622 | 0.92 (point_sim 2.77, elo_sim 4.14) |
+| test 2025 (39) | 0.1751 | 0.1886 | 0.1616 | 0.2564 | 3.02 (every model > 1.96) |
+
+In the GBL the point-strength baseline is miscalibrated on tuning (z 2.77) and sampling the posterior fixes it; the one
+test season (13 teams) is miscalibrated for every model. GBL rules stay unverified (format notes in the report).
+
+RUNTIME m7 gbl 53
+
 ## Subagent log
 - Worktrees: created by the orchestrator (`git worktree add C:\Python\EH-m7-{a,b,c} -b m7-{a,b,c} week-14-16-m7`), not by
   the Agent tool's `isolation: "worktree"`, which would have created them inside `C:\Python\Sports_Project` (off limits
