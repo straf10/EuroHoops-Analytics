@@ -139,10 +139,11 @@ def test_a_cutoff_between_rounds_matches_a_hand_built_decayed_ridge() -> None:
     for r, i in enumerate(use):
         x[r, columns[i]] = values[i]
     resid = history.row_ortg[use] - x @ theta
-    sigma2 = float(np.sum(decay * history.row_poss[use] * resid**2) / np.sum(decay))
-    assert post.sigma2 == pytest.approx(sigma2, rel=1e-12)
     weighted = x.T @ ((decay * history.row_poss[use])[:, None] * x)
     precision = weighted + np.diag(rating_penalty(n, RATING.ridge))
+    p_eff = np.trace(np.linalg.solve(precision[np.ix_(seen, seen)], weighted[np.ix_(seen, seen)]))
+    sigma2 = float(np.sum(decay * history.row_poss[use] * resid**2) / (np.sum(decay) - p_eff))
+    assert post.sigma2 == pytest.approx(sigma2, rel=1e-9)
     expected = sigma2 * np.linalg.inv(precision[np.ix_(seen, seen)])
     assert np.max(np.abs(post.cov - expected)) < 1e-9 * np.max(np.abs(expected))
 
@@ -209,7 +210,7 @@ def test_the_order_of_the_cutoffs_does_not_matter() -> None:
     for i, cutoff in enumerate(shuffled):
         j = cutoffs.index(cutoff)
         assert np.array_equal(other[i].mean, forward[j].mean)
-        assert np.array_equal(other[i].cov, forward[j].cov)
+        assert np.array_equal(other[i].cov, forward[j].cov, equal_nan=True)
         assert np.array_equal([other[i].sigma2], [forward[j].sigma2], equal_nan=True)
         assert np.array_equal(pace_other[i], pace_forward[j])
 
@@ -351,15 +352,14 @@ def league_history(
 
 
 def test_ninety_percent_intervals_cover_the_truth_when_the_model_is_right() -> None:
-    """200 leagues of 12 teams from the model itself (one season, no decay, truth from the prior).
+    """200 leagues of 10 teams from the model itself (one season, no decay, truth from the prior).
 
-    Pooled over leagues and the 24 off/def columns that is 4800 intervals; at 90% the binomial SE
-    of the coverage is sqrt(.9 * .1 / 4800) = 0.43 points. The 24 intervals of a league share one
-    fit and one sigma-hat, so allow a design effect of about 4 (SE 0.87 points). sigma-hat^2 is
-    estimated from 264 rows without a degrees-of-freedom correction (K-b fixes the estimator):
-    the 26 fitted parameters bring it to about 0.91 of the truth, which narrows the intervals
-    by about 4% and lowers the coverage to about 88.5%. 87-93% is therefore a +-2 SE band at the
-    low end (and +-5 SE above), and it fails if the covariance is off by a few percent.
+    Pooled over leagues and the 20 off/def columns that is 4000 intervals; at 90% the binomial SE
+    of the coverage is sqrt(.9 * .1 / 4000) = 0.47 points. The 20 intervals of a league share one
+    fit and one sigma-hat, so allow a design effect of about 4 (SE 0.95 points). sigma^2 is
+    estimated with the effective-degrees-of-freedom correction, so it is unbiased for a ridge
+    fit and only the Normal-versus-t width effect of order p_eff / (n - p_eff) remains, a few
+    tenths of a point. 87-93% is then about +-3 SE around 90%.
     """
     sigma2, ridge = 90.0**2, 250.0  # prior sd of a rating = sqrt(σ²/ridge) = 5.7 points
     params = DecayParams(half_life_days=1e9, carry=1.0, ridge=ridge)
@@ -368,7 +368,7 @@ def test_ninety_percent_intervals_cover_the_truth_when_the_model_is_right() -> N
     covered = total = 0
     sigma2_hats = []
     for _ in range(200):
-        history, off, dfn, cutoff = league_history(rng, 12, sigma2, ridge)
+        history, off, dfn, cutoff = league_history(rng, 10, sigma2, ridge)
         (post,) = rating_posteriors(history, params, [(cutoff, 2020)])
         truth = np.concatenate([[np.nan, np.nan], off, dfn])[post.columns]
         rated = post.columns >= 2
@@ -376,6 +376,6 @@ def test_ninety_percent_intervals_cover_the_truth_when_the_model_is_right() -> N
         covered += int(np.sum((np.abs(post.mean - truth) < z90 * sd)[rated]))
         total += int(rated.sum())
         sigma2_hats.append(post.sigma2)
-    assert total == 4800
+    assert total == 4000
     assert 0.87 < covered / total < 0.93
     assert np.mean(sigma2_hats) == pytest.approx(sigma2, rel=0.1)

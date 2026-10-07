@@ -352,8 +352,11 @@ class RatingPosterior:
     Each ORtg row has variance σ²/poss_i and the time/season decay d_i acts as a fractional
     likelihood power, so the posterior precision is (G + P)/σ² with G = Σ d_i·poss_i·x_i x_iᵀ
     (``DecayedRidge.gram``) and the ridge penalty P a prior in possessions of evidence. σ² is
-    Σ d_i·poss_i·r_i² / Σ d_i with r_i = ORtg_i - x_i·θ̂ at the cutoff's solution θ̂, over the
-    rows that tipped off before the cutoff. Before any row: no columns and σ² is NaN.
+    the ridge residual-variance estimator Σ d_i·poss_i·r_i² / (Σ d_i - p_eff) with
+    r_i = ORtg_i - x_i·θ̂ at the cutoff's solution θ̂, over the rows that tipped off before the
+    cutoff, and p_eff = tr((G + P)⁻¹ G) the effective number of parameters (hat-matrix trace,
+    scale-free in the row weights). Σ d_i counts the decay-weighted rows, as each row's variance
+    is σ²/poss_i. Before any row, or when Σ d_i - p_eff <= 0: σ² is NaN (no columns before any row).
     """
 
     teams: tuple[str, ...]  # History.teams (all n, design order)
@@ -361,7 +364,7 @@ class RatingPosterior:
     labels: tuple[str, ...]  # (k,) "mu", "h", "off:<team>", "def:<team>"
     mean: FloatArray  # (k,) DecayedRidge.solve() at the cutoff, seen columns
     cov: FloatArray  # (k, k) sigma2 · inv(G + P) over the seen columns
-    sigma2: float  # Σ d_i·poss_i·r_i² / Σ d_i over the rows used (d_i = decay weight at the cutoff)
+    sigma2: float  # Σ d_i·poss_i·r_i² / (Σ d_i - p_eff) over the rows used; NaN if that is <= 0
 
 
 def rating_posteriors(
@@ -388,7 +391,10 @@ def rating_posteriors(
             decay = model.decay(
                 (time - rows.time[span]) / SECONDS_PER_DAY, season - rows.season[span]
             )
-            sigma2 = float(np.sum(decay * rows.weight[span] * residual**2) / np.sum(decay))
+            gram = model.gram[np.ix_(columns, columns)]
+            dof = float(np.sum(decay)) - float(np.trace(np.linalg.solve(precision, gram)))
+            if dof > 0.0:
+                sigma2 = float(np.sum(decay * rows.weight[span] * residual**2) / dof)
         inverse = np.linalg.inv(precision)
         out[position] = RatingPosterior(
             teams=teams,
