@@ -211,6 +211,7 @@ VALIDATION c65e91c
 
 TEST d885fc8
 9 | K8 live simulate (gated; dry run on real marts), item 52 | test_live_sim (9), sim_dry_run.py, ruff/mypy/vulture | PASS | (this commit)
+10 | K9 card + CONTEXT + item 53; full §7 checklist in one run (HEAD d4a55fd, 11:47Z-14:42Z, quiet machine) | items 1-53 | all PASS except 22, 25 (known M2) | d4a55fd; closeout (this commit)
 
 ## K6: tuning and verdict (EuroLeague, tuning seasons 2016, 2017, 2018, 2020, 2022; 252 team-checkpoints)
 `uv run eurohoops backtest --model m7 --tuning-only` (quiet machine: CPU 12%, no other python jobs), 129 s.
