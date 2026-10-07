@@ -151,6 +151,20 @@ def test_predict_exits_non_zero_when_stamp_is_not_before_tipoff(
     assert not EUROLEAGUE.prediction_log.exists()
 
 
+@pytest.mark.usefixtures("pipeline")
+def test_a_failing_m5_forecast_never_blocks_the_elo_log(monkeypatch: pytest.MonkeyPatch) -> None:
+    invoke("backtest")
+
+    def broken(*_args: object, **_kwargs: object) -> int:
+        raise ValueError("no tuning game with finite forecasts to fit the margin model on")
+
+    monkeypatch.setattr(cli, "load_m5", lambda _path: object())
+    monkeypatch.setattr(cli, "predict_upcoming_m5", broken)
+    result = runner.invoke(cli.app, ["predict"])
+    assert result.exit_code == 0
+    assert EUROLEAGUE.prediction_log.exists()
+
+
 def odds_api(status: int) -> httpx.MockTransport:
     events = [
         {
