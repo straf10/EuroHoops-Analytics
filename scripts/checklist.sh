@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # The phase checklist, top to bottom (weeks 5-7 §6 items 1-20, weeks 7-10 items 21-30, weeks
-# 7-10b items 31-32, weeks 9-12 items 33-37). Prints PASS/FAIL per
+# 7-10b items 31-32, weeks 9-12 items 33-37,
+# weeks 14-16 M7 items 48-53). Prints PASS/FAIL per
 # item; the exit code is the number of FAILs. Run from anywhere: `bash scripts/checklist.sh`.
 #
 #   BASE      git ref the predictions and the stint sample are compared with (default origin/main)
@@ -162,4 +163,16 @@ skip 47 "M5 card" || {
   uv run pytest -q -p no:cacheprovider tests/test_model_card_m5.py 2>&1 | tail -1
   res "${PIPESTATUS[0]}"
 }
+skip 48 "M7 units + facts" || {
+  item "48 M7 unit tests (posterior, formats, engine, harness), section 3 facts, rating_fits/forecast/rank unchanged"
+  PYTHONIOENCODING=utf-8 uv run python "$CHECKS/m7_facts.py" | tail -1 &&     uv run pytest -q -p no:cacheprovider tests/test_rating_posterior.py tests/test_team_eff.py tests/test_sim_formats.py tests/test_sim_season.py tests/test_rank_by_wins.py tests/test_sim_played.py tests/test_standings.py tests/test_m7_backtest.py 2>&1 | tail -1
+  res "${PIPESTATUS[0]}"
+}
+skip 49 "M7 leakage" || {
+  item "49 M7 leakage suite (planted leaks detected)"
+  uv run pytest -q -p no:cacheprovider tests/test_m7_leakage.py 2>&1 | tail -1
+  res "${PIPESTATUS[0]}"
+}
+skip 50 "M7 report" || { item "50 backtest_m7.json + gate/reliability, two runs identical, GBL fixed choice, verdict < validation < test"; bash "$CHECKS/m7_reports.sh"; res $?; }
+skip 51 "M7 runtime" || { item "51 backtest --model m7 runtime: EL < 1,800 s, GBL < 600 s; simulate < 120 s"; bash "$CHECKS/m7_runtime.sh"; res $?; }
 echo; echo "FAILS: $fails (end $(date -u +%H:%MZ))"; exit "$fails"
