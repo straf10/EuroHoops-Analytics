@@ -358,3 +358,47 @@ M5_GBL = M5Backtest(
     validation=(2023,),
     test=(2024, 2025),
 )
+
+
+@dataclass(frozen=True)
+class M7Backtest:
+    """M7 season simulator backtest (week 14-16 K4): replay past seasons at checkpoints."""
+
+    report: Path
+    teams_report: Path
+    tuning: tuple[int, ...]
+    validation: tuple[int, ...]
+    test: tuple[int, ...]
+    checkpoints: tuple[float, ...] = (0.25, 0.5, 0.75)  # fractions of the regular-season rounds
+    n_sims: int = 4000
+    seed: int = 20261101  # + the checkpoint's index in the run
+    inflate: tuple[float, ...] = (1.5, 2.0)  # strength covariance multipliers of sim_inflate
+    tie_tolerance: float = 0.002  # tuning mean RPS difference below which the simpler wins
+    noise_floor: float = 0.5  # sim_net's noise scale is at least this share of M1's scale
+    bootstrap_resamples: int = 1000
+    bootstrap_seed: int = 20261102
+
+
+# EuroLeague scored seasons are the single-table regular seasons only (reports/m7_progress.md, K-a).
+M7 = M7Backtest(
+    Path("reports/backtest_m7.json"),
+    Path("reports/backtest_m7_teams.csv"),
+    tuning=(2016, 2017, 2018, 2020, 2022),
+    validation=(2023,),
+    test=(2024, 2025),
+)
+# GBL: the seasons whose format section 3 can verify; reported only (it scores the EuroLeague
+# verdict as `fixed`).
+M7_GBL = M7Backtest(
+    Path("reports/backtest_m7_gbl.json"),
+    Path("reports/backtest_m7_gbl_teams.csv"),
+    tuning=(2020, 2021, 2022),
+    validation=(),
+    test=(2025,),
+)
+# Live M7 (K8): one append-only simulation log per competition, plus the latest run's report.
+SIM_LOGS = {
+    name: Path(f"predictions/{name}_sim_{LIVE_SEASON}-{(LIVE_SEASON + 1) % 100}.csv")
+    for name in ("euroleague", "gbl")
+}
+SIM_LATEST = {name: Path(f"reports/sim_latest_{name}.json") for name in ("euroleague", "gbl")}

@@ -24,7 +24,9 @@ decayed normal equations are kept incrementally, so each refit is one small line
 """
 
 import math
+from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
+from typing import NamedTuple
 
 import numpy as np
 import numpy.typing as npt
@@ -249,28 +251,60 @@ def rating_design(history: History) -> tuple[IntArray, FloatArray]:
     return columns, values
 
 
+class _Rows(NamedTuple):
+    """Rows feeding one fit, sorted by ``time``: what ``DecayedRidge.add`` takes."""
+
+    columns: IntArray
+    design: FloatArray
+    target: FloatArray
+    weight: FloatArray
+    time: FloatArray
+    season: IntArray
+
+
+def _walk[Payload](
+    model: DecayedRidge, rows: _Rows, steps: Iterable[tuple[float, int, Payload]]
+) -> Iterator[tuple[float, int, Payload, int]]:
+    """Advance ``model`` through ``steps`` (time, season, payload) in time order, adding the rows
+    that tipped off before each; yields the step and the number of rows added so far."""
+    added = 0
+    for time, season, payload in steps:
+        model.advance(time, season)
+        stop = int(np.searchsorted(rows.time, time, side="left"))
+        if stop > added:
+            span = slice(added, stop)
+            model.add(
+                rows.columns[span],
+                rows.design[span],
+                target=rows.target[span],
+                weight=rows.weight[span],
+                time=rows.time[span],
+                season=rows.season[span],
+            )
+            added = stop
+        yield time, season, payload, added
+
+
+def _requested(cutoffs: Sequence[tuple[float, int]]) -> list[tuple[float, int, int]]:
+    """(time, season, position in ``cutoffs``) in time order."""
+    order = sorted(range(len(cutoffs)), key=lambda i: cutoffs[i])
+    return [(cutoffs[i][0], cutoffs[i][1], i) for i in order]
+
+
+def _rating_rows(history: History) -> _Rows:
+    columns, values = rating_design(history)
+    return _Rows(
+        columns, values, history.row_ortg, history.row_poss, history.row_time, history.row_season
+    )
+
+
 def rating_fits(history: History, params: DecayParams) -> tuple[FloatArray, FloatArray]:
     """Pre-round ORtg of the home and away side of every game (NaN before any game)."""
     n = len(history.teams)
     model = DecayedRidge(rating_penalty(n, params.ridge), params)
-    columns, values = rating_design(history)
     home_ortg = np.full(len(history.home), np.nan)
     away_ortg = np.full(len(history.home), np.nan)
-    added = 0
-    for time, season, games in _cutoffs(history):
-        model.advance(time, season)
-        stop = int(np.searchsorted(history.row_time, time, side="left"))
-        if stop > added:
-            span = slice(added, stop)
-            model.add(
-                columns[span],
-                values[span],
-                target=history.row_ortg[span],
-                weight=history.row_poss[span],
-                time=history.row_time[span],
-                season=history.row_season[span],
-            )
-            added = stop
+    for _, _, games, added in _walk(model, _rating_rows(history), _cutoffs(history)):
         if not added:
             continue  # nothing tipped off yet: no forecast (NaN)
         theta = model.solve()
@@ -283,36 +317,106 @@ def rating_fits(history: History, params: DecayParams) -> tuple[FloatArray, Floa
     return home_ortg, away_ortg
 
 
+def _pace_rows(history: History) -> _Rows:
+    columns = np.stack(
+        [np.zeros_like(history.pace_home), 1 + history.pace_home, 1 + history.pace_away], axis=1
+    )
+    return _Rows(
+        columns,
+        np.ones(columns.shape, dtype=np.float64),
+        history.pace_poss40,
+        np.ones(len(history.pace_home)),
+        history.pace_time,
+        history.pace_season,
+    )
+
+
 def pace_fits(history: History, params: DecayParams) -> FloatArray:
     """Pre-round expected possessions (per 40 minutes) of every game."""
     n = len(history.teams)
     model = DecayedRidge(pace_penalty(n, params.ridge), params)
-    columns = np.stack(
-        [np.zeros_like(history.pace_home), 1 + history.pace_home, 1 + history.pace_away], axis=1
-    )
-    values = np.ones(columns.shape, dtype=np.float64)
-    weight = np.ones(len(history.pace_home))
     pace = np.full(len(history.home), np.nan)
-    added = 0
-    for time, season, games in _cutoffs(history):
-        model.advance(time, season)
-        stop = int(np.searchsorted(history.pace_time, time, side="left"))
-        if stop > added:
-            span = slice(added, stop)
-            model.add(
-                columns[span],
-                values[span],
-                target=history.pace_poss40[span],
-                weight=weight[span],
-                time=history.pace_time[span],
-                season=history.pace_season[span],
-            )
-            added = stop
+    for _, _, games, added in _walk(model, _pace_rows(history), _cutoffs(history)):
         if not added:
             continue
         theta = model.solve()
         pace[games] = theta[0] + theta[1 + history.home[games]] + theta[1 + history.away[games]]
     return pace
+
+
+@dataclass(frozen=True)
+class RatingPosterior:
+    """M1's rating posterior at a cutoff (K-b): Gaussian over the seen columns of the design
+    [μ, h, off · n, def · n] (``rating_design`` order).
+
+    Each ORtg row has variance σ²/poss_i and the time/season decay d_i acts as a fractional
+    likelihood power, so the posterior precision is (G + P)/σ² with G = Σ d_i·poss_i·x_i x_iᵀ
+    (``DecayedRidge.gram``) and the ridge penalty P a prior in possessions of evidence. σ² is
+    the ridge residual-variance estimator Σ d_i·poss_i·r_i² / (Σ d_i - p_eff) with
+    r_i = ORtg_i - x_i·θ̂ at the cutoff's solution θ̂, over the rows that tipped off before the
+    cutoff, and p_eff = tr((G + P)⁻¹ G) the effective number of parameters (hat-matrix trace,
+    scale-free in the row weights). Σ d_i counts the decay-weighted rows, as each row's variance
+    is σ²/poss_i. Before any row, or when Σ d_i - p_eff <= 0: σ² is NaN (no columns before any row).
+    """
+
+    teams: tuple[str, ...]  # History.teams (all n, design order)
+    columns: IntArray  # (k,) seen design columns, ascending
+    labels: tuple[str, ...]  # (k,) "mu", "h", "off:<team>", "def:<team>"
+    mean: FloatArray  # (k,) DecayedRidge.solve() at the cutoff, seen columns
+    cov: FloatArray  # (k, k) sigma2 · inv(G + P) over the seen columns
+    sigma2: float  # Σ d_i·poss_i·r_i² / (Σ d_i - p_eff) over the rows used; NaN if that is <= 0
+
+
+def rating_posteriors(
+    history: History, params: DecayParams, cutoffs: Sequence[tuple[float, int]]
+) -> list[RatingPosterior]:
+    """Posterior at each (cutoff epoch seconds, season), in one walk-forward pass: rows with
+    row_time < cutoff, the model advanced to (cutoff, season) as rating_fits does.
+
+    ``cutoffs`` may come in any order; the result is aligned with it.
+    """
+    teams = history.teams
+    names = ["mu", "h", *(f"off:{t}" for t in teams), *(f"def:{t}" for t in teams)]
+    model = DecayedRidge(rating_penalty(len(teams), params.ridge), params)
+    rows = _rating_rows(history)
+    out: list[RatingPosterior | None] = [None] * len(cutoffs)
+    for time, season, position, added in _walk(model, rows, _requested(cutoffs)):
+        columns = np.flatnonzero(model.seen).astype(np.int64)
+        mean = model.solve()
+        precision = model.gram[np.ix_(columns, columns)] + np.diag(model.penalty[columns])
+        sigma2 = math.nan
+        if added:
+            span = slice(0, added)
+            residual = rows.target[span] - (mean[rows.columns[span]] * rows.design[span]).sum(1)
+            decay = model.decay(
+                (time - rows.time[span]) / SECONDS_PER_DAY, season - rows.season[span]
+            )
+            gram = model.gram[np.ix_(columns, columns)]
+            dof = float(np.sum(decay)) - float(np.trace(np.linalg.solve(precision, gram)))
+            if dof > 0.0:
+                sigma2 = float(np.sum(decay * rows.weight[span] * residual**2) / dof)
+        inverse = np.linalg.inv(precision)
+        out[position] = RatingPosterior(
+            teams=teams,
+            columns=columns,
+            labels=tuple(names[c] for c in columns),
+            mean=mean[columns],
+            cov=sigma2 * (inverse + inverse.T) / 2.0,
+            sigma2=sigma2,
+        )
+    return [posterior for posterior in out if posterior is not None]
+
+
+def pace_points(
+    history: History, params: DecayParams, cutoffs: Sequence[tuple[float, int]]
+) -> list[FloatArray]:
+    """Pace solution [μ_p, pace · n] (1 + n,) at each cutoff, as pace_fits uses it (all 0 before
+    any game), aligned with ``cutoffs``."""
+    model = DecayedRidge(pace_penalty(len(history.teams), params.ridge), params)
+    out: list[FloatArray | None] = [None] * len(cutoffs)
+    for _, _, position, _ in _walk(model, _pace_rows(history), _requested(cutoffs)):
+        out[position] = model.solve()
+    return [point for point in out if point is not None]
 
 
 def forecast(history: History, rating: DecayParams, pace: DecayParams) -> Forecast:

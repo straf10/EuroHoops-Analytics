@@ -1,0 +1,1824 @@
+{
+  "model": "m7",
+  "model_version": "m7-sim_full-v1",
+  "competition": "gbl",
+  "seasons": {
+    "tuning": [
+      2020,
+      2021,
+      2022
+    ],
+    "test": [
+      2025
+    ]
+  },
+  "checkpoints": [
+    0.25,
+    0.5,
+    0.75
+  ],
+  "n_sims": 4000,
+  "seeds": [
+    {
+      "season": 2020,
+      "fraction": 0.25,
+      "round": 5,
+      "cutoff": "2020-12-05T15:00:00Z",
+      "seed": 20261101
+    },
+    {
+      "season": 2020,
+      "fraction": 0.5,
+      "round": 11,
+      "cutoff": "2021-01-23T14:00:00Z",
+      "seed": 20261102
+    },
+    {
+      "season": 2020,
+      "fraction": 0.75,
+      "round": 16,
+      "cutoff": "2021-03-13T15:00:00Z",
+      "seed": 20261103
+    },
+    {
+      "season": 2021,
+      "fraction": 0.25,
+      "round": 6,
+      "cutoff": "2021-11-13T15:00:00Z",
+      "seed": 20261104
+    },
+    {
+      "season": 2021,
+      "fraction": 0.5,
+      "round": 13,
+      "cutoff": "2022-01-29T15:00:00Z",
+      "seed": 20261105
+    },
+    {
+      "season": 2021,
+      "fraction": 0.75,
+      "round": 19,
+      "cutoff": "2022-04-02T14:00:00Z",
+      "seed": 20261106
+    },
+    {
+      "season": 2022,
+      "fraction": 0.25,
+      "round": 5,
+      "cutoff": "2022-11-19T14:00:00Z",
+      "seed": 20261107
+    },
+    {
+      "season": 2022,
+      "fraction": 0.5,
+      "round": 11,
+      "cutoff": "2023-01-14T14:00:00Z",
+      "seed": 20261108
+    },
+    {
+      "season": 2022,
+      "fraction": 0.75,
+      "round": 16,
+      "cutoff": "2023-03-04T13:30:00Z",
+      "seed": 20261109
+    },
+    {
+      "season": 2025,
+      "fraction": 0.25,
+      "round": 6,
+      "cutoff": "2025-11-15T14:00:00Z",
+      "seed": 20261110
+    },
+    {
+      "season": 2025,
+      "fraction": 0.5,
+      "round": 13,
+      "cutoff": "2026-01-10T13:30:00Z",
+      "seed": 20261111
+    },
+    {
+      "season": 2025,
+      "fraction": 0.75,
+      "round": 19,
+      "cutoff": "2026-03-07T10:45:00Z",
+      "seed": 20261112
+    }
+  ],
+  "formats": {
+    "2020": {
+      "label": "2020-21",
+      "teams": 12,
+      "rounds": 22,
+      "sources": [
+        "ESAKE results pages (games mart): 12 teams, 22 rounds; quarterfinal field = top 8 of the table, checked by scripts/checks/m7_facts.py"
+      ],
+      "unverified": [
+        "full table order below the cut (only the top-8 set is checked)",
+        "series lengths and home order (2025-26: QF/SF best of 3, final best of 5 per the ESAKE round codes; earlier seasons assumed)",
+        "tie-breaks: EuroLeague-style procedure assumed",
+        "relegation"
+      ]
+    },
+    "2021": {
+      "label": "2021-22",
+      "teams": 13,
+      "rounds": 26,
+      "sources": [
+        "ESAKE results pages (games mart): 13 teams, 26 rounds (a bye per round, 24 games per team); quarterfinal field = top 8 of the table, checked by scripts/checks/m7_facts.py"
+      ],
+      "unverified": [
+        "full table order below the cut (only the top-8 set is checked)",
+        "series lengths and home order (2025-26: QF/SF best of 3, final best of 5 per the ESAKE round codes; earlier seasons assumed)",
+        "tie-breaks: EuroLeague-style procedure assumed",
+        "relegation"
+      ]
+    },
+    "2022": {
+      "label": "2022-23",
+      "teams": 12,
+      "rounds": 22,
+      "sources": [
+        "ESAKE results pages (games mart): 12 teams, 22 rounds; quarterfinal field = top 8 of the table, checked by scripts/checks/m7_facts.py"
+      ],
+      "unverified": [
+        "full table order below the cut (only the top-8 set is checked)",
+        "series lengths and home order (2025-26: QF/SF best of 3, final best of 5 per the ESAKE round codes; earlier seasons assumed)",
+        "tie-breaks: EuroLeague-style procedure assumed",
+        "relegation"
+      ]
+    },
+    "2025": {
+      "label": "2025-26",
+      "teams": 13,
+      "rounds": 26,
+      "sources": [
+        "ESAKE results pages (games mart): 13 teams, 26 rounds (a bye per round, 24 games per team); quarterfinal field = top 8 of the table, checked by scripts/checks/m7_facts.py"
+      ],
+      "unverified": [
+        "full table order below the cut (only the top-8 set is checked)",
+        "series lengths and home order (2025-26: QF/SF best of 3, final best of 5 per the ESAKE round codes; earlier seasons assumed)",
+        "tie-breaks: EuroLeague-style procedure assumed",
+        "relegation"
+      ]
+    }
+  },
+  "data_sha256": "05b512e5fe0b9e3a9cb3f10c290e38f11a4b3f4eadf3a34c30911442b0c352c6",
+  "tuning_only": false,
+  "validation_scored": true,
+  "test_scored": true,
+  "grid": {
+    "objective": "mean RPS of the final rank on the tuning seasons",
+    "tie_tolerance": 0.002,
+    "candidates": {
+      "sim_full": {
+        "n": 111,
+        "brier": 0.103094,
+        "rps": 0.085179,
+        "log_loss": 0.314378,
+        "brier_top10": null,
+        "spiegelhalter_z": 0.923929
+      },
+      "sim_net": {
+        "n": 111,
+        "brier": 0.102862,
+        "rps": 0.085356,
+        "log_loss": 0.315284,
+        "brier_top10": null,
+        "spiegelhalter_z": 0.99826
+      },
+      "sim_inflate_1.5": {
+        "n": 111,
+        "brier": 0.102244,
+        "rps": 0.084387,
+        "log_loss": 0.311767,
+        "brier_top10": null,
+        "spiegelhalter_z": 0.501765
+      },
+      "sim_inflate_2": {
+        "n": 111,
+        "brier": 0.101538,
+        "rps": 0.083869,
+        "log_loss": 0.309453,
+        "brier_top10": null,
+        "spiegelhalter_z": 0.091674
+      }
+    },
+    "baselines": {
+      "point_sim": {
+        "n": 111,
+        "brier": 0.108201,
+        "rps": 0.089449,
+        "log_loss": 0.346577,
+        "brier_top10": null,
+        "spiegelhalter_z": 2.771382
+      },
+      "elo_sim": {
+        "n": 111,
+        "brier": 0.11346,
+        "rps": 0.101943,
+        "log_loss": 0.425737,
+        "brier_top10": null,
+        "spiegelhalter_z": 4.144566
+      },
+      "standings_now": {
+        "n": 111,
+        "brier": 0.162162,
+        "rps": 0.126809,
+        "log_loss": 1.493652,
+        "brier_top10": null,
+        "spiegelhalter_z": null
+      }
+    },
+    "best_on_edge": false
+  },
+  "chosen": {
+    "key": "sim_full",
+    "spread": 1.0,
+    "net": false,
+    "fixed": "the EuroLeague verdict (K-a), not chosen here",
+    "tuning_rps": 0.085179,
+    "tuning_brier": 0.103094
+  },
+  "metrics": {
+    "tuning": {
+      "sim_full": {
+        "n": 111,
+        "brier": 0.103094,
+        "rps": 0.085179,
+        "log_loss": 0.314378,
+        "brier_top10": null,
+        "spiegelhalter_z": 0.923929
+      },
+      "sim_net": {
+        "n": 111,
+        "brier": 0.102862,
+        "rps": 0.085356,
+        "log_loss": 0.315284,
+        "brier_top10": null,
+        "spiegelhalter_z": 0.99826
+      },
+      "sim_inflate_1.5": {
+        "n": 111,
+        "brier": 0.102244,
+        "rps": 0.084387,
+        "log_loss": 0.311767,
+        "brier_top10": null,
+        "spiegelhalter_z": 0.501765
+      },
+      "sim_inflate_2": {
+        "n": 111,
+        "brier": 0.101538,
+        "rps": 0.083869,
+        "log_loss": 0.309453,
+        "brier_top10": null,
+        "spiegelhalter_z": 0.091674
+      },
+      "point_sim": {
+        "n": 111,
+        "brier": 0.108201,
+        "rps": 0.089449,
+        "log_loss": 0.346577,
+        "brier_top10": null,
+        "spiegelhalter_z": 2.771382
+      },
+      "elo_sim": {
+        "n": 111,
+        "brier": 0.11346,
+        "rps": 0.101943,
+        "log_loss": 0.425737,
+        "brier_top10": null,
+        "spiegelhalter_z": 4.144566
+      },
+      "standings_now": {
+        "n": 111,
+        "brier": 0.162162,
+        "rps": 0.126809,
+        "log_loss": 1.493652,
+        "brier_top10": null,
+        "spiegelhalter_z": null
+      }
+    },
+    "test": {
+      "sim_full": {
+        "n": 39,
+        "brier": 0.175088,
+        "rps": 0.070967,
+        "log_loss": 0.480792,
+        "brier_top10": null,
+        "spiegelhalter_z": 3.015718
+      },
+      "sim_net": {
+        "n": 39,
+        "brier": 0.175804,
+        "rps": 0.070944,
+        "log_loss": 0.48295,
+        "brier_top10": null,
+        "spiegelhalter_z": 3.070434
+      },
+      "sim_inflate_1.5": {
+        "n": 39,
+        "brier": 0.172083,
+        "rps": 0.070872,
+        "log_loss": 0.472453,
+        "brier_top10": null,
+        "spiegelhalter_z": 2.671073
+      },
+      "sim_inflate_2": {
+        "n": 39,
+        "brier": 0.167861,
+        "rps": 0.07097,
+        "log_loss": 0.46091,
+        "brier_top10": null,
+        "spiegelhalter_z": 2.301463
+      },
+      "point_sim": {
+        "n": 39,
+        "brier": 0.188588,
+        "rps": 0.072624,
+        "log_loss": 0.525361,
+        "brier_top10": null,
+        "spiegelhalter_z": 4.279377
+      },
+      "elo_sim": {
+        "n": 39,
+        "brier": 0.161575,
+        "rps": 0.070645,
+        "log_loss": 0.518283,
+        "brier_top10": null,
+        "spiegelhalter_z": 4.259555
+      },
+      "standings_now": {
+        "n": 39,
+        "brier": 0.25641,
+        "rps": 0.119658,
+        "log_loss": 2.3617,
+        "brier_top10": null,
+        "spiegelhalter_z": null
+      }
+    }
+  },
+  "per_checkpoint": {
+    "tuning": {
+      "0.25": {
+        "sim_full": {
+          "n": 37,
+          "brier": 0.175008,
+          "rps": 0.123356,
+          "log_loss": 0.531632,
+          "brier_top10": null,
+          "spiegelhalter_z": 1.385592
+        },
+        "sim_net": {
+          "n": 37,
+          "brier": 0.174145,
+          "rps": 0.123483,
+          "log_loss": 0.533539,
+          "brier_top10": null,
+          "spiegelhalter_z": 1.41152
+        },
+        "sim_inflate_1.5": {
+          "n": 37,
+          "brier": 0.173636,
+          "rps": 0.121659,
+          "log_loss": 0.523081,
+          "brier_top10": null,
+          "spiegelhalter_z": 1.054863
+        },
+        "sim_inflate_2": {
+          "n": 37,
+          "brier": 0.171911,
+          "rps": 0.120478,
+          "log_loss": 0.512904,
+          "brier_top10": null,
+          "spiegelhalter_z": 0.764516
+        },
+        "point_sim": {
+          "n": 37,
+          "brier": 0.18521,
+          "rps": 0.132712,
+          "log_loss": 0.618329,
+          "brier_top10": null,
+          "spiegelhalter_z": 3.058035
+        },
+        "elo_sim": {
+          "n": 37,
+          "brier": 0.215203,
+          "rps": 0.156727,
+          "log_loss": 0.882199,
+          "brier_top10": null,
+          "spiegelhalter_z": 5.030326
+        },
+        "standings_now": {
+          "n": 37,
+          "brier": 0.27027,
+          "rps": 0.20475,
+          "log_loss": 2.489354,
+          "brier_top10": null,
+          "spiegelhalter_z": null
+        }
+      },
+      "0.5": {
+        "sim_full": {
+          "n": 37,
+          "brier": 0.082438,
+          "rps": 0.075844,
+          "log_loss": 0.256918,
+          "brier_top10": null,
+          "spiegelhalter_z": 0.075288
+        },
+        "sim_net": {
+          "n": 37,
+          "brier": 0.082787,
+          "rps": 0.076205,
+          "log_loss": 0.258484,
+          "brier_top10": null,
+          "spiegelhalter_z": 0.139053
+        },
+        "sim_inflate_1.5": {
+          "n": 37,
+          "brier": 0.08186,
+          "rps": 0.075366,
+          "log_loss": 0.258097,
+          "brier_top10": null,
+          "spiegelhalter_z": -0.159807
+        },
+        "sim_inflate_2": {
+          "n": 37,
+          "brier": 0.081573,
+          "rps": 0.075047,
+          "log_loss": 0.260048,
+          "brier_top10": null,
+          "spiegelhalter_z": -0.399592
+        },
+        "point_sim": {
+          "n": 37,
+          "brier": 0.085769,
+          "rps": 0.078104,
+          "log_loss": 0.2647,
+          "brier_top10": null,
+          "spiegelhalter_z": 0.964938
+        },
+        "elo_sim": {
+          "n": 37,
+          "brier": 0.075333,
+          "rps": 0.084467,
+          "log_loss": 0.240378,
+          "brier_top10": null,
+          "spiegelhalter_z": 0.743729
+        },
+        "standings_now": {
+          "n": 37,
+          "brier": 0.108108,
+          "rps": 0.104832,
+          "log_loss": 0.995802,
+          "brier_top10": null,
+          "spiegelhalter_z": null
+        }
+      },
+      "0.75": {
+        "sim_full": {
+          "n": 37,
+          "brier": 0.051836,
+          "rps": 0.056338,
+          "log_loss": 0.154584,
+          "brier_top10": null,
+          "spiegelhalter_z": -0.118037
+        },
+        "sim_net": {
+          "n": 37,
+          "brier": 0.051652,
+          "rps": 0.056382,
+          "log_loss": 0.153829,
+          "brier_top10": null,
+          "spiegelhalter_z": -0.082312
+        },
+        "sim_inflate_1.5": {
+          "n": 37,
+          "brier": 0.051236,
+          "rps": 0.056137,
+          "log_loss": 0.154122,
+          "brier_top10": null,
+          "spiegelhalter_z": -0.216921
+        },
+        "sim_inflate_2": {
+          "n": 37,
+          "brier": 0.051128,
+          "rps": 0.056084,
+          "log_loss": 0.155407,
+          "brier_top10": null,
+          "spiegelhalter_z": -0.342787
+        },
+        "point_sim": {
+          "n": 37,
+          "brier": 0.053623,
+          "rps": 0.057532,
+          "log_loss": 0.156702,
+          "brier_top10": null,
+          "spiegelhalter_z": 0.288066
+        },
+        "elo_sim": {
+          "n": 37,
+          "brier": 0.049844,
+          "rps": 0.064636,
+          "log_loss": 0.154633,
+          "brier_top10": null,
+          "spiegelhalter_z": 0.444074
+        },
+        "standings_now": {
+          "n": 37,
+          "brier": 0.108108,
+          "rps": 0.070843,
+          "log_loss": 0.995802,
+          "brier_top10": null,
+          "spiegelhalter_z": null
+        }
+      }
+    },
+    "test": {
+      "0.25": {
+        "sim_full": {
+          "n": 13,
+          "brier": 0.174923,
+          "rps": 0.091579,
+          "log_loss": 0.481627,
+          "brier_top10": null,
+          "spiegelhalter_z": 0.761309
+        },
+        "sim_net": {
+          "n": 13,
+          "brier": 0.175771,
+          "rps": 0.091738,
+          "log_loss": 0.483154,
+          "brier_top10": null,
+          "spiegelhalter_z": 0.805052
+        },
+        "sim_inflate_1.5": {
+          "n": 13,
+          "brier": 0.171353,
+          "rps": 0.092009,
+          "log_loss": 0.476196,
+          "brier_top10": null,
+          "spiegelhalter_z": 0.51249
+        },
+        "sim_inflate_2": {
+          "n": 13,
+          "brier": 0.168728,
+          "rps": 0.092769,
+          "log_loss": 0.47231,
+          "brier_top10": null,
+          "spiegelhalter_z": 0.329893
+        },
+        "point_sim": {
+          "n": 13,
+          "brier": 0.195578,
+          "rps": 0.094859,
+          "log_loss": 0.532013,
+          "brier_top10": null,
+          "spiegelhalter_z": 1.857042
+        },
+        "elo_sim": {
+          "n": 13,
+          "brier": 0.2107,
+          "rps": 0.10547,
+          "log_loss": 0.566323,
+          "brier_top10": null,
+          "spiegelhalter_z": 2.890674
+        },
+        "standings_now": {
+          "n": 13,
+          "brier": 0.307692,
+          "rps": 0.166667,
+          "log_loss": 2.83402,
+          "brier_top10": null,
+          "spiegelhalter_z": null
+        }
+      },
+      "0.5": {
+        "sim_full": {
+          "n": 13,
+          "brier": 0.215348,
+          "rps": 0.075048,
+          "log_loss": 0.605361,
+          "brier_top10": null,
+          "spiegelhalter_z": 2.7388
+        },
+        "sim_net": {
+          "n": 13,
+          "brier": 0.21691,
+          "rps": 0.075206,
+          "log_loss": 0.611673,
+          "brier_top10": null,
+          "spiegelhalter_z": 2.779521
+        },
+        "sim_inflate_1.5": {
+          "n": 13,
+          "brier": 0.212093,
+          "rps": 0.074661,
+          "log_loss": 0.59099,
+          "brier_top10": null,
+          "spiegelhalter_z": 2.563444
+        },
+        "sim_inflate_2": {
+          "n": 13,
+          "brier": 0.206165,
+          "rps": 0.074341,
+          "log_loss": 0.569189,
+          "brier_top10": null,
+          "spiegelhalter_z": 2.307065
+        },
+        "point_sim": {
+          "n": 13,
+          "brier": 0.230307,
+          "rps": 0.077339,
+          "log_loss": 0.677547,
+          "brier_top10": null,
+          "spiegelhalter_z": 3.40761
+        },
+        "elo_sim": {
+          "n": 13,
+          "brier": 0.190345,
+          "rps": 0.07227,
+          "log_loss": 0.758781,
+          "brier_top10": null,
+          "spiegelhalter_z": 3.448899
+        },
+        "standings_now": {
+          "n": 13,
+          "brier": 0.307692,
+          "rps": 0.115385,
+          "log_loss": 2.83402,
+          "brier_top10": null,
+          "spiegelhalter_z": null
+        }
+      },
+      "0.75": {
+        "sim_full": {
+          "n": 13,
+          "brier": 0.134992,
+          "rps": 0.046273,
+          "log_loss": 0.355388,
+          "brier_top10": null,
+          "spiegelhalter_z": 1.718254
+        },
+        "sim_net": {
+          "n": 13,
+          "brier": 0.134733,
+          "rps": 0.045889,
+          "log_loss": 0.354023,
+          "brier_top10": null,
+          "spiegelhalter_z": 1.717191
+        },
+        "sim_inflate_1.5": {
+          "n": 13,
+          "brier": 0.132804,
+          "rps": 0.045946,
+          "log_loss": 0.350174,
+          "brier_top10": null,
+          "spiegelhalter_z": 1.551989
+        },
+        "sim_inflate_2": {
+          "n": 13,
+          "brier": 0.12869,
+          "rps": 0.0458,
+          "log_loss": 0.341231,
+          "brier_top10": null,
+          "spiegelhalter_z": 1.331687
+        },
+        "point_sim": {
+          "n": 13,
+          "brier": 0.139879,
+          "rps": 0.045673,
+          "log_loss": 0.366523,
+          "brier_top10": null,
+          "spiegelhalter_z": 2.094088
+        },
+        "elo_sim": {
+          "n": 13,
+          "brier": 0.08368,
+          "rps": 0.034194,
+          "log_loss": 0.229747,
+          "brier_top10": null,
+          "spiegelhalter_z": 0.402598
+        },
+        "standings_now": {
+          "n": 13,
+          "brier": 0.153846,
+          "rps": 0.076923,
+          "log_loss": 1.41706,
+          "brier_top10": null,
+          "spiegelhalter_z": null
+        }
+      }
+    }
+  },
+  "reliability": {
+    "tuning": {
+      "sim_full": [
+        {
+          "low": 0.0,
+          "high": 0.1,
+          "n": 16,
+          "mean_p": 0.035906,
+          "observed": 0.125
+        },
+        {
+          "low": 0.1,
+          "high": 0.2,
+          "n": 8,
+          "mean_p": 0.153062,
+          "observed": 0.125
+        },
+        {
+          "low": 0.2,
+          "high": 0.3,
+          "n": 6,
+          "mean_p": 0.236042,
+          "observed": 0.166667
+        },
+        {
+          "low": 0.3,
+          "high": 0.4,
+          "n": 3,
+          "mean_p": 0.338833,
+          "observed": 0.333333
+        },
+        {
+          "low": 0.4,
+          "high": 0.5,
+          "n": 3,
+          "mean_p": 0.431417,
+          "observed": 0.666667
+        },
+        {
+          "low": 0.5,
+          "high": 0.6,
+          "n": 7,
+          "mean_p": 0.543036,
+          "observed": 0.571429
+        },
+        {
+          "low": 0.6,
+          "high": 0.7,
+          "n": 4,
+          "mean_p": 0.625437,
+          "observed": 0.5
+        },
+        {
+          "low": 0.7,
+          "high": 0.8,
+          "n": 7,
+          "mean_p": 0.752143,
+          "observed": 0.571429
+        },
+        {
+          "low": 0.8,
+          "high": 0.9,
+          "n": 9,
+          "mean_p": 0.865056,
+          "observed": 0.888889
+        },
+        {
+          "low": 0.9,
+          "high": 1.0,
+          "n": 48,
+          "mean_p": 0.981677,
+          "observed": 0.979167
+        }
+      ],
+      "sim_net": [
+        {
+          "low": 0.0,
+          "high": 0.1,
+          "n": 17,
+          "mean_p": 0.037265,
+          "observed": 0.117647
+        },
+        {
+          "low": 0.1,
+          "high": 0.2,
+          "n": 8,
+          "mean_p": 0.160875,
+          "observed": 0.25
+        },
+        {
+          "low": 0.2,
+          "high": 0.3,
+          "n": 5,
+          "mean_p": 0.2397,
+          "observed": 0.0
+        },
+        {
+          "low": 0.3,
+          "high": 0.4,
+          "n": 3,
+          "mean_p": 0.33475,
+          "observed": 0.333333
+        },
+        {
+          "low": 0.4,
+          "high": 0.5,
+          "n": 3,
+          "mean_p": 0.429917,
+          "observed": 0.666667
+        },
+        {
+          "low": 0.5,
+          "high": 0.6,
+          "n": 8,
+          "mean_p": 0.552531,
+          "observed": 0.5
+        },
+        {
+          "low": 0.6,
+          "high": 0.7,
+          "n": 3,
+          "mean_p": 0.6365,
+          "observed": 0.666667
+        },
+        {
+          "low": 0.7,
+          "high": 0.8,
+          "n": 7,
+          "mean_p": 0.756321,
+          "observed": 0.571429
+        },
+        {
+          "low": 0.8,
+          "high": 0.9,
+          "n": 7,
+          "mean_p": 0.856679,
+          "observed": 0.857143
+        },
+        {
+          "low": 0.9,
+          "high": 1.0,
+          "n": 50,
+          "mean_p": 0.979325,
+          "observed": 0.98
+        }
+      ],
+      "sim_inflate_1.5": [
+        {
+          "low": 0.0,
+          "high": 0.1,
+          "n": 13,
+          "mean_p": 0.02675,
+          "observed": 0.076923
+        },
+        {
+          "low": 0.1,
+          "high": 0.2,
+          "n": 9,
+          "mean_p": 0.147056,
+          "observed": 0.111111
+        },
+        {
+          "low": 0.2,
+          "high": 0.3,
+          "n": 7,
+          "mean_p": 0.230714,
+          "observed": 0.285714
+        },
+        {
+          "low": 0.3,
+          "high": 0.4,
+          "n": 4,
+          "mean_p": 0.344813,
+          "observed": 0.25
+        },
+        {
+          "low": 0.4,
+          "high": 0.5,
+          "n": 3,
+          "mean_p": 0.440333,
+          "observed": 0.666667
+        },
+        {
+          "low": 0.5,
+          "high": 0.6,
+          "n": 8,
+          "mean_p": 0.551562,
+          "observed": 0.5
+        },
+        {
+          "low": 0.6,
+          "high": 0.7,
+          "n": 4,
+          "mean_p": 0.644125,
+          "observed": 0.5
+        },
+        {
+          "low": 0.7,
+          "high": 0.8,
+          "n": 6,
+          "mean_p": 0.746625,
+          "observed": 0.666667
+        },
+        {
+          "low": 0.8,
+          "high": 0.9,
+          "n": 12,
+          "mean_p": 0.85675,
+          "observed": 0.833333
+        },
+        {
+          "low": 0.9,
+          "high": 1.0,
+          "n": 45,
+          "mean_p": 0.983639,
+          "observed": 1.0
+        }
+      ],
+      "sim_inflate_2": [
+        {
+          "low": 0.0,
+          "high": 0.1,
+          "n": 12,
+          "mean_p": 0.028063,
+          "observed": 0.083333
+        },
+        {
+          "low": 0.1,
+          "high": 0.2,
+          "n": 7,
+          "mean_p": 0.139036,
+          "observed": 0.142857
+        },
+        {
+          "low": 0.2,
+          "high": 0.3,
+          "n": 10,
+          "mean_p": 0.23935,
+          "observed": 0.2
+        },
+        {
+          "low": 0.3,
+          "high": 0.4,
+          "n": 4,
+          "mean_p": 0.355,
+          "observed": 0.25
+        },
+        {
+          "low": 0.4,
+          "high": 0.5,
+          "n": 3,
+          "mean_p": 0.445917,
+          "observed": 0.666667
+        },
+        {
+          "low": 0.5,
+          "high": 0.6,
+          "n": 8,
+          "mean_p": 0.551844,
+          "observed": 0.5
+        },
+        {
+          "low": 0.6,
+          "high": 0.7,
+          "n": 5,
+          "mean_p": 0.64595,
+          "observed": 0.6
+        },
+        {
+          "low": 0.7,
+          "high": 0.8,
+          "n": 6,
+          "mean_p": 0.747625,
+          "observed": 0.666667
+        },
+        {
+          "low": 0.8,
+          "high": 0.9,
+          "n": 13,
+          "mean_p": 0.851308,
+          "observed": 0.846154
+        },
+        {
+          "low": 0.9,
+          "high": 1.0,
+          "n": 43,
+          "mean_p": 0.984686,
+          "observed": 1.0
+        }
+      ],
+      "point_sim": [
+        {
+          "low": 0.0,
+          "high": 0.1,
+          "n": 24,
+          "mean_p": 0.034698,
+          "observed": 0.166667
+        },
+        {
+          "low": 0.1,
+          "high": 0.2,
+          "n": 4,
+          "mean_p": 0.156,
+          "observed": 0.0
+        },
+        {
+          "low": 0.2,
+          "high": 0.3,
+          "n": 4,
+          "mean_p": 0.250062,
+          "observed": 0.0
+        },
+        {
+          "low": 0.3,
+          "high": 0.4,
+          "n": 2,
+          "mean_p": 0.355,
+          "observed": 1.0
+        },
+        {
+          "low": 0.4,
+          "high": 0.5,
+          "n": 4,
+          "mean_p": 0.432375,
+          "observed": 0.5
+        },
+        {
+          "low": 0.5,
+          "high": 0.6,
+          "n": 4,
+          "mean_p": 0.564625,
+          "observed": 0.5
+        },
+        {
+          "low": 0.6,
+          "high": 0.7,
+          "n": 4,
+          "mean_p": 0.636813,
+          "observed": 0.75
+        },
+        {
+          "low": 0.7,
+          "high": 0.8,
+          "n": 3,
+          "mean_p": 0.756667,
+          "observed": 0.333333
+        },
+        {
+          "low": 0.8,
+          "high": 0.9,
+          "n": 5,
+          "mean_p": 0.82635,
+          "observed": 0.6
+        },
+        {
+          "low": 0.9,
+          "high": 1.0,
+          "n": 57,
+          "mean_p": 0.980632,
+          "observed": 0.964912
+        }
+      ],
+      "elo_sim": [
+        {
+          "low": 0.0,
+          "high": 0.1,
+          "n": 26,
+          "mean_p": 0.025846,
+          "observed": 0.115385
+        },
+        {
+          "low": 0.1,
+          "high": 0.2,
+          "n": 4,
+          "mean_p": 0.149125,
+          "observed": 0.25
+        },
+        {
+          "low": 0.2,
+          "high": 0.3,
+          "n": 3,
+          "mean_p": 0.2435,
+          "observed": 0.333333
+        },
+        {
+          "low": 0.3,
+          "high": 0.4,
+          "n": 1,
+          "mean_p": 0.3715,
+          "observed": 1.0
+        },
+        {
+          "low": 0.4,
+          "high": 0.5,
+          "n": 1,
+          "mean_p": 0.48025,
+          "observed": 1.0
+        },
+        {
+          "low": 0.5,
+          "high": 0.6,
+          "n": 7,
+          "mean_p": 0.558393,
+          "observed": 0.428571
+        },
+        {
+          "low": 0.6,
+          "high": 0.7,
+          "n": 4,
+          "mean_p": 0.645125,
+          "observed": 0.75
+        },
+        {
+          "low": 0.7,
+          "high": 0.8,
+          "n": 4,
+          "mean_p": 0.740562,
+          "observed": 0.75
+        },
+        {
+          "low": 0.8,
+          "high": 0.9,
+          "n": 3,
+          "mean_p": 0.855917,
+          "observed": 0.666667
+        },
+        {
+          "low": 0.9,
+          "high": 1.0,
+          "n": 58,
+          "mean_p": 0.985,
+          "observed": 0.931034
+        }
+      ],
+      "standings_now": [
+        {
+          "low": 0.0,
+          "high": 0.1,
+          "n": 39,
+          "mean_p": 0.0,
+          "observed": 0.230769
+        },
+        {
+          "low": 0.1,
+          "high": 0.2,
+          "n": 0,
+          "mean_p": null,
+          "observed": null
+        },
+        {
+          "low": 0.2,
+          "high": 0.3,
+          "n": 0,
+          "mean_p": null,
+          "observed": null
+        },
+        {
+          "low": 0.3,
+          "high": 0.4,
+          "n": 0,
+          "mean_p": null,
+          "observed": null
+        },
+        {
+          "low": 0.4,
+          "high": 0.5,
+          "n": 0,
+          "mean_p": null,
+          "observed": null
+        },
+        {
+          "low": 0.5,
+          "high": 0.6,
+          "n": 0,
+          "mean_p": null,
+          "observed": null
+        },
+        {
+          "low": 0.6,
+          "high": 0.7,
+          "n": 0,
+          "mean_p": null,
+          "observed": null
+        },
+        {
+          "low": 0.7,
+          "high": 0.8,
+          "n": 0,
+          "mean_p": null,
+          "observed": null
+        },
+        {
+          "low": 0.8,
+          "high": 0.9,
+          "n": 0,
+          "mean_p": null,
+          "observed": null
+        },
+        {
+          "low": 0.9,
+          "high": 1.0,
+          "n": 72,
+          "mean_p": 1.0,
+          "observed": 0.875
+        }
+      ]
+    },
+    "test": {
+      "sim_full": [
+        {
+          "low": 0.0,
+          "high": 0.1,
+          "n": 6,
+          "mean_p": 0.02875,
+          "observed": 0.0
+        },
+        {
+          "low": 0.1,
+          "high": 0.2,
+          "n": 1,
+          "mean_p": 0.1185,
+          "observed": 1.0
+        },
+        {
+          "low": 0.2,
+          "high": 0.3,
+          "n": 2,
+          "mean_p": 0.25175,
+          "observed": 0.5
+        },
+        {
+          "low": 0.3,
+          "high": 0.4,
+          "n": 3,
+          "mean_p": 0.32425,
+          "observed": 0.666667
+        },
+        {
+          "low": 0.4,
+          "high": 0.5,
+          "n": 5,
+          "mean_p": 0.4744,
+          "observed": 0.4
+        },
+        {
+          "low": 0.5,
+          "high": 0.6,
+          "n": 1,
+          "mean_p": 0.5155,
+          "observed": 1.0
+        },
+        {
+          "low": 0.6,
+          "high": 0.7,
+          "n": 1,
+          "mean_p": 0.646,
+          "observed": 1.0
+        },
+        {
+          "low": 0.7,
+          "high": 0.8,
+          "n": 3,
+          "mean_p": 0.762583,
+          "observed": 0.333333
+        },
+        {
+          "low": 0.8,
+          "high": 0.9,
+          "n": 3,
+          "mean_p": 0.844,
+          "observed": 0.333333
+        },
+        {
+          "low": 0.9,
+          "high": 1.0,
+          "n": 14,
+          "mean_p": 0.991393,
+          "observed": 1.0
+        }
+      ],
+      "sim_net": [
+        {
+          "low": 0.0,
+          "high": 0.1,
+          "n": 6,
+          "mean_p": 0.028167,
+          "observed": 0.0
+        },
+        {
+          "low": 0.1,
+          "high": 0.2,
+          "n": 1,
+          "mean_p": 0.11475,
+          "observed": 1.0
+        },
+        {
+          "low": 0.2,
+          "high": 0.3,
+          "n": 2,
+          "mean_p": 0.25425,
+          "observed": 0.5
+        },
+        {
+          "low": 0.3,
+          "high": 0.4,
+          "n": 3,
+          "mean_p": 0.323333,
+          "observed": 0.666667
+        },
+        {
+          "low": 0.4,
+          "high": 0.5,
+          "n": 4,
+          "mean_p": 0.466187,
+          "observed": 0.5
+        },
+        {
+          "low": 0.5,
+          "high": 0.6,
+          "n": 2,
+          "mean_p": 0.50825,
+          "observed": 0.5
+        },
+        {
+          "low": 0.6,
+          "high": 0.7,
+          "n": 1,
+          "mean_p": 0.64425,
+          "observed": 1.0
+        },
+        {
+          "low": 0.7,
+          "high": 0.8,
+          "n": 3,
+          "mean_p": 0.7625,
+          "observed": 0.333333
+        },
+        {
+          "low": 0.8,
+          "high": 0.9,
+          "n": 3,
+          "mean_p": 0.846917,
+          "observed": 0.333333
+        },
+        {
+          "low": 0.9,
+          "high": 1.0,
+          "n": 14,
+          "mean_p": 0.991714,
+          "observed": 1.0
+        }
+      ],
+      "sim_inflate_1.5": [
+        {
+          "low": 0.0,
+          "high": 0.1,
+          "n": 6,
+          "mean_p": 0.036042,
+          "observed": 0.0
+        },
+        {
+          "low": 0.1,
+          "high": 0.2,
+          "n": 1,
+          "mean_p": 0.1305,
+          "observed": 1.0
+        },
+        {
+          "low": 0.2,
+          "high": 0.3,
+          "n": 1,
+          "mean_p": 0.215,
+          "observed": 1.0
+        },
+        {
+          "low": 0.3,
+          "high": 0.4,
+          "n": 4,
+          "mean_p": 0.33625,
+          "observed": 0.5
+        },
+        {
+          "low": 0.4,
+          "high": 0.5,
+          "n": 5,
+          "mean_p": 0.476,
+          "observed": 0.4
+        },
+        {
+          "low": 0.5,
+          "high": 0.6,
+          "n": 1,
+          "mean_p": 0.51975,
+          "observed": 1.0
+        },
+        {
+          "low": 0.6,
+          "high": 0.7,
+          "n": 1,
+          "mean_p": 0.641,
+          "observed": 1.0
+        },
+        {
+          "low": 0.7,
+          "high": 0.8,
+          "n": 3,
+          "mean_p": 0.7425,
+          "observed": 0.333333
+        },
+        {
+          "low": 0.8,
+          "high": 0.9,
+          "n": 3,
+          "mean_p": 0.829,
+          "observed": 0.333333
+        },
+        {
+          "low": 0.9,
+          "high": 1.0,
+          "n": 14,
+          "mean_p": 0.988429,
+          "observed": 1.0
+        }
+      ],
+      "sim_inflate_2": [
+        {
+          "low": 0.0,
+          "high": 0.1,
+          "n": 6,
+          "mean_p": 0.042667,
+          "observed": 0.0
+        },
+        {
+          "low": 0.1,
+          "high": 0.2,
+          "n": 1,
+          "mean_p": 0.14825,
+          "observed": 1.0
+        },
+        {
+          "low": 0.2,
+          "high": 0.3,
+          "n": 1,
+          "mean_p": 0.225,
+          "observed": 1.0
+        },
+        {
+          "low": 0.3,
+          "high": 0.4,
+          "n": 4,
+          "mean_p": 0.35275,
+          "observed": 0.5
+        },
+        {
+          "low": 0.4,
+          "high": 0.5,
+          "n": 5,
+          "mean_p": 0.4795,
+          "observed": 0.4
+        },
+        {
+          "low": 0.5,
+          "high": 0.6,
+          "n": 1,
+          "mean_p": 0.51775,
+          "observed": 1.0
+        },
+        {
+          "low": 0.6,
+          "high": 0.7,
+          "n": 1,
+          "mean_p": 0.63425,
+          "observed": 1.0
+        },
+        {
+          "low": 0.7,
+          "high": 0.8,
+          "n": 5,
+          "mean_p": 0.7513,
+          "observed": 0.4
+        },
+        {
+          "low": 0.8,
+          "high": 0.9,
+          "n": 1,
+          "mean_p": 0.854,
+          "observed": 0.0
+        },
+        {
+          "low": 0.9,
+          "high": 1.0,
+          "n": 14,
+          "mean_p": 0.985696,
+          "observed": 1.0
+        }
+      ],
+      "point_sim": [
+        {
+          "low": 0.0,
+          "high": 0.1,
+          "n": 7,
+          "mean_p": 0.024214,
+          "observed": 0.142857
+        },
+        {
+          "low": 0.1,
+          "high": 0.2,
+          "n": 2,
+          "mean_p": 0.19425,
+          "observed": 0.5
+        },
+        {
+          "low": 0.2,
+          "high": 0.3,
+          "n": 3,
+          "mean_p": 0.262917,
+          "observed": 0.666667
+        },
+        {
+          "low": 0.3,
+          "high": 0.4,
+          "n": 0,
+          "mean_p": null,
+          "observed": null
+        },
+        {
+          "low": 0.4,
+          "high": 0.5,
+          "n": 3,
+          "mean_p": 0.45225,
+          "observed": 0.666667
+        },
+        {
+          "low": 0.5,
+          "high": 0.6,
+          "n": 3,
+          "mean_p": 0.516333,
+          "observed": 0.333333
+        },
+        {
+          "low": 0.6,
+          "high": 0.7,
+          "n": 1,
+          "mean_p": 0.657,
+          "observed": 1.0
+        },
+        {
+          "low": 0.7,
+          "high": 0.8,
+          "n": 2,
+          "mean_p": 0.787375,
+          "observed": 0.5
+        },
+        {
+          "low": 0.8,
+          "high": 0.9,
+          "n": 3,
+          "mean_p": 0.882167,
+          "observed": 0.0
+        },
+        {
+          "low": 0.9,
+          "high": 1.0,
+          "n": 15,
+          "mean_p": 0.991283,
+          "observed": 1.0
+        }
+      ],
+      "elo_sim": [
+        {
+          "low": 0.0,
+          "high": 0.1,
+          "n": 8,
+          "mean_p": 0.006375,
+          "observed": 0.125
+        },
+        {
+          "low": 0.1,
+          "high": 0.2,
+          "n": 1,
+          "mean_p": 0.106,
+          "observed": 0.0
+        },
+        {
+          "low": 0.2,
+          "high": 0.3,
+          "n": 2,
+          "mean_p": 0.26075,
+          "observed": 1.0
+        },
+        {
+          "low": 0.3,
+          "high": 0.4,
+          "n": 2,
+          "mean_p": 0.371375,
+          "observed": 0.5
+        },
+        {
+          "low": 0.4,
+          "high": 0.5,
+          "n": 0,
+          "mean_p": null,
+          "observed": null
+        },
+        {
+          "low": 0.5,
+          "high": 0.6,
+          "n": 5,
+          "mean_p": 0.5699,
+          "observed": 0.4
+        },
+        {
+          "low": 0.6,
+          "high": 0.7,
+          "n": 2,
+          "mean_p": 0.627625,
+          "observed": 0.5
+        },
+        {
+          "low": 0.7,
+          "high": 0.8,
+          "n": 1,
+          "mean_p": 0.786,
+          "observed": 1.0
+        },
+        {
+          "low": 0.8,
+          "high": 0.9,
+          "n": 0,
+          "mean_p": null,
+          "observed": null
+        },
+        {
+          "low": 0.9,
+          "high": 1.0,
+          "n": 18,
+          "mean_p": 0.982667,
+          "observed": 0.888889
+        }
+      ],
+      "standings_now": [
+        {
+          "low": 0.0,
+          "high": 0.1,
+          "n": 15,
+          "mean_p": 0.0,
+          "observed": 0.333333
+        },
+        {
+          "low": 0.1,
+          "high": 0.2,
+          "n": 0,
+          "mean_p": null,
+          "observed": null
+        },
+        {
+          "low": 0.2,
+          "high": 0.3,
+          "n": 0,
+          "mean_p": null,
+          "observed": null
+        },
+        {
+          "low": 0.3,
+          "high": 0.4,
+          "n": 0,
+          "mean_p": null,
+          "observed": null
+        },
+        {
+          "low": 0.4,
+          "high": 0.5,
+          "n": 0,
+          "mean_p": null,
+          "observed": null
+        },
+        {
+          "low": 0.5,
+          "high": 0.6,
+          "n": 0,
+          "mean_p": null,
+          "observed": null
+        },
+        {
+          "low": 0.6,
+          "high": 0.7,
+          "n": 0,
+          "mean_p": null,
+          "observed": null
+        },
+        {
+          "low": 0.7,
+          "high": 0.8,
+          "n": 0,
+          "mean_p": null,
+          "observed": null
+        },
+        {
+          "low": 0.8,
+          "high": 0.9,
+          "n": 0,
+          "mean_p": null,
+          "observed": null
+        },
+        {
+          "low": 0.9,
+          "high": 1.0,
+          "n": 24,
+          "mean_p": 1.0,
+          "observed": 0.791667
+        }
+      ]
+    }
+  },
+  "title_brier": {
+    "tuning": {
+      "sim_full": 0.550559,
+      "sim_net": 0.54959,
+      "sim_inflate_1.5": 0.548729,
+      "sim_inflate_2": 0.550125,
+      "point_sim": 0.558,
+      "elo_sim": 0.519526,
+      "standings_now": 0.888889
+    },
+    "test": {
+      "sim_full": 0.390406,
+      "sim_net": 0.389485,
+      "sim_inflate_1.5": 0.395615,
+      "sim_inflate_2": 0.403751,
+      "point_sim": 0.376709,
+      "elo_sim": 0.077514,
+      "standings_now": 0.0
+    }
+  },
+  "differences": {
+    "tuning": {
+      "brier_vs_point_sim": {
+        "mean": -0.005107,
+        "ci95": [
+          -0.013869,
+          0.002386
+        ],
+        "clusters": 37,
+        "resamples": 1000,
+        "seed": 20261102
+      },
+      "brier_vs_standings_now": {
+        "mean": -0.059068,
+        "ci95": [
+          -0.106899,
+          -0.018023
+        ],
+        "clusters": 37,
+        "resamples": 1000,
+        "seed": 20261102
+      },
+      "brier_vs_elo_sim": {
+        "mean": -0.010366,
+        "ci95": [
+          -0.027441,
+          0.007052
+        ],
+        "clusters": 37,
+        "resamples": 1000,
+        "seed": 20261102
+      }
+    },
+    "test": {
+      "brier_vs_point_sim": {
+        "mean": -0.0135,
+        "ci95": [
+          -0.025892,
+          -0.003629
+        ],
+        "clusters": 13,
+        "resamples": 1000,
+        "seed": 20261102
+      },
+      "brier_vs_standings_now": {
+        "mean": -0.081323,
+        "ci95": [
+          -0.183246,
+          0.015972
+        ],
+        "clusters": 13,
+        "resamples": 1000,
+        "seed": 20261102
+      },
+      "brier_vs_elo_sim": {
+        "mean": 0.013512,
+        "ci95": [
+          -0.025942,
+          0.058157
+        ],
+        "clusters": 13,
+        "resamples": 1000,
+        "seed": 20261102
+      }
+    }
+  },
+  "gate": {
+    "rule": "validation mean Brier of the direct-playoff cut: the chosen variant below point_sim's and standings_now's (point rule), and the Spiegelhalter |z| pooled over tuning and validation below 1.96; team-cluster bootstrap 95% CIs reported",
+    "variant": "sim_full",
+    "brier_chosen": null,
+    "brier_point_sim": null,
+    "brier_standings_now": null,
+    "spiegelhalter_z_pooled": 0.923929,
+    "passed": null,
+    "gated": false
+  }
+}

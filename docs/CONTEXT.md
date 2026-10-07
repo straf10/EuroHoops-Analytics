@@ -72,3 +72,18 @@ A GBL id and a EuroLeague id on the same Greek club in the same season, with equ
 
 **Confirmed time**:
 A tip-off time the source has published. A game without one (in the GBL it sits at local midnight of its date) is never forecast; it is the next tip-off only by its date ("time TBC"), when no game ahead has a confirmed time.
+
+## Season simulation (M7)
+
+**Checkpoint**:
+A point in a past season where the backtest stops time: after 25%, 50% or 75% of the regular-season rounds, at the next round's first tip-off. Everything a checkpoint forecast uses comes from games before it.
+
+**Strength posterior**:
+M1's team ratings read as a Gaussian at a cutoff: the ridge solution as mean, σ²·(G + P)⁻¹ as covariance. Each simulation draws one strength vector from it and keeps it for the whole season.
+_Avoid_: rating (the point value M1 forecasts with)
+
+**Cut line**:
+The regular-season places that decide a team's path: the direct playoffs (top 8 through 2022-23, top 6 after), the play-in (7–10) and the top 10.
+
+**Simulation log**:
+The append-only per-team record of the live season simulation (`predictions/{competition}_sim_2026-27.csv`), one set of rows per completed round; written only when M7's gate passed.

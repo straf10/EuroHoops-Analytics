@@ -34,12 +34,16 @@ from eurohoops.config import (
     M3_GBL,
     M5,
     M5_GBL,
+    M7,
+    M7_GBL,
     MART_PATH,
     ODDS_CALLS,
     ODDS_RAW_DIR,
     ODDS_TEAMS,
     PLAYER_BIOS,
     POSSESSION_REPORT,
+    SIM_LATEST,
+    SIM_LOGS,
     SITE_DATA,
     SQL_DIR,
     STINT_REPORT,
@@ -47,6 +51,7 @@ from eurohoops.config import (
     TEAM_CONTINUITY_REPORT,
     Competition,
     M5Backtest,
+    M7Backtest,
 )
 from eurohoops.eval.backtest import TunedModel, format_table, load_tuned_model, run_backtest
 from eurohoops.eval.m1_backtest import format_m1_table, run_m1_backtest
@@ -65,12 +70,14 @@ from eurohoops.eval.m5_backtest import (
     format_m5_table,
     run_m5_backtest,
 )
+from eurohoops.eval.m7_backtest import M7Inputs, format_m7_table, run_m7_backtest, scored_splits
 from eurohoops.eval.scorecard import build_scorecard
 from eurohoops.eval.tracking import (
     default_tracking_uri,
     log_backtest,
     log_m3_backtest,
     log_m5_backtest,
+    log_m7_backtest,
 )
 from eurohoops.ingest import euroleague, gbl
 from eurohoops.ingest.bios import build_bios, ingest_bios
@@ -78,6 +85,7 @@ from eurohoops.ingest.http import Fetcher, make_client
 from eurohoops.injuries import InjuryPaths, record_injuries, team_name_map
 from eurohoops.live_m1 import load_m1, predict_upcoming_m1
 from eurohoops.live_m5 import live_spec, load_m5, predict_upcoming_m5
+from eurohoops.live_sim import LIVE_SIMS, load_sim, log_rows, run_live_sim, write_live_sim
 from eurohoops.logs import write_json
 from eurohoops.marts import (
     box_invariants,
@@ -111,6 +119,8 @@ from eurohoops.parse.stints_mart import build_stints_mart, mart_report
 from eurohoops.parse.team_box import TEAM_GAMES_SCHEMA, build_team_games
 from eurohoops.predict import LatePredictionError, predict_upcoming
 from eurohoops.publish import DISPLAY_CODES, Section, site_data
+from eurohoops.sim.formats import season_format
+from eurohoops.sim.played import regulation_scores
 from eurohoops.stats.box import build_box_games
 from eurohoops.stats.export import STATS_DIR, Inputs, build_payloads, load_cached_games, write_stats
 from eurohoops.stats.shots import build_shots
@@ -131,6 +141,7 @@ class ModelName(StrEnum):
     m3 = "m3"
     m4 = "m4"
     m5 = "m5"
+    m7 = "m7"
 
 
 CompetitionOption = Annotated[
@@ -684,12 +695,64 @@ def _backtest_m5(
         typer.echo(f"MLflow run {run_id}")
 
 
+def _m7_inputs(comp: Competition, spec: M7Backtest, seasons: tuple[int, ...]) -> M7Inputs:
+    """M7's inputs for ``comp``: every game up to the last test season (the live season never
+    enters, so the daily log cannot move the report), M1's committed parameters and comparison
+    Elo, and the EuroLeague's regulation scores of the scored regular seasons."""
+    if comp.m1 is None or not comp.m1.report.exists():
+        log.error("no committed M1 report for %s; run: eurohoops backtest --model m1", comp.name)
+        raise typer.Exit(code=1)
+    m1_report = json.loads(comp.m1.report.read_text(encoding="utf-8"))
+    games = read_games(MART_PATH, comp.name)
+    games = games[games["season"] <= spec.test[-1]].reset_index(drop=True)
+    team_games = read_table(MART_PATH, "team_games", comp.name)
+    if team_games is None:
+        log.error("no team_games in the marts; run: eurohoops build")
+        raise typer.Exit(code=1)
+    team_games = team_games[team_games["game_id"].isin(set(games["game_id"]))]
+    scored = games[(games["phase"] == "RS") & games["season"].isin(seasons)]
+    return M7Inputs(
+        competition=comp.name,
+        games=games,
+        team_games=team_games.reset_index(drop=True),
+        regulation=regulation_scores(comp.raw_dir, scored) if comp is EUROLEAGUE else {},
+        tuned_m1=m1_report["tuned"],
+        elo=m1_report["comparison_elo"],
+    )
+
+
+def _backtest_m7(
+    competition: CompetitionName, score_test: bool, tuning_only: bool, tracking_uri: str
+) -> None:
+    """``backtest --model m7`` (week 14-16 K4): season simulation vs the real final tables."""
+    spec, comp = (M7, EUROLEAGUE) if competition is CompetitionName.euroleague else (M7_GBL, GBL)
+    fixed = None
+    if comp is GBL:  # K-a: the EuroLeague verdict, no GBL-specific choice
+        if tuning_only or not M7.report.exists():
+            log.error("GBL M7 scores the committed EuroLeague verdict; run the EuroLeague first")
+            raise typer.Exit(code=1)
+        fixed = json.loads(M7.report.read_text(encoding="utf-8"))["chosen"]["key"]
+    started = time.perf_counter()
+    inputs = _m7_inputs(comp, spec, tuple(scored_splits(spec, tuning_only, score_test)))
+    report, rows = run_m7_backtest(
+        inputs, spec=spec, tuning_only=tuning_only, score_test=score_test, fixed=fixed
+    )
+    write_json(spec.report, report)
+    rows.to_csv(spec.teams_report, index=False, lineterminator="\n")
+    typer.echo(f"{spec.report}\n{format_m7_table(report)}")
+    typer.echo(f"RUNTIME backtest m7 {comp.name}: {time.perf_counter() - started:.0f} s")
+    run_id = log_m7_backtest(report, comp.name, tracking_uri)
+    if run_id is not None:
+        typer.echo(f"MLflow run {run_id}")
+
+
 @app.command()
 def backtest(
     *,
     competition: CompetitionOption = CompetitionName.euroleague,
     model: Annotated[
-        ModelName, typer.Option(help="elo (live model), m1, m2 (shots) or m3 (player impact)")
+        ModelName,
+        typer.Option(help="elo (live), m1, m2 (shots), m3 (players), m4, m5 (roster), m7 (season)"),
     ] = ModelName.elo,
     score_test: Annotated[
         bool,
@@ -720,6 +783,9 @@ def backtest(
         return
     if model is ModelName.m5:
         _backtest_m5(competition, score_test, tuning_only, tracking_uri or default_tracking_uri())
+        return
+    if model is ModelName.m7:
+        _backtest_m7(competition, score_test, tuning_only, tracking_uri or default_tracking_uri())
         return
     comp = COMPETITIONS[competition]
     games = read_games(MART_PATH, comp.name)
@@ -862,6 +928,59 @@ def injuries() -> None:
         f" (page updated {summary.get('page_updated_utc') or '?'}); log {paths.log}; "
         f"unmapped teams: {', '.join(summary['unmapped']) or 'none'}"
     )
+
+
+@app.command()
+def simulate(
+    *,
+    competition: CompetitionOption = CompetitionName.euroleague,
+    dry_run: Annotated[
+        bool, typer.Option(help="Compute and print the simulation; write nothing")
+    ] = False,
+) -> None:
+    """Simulate the rest of the live regular season (M7, K8) after the completed rounds; the log
+    is appended only when the EuroLeague M7 gate passed and the round is not logged yet."""
+    comp = COMPETITIONS[competition]
+    model = load_sim(M7.report)
+    if comp.m1 is None or model is None or not comp.m1.report.exists():
+        log.error("no committed M7 or M1 report; run: eurohoops backtest --model m7")
+        raise typer.Exit(code=1)
+    started = time.perf_counter()
+    games = read_games(MART_PATH, comp.name)
+    games = games[games["season"] <= LIVE_SEASON].reset_index(drop=True)
+    team_games = read_table(MART_PATH, "team_games", comp.name)
+    if team_games is None:
+        log.error("no team_games in the marts; run: eurohoops build")
+        raise typer.Exit(code=1)
+    fmt = season_format(comp.name, LIVE_SEASON)
+    tuned = json.loads(comp.m1.report.read_text(encoding="utf-8"))["tuned"]
+    spec = M7 if comp is EUROLEAGUE else M7_GBL
+    run = run_live_sim(
+        games, team_games, tuned, model, fmt=fmt, season=LIVE_SEASON, spec=spec, n_sims=LIVE_SIMS
+    )
+    if run is None:
+        typer.echo(f"{comp.name}: the {LIVE_SEASON} regular season is over; nothing to simulate")
+        return
+    now = datetime.now(UTC)
+    for row in log_rows(run, model, LIVE_SEASON, now):
+        typer.echo(
+            f"{row['team']:<10}{row['p_direct_playoffs']:>8}{row['p_play_in']:>8}"
+            f"{row['p_final_four']:>8}{row['p_title']:>8}{row['expected_wins']:>7}"
+            f"  {row['rank_p10']}-{row['rank_p50']}-{row['rank_p90']}"
+        )
+    typer.echo(f"after round {run.after_round}, seed {run.seed}, gate passed {model.gate_passed}")
+    if not dry_run:
+        n = write_live_sim(
+            run,
+            model,
+            fmt=fmt,
+            season=LIVE_SEASON,
+            at=now,
+            log_path=SIM_LOGS[comp.name],
+            report_path=SIM_LATEST[comp.name],
+        )
+        typer.echo(f"{n} rows appended to {SIM_LOGS[comp.name]}")
+    typer.echo(f"RUNTIME simulate {comp.name}: {time.perf_counter() - started:.0f} s")
 
 
 @app.command()
