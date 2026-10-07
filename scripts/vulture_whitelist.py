@@ -96,45 +96,11 @@ projected_shares_variant
 # the J8 gap recomputation test call; src does not call it
 predict_games
 
-# week 14-16 M7 K0: played results for the M7 backtest (K4) and live simulate (K8)
-from eurohoops.sim.played import regulation_scores, season_results  # noqa: E402
-
-regulation_scores
-season_results
-
-# week 14-16 M7 K2: used by eval/m7_backtest.py (K4) and live simulate (K8)
-from eurohoops.sim.formats import cut_lines, season_format  # noqa: E402
-
-cut_lines
-season_format
-
-# week 14-16 M7 K3: used by eval/m7_backtest.py (K4) and live simulate (K8)
-from eurohoops.sim.season import (  # noqa: E402
-    NoiseModel,
-    PaceModel,
-    SimOutput,
-    StrengthSampler,
-    simulate,
-)
+# week 14-16 M7 K3: used by live simulate (K8); eval/m7_backtest.py reads the other SimOutput fields
+from eurohoops.sim.season import SimOutput  # noqa: E402
 from eurohoops.standings import rank_by_wins  # noqa: E402
 
-NoiseModel
-PaceModel
-SimOutput
-StrengthSampler
-simulate
 rank_by_wins
-SimOutput.p_direct
-SimOutput.p_play_in
-SimOutput.p_top10
 SimOutput.p_playoffs
 SimOutput.p_semis
 SimOutput.p_final
-SimOutput.p_title
-
-# week 14-16 M7 K1: used by eval/m7_backtest.py (K4) and live simulate (K8)
-from eurohoops.models.team_eff import RatingPosterior, pace_points, rating_posteriors  # noqa: E402
-
-RatingPosterior
-rating_posteriors
-pace_points

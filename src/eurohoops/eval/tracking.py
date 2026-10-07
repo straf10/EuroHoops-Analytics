@@ -306,3 +306,52 @@ def log_m5_backtest(report: dict[str, Any], competition: str, tracking_uri: str)
             mlflow.log_artifact(str(path))
     run_id: str = run.info.run_id
     return run_id
+
+
+EXPERIMENT_M7 = "m7-backtest"
+M7_UNLOGGED = ("reliability", "seeds", "formats")  # bins and seeds are in the JSON artifact only
+
+
+def log_m7_backtest(report: dict[str, Any], competition: str, tracking_uri: str) -> str | None:
+    """Log one M7 backtest (week 14-16 K4): one run with the chosen variant as params, the data
+    hash and commit, every numeric report value except the reliability bins, the seeds and the
+    formats, and the report JSON. None when MLflow is not installed, like the other loggers."""
+    try:
+        import mlflow  # noqa: PLC0415 - optional dev dependency, only on the backtest path
+    except ImportError:
+        log.warning("MLflow is not installed (dev dependency): backtest not tracked")
+        return None
+    commit, dirty = git_state()
+    shared = {
+        "competition": competition,
+        "data_sha256": report["data_sha256"],
+        "git_commit": commit,
+        "git_dirty": str(dirty).lower(),
+        "model_version": report["model_version"],
+    }
+    chosen = report["chosen"]
+    params = {
+        **shared,
+        "chosen.key": chosen["key"],
+        "chosen.spread": chosen["spread"],
+        "chosen.net": chosen["net"],
+        "n_sims": report["n_sims"],
+        **{f"seasons.{k}": ",".join(map(str, v)) for k, v in report["seasons"].items()},
+        "tuning_only": report["tuning_only"],
+        "test_scored": report["test_scored"],
+    }
+    mlflow.set_tracking_uri(tracking_uri)
+    experiment_id = _experiment(mlflow.MlflowClient(), EXPERIMENT_M7, tracking_uri)
+    name = f"m7 {competition} {report['model_version']}"
+    with mlflow.start_run(experiment_id=experiment_id, run_name=name) as run:
+        mlflow.log_params(params)
+        mlflow.set_tags(shared)
+        mlflow.log_metrics(
+            flatten_metrics({k: v for k, v in report.items() if k not in M7_UNLOGGED})
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / f"backtest_m7_{competition}.json"
+            path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+            mlflow.log_artifact(str(path))
+    run_id: str = run.info.run_id
+    return run_id
