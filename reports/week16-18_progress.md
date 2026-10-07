@@ -55,7 +55,9 @@ already up to date on 2026-10-07). Orchestrator Opus 5.5; subagents Sonnet 5.5 i
 - **D9 (pre-existing, reported to the owner):** item 48's `m7_facts.py` crashes in this tree:
   `data/raw/euroleague/standings/E2016_r30.xml` does not exist (M7's K0 cached the official tables inside the
   removed `C:\Python\EH-m7` worktree). Item 48 still prints PASS because `| tail -1` hides the script's exit
-  code. Restoring needs one cached re-fetch from the EuroLeague API; asked the owner, not done.
+  code. **Resolved (owner, 2026-10-07):** the 8 official final tables (EuroLeague 2016–2018, 2020,
+  2022–2025) were re-fetched once from `api-live.euroleague.net/v1/standings` (2 s apart) into the fixture's cache
+  paths; each equals `tests/fixtures/m7_official_tables.json`, and `m7_facts.py` exits 0 (m7 facts: PASS).
 
 ## §3 findings (L0, real data, HEAD 6b2239b; re-checked by `scripts/checks/m6_facts.py`, item 54)
 Fixture: `tests/fixtures/m6_facts.json`.
