@@ -78,6 +78,10 @@ jobs:
           else
             uv run --no-dev eurohoops odds
           fi
+      # Forward injury recorder: one BasketNews request, appended only when the report changed.
+      # A fetch or parse failure is a warning, never a failed run.
+      - name: Record EuroLeague injuries
+        run: uv run --no-dev eurohoops injuries
       - name: Predict upcoming games
         run: |
           uv run --no-dev eurohoops predict
@@ -106,7 +110,7 @@ jobs:
           REPO: ${{ github.repository }}
           BRANCH: ${{ github.ref_name }}
         run: |
-          git add predictions/ reports/ odds/
+          git add predictions/ reports/ odds/ injuries/
           if git diff --cached --quiet; then
             echo "No changes to commit."
             exit 0

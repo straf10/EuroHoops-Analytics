@@ -189,10 +189,15 @@ def _m1_crps(scored: pd.DataFrame) -> tuple[FloatArray, FloatArray]:
 
 
 def m1_section(
-    m1_log_path: Path, games: pd.DataFrame, elo: pd.DataFrame, window: int = ROLLING_WINDOW
+    m1_log_path: Path,
+    games: pd.DataFrame,
+    elo: pd.DataFrame,
+    window: int = ROLLING_WINDOW,
+    name: str = "m1",
 ) -> dict[str, Any]:
     """Live M1 scores: its log's earliest pre-tip-off row per finished game, with the Elo
-    headline forecast of the same game alongside (``elo``: scored Elo rows)."""
+    headline forecast of the same game alongside (``elo``: scored Elo rows). ``name`` keys the
+    model's blocks (``"m5"`` scores the shadow M5 log, which has the same columns)."""
     log = (
         pd.read_csv(m1_log_path, dtype={"game_id": str})
         if m1_log_path.exists()
@@ -246,10 +251,10 @@ def m1_section(
     return {
         "rows_in_log": len(log),
         "rows_excluded_late": len(log) - len(valid),
-        "m1": metrics,
+        name: metrics,
         "same_games_as_elo": {
             "n": len(both),
-            "m1_log_loss": mean_loss("p_home"),
+            f"{name}_log_loss": mean_loss("p_home"),
             "elo_log_loss": mean_loss("p_elo"),
         },
         "rolling": {
@@ -259,7 +264,7 @@ def m1_section(
                     "game_id": ids[i],
                     "tipoff_utc": tipoffs[i].strftime(TIME_FORMAT),
                     "n": i + 1,
-                    "m1": means[i],
+                    name: means[i],
                 }
                 for i in range(window - 1, n)
             ],
@@ -276,6 +281,7 @@ def build_scorecard(
     manual_pushes: Sequence[datetime] = (),
     odds_path: Path | None = None,
     m1_log_path: Path | None = None,
+    m5_log_path: Path | None = None,
 ) -> dict[str, Any]:
     """Score logged games that have finished; a missing log or no finished games gives n=0.
 
@@ -304,4 +310,9 @@ def build_scorecard(
         "warnings": monitoring_warnings(rolling, log, games, now),
         "market": None if odds_path is None else market_scores(headline, odds_path),
         **({} if m1_log_path is None else {"m1": m1_section(m1_log_path, games, headline)}),
+        **(
+            {}
+            if m5_log_path is None
+            else {"m5": m1_section(m5_log_path, games, headline, name="m5")}
+        ),
     }

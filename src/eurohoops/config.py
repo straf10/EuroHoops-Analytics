@@ -104,6 +104,7 @@ class Competition:
     odds_log: Path | None = None  # forward-recorded market consensus (EuroLeague only)
     m1: M1Backtest | None = None
     m1_prediction_log: Path | None = None  # live M1 log (E-g), separate from the Elo log
+    m5_prediction_log: Path | None = None  # live M5 shadow log (EuroLeague only; not gated for GBL)
 
     @property
     def raw_dir(self) -> Path:
@@ -154,6 +155,7 @@ EUROLEAGUE = Competition(
         test=(2024, 2025),
     ),
     m1_prediction_log=Path("predictions/euroleague_m1_2026-27.csv"),
+    m5_prediction_log=Path("predictions/euroleague_m5_2026-27.csv"),
 )
 
 GBL_ELO_GRID = Grid(
@@ -302,6 +304,8 @@ GBL_BOX_GAPS = Path("reports/gbl_box_gaps.csv")
 ODDS_CALLS = Path("odds/api_calls.csv")
 ODDS_TEAMS = Path("odds/euroleague_teams.csv")
 ODDS_RAW_DIR = Path("data/raw/odds/euroleague")
+INJURY_LOG = Path(f"injuries/euroleague_{LIVE_SEASON}-{(LIVE_SEASON + 1) % 100}.csv")
+INJURY_RAW_DIR = Path("data/raw/basketnews")
 
 
 @dataclass(frozen=True)
