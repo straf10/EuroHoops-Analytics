@@ -198,6 +198,7 @@ def rank_by_wins(
 iteration | deliverable | checks run | result | commit
 1 | K0: progress file, §3 facts (`m7_facts.py`, fixtures), `sim/played.py` | ruff, format, mypy, vulture, test_sim_played, m7_facts | PASS | 291b312
 2 | wave 1: K2 formats (B, 1 round), K3 engine + `rank_by_wins` (C, 1 round), K1 posterior (A, 2 rounds: D7) merged | per-deliverable tests rerun after merge; fast gate | see iteration 3 | e273bdc, 84915fe
+3 | fast gate after wave 1 (HEAD 84915fe/d5bd175) | items 1-6, 9, 11, 14, 17, 19, 27-29, 32-34, 40, 42-44 | 2 FAIL: item 9 (origin/main had moved: 20 newer prediction rows missing on the branch; fixed by merging origin/main, be4a070, item 9 PASS, 0 changed lines); item 28 (its MLflow half reads the M2 runs item 24 writes in the same SCRATCH, and item 24 is in the fast-gate SKIP list; its leakage half passes, 7 passed). Item 5: 895 passed. All other run items PASS | be4a070
 
 ## Subagent log
 - Worktrees: created by the orchestrator (`git worktree add C:\Python\EH-m7-{a,b,c} -b m7-{a,b,c} week-14-16-m7`), not by
