@@ -177,3 +177,26 @@ def rank(results: Sequence[Result], deducted_wins: Mapping[str, int] | None = No
             _resolve(sanctioned, results) if sanctioned else []
         )
     return ordered
+
+
+def rank_by_wins(
+    wins: Mapping[str, int],
+    results: Sequence[Result],
+    deducted_wins: Mapping[str, int] | None = None,
+) -> list[str]:
+    """``rank`` given each team's wins (before deductions): equal to ``rank(all results)`` when
+    ``results`` holds at least every game of each team that is tied after deductions.
+
+    Covers every team in ``wins``, also those without a game in ``results``.
+    """
+    deducted = deducted_wins or {}
+    net = {team: wins[team] - deducted.get(team, 0) for team in sorted(wins)}
+    ordered: list[str] = []
+    for value in sorted(set(net.values()), reverse=True):
+        tied = [t for t in net if net[t] == value]
+        clean = [t for t in tied if not deducted.get(t)]
+        sanctioned = [t for t in tied if deducted.get(t)]
+        ordered += (_resolve(clean, results) if clean else []) + (
+            _resolve(sanctioned, results) if sanctioned else []
+        )
+    return ordered
