@@ -175,4 +175,9 @@ skip 49 "M7 leakage" || {
 }
 skip 50 "M7 report" || { item "50 backtest_m7.json + gate/reliability, two runs identical, GBL fixed choice, verdict < validation < test"; bash "$CHECKS/m7_reports.sh"; res $?; }
 skip 51 "M7 runtime" || { item "51 backtest --model m7 runtime: EL < 1,800 s, GBL < 600 s; simulate < 120 s"; bash "$CHECKS/m7_runtime.sh"; res $?; }
+skip 52 "simulate dry run" || {
+  item "52 live simulate: probability sums, gated and idempotent log, existing logs untouched, workflow per gate; actionlint"
+  (PYTHONIOENCODING=utf-8 uv run python "$CHECKS/sim_dry_run.py"     && uvx --from actionlint-py actionlint .github/workflows/daily.yml && echo "daily.yml clean")
+  res $?
+}
 echo; echo "FAILS: $fails (end $(date -u +%H:%MZ))"; exit "$fails"

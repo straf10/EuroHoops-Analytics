@@ -42,6 +42,8 @@ from eurohoops.config import (
     ODDS_TEAMS,
     PLAYER_BIOS,
     POSSESSION_REPORT,
+    SIM_LATEST,
+    SIM_LOGS,
     SITE_DATA,
     SQL_DIR,
     STINT_REPORT,
@@ -83,6 +85,7 @@ from eurohoops.ingest.http import Fetcher, make_client
 from eurohoops.injuries import InjuryPaths, record_injuries, team_name_map
 from eurohoops.live_m1 import load_m1, predict_upcoming_m1
 from eurohoops.live_m5 import live_spec, load_m5, predict_upcoming_m5
+from eurohoops.live_sim import LIVE_SIMS, load_sim, log_rows, run_live_sim, write_live_sim
 from eurohoops.logs import write_json
 from eurohoops.marts import (
     box_invariants,
@@ -116,6 +119,7 @@ from eurohoops.parse.stints_mart import build_stints_mart, mart_report
 from eurohoops.parse.team_box import TEAM_GAMES_SCHEMA, build_team_games
 from eurohoops.predict import LatePredictionError, predict_upcoming
 from eurohoops.publish import DISPLAY_CODES, Section, site_data
+from eurohoops.sim.formats import season_format
 from eurohoops.sim.played import regulation_scores
 from eurohoops.stats.box import build_box_games
 from eurohoops.stats.export import STATS_DIR, Inputs, build_payloads, load_cached_games, write_stats
@@ -918,6 +922,59 @@ def injuries() -> None:
         f" (page updated {summary.get('page_updated_utc') or '?'}); log {paths.log}; "
         f"unmapped teams: {', '.join(summary['unmapped']) or 'none'}"
     )
+
+
+@app.command()
+def simulate(
+    *,
+    competition: CompetitionOption = CompetitionName.euroleague,
+    dry_run: Annotated[
+        bool, typer.Option(help="Compute and print the simulation; write nothing")
+    ] = False,
+) -> None:
+    """Simulate the rest of the live regular season (M7, K8) after the completed rounds; the log
+    is appended only when the EuroLeague M7 gate passed and the round is not logged yet."""
+    comp = COMPETITIONS[competition]
+    model = load_sim(M7.report)
+    if comp.m1 is None or model is None or not comp.m1.report.exists():
+        log.error("no committed M7 or M1 report; run: eurohoops backtest --model m7")
+        raise typer.Exit(code=1)
+    started = time.perf_counter()
+    games = read_games(MART_PATH, comp.name)
+    games = games[games["season"] <= LIVE_SEASON].reset_index(drop=True)
+    team_games = read_table(MART_PATH, "team_games", comp.name)
+    if team_games is None:
+        log.error("no team_games in the marts; run: eurohoops build")
+        raise typer.Exit(code=1)
+    fmt = season_format(comp.name, LIVE_SEASON)
+    tuned = json.loads(comp.m1.report.read_text(encoding="utf-8"))["tuned"]
+    spec = M7 if comp is EUROLEAGUE else M7_GBL
+    run = run_live_sim(
+        games, team_games, tuned, model, fmt=fmt, season=LIVE_SEASON, spec=spec, n_sims=LIVE_SIMS
+    )
+    if run is None:
+        typer.echo(f"{comp.name}: the {LIVE_SEASON} regular season is over; nothing to simulate")
+        return
+    now = datetime.now(UTC)
+    for row in log_rows(run, model, LIVE_SEASON, now):
+        typer.echo(
+            f"{row['team']:<10}{row['p_direct_playoffs']:>8}{row['p_play_in']:>8}"
+            f"{row['p_final_four']:>8}{row['p_title']:>8}{row['expected_wins']:>7}"
+            f"  {row['rank_p10']}-{row['rank_p50']}-{row['rank_p90']}"
+        )
+    typer.echo(f"after round {run.after_round}, seed {run.seed}, gate passed {model.gate_passed}")
+    if not dry_run:
+        n = write_live_sim(
+            run,
+            model,
+            fmt=fmt,
+            season=LIVE_SEASON,
+            at=now,
+            log_path=SIM_LOGS[comp.name],
+            report_path=SIM_LATEST[comp.name],
+        )
+        typer.echo(f"{n} rows appended to {SIM_LOGS[comp.name]}")
+    typer.echo(f"RUNTIME simulate {comp.name}: {time.perf_counter() - started:.0f} s")
 
 
 @app.command()

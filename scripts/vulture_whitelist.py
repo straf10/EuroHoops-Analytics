@@ -95,12 +95,3 @@ projected_shares_variant
 # week 14-16 J4: predict_games is the public per-choice entry point the leakage suite (J5) and
 # the J8 gap recomputation test call; src does not call it
 predict_games
-
-# week 14-16 M7 K3: used by live simulate (K8); eval/m7_backtest.py reads the other SimOutput fields
-from eurohoops.sim.season import SimOutput  # noqa: E402
-from eurohoops.standings import rank_by_wins  # noqa: E402
-
-rank_by_wins
-SimOutput.p_playoffs
-SimOutput.p_semis
-SimOutput.p_final

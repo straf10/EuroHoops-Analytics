@@ -210,6 +210,7 @@ VALIDATION c65e91c
 8 | K7 test scored once | m7_order | sim_full level with point_sim on test | d885fc8
 
 TEST d885fc8
+9 | K8 live simulate (gated; dry run on real marts), item 52 | test_live_sim (9), sim_dry_run.py, ruff/mypy/vulture | PASS | (this commit)
 
 ## K6: tuning and verdict (EuroLeague, tuning seasons 2016, 2017, 2018, 2020, 2022; 252 team-checkpoints)
 `uv run eurohoops backtest --model m7 --tuning-only` (quiet machine: CPU 12%, no other python jobs), 129 s.
@@ -275,6 +276,20 @@ In the GBL the point-strength baseline is miscalibrated on tuning (z 2.77) and s
 test season (13 teams) is miscalibrated for every model. GBL rules stay unverified (format notes in the report).
 
 RUNTIME m7 gbl 53
+
+## K8: live simulate (gate FAIL → built, not scheduled)
+`uv run eurohoops simulate [--competition gbl] [--dry-run]` (`src/eurohoops/live_sim.py`): state = completed rounds k
+(rounds 1..k all played; EL 2026-27 k = 1 on the mart copy of 28347b9, GBL k = 0), cutoff = round k + 1's first tip-off,
+M1 posterior + pace at the cutoff (committed `tuned`), the verdict `sim_full`, 10,000 simulations, seed 20261101 + k.
+It appends to `predictions/{competition}_sim_2026-27.csv` and writes `reports/sim_latest_{competition}.json` only when
+the EuroLeague gate passed; one set of rows per completed round. **The gate failed, so no log file or latest report
+exists, and `daily.yml` is unchanged (K-j).** Item 52 (`scripts/checks/sim_dry_run.py`) checks this on the real marts.
+- **D11 (unseen live teams):** a team with no game before the cutoff (the two promoted GBL clubs before round 1) keeps
+  M1's ridge prior, mean 0 (where M1 itself forecasts it) and variance σ²/ridge, independent. With the GBL's ridge
+  (62.5 possessions) that prior is wide: before round 1 each promoted club gets ~12% title odds in a dry run, which is
+  the honest consequence of no data and of M1's league-mean prior, and fades once it plays. Recorded as a limitation.
+
+RUNTIME simulate 7
 
 ## Subagent log
 - Worktrees: created by the orchestrator (`git worktree add C:\Python\EH-m7-{a,b,c} -b m7-{a,b,c} week-14-16-m7`), not by

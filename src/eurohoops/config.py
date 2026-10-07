@@ -396,3 +396,9 @@ M7_GBL = M7Backtest(
     validation=(),
     test=(2025,),
 )
+# Live M7 (K8): one append-only simulation log per competition, plus the latest run's report.
+SIM_LOGS = {
+    name: Path(f"predictions/{name}_sim_{LIVE_SEASON}-{(LIVE_SEASON + 1) % 100}.csv")
+    for name in ("euroleague", "gbl")
+}
+SIM_LATEST = {name: Path(f"reports/sim_latest_{name}.json") for name in ("euroleague", "gbl")}
