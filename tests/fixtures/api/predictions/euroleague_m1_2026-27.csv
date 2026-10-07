@@ -1,0 +1,2 @@
+game_id,season,round,phase,tipoff_utc,home,away,p_home,exp_margin,exp_total,margin_sigma,margin_df,total_sigma,model,model_version,predicted_at_utc
+E2026_4,2026,2,RS,2026-10-08T18:00:00Z,BAR,ULK,0.6300,3.80,160.50,10.4000,7,16.5000,m1,0.2.0+fixture,2026-10-07T08:00:00Z

@@ -196,3 +196,13 @@ Translation
 fit_drift
 project
 variant_params
+
+# weeks 16-18 E: the read-only API; FastAPI calls the response classes' attributes and uvicorn
+# calls the factory named in the Dockerfile (`uvicorn --factory eurohoops.api.app:local_app`)
+from eurohoops.api.app import CompactJSON, IndentedJSON, local_app  # noqa: E402
+
+CompactJSON.media_type
+CompactJSON.render
+IndentedJSON.media_type
+IndentedJSON.render
+local_app

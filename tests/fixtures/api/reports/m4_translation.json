@@ -1,0 +1,18 @@
+{
+  "model": "m4",
+  "fits_by_target_season": {
+    "2025": {
+      "translate": {
+        "pts": {"c": 11.436921, "delta": -0.056783, "delta_lo90": -0.087549, "delta_hi90": -0.026016, "n_pairs": 126, "n_persons": 59},
+        "fta": {"c": 2.689846, "delta": -0.105476, "delta_lo90": -0.173732, "delta_hi90": -0.03722, "n_pairs": 126, "n_persons": 59}
+      }
+    }
+  },
+  "team_offset": {
+    "label": "points per 100 possessions the average GBL club sits below its EuroLeague level",
+    "mean": 20.202848,
+    "ci95": [16.856517, 23.5],
+    "resamples": 1000,
+    "seed": 20261015
+  }
+}

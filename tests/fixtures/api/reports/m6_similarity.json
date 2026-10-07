@@ -1,0 +1,12 @@
+{
+  "model": "m6",
+  "season": 2025,
+  "features": {"euroleague": ["rim", "mid", "three"], "gbl": ["rim", "mid", "three"]},
+  "pool_seasons": [2023, 2024, 2025],
+  "players": {
+    "P:P013382": [
+      {"rank": 1, "person_id": "P:P006835", "competition": "euroleague", "season": 2024, "name": "Jaylen Hoard", "score": 91.5},
+      {"rank": 2, "person_id": "G:ABCD1234", "competition": "gbl", "season": 2025, "name": "Nikos Papas", "score": 84.0}
+    ]
+  }
+}
