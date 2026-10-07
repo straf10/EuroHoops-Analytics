@@ -86,6 +86,20 @@ def test_ingest_both_competitions_then_build(monkeypatch: pytest.MonkeyPatch) ->
     assert "2026" in continuity["euroleague"]["seasons"]
 
 
+@pytest.mark.usefixtures("workdir", "no_sleep")
+def test_ingest_from_season_adds_the_range_to_the_chosen_seasons(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    api = FakeApi()
+    transport = httpx.MockTransport(api)
+    monkeypatch.setattr(cli, "make_client", lambda: httpx.Client(transport=transport))
+    monkeypatch.setattr(cli, "LIVE_SEASON", 2026)
+    invoke("ingest", "--from-season", "2026")
+    assert list(pd.read_parquet(EUROLEAGUE.staging_games)["season"].unique()) == [2026]
+    invoke("ingest", "--seasons", "2024", "--from-season", "2026")
+    assert sorted(pd.read_parquet(EUROLEAGUE.staging_games)["season"].unique()) == [2024, 2026]
+
+
 @pytest.mark.usefixtures("workdir")
 def test_ingest_rejects_junk_arguments() -> None:
     result = runner.invoke(cli.app, ["ingest", "--seasons", "2024", "--detials"])
