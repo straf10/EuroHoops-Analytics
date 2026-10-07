@@ -77,6 +77,13 @@ Re-checked by `scripts/checks/m7_facts.py` (checklist item 48) against `tests/fi
   is biased low by about (n − p)/n; K1's synthetic coverage test exposed it (subagent A, round 1). Fixed in the
   estimator; the test's league size, seed and band stay as first designed.
 
+- **D8 (GBL noise):** M1-GBL's margin model is `student_t_pace`; inside a simulation the scale is constant per
+  checkpoint, scale · sqrt(mean pace of the remaining fixtures / ref_pace).
+- **D9 (sim_inflate noise):** `sim_inflate(c)` keeps `sim_net`'s noise scale computed from the uninflated covariance and
+  multiplies only the strength covariance by c (K-f: "sim_net with the strength covariance × c").
+- **D10 (GBL splits):** the GBL never chooses (fixed EuroLeague verdict). Its scored seasons are labelled tuning 2020,
+  2021, 2022 and test 2025 (validation empty; 2023-24 excluded by finding 4), test scored only with `--score-test`.
+
 ## Interfaces (fixed before wave 1; pasted verbatim into every subagent prompt)
 
 ```python

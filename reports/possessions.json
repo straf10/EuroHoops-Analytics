@@ -97,9 +97,9 @@
         "missing": 0
       },
       "2026": {
-        "rated_games": 7,
+        "rated_games": 10,
         "with_rows": 2,
-        "missing": 5
+        "missing": 8
       }
     },
     "gbl": {
@@ -186,6 +186,24 @@
       "competition": "euroleague",
       "season": 2026,
       "game_id": "E2026_6",
+      "reason": "no cached box score (ingest --details)"
+    },
+    {
+      "competition": "euroleague",
+      "season": 2026,
+      "game_id": "E2026_8",
+      "reason": "no cached box score (ingest --details)"
+    },
+    {
+      "competition": "euroleague",
+      "season": 2026,
+      "game_id": "E2026_9",
+      "reason": "no cached box score (ingest --details)"
+    },
+    {
+      "competition": "euroleague",
+      "season": 2026,
+      "game_id": "E2026_10",
       "reason": "no cached box score (ingest --details)"
     },
     {
