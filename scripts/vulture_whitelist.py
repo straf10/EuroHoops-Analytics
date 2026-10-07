@@ -130,3 +130,22 @@ build_player_seasons
 player_ages
 rate_table
 PROJECTED_STATS
+
+# weeks 16-18 C: the over/under board (L3) is called by the report writer and the L9 live run
+from eurohoops.models.board import (  # noqa: E402
+    RetentionBacktest,
+    board,
+    fg3_observations,
+    on_off_observations,
+    retention_backtest,
+    shot_making_observations,
+    stability,
+)
+
+board
+fg3_observations
+on_off_observations
+retention_backtest
+shot_making_observations
+stability
+RetentionBacktest.contrast_z  # read by the report writer and the board test
