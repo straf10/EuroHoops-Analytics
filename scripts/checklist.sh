@@ -28,7 +28,7 @@ skip 3 "ruff format --check" || { item "3 ruff format --check"; uv run ruff form
 skip 4 "mypy src" || { item "4 mypy src"; uv run mypy src; res $?; }
 skip 5 "pytest + coverage" || {
   item "5 pytest + coverage"
-  uv run pytest -q --cov=eurohoops --cov-fail-under=85 -p no:cacheprovider 2>&1 | tail -3
+  uv run pytest -q -n 6 --cov=eurohoops --cov-fail-under=85 -p no:cacheprovider 2>&1 | tail -3
   res "${PIPESTATUS[0]}"
 }
 skip 6 "vulture" || { item "6 vulture"; uv run vulture src scripts/vulture_whitelist.py --min-confidence 60; res $?; }

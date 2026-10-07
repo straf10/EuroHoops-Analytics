@@ -402,3 +402,47 @@ SIM_LOGS = {
     for name in ("euroleague", "gbl")
 }
 SIM_LATEST = {name: Path(f"reports/sim_latest_{name}.json") for name in ("euroleague", "gbl")}
+
+
+@dataclass(frozen=True)
+class M6Backtest:
+    """M6 player projections backtest (weeks 16-18 L6): next-season and rest-of-season targets."""
+
+    report: Path
+    players_report: Path
+    tuning: tuple[int, ...]
+    validation: tuple[int, ...]
+    test: tuple[int, ...]
+    checkpoints: tuple[float, ...] = (0.25, 0.5, 0.75)  # fractions of the regular-season rounds
+    min_poss: float = 500.0  # scored set: possessions in the target season (L-g)
+    half_lives: tuple[float, ...] = (1.0, 2.0, 3.0)  # season-decay grid, in seasons (L-f)
+    interval: float = 0.8
+    coverage_band: tuple[float, float] = (0.75, 0.85)  # pooled tuning + validation (L-h)
+    tie_tolerance: float = 0.005  # relative tuning-loss difference below which the simpler wins
+    bootstrap_resamples: int = 1000
+    bootstrap_seed: int = 20261201
+
+
+# Target seasons need a prior senior season in either league (L-a, L-g). EuroLeague 2019-20
+# passes the possessions floor (128 scored players, reports/week16-18_progress.md) and stays.
+M6 = M6Backtest(
+    Path("reports/backtest_m6.json"),
+    Path("reports/backtest_m6_players.csv"),
+    tuning=_seasons(2016, 2022),
+    validation=(2023,),
+    test=(2024, 2025),
+)
+# GBL box scores start in 2018-19, so the first target with a prior GBL season is 2019-20;
+# reported only (it scores the EuroLeague verdict as `fixed`).
+M6_GBL = M6Backtest(
+    Path("reports/backtest_m6_gbl.json"),
+    Path("reports/backtest_m6_gbl_players.csv"),
+    tuning=_seasons(2019, 2022),
+    validation=(2023,),
+    test=(2024, 2025),
+)
+# Live M6 (L9) and the ungated standings report (owner, 2026-10-07: decision D1).
+M6_PROJECTIONS = Path("reports/m6_projections.json")
+M6_BOARD = Path("reports/m6_board.json")
+M6_SIMILARITY = Path("reports/m6_similarity.json")
+SIM_UNGATED = {name: Path(f"reports/sim_ungated_{name}.json") for name in ("euroleague", "gbl")}
