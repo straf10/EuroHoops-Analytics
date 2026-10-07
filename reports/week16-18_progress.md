@@ -58,6 +58,12 @@ already up to date on 2026-10-07). Orchestrator Opus 5.5; subagents Sonnet 5.5 i
   code. **Resolved (owner, 2026-10-07):** the 8 official final tables (EuroLeague 2016–2018, 2020,
   2022–2025) were re-fetched once from `api-live.euroleague.net/v1/standings` (2 s apart) into the fixture's cache
   paths; each equals `tests/fixtures/m7_official_tables.json`, and `m7_facts.py` exits 0 (m7 facts: PASS).
+- **D10 (aging survivor weights, amends I3):** with `survivor_correction=True` every pair is weighted by its
+  season-s sampling variance only (1/(var_s + tau_d²)), never by the s+1 exposure, and the s+1 rate of a short
+  season is EB-shrunk toward the same-competition, same-age mean of the short s+1 rates; the SE uses the shrunk
+  posterior variance. A weight that grows with the s+1 exposure under-represents the decliners (who get the short
+  seasons), so the harmonic-mean weights of I3 left part of the survivor bias in (subagent B, round 1). With the
+  correction off the uncorrected harmonic weights stay (the planted bias must show).
 
 ## §3 findings (L0, real data, HEAD 6b2239b; re-checked by `scripts/checks/m6_facts.py`, item 54)
 Fixture: `tests/fixtures/m6_facts.json`.
@@ -341,3 +347,10 @@ is the one exception, written today by `logs.write_json` (indent 2): the `/site`
 
 ## Iterations
 iteration 1 | L0 branch, progress file, decisions, §3 facts, interfaces, `player_seasons.py`, M6 config, fastapi + pytest-xdist | m6_facts.py PASS (36 checks); fast gate (D8 skip list) FAILS 0 in 441 s; ruff/format/mypy/vulture clean | green | (this commit)
+
+## Subagent log
+| wave | subagent | deliverable | rounds | notes |
+|---|---|---|---|---|
+| 1 | D | L4 similarity | 1 | `tests/test_similarity.py` already existed (name matcher), so its tests are `tests/test_player_similarity.py`; self-retrieval through `self_retrieval_rate` (evaluation only) |
+| 1 | C | L3 board | 1 | whitelist merge conflict resolved (both blocks kept) |
+| 1 | B | L2 aging | 2 | round 1 narrowed the synthetic possession gap (1200 → 1000) after a failure (rejected); root cause: outcome-dependent weights → D10; original 1200/450 design passes unchanged; impact-stat test added |
