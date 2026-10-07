@@ -204,6 +204,9 @@ iteration | deliverable | checks run | result | commit
 6 | K6 tuning run and verdict | tuning-only report checked free of validation/test numbers | sim_full chosen | 8b8fa8c
 
 VERDICT 8b8fa8c
+7 | K7 validation scored once | gate block | FAIL (point_sim lower Brier) | c65e91c
+
+VALIDATION c65e91c
 
 ## K6: tuning and verdict (EuroLeague, tuning seasons 2016, 2017, 2018, 2020, 2022; 252 team-checkpoints)
 `uv run eurohoops backtest --model m7 --tuning-only` (quiet machine: CPU 12%, no other python jobs), 129 s.
