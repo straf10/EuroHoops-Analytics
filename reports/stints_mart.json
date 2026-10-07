@@ -2,16 +2,10 @@
   "first_season": 2011,
   "possession_tolerance": 5.0,
   "pass_rate_2011_2014": 0.9587,
-  "pass_rate_2015_on": 0.9894,
-  "games": 4246,
-  "stints": 141625,
-  "not_cached": [
-    "E2026_1",
-    "E2026_7",
-    "E2026_4",
-    "E2026_5",
-    "E2026_6"
-  ],
+  "pass_rate_2015_on": 0.9895,
+  "games": 4274,
+  "stints": 142639,
+  "not_cached": [],
   "passing_games_where_stint_points_miss_the_final": [],
   "pbp_vs_box_possessions": {
     "2011_2014": {
@@ -21,16 +15,16 @@
       "ft_weight_matching_pbp": 0.4371
     },
     "2015_on": {
-      "team_games": 6598,
+      "team_games": 6654,
       "within_2_share": 0.9142,
-      "mean_gap_pbp_minus_box": -0.1925,
-      "ft_weight_matching_pbp": 0.4093
+      "mean_gap_pbp_minus_box": -0.1897,
+      "ft_weight_matching_pbp": 0.4095
     },
     "all": {
-      "team_games": 8488,
-      "within_2_share": 0.9022,
-      "mean_gap_pbp_minus_box": -0.0806,
-      "ft_weight_matching_pbp": 0.4155
+      "team_games": 8544,
+      "within_2_share": 0.9023,
+      "mean_gap_pbp_minus_box": -0.0792,
+      "ft_weight_matching_pbp": 0.4156
     }
   },
   "seasons": {
@@ -333,8 +327,8 @@
       }
     },
     "2026": {
-      "games": 2,
-      "passed": 2,
+      "games": 30,
+      "passed": 30,
       "pass_rate": 1.0,
       "possessions_pass_rate": 1.0,
       "failures_by_check": {
@@ -348,7 +342,7 @@
     }
   },
   "table_sha256": {
-    "stints": "b212efa4037cb64859c878341ccf1188a12ae72926c390814595afcdc71b3fa1",
-    "stint_game_checks": "061f7825cb225cba3a9dbe80c2005e8ca9d6558b950cafbb02cf64bc051fec6c"
+    "stints": "7b3c806568e25d28a7a2a787582f33ddae69ace9fa28f7ed35c0fa4d4096224c",
+    "stint_game_checks": "609b4864b5a2ff0500a5eecd1826ca6fa34c21a20a4cf7bc7c593f2bef380360"
   }
 }
