@@ -130,3 +130,26 @@ build_player_seasons
 player_ages
 rate_table
 PROJECTED_STATS
+
+# weeks 16-18 A: L1 projections, called by the L6 harness and `eurohoops project` (L9), wave 2
+from eurohoops.models.projection import (  # noqa: E402
+    FLAGS,
+    IMPACT_SCHEMA,
+    VARIANTS,
+    AgeAdjust,
+    ProjectionParams,
+    Translation,
+    fit_drift,
+    project,
+    variant_params,
+)
+
+FLAGS
+IMPACT_SCHEMA
+VARIANTS
+AgeAdjust
+ProjectionParams
+Translation
+fit_drift
+project
+variant_params
