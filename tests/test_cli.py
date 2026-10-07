@@ -17,6 +17,7 @@ from eurohoops.config import (
     GBL,
     GBL_BOX_FILL,
     GBL_PBP,
+    INJURY_LOG,
     MART_PATH,
     ODDS_TEAMS,
     POSSESSION_REPORT,
@@ -207,6 +208,27 @@ def test_odds_fails_cleanly(monkeypatch: pytest.MonkeyPatch) -> None:
     result = runner.invoke(cli.app, ["odds"])
     assert result.exit_code == 1
     assert "fake-key" not in result.output
+
+
+@pytest.mark.usefixtures("pipeline")
+def test_injuries_records_a_snapshot_and_never_fails(monkeypatch: pytest.MonkeyPatch) -> None:
+    page = Path(__file__).parent / "fixtures" / "basketnews" / "injury_report.html"
+
+    def serve(status: int) -> httpx.Client:
+        body = page.read_bytes()
+        return httpx.Client(
+            transport=httpx.MockTransport(lambda r: httpx.Response(status, content=body))
+        )
+
+    monkeypatch.setattr(cli, "make_client", lambda: serve(200))
+    output = invoke("injuries")
+    assert "appended; 5 rows, 3 teams" in output
+    assert "Anadolu Efes Istanbul" in output  # the fixture season has no such team: unmapped
+    assert len(pd.read_csv(INJURY_LOG)) == 5
+    assert "unchanged" in invoke("injuries")
+    monkeypatch.setattr(cli, "make_client", lambda: serve(503))
+    assert "failed" in invoke("injuries")
+    assert len(pd.read_csv(INJURY_LOG)) == 5
 
 
 @pytest.mark.usefixtures("pipeline")

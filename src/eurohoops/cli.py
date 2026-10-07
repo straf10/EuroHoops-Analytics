@@ -27,6 +27,8 @@ from eurohoops.config import (
     GBL_PLAYER_BOX,
     GBL_TEAM_BOX,
     GREEK_EL_CLUBS,
+    INJURY_LOG,
+    INJURY_RAW_DIR,
     LIVE_SEASON,
     M3,
     M3_GBL,
@@ -73,7 +75,9 @@ from eurohoops.eval.tracking import (
 from eurohoops.ingest import euroleague, gbl
 from eurohoops.ingest.bios import build_bios, ingest_bios
 from eurohoops.ingest.http import Fetcher, make_client
+from eurohoops.injuries import InjuryPaths, record_injuries, team_name_map
 from eurohoops.live_m1 import load_m1, predict_upcoming_m1
+from eurohoops.live_m5 import live_spec, load_m5, predict_upcoming_m5
 from eurohoops.logs import write_json
 from eurohoops.marts import (
     box_invariants,
@@ -743,6 +747,14 @@ app.command(name="m5-rest")(research.m5_rest)
 app.command(name="shot-charts")(research.shot_charts)
 
 
+def _m5_live_build(comp: Competition) -> tuple[M5Inputs, PlayerPartFn]:
+    """The live M5 harness inputs and EuroLeague player part: the backtest's own builders over
+    every game up to the live season (``live_spec``)."""
+    spec = live_spec(M5, LIVE_SEASON)
+    inputs, frame = _m5_inputs(comp, GBL, spec, dict(GREEK_EL_CLUBS))
+    return inputs, _m5_player_part_el(inputs, frame)
+
+
 @app.command()
 def predict(
     competition: CompetitionOption = CompetitionName.euroleague,
@@ -775,6 +787,21 @@ def predict(
                 clock=utc_now,
             )
             typer.echo(f"{added} M1 predictions appended to {comp.m1_prediction_log}")
+        m5 = load_m5(M5.report) if comp.m5_prediction_log is not None else None
+        if m5 is not None and comp.m5_prediction_log is not None:
+            try:
+                added = predict_upcoming_m5(
+                    live.games,
+                    m5,
+                    partial(_m5_live_build, comp),
+                    log_path=comp.m5_prediction_log,
+                    season=live.season,
+                    window=timedelta(hours=window_hours),
+                    clock=utc_now,
+                )
+                typer.echo(f"{added} M5 predictions appended to {comp.m5_prediction_log}")
+            except typer.Exit:  # a shadow model never blocks the Elo and M1 logs
+                log.warning("M5 skipped: its marts, stints or reports are missing here")
     except LatePredictionError as exc:
         log.error("refusing to log: %s", exc)
         raise typer.Exit(code=1) from exc
@@ -805,6 +832,29 @@ def odds() -> None:
 
 
 @app.command()
+def injuries() -> None:
+    """Record the BasketNews EuroLeague injury report: one request, a snapshot appended.
+
+    A failed fetch, an unparseable page or a torn log is a warning, never a non-zero exit.
+    """
+    names = team_name_map(
+        read_teams(MART_PATH, EUROLEAGUE.name), read_games(MART_PATH, EUROLEAGUE.name), LIVE_SEASON
+    )
+    paths = InjuryPaths(INJURY_LOG, INJURY_RAW_DIR)
+    try:
+        with make_client() as client:
+            summary = record_injuries(client, names, paths, utc_now)
+    except ValueError as exc:
+        log.warning("injuries: %s; nothing recorded", exc)
+        return
+    typer.echo(
+        f"injuries: {summary['status']}; {summary['rows']} rows, {summary['teams']} teams"
+        f" (page updated {summary.get('page_updated_utc') or '?'}); log {paths.log}; "
+        f"unmapped teams: {', '.join(summary['unmapped']) or 'none'}"
+    )
+
+
+@app.command()
 def score(competition: CompetitionOption = CompetitionName.euroleague) -> None:
     """Score the prediction log against results and write the competition's scorecard."""
     comp = COMPETITIONS[competition]
@@ -817,6 +867,7 @@ def score(competition: CompetitionOption = CompetitionName.euroleague) -> None:
         manual_pushes=comp.manual_pushes,
         odds_path=comp.odds_log,
         m1_log_path=comp.m1_prediction_log,
+        m5_log_path=comp.m5_prediction_log,
     )
     write_json(comp.scorecard, card)
     typer.echo(json.dumps(card, indent=2))
