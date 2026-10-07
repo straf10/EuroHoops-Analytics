@@ -201,6 +201,9 @@ iteration | deliverable | checks run | result | commit
 3 | fast gate after wave 1 (HEAD 84915fe/d5bd175) | items 1-6, 9, 11, 14, 17, 19, 27-29, 32-34, 40, 42-44 | 2 FAIL: item 9 (origin/main had moved: 20 newer prediction rows missing on the branch; fixed by merging origin/main, be4a070, item 9 PASS, 0 changed lines); item 28 (its MLflow half reads the M2 runs item 24 writes in the same SCRATCH, and item 24 is in the fast-gate SKIP list; its leakage half passes, 7 passed). Item 5: 895 passed. All other run items PASS | be4a070
 4 | K4 harness (D, 1 round) merged; checklist items 48-51 added | ruff, format, mypy, vulture; 168 tests over the M7 + neighbouring files | PASS | 0b13d23 merge, 5cc64c2
 5 | K5 leakage suite (E, 1 round) merged; E's `checkpoint_inputs` refactor checked output-identical by the orchestrator (pre/post code on the synthetic league: EL default/tuning-only/test, GBL fixed; JSON + CSV byte-identical) | items 48, 49 | PASS (49: 32 passed) | merge of m7-e
+6 | K6 tuning run and verdict | tuning-only report checked free of validation/test numbers | sim_full chosen | 8b8fa8c
+
+VERDICT 8b8fa8c
 
 ## K6: tuning and verdict (EuroLeague, tuning seasons 2016, 2017, 2018, 2020, 2022; 252 team-checkpoints)
 `uv run eurohoops backtest --model m7 --tuning-only` (quiet machine: CPU 12%, no other python jobs), 129 s.
