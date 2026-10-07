@@ -508,25 +508,28 @@ def order_forecast(order: Sequence[str], teams: Sequence[str], fmt: Format) -> F
     )
 
 
-def _forecasts(
-    *,
-    spec: M7Backtest,
-    teams: tuple[str, ...],
-    fmt: Format,
-    played: Sequence[Result],
-    remaining: pd.DataFrame,
-    strengths: Strengths,
-    pace: PaceModel,
-    margin: MarginModel,
-    elo_ratings: Mapping[str, float],
-    elo_hca: float,
-    seed: int,
-) -> dict[str, Forecast]:
-    """Every model's forecast at one checkpoint, in ``model_keys`` order."""
+def _remaining_arrays(
+    teams: Sequence[str], remaining: pd.DataFrame, pace: PaceModel
+) -> tuple[IntArray, IntArray, FloatArray]:
+    """Home and away team index and expected pace of every remaining fixture."""
     index = {team: i for i, team in enumerate(teams)}
     home_idx = np.asarray(remaining["home"].map(index), dtype=np.int64)
     away_idx = np.asarray(remaining["away"].map(index), dtype=np.int64)
-    game_pace = pace.mu + pace.team[home_idx] + pace.team[away_idx]
+    return home_idx, away_idx, pace.mu + pace.team[home_idx] + pace.team[away_idx]
+
+
+def noise_models(
+    spec: M7Backtest,
+    teams: Sequence[str],
+    remaining: pd.DataFrame,
+    *,
+    strengths: Strengths,
+    pace: PaceModel,
+    margin: MarginModel,
+) -> tuple[NoiseModel, NoiseModel]:
+    """M1's margin noise at the remaining fixtures' mean pace, and the net noise that leaves
+    room for the strength variance (K-f)."""
+    home_idx, away_idx, game_pace = _remaining_arrays(teams, remaining, pace)
     noise = margin_noise(margin, float(game_pace.mean()))
     net = net_noise(
         noise,
@@ -539,6 +542,97 @@ def _forecasts(
         ),
         spec.noise_floor,
     )
+    return noise, net
+
+
+@dataclass(frozen=True)
+class CheckpointInputs:
+    """Everything a checkpoint's forecasts are a function of (with ``checkpoint.seed``): the
+    walk-forward rule (reports/m7_progress.md, section 1) says none of it may depend on a game at
+    or after the cutoff; the remaining fixtures' schedule, but not their results, may."""
+
+    checkpoint: Checkpoint
+    info: _Season
+    posterior: RatingPosterior
+    strengths: Strengths
+    pace: PaceModel
+    margin: MarginModel
+    noise: NoiseModel
+    net: NoiseModel
+    played: list[Result]
+    remaining: pd.DataFrame
+    elo_ratings: Mapping[str, float]
+    elo_hca: float
+
+
+def checkpoint_inputs(
+    inputs: M7Inputs,
+    spec: M7Backtest,
+    formats: Callable[[str, int], Format] = season_format,
+    *,
+    tuning_only: bool = False,
+    score_test: bool = False,
+) -> list[CheckpointInputs]:
+    """The inputs of every checkpoint of a run, in plan order (what ``run_m7_backtest`` forecasts
+    from): M1's posterior and pace point on the games before the cutoff, the noise scales, the
+    season's played results, its remaining fixtures and the Elo ratings at the cutoff."""
+    split_of = scored_splits(spec, tuning_only, score_test)
+    seasons = {s: _season(inputs, formats(inputs.competition, s), s) for s in split_of}
+    plan = plan_checkpoints(seasons, split_of, spec)
+
+    games = inputs.games.sort_values("tipoff_utc", kind="stable").reset_index(drop=True)
+    history = prepare_history(games, inputs.team_games)
+    tuned = inputs.tuned_m1
+    when = [(float(np.float64(cp.cutoff.as_unit("ns").value) / 1e9), cp.season) for cp in plan]
+    posteriors = rating_posteriors(history, DecayParams(**tuned["rating"]), when)
+    paces = pace_points(history, DecayParams(**tuned["pace"]), when)
+    margin = MarginModel(**tuned["margin"])
+    elo = EloParams(k=inputs.elo["k"], hca=inputs.elo["hca"], reversion=inputs.elo["reversion"])
+    column = {team: i for i, team in enumerate(history.teams)}
+
+    out = []
+    for cp, posterior, pace_point in zip(plan, posteriors, paces, strict=True):
+        info = seasons[cp.season]
+        regular = info.regular
+        before = prepare(games[games["tipoff_utc"] < cp.cutoff])
+        ratings = season_ratings(before, elo, cp.season)
+        unrated = [team for team in info.teams if team not in ratings]
+        if unrated:
+            raise ValueError(f"no Elo rating at the cutoff for {unrated}")
+        remaining = remaining_fixtures(regular, cp.cutoff)
+        strengths = restrict_posterior(posterior, info.teams)
+        pace = PaceModel(
+            float(pace_point[0]), np.array([pace_point[1 + column[team]] for team in info.teams])
+        )
+        noise, net = noise_models(
+            spec, info.teams, remaining, strengths=strengths, pace=pace, margin=margin
+        )
+        out.append(
+            CheckpointInputs(
+                checkpoint=cp,
+                info=info,
+                posterior=posterior,
+                strengths=strengths,
+                pace=pace,
+                margin=margin,
+                noise=noise,
+                net=net,
+                played=season_results(
+                    regular[regular["tipoff_utc"] < cp.cutoff], inputs.regulation
+                ),
+                remaining=remaining,
+                elo_ratings={team: ratings[team][0] for team in info.teams},
+                elo_hca=elo.hca,
+            )
+        )
+    return out
+
+
+def _forecasts(spec: M7Backtest, ci: CheckpointInputs) -> dict[str, Forecast]:
+    """Every model's forecast at one checkpoint, in ``model_keys`` order."""
+    teams, fmt, played, remaining = ci.info.teams, ci.info.fmt, ci.played, ci.remaining
+    strengths, pace, noise, net = ci.strengths, ci.pace, ci.noise, ci.net
+    home_idx, away_idx, game_pace = _remaining_arrays(teams, remaining, pace)
 
     def play(sampler: StrengthSampler, pace_: PaceModel, noise_: NoiseModel) -> Forecast:
         return sim_forecast(
@@ -551,7 +645,7 @@ def _forecasts(
                 noise=noise_,
                 fmt=fmt,
                 n_sims=spec.n_sims,
-                seed=seed,
+                seed=ci.checkpoint.seed,
             )
         )
 
@@ -571,9 +665,9 @@ def _forecasts(
         )
     )
     slope = elo_strength_scale(noise)
-    rating = np.array([elo_ratings[team] for team in teams])
+    rating = np.array([ci.elo_ratings[team] for team in teams])
     elo_sampler = fixed_sampler(
-        total / 2.0 + slope * rating / 2.0, slope * rating / 2.0, slope * elo_hca / 2.0
+        total / 2.0 + slope * rating / 2.0, slope * rating / 2.0, slope * ci.elo_hca / 2.0
     )
     out["elo_sim"] = play(elo_sampler, PaceModel(100.0, np.zeros(n)), noise)
     order = standings_order(teams, played, fmt.deducted_wins())
@@ -762,47 +856,12 @@ def run_m7_backtest(
     keys = [v.key for v in variants(spec)]
     if fixed is not None and fixed not in keys:
         raise ValueError(f"the fixed variant {fixed!r} is not one of {keys}")
-    split_of = scored_splits(spec, tuning_only, score_test)
-    seasons = {s: _season(inputs, formats(inputs.competition, s), s) for s in split_of}
-    plan = plan_checkpoints(seasons, split_of, spec)
-
-    games = inputs.games.sort_values("tipoff_utc", kind="stable").reset_index(drop=True)
-    history = prepare_history(games, inputs.team_games)
-    tuned = inputs.tuned_m1
-    when = [(float(np.float64(cp.cutoff.as_unit("ns").value) / 1e9), cp.season) for cp in plan]
-    posteriors = rating_posteriors(history, DecayParams(**tuned["rating"]), when)
-    paces = pace_points(history, DecayParams(**tuned["pace"]), when)
-    margin = MarginModel(**tuned["margin"])
-    elo = EloParams(k=inputs.elo["k"], hca=inputs.elo["hca"], reversion=inputs.elo["reversion"])
-    column = {team: i for i, team in enumerate(history.teams)}
-
-    frames = []
-    for cp, posterior, pace_point in zip(plan, posteriors, paces, strict=True):
-        info = seasons[cp.season]
-        regular = info.regular
-        played = season_results(regular[regular["tipoff_utc"] < cp.cutoff], inputs.regulation)
-        before = prepare(games[games["tipoff_utc"] < cp.cutoff])
-        ratings = season_ratings(before, elo, cp.season)
-        unrated = [team for team in info.teams if team not in ratings]
-        if unrated:
-            raise ValueError(f"no Elo rating at the cutoff for {unrated}")
-        forecasts = _forecasts(
-            spec=spec,
-            teams=info.teams,
-            fmt=info.fmt,
-            played=played,
-            remaining=remaining_fixtures(regular, cp.cutoff),
-            strengths=restrict_posterior(posterior, info.teams),
-            pace=PaceModel(
-                float(pace_point[0]),
-                np.array([pace_point[1 + column[team]] for team in info.teams]),
-            ),
-            margin=margin,
-            elo_ratings={team: ratings[team][0] for team in info.teams},
-            elo_hca=elo.hca,
-            seed=cp.seed,
-        )
-        frames.append(_checkpoint_rows(cp, info, forecasts))
+    states = checkpoint_inputs(
+        inputs, spec, formats, tuning_only=tuning_only, score_test=score_test
+    )
+    plan = [ci.checkpoint for ci in states]
+    seasons = {ci.checkpoint.season: ci.info for ci in states}
+    frames = [_checkpoint_rows(ci.checkpoint, ci.info, _forecasts(spec, ci)) for ci in states]
     rows = validated(pd.concat(frames, ignore_index=True).round(6), TEAMS_SCHEMA)
     report = _report(
         inputs=inputs,
