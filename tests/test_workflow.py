@@ -32,6 +32,20 @@ def test_daily_caches_box_scores_before_build() -> None:
     assert DAILY.index("eurohoops predict") > build
 
 
+def test_daily_stages_el_history_and_stints_for_m5_softly() -> None:
+    """M5 needs 2007-on games before the build and the stints mart after it, before predict; a
+    failure of either step is a warning so Elo, M1, odds and injuries still run and commit."""
+    stage = DAILY.index("eurohoops ingest --from-season 2007")
+    build = DAILY.index("eurohoops build")
+    stints = DAILY.index("eurohoops stints --mart")
+    assert DAILY.index("eurohoops ingest --details") < stage < build < stints
+    assert stints < DAILY.index("- name: Predict upcoming games")
+    assert DAILY.count("will be skipped") == 2
+    for command in ("ingest --from-season 2007", "stints --mart"):
+        start = DAILY.index(command)
+        assert '|| echo "::warning::' in DAILY[start : DAILY.index("- name:", start)]
+
+
 def test_daily_runs_are_closer_together_than_the_prediction_window() -> None:
     """With one run a day and a 36 h window, every game is inside at least one run's window."""
     (cron,) = re.findall(r'cron: "([^"]+)"', DAILY)

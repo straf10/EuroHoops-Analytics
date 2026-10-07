@@ -65,8 +65,20 @@ jobs:
         with:
           path: data/raw/euroleague
           key: euroleague-raw-${{ github.run_id }}
+      # M5 (EuroLeague shadow log) replays 2007-on games and needs the 2011-on stints mart, both
+      # built from the seeded raw cache: past schedules and details are cache hits, so only the
+      # live schedule is fetched. Elo and M1 slice their own seasons (replay_from), so the extra
+      # marts rows do not move them. A failure is a warning: predict then skips M5 only.
+      - name: Stage EuroLeague history for M5
+        run: |
+          uv run --no-dev eurohoops ingest --from-season 2007 \
+            || echo "::warning::EuroLeague history staging failed; M5 will be skipped"
       - name: Build marts
         run: uv run --no-dev eurohoops build
+      - name: Build the stints mart for M5
+        run: |
+          uv run --no-dev eurohoops stints --mart \
+            || echo "::warning::stints mart failed; M5 will be skipped"
       # Market benchmark (EuroLeague only): one The Odds API call. The repository secret is
       # set by the owner; without it the step is skipped with a warning, never failed.
       - name: Record EuroLeague odds

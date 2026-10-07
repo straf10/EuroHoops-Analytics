@@ -187,6 +187,7 @@ def main() -> None:
 @app.command(context_settings={"allow_extra_args": True, "ignore_unknown_options": True})
 def ingest(
     ctx: typer.Context,
+    *,
     competition: CompetitionOption = CompetitionName.euroleague,
     seasons: Annotated[
         list[int] | None,
@@ -200,6 +201,10 @@ def ingest(
         bool,
         typer.Option(help="GBL: also cache the chosen seasons' play-by-play (local backfill)"),
     ] = False,
+    from_season: Annotated[
+        int | None,
+        typer.Option(help="Stage every season from this start year to the live one"),
+    ] = None,
 ) -> None:
     """Fetch results into the raw cache and rebuild the competition's staging tables.
 
@@ -211,7 +216,8 @@ def ingest(
     except ValueError as exc:
         raise typer.BadParameter(f"unexpected arguments {ctx.args}") from exc
     comp = COMPETITIONS[competition]
-    chosen = sorted({*(seasons or []), *extra}) or list(comp.default_seasons)
+    history = range(from_season, LIVE_SEASON + 1) if from_season is not None else ()
+    chosen = sorted({*(seasons or []), *extra, *history}) or list(comp.default_seasons)
     if pbp and comp is not GBL:
         raise typer.BadParameter("--pbp is for --competition gbl (EuroLeague PBP: --details)")
     with make_client() as client:
