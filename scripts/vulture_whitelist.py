@@ -101,3 +101,10 @@ from eurohoops.sim.played import regulation_scores, season_results  # noqa: E402
 
 regulation_scores
 season_results
+
+# week 14-16 M7 K1: used by eval/m7_backtest.py (K4) and live simulate (K8)
+from eurohoops.models.team_eff import RatingPosterior, pace_points, rating_posteriors  # noqa: E402
+
+RatingPosterior
+rating_posteriors
+pace_points
