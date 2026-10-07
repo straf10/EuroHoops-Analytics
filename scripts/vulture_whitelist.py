@@ -101,3 +101,27 @@ from eurohoops.sim.played import regulation_scores, season_results  # noqa: E402
 
 regulation_scores
 season_results
+
+# week 14-16 M7 K3: used by eval/m7_backtest.py (K4) and live simulate (K8)
+from eurohoops.sim.season import (  # noqa: E402
+    NoiseModel,
+    PaceModel,
+    SimOutput,
+    StrengthSampler,
+    simulate,
+)
+from eurohoops.standings import rank_by_wins  # noqa: E402
+
+NoiseModel
+PaceModel
+SimOutput
+StrengthSampler
+simulate
+rank_by_wins
+SimOutput.p_direct
+SimOutput.p_play_in
+SimOutput.p_top10
+SimOutput.p_playoffs
+SimOutput.p_semis
+SimOutput.p_final
+SimOutput.p_title
