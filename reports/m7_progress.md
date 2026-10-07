@@ -246,6 +246,22 @@ VALIDATION c65e91c
 50%: 0.1015 vs 0.0969; 75%: 0.0465 vs 0.0455). Reliability (10 bins) shows no systematic over- or under-confidence
 (z −1.15 on validation). Consequence (K-j): `eurohoops simulate` is built but not added to the daily workflow.
 
+## K7: test 2024, 2025 (scored once, after the validation commit; 114 team-checkpoints), 231 s for the full run
+| model | Brier | RPS | log loss | z |
+|---|---|---|---|---|
+| sim_full (chosen) | 0.115923 | 0.078104 | 0.349359 | -0.62 |
+| point_sim | 0.1169 | 0.0780 | 0.3484 | 0.63 |
+| elo_sim | 0.1235 | 0.0777 | 0.3674 | 0.81 |
+| standings_now | 0.2105 | 0.1381 | 1.9391 | — |
+
+On test sim_full is level with point_sim (−0.0009, CI [−0.0076, +0.0050]), ahead of elo_sim (−0.0076,
+[−0.0241, +0.0073]) and well ahead of standings_now (−0.0946, [−0.1701, −0.0332]). With validation (point_sim ahead,
+CI spanning 0) the honest reading: sampling M1's strength posterior neither helps nor hurts the direct-cut Brier
+measurably at these sample sizes; it is calibrated (|z| < 1.96 in every split) and clearly beats the current table.
+The gate stays FAIL (decided on validation, the point rule).
+
+RUNTIME m7 euroleague 231
+
 ## Subagent log
 - Worktrees: created by the orchestrator (`git worktree add C:\Python\EH-m7-{a,b,c} -b m7-{a,b,c} week-14-16-m7`), not by
   the Agent tool's `isolation: "worktree"`, which would have created them inside `C:\Python\Sports_Project` (off limits
