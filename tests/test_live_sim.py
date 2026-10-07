@@ -144,23 +144,35 @@ def test_gbl_report_carries_the_unverified_notes(tmp_path: Path) -> None:
     ]
 
 
-def test_an_unseen_team_keeps_the_ridge_prior() -> None:
-    posterior = RatingPosterior(
-        teams=("A", "B", "C"),
-        columns=np.array([0, 1, 2, 3, 5, 6], dtype=np.int64),
-        labels=("mu", "h", "off:A", "off:B", "def:A", "def:B"),
-        mean=np.array([100.0, 2.0, 1.0, -1.0, 0.5, -0.5]),
-        cov=np.diag([0.1, 0.2, 0.3, 0.4, 0.5, 0.6]),
+def _posterior() -> RatingPosterior:
+    return RatingPosterior(
+        teams=("A", "B", "C", "D"),
+        columns=np.array([0, 1, 2, 3, 4, 6, 7, 8], dtype=np.int64),
+        labels=("mu", "h", "off:A", "off:B", "off:D", "def:A", "def:B", "def:D"),
+        mean=np.array([100.0, 2.0, 1.0, -1.0, -3.0, 0.5, -0.5, -2.0]),
+        cov=np.diag([0.1, 0.2, 0.3, 0.4, 0.45, 0.5, 0.6, 0.65]),
         sigma2=250.0,
     )
-    strengths = with_prior(posterior, ("A", "B", "C"), ridge=125.0)
-    # [mu, h, off A, off B, off C, def A, def B, def C]
-    assert np.array_equal(strengths.mean, [100.0, 2.0, 1.0, -1.0, 0.0, 0.5, -0.5, 0.0])
-    assert np.allclose(np.diag(strengths.cov), [0.1, 0.2, 0.3, 0.4, 2.0, 0.5, 0.6, 2.0])
-    assert strengths.cov[4, 2] == 0.0 and strengths.cov[7, 5] == 0.0
-    # with every team seen it is restrict_posterior unchanged
-    seen = with_prior(posterior, ("A", "B"), ridge=125.0)
-    assert np.array_equal(seen.mean, posterior.mean)
+
+
+def test_a_promoted_team_starts_at_the_replaced_teams_mean() -> None:
+    # C is new (no column); B and D left the league, so C starts at their average rating
+    strengths = with_prior(_posterior(), ("A", "C"), ridge=125.0, replaced=("B", "D"))
+    # [mu, h, off A, off C, def A, def C]
+    assert np.allclose(strengths.mean, [100.0, 2.0, 1.0, -2.0, 0.5, -1.25])
+    # the variance is M1's ridge prior sigma2 / ridge, independent of the rest
+    assert np.allclose(np.diag(strengths.cov), [0.1, 0.2, 0.3, 2.0, 0.5, 2.0])
+    assert strengths.cov[3, 2] == 0.0 and strengths.cov[5, 4] == 0.0
+
+
+def test_without_a_rated_replaced_team_the_start_is_the_league_mean() -> None:
+    strengths = with_prior(_posterior(), ("A", "C"), ridge=125.0, replaced=("Z",))
+    assert np.allclose(strengths.mean, [100.0, 2.0, 1.0, 0.0, 0.5, 0.0])
+
+
+def test_with_every_team_seen_it_is_restrict_posterior() -> None:
+    seen = with_prior(_posterior(), ("A", "B", "D"), ridge=125.0, replaced=("C",))
+    assert np.array_equal(seen.mean, _posterior().mean)
 
 
 def test_load_sim_reads_the_verdict_and_gate(tmp_path: Path) -> None:

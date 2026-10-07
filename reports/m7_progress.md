@@ -289,6 +289,12 @@ exists, and `daily.yml` is unchanged (K-j).** Item 52 (`scripts/checks/sim_dry_r
   M1's ridge prior, mean 0 (where M1 itself forecasts it) and variance σ²/ridge, independent. With the GBL's ridge
   (62.5 possessions) that prior is wide: before round 1 each promoted club gets ~12% title odds in a dry run, which is
   the honest consequence of no data and of M1's league-mean prior, and fades once it plays. Recorded as a limitation.
+- **D12 (owner, 2026-10-07: promoted teams start below average; amends D11):** an unseen team's off/def mean is the
+  average posterior mean of the teams it replaced (last season's regular-season teams no longer in the league), 0 when
+  none is rated; the variance stays σ²/ridge. GBL dry run before round 1: the promoted clubs' expected wins fall from
+  12.3 to 10.4 and their title odds from ~12% to ~8% (the wide prior variance keeps them non-trivial until they play).
+  Live-only (the backtest never meets an unseen team). The owner also chose: no live shadow log (M7 stays off), GBL
+  2023-24 / 2024-25 stay excluded.
 
 RUNTIME simulate 7
 

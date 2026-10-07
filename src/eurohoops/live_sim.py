@@ -150,7 +150,9 @@ def run_live_sim(
     point = pace_points(history, DecayParams(**tuned_m1["pace"]), when)[0]
     column = {team: i for i, team in enumerate(history.teams)}
     pace = PaceModel(float(point[0]), np.array([point[1 + column[team]] for team in teams]))
-    strengths = with_prior(posterior, teams, float(tuned_m1["rating"]["ridge"]))
+    last = games[(games["season"] == season - 1) & (games["phase"] == "RS")]
+    replaced = sorted({*last["home"], *last["away"]} - set(teams))
+    strengths = with_prior(posterior, teams, float(tuned_m1["rating"]["ridge"]), replaced)
     remaining = remaining_fixtures(regular, cutoff)
     noise, net = noise_models(
         spec,
@@ -175,19 +177,32 @@ def run_live_sim(
     return LiveRun(done, cutoff, seed, out)
 
 
-def with_prior(posterior: RatingPosterior, teams: Sequence[str], ridge: float) -> Strengths:
+def with_prior(
+    posterior: RatingPosterior, teams: Sequence[str], ridge: float, replaced: Sequence[str]
+) -> Strengths:
     """``restrict_posterior`` for the live season, where a newly promoted team may have no
-    game before the cutoff: its off and def columns are unseen, so they keep M1's ridge prior,
-    mean 0 (M1 forecasts such a team at the league mean too) and variance sigma2 / ridge,
-    independent of everything else."""
+    game before the cutoff (D11, D12). Its off and def columns are unseen: their mean is the
+    average posterior mean of the teams it replaced (``replaced``: last season's teams that left
+    the league, as promotion replaces relegation), or 0 (the league mean) when none of them is
+    rated; their variance is M1's ridge prior sigma2 / ridge, independent of everything else."""
     seen = set(posterior.labels)
     new = [t for t in teams if f"off:{t}" not in seen and f"def:{t}" not in seen]
     if not new:
         return restrict_posterior(posterior, teams)
+    position = {label: i for i, label in enumerate(posterior.labels)}
+    rated = [t for t in replaced if f"off:{t}" in position and f"def:{t}" in position]
+    start_off = (
+        float(np.mean([posterior.mean[position[f"off:{t}"]] for t in rated])) if rated else 0.0
+    )
+    start_def = (
+        float(np.mean([posterior.mean[position[f"def:{t}"]] for t in rated])) if rated else 0.0
+    )
     prior_var = posterior.sigma2 / ridge
     k = len(posterior.labels)
     labels = (*posterior.labels, *(f"off:{t}" for t in new), *(f"def:{t}" for t in new))
-    mean = np.concatenate([posterior.mean, np.zeros(2 * len(new))])
+    mean = np.concatenate(
+        [posterior.mean, np.full(len(new), start_off), np.full(len(new), start_def)]
+    )
     cov = np.zeros((len(labels), len(labels)))
     cov[:k, :k] = posterior.cov
     cov[k:, k:] = np.eye(2 * len(new)) * prior_var

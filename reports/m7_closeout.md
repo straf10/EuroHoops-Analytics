@@ -104,11 +104,13 @@ branches. A's first prompt carried an unexpanded placeholder; the rules were sen
 - D1 checkpoint rounds ⌊f·R⌋; D2 duplicate fixture once; D3 deductions in the format; D4 Elo baseline through the
   engine; D5 knockout home order; D6 `rank_by_wins`; D7 σ² dof; D8 GBL pace-dependent noise at the mean pace; D9
   sim_inflate keeps sim_net's noise; D10 GBL splits; D11 unseen live teams at M1's prior (`reports/m7_progress.md`).
-- **Open:** (1) Live M7 anyway as a shadow log (like M5), given calibration passed and test favours sim_full? K-j says
-  no without the gate; owner's call. (2) A season-simulation page is out of scope until after week 16. (3) The
-  promoted GBL clubs' wide prior before round 1 (D11): acceptable, or start them at a promoted-team mean? (4) GBL
-  2023-24 / 2024-25 playoff fields: an ESAKE competition notice would let them be scored.
+- **Owner's answers (2026-10-07, after the run):** (1) merge to `main` and push; (2) no live shadow log: M7 stays off;
+  (3) promoted teams start below average: D12, the average strength of the teams they replaced (`live_sim.with_prior`,
+  tests in `tests/test_live_sim.py`); (4) GBL 2023-24 / 2024-25 stay excluded (no source); (5) memory.md entry appended
+  by the orchestrator. D12 changed live code only, after the full run: rerun on the merge are ruff, format, mypy,
+  vulture, the M7 test files, items 9, 48–53 (see below).
+- **Still open:** an ESAKE competition notice for 2023-24 / 2024-25 would let those GBL seasons be scored; a
+  season-simulation page (after week 16).
 
 ## memory.md entry
-`memory.md` lives untracked in the main tree, which this run must not edit; the entry is in
-`C:\Python\EH-m7\memory.md` (untracked) for the owner to append.
+Appended to the main tree's untracked `memory.md` at the owner's request.
