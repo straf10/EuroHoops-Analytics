@@ -828,7 +828,8 @@ def _m6_spm(el: ElSpm, league: pd.DataFrame) -> SpmFn:
     """The injected SPM: ``before_season``'s EuroLeague SPM model (fitted on data before that
     season; the latest one when there is none for it) applied to each row's per-100 box rates
     minus the league rate of the row's previous season (never the row's own season: at a
-    checkpoint that would read games after the cutoff); SPM = O + D. Unshrunk rates."""
+    checkpoint that would read games after the cutoff; the first season has none and uses
+    its own, which no checkpoint reads); SPM = O + D. Unshrunk rates."""
 
     def spm(frame: pd.DataFrame, before_season: int) -> "pd.Series[float]":
         model = choose_model(el, el.fit_time.get(before_season, float("inf")))
@@ -836,8 +837,9 @@ def _m6_spm(el: ElSpm, league: pd.DataFrame) -> SpmFn:
             raise ValueError(f"no EuroLeague SPM model for season {before_season}")
         base = []
         for competition, season in zip(frame["competition"], frame["season"], strict=True):
-            earlier = league.loc[competition].loc[: int(season) - 1]
-            base.append(earlier.iloc[-1].to_numpy(dtype="float64"))
+            rates = league.loc[competition]
+            earlier = rates.loc[: int(season) - 1]
+            base.append((earlier if len(earlier) else rates).iloc[-1].to_numpy(dtype="float64"))
         features = frame[list(model.stats)].to_numpy(dtype="float64") - np.array(base)
         o, d = model.predict(features)
         return pd.Series(o + d, index=frame.index)

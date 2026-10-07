@@ -4,7 +4,9 @@ each variant and baseline, score the projections against what the player then di
 Targets (L-a). *Next-season*: season ``t`` projected from everything before its first tip-off.
 *Rest-of-season*: season ``t`` at a checkpoint (25 / 50 / 75% of the regular season, M7's rule:
 k = floor(f * R) completed rounds, cutoff = the first tip-off of round k + 1, D12), from every game
-before the cutoff, the current season entering as a ``partial`` row. Both use the regular-season
+before the cutoff, the current season entering as a ``partial`` row. R is the season's last played
+regular-season round (``rounds`` overrides it): M7's format R except in a season cut short, and
+``season_format`` does not cover every season M6 scores. Both use the regular-season
 games only (history, truth and exposure alike). A target is scored when the player has at least
 ``min_poss`` possessions in the target window (``min_poss * (1 - f)`` at a checkpoint: the floor
 scaled to the window) and a senior season before ``t`` in either league.
@@ -110,7 +112,6 @@ from eurohoops.models.projection import (
 )
 from eurohoops.models.team_eff import IntArray
 from eurohoops.parse.schemas import validated
-from eurohoops.sim.formats import season_format
 
 SPLITS = ("tuning", "validation", "test")
 BASELINES = ("same_as_last", "league_mean", "marcel")
@@ -166,11 +167,6 @@ PLAYERS_SCHEMA = pa.DataFrameSchema(
 
 def _round(value: float | None) -> float | None:
     return None if value is None or not math.isfinite(value) else round(float(value), 6)
-
-
-def official_rounds(competition: str, season: int) -> int:
-    """R: the format's regular-season rounds."""
-    return season_format(competition, season).regular_season_rounds
 
 
 # --- Inputs, cells and the choice -----------------------------------------------------------------
@@ -558,6 +554,13 @@ def _truth(
     return truth
 
 
+def _played_rounds(regular: pd.DataFrame) -> int:
+    """R: the season's last played regular-season round. It is the format's R of M7 except in a
+    season cut short (EuroLeague 2019-20); ``season_format`` does not cover every season M6
+    scores (it excludes 2019, 2021 and the GBL's 2023-24)."""
+    return int(regular.loc[regular["played"], "round"].max())
+
+
 def target_inputs(
     inputs: M6Inputs,
     competition: str,
@@ -565,7 +568,7 @@ def target_inputs(
     checkpoint: float,
     *,
     spec: M6Backtest,
-    rounds: Callable[[str, int], int] = official_rounds,
+    rounds: Callable[[str, int], int] | None = None,
     world: World | None = None,
 ) -> TargetInputs:
     """The inputs of one target block (``checkpoint`` 0.0: next-season; else the fraction of the
@@ -578,7 +581,8 @@ def target_inputs(
     if checkpoint > 0.0:
         games = inputs.games[competition]
         regular = games[(games["season"] == season) & (games["phase"] == "RS")]
-        done = math.floor(checkpoint * rounds(competition, season))
+        total = rounds(competition, season) if rounds else _played_rounds(regular)
+        done = math.floor(checkpoint * total)
         cutoff = checkpoint_cutoff(regular, done)
     history = _history(world, competition, season, cutoff)
     window = _target_rows(world, competition, season, cutoff)
@@ -720,11 +724,13 @@ def marcel_age_factor(age: FloatArray) -> FloatArray:
     return factor
 
 
-def marcel_blend(rows: pd.DataFrame, people: pd.Series, mean: float, per_poss: float) -> FloatArray:
-    """Marcel's regressed blend per person (module docstring): weights 5/4/3 on the three most
-    recent rows times their exposure, plus ``MARCEL_REGRESSION`` possessions (x ``per_poss``
-    attempts per possession) of the league ``mean``; a person without rows gets ``mean``."""
-    recent = _recent(rows, len(MARCEL_WEIGHTS))
+def marcel_blend(
+    recent: pd.DataFrame, people: pd.Series, mean: float, per_poss: float
+) -> FloatArray:
+    """Marcel's regressed blend per person (module docstring) from each person's three most
+    recent rows (``_recent``): weights 5/4/3 times their exposure, plus ``MARCEL_REGRESSION``
+    possessions (x ``per_poss`` attempts per possession) of the league ``mean``; a person without
+    rows gets ``mean``."""
     weight = recent["rank"].map(dict(enumerate(MARCEL_WEIGHTS))).to_numpy(dtype=np.float64)
     exposure = weight * recent["n"].to_numpy()
     sums = (
@@ -756,8 +762,10 @@ def baseline_predictions(ti: TargetInputs) -> dict[str, pd.DataFrame]:
     for stat in ti.stats:
         mean, per_poss = _league_level(ti, rates, stat)
         rows = _stat_rows(ti, rates, stat)
-        last = people.map(_recent(rows, 1).set_index("person_id")["x"]).to_numpy(dtype=np.float64)
-        blend = marcel_blend(rows, people, mean, per_poss)
+        recent = _recent(rows, len(MARCEL_WEIGHTS))
+        newest = recent[recent["rank"] == 0].set_index("person_id")["x"]
+        last = people.map(newest).to_numpy(dtype=np.float64)
+        blend = marcel_blend(recent, people, mean, per_poss)
         if stat not in IMPACT_STATS:
             blend = np.clip(blend * factor, 0.0, 1.0 if stat in PCT_STATS else None)
         by_name = {
@@ -973,7 +981,7 @@ def run_m6_backtest(
     tuning_only: bool = False,
     score_test: bool = False,
     fixed: Mapping[str, Any] | None = None,
-    rounds: Callable[[str, int], int] = official_rounds,
+    rounds: Callable[[str, int], int] | None = None,
 ) -> tuple[dict[str, Any], pd.DataFrame]:
     """The M6 report and the per-player rows (module docstring). ``tuning_only``: only the tuning
     seasons are scored, so no validation or test number exists anywhere (the verdict must be

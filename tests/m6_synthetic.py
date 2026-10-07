@@ -43,7 +43,7 @@ N_TEAMS = {"euroleague": 8, "gbl": 6}
 ROSTER = {"euroleague": 11, "gbl": 10}
 TEAM_POSS = {"euroleague": 72.0, "gbl": 70.0}
 LEGS = 4
-SEASONS = tuple(range(2010, 2021))
+SEASONS = tuple(range(2010, 2020))
 MOVE_P = 0.07
 DRIFT_SD = 0.04
 PCT_DRIFT_SD = 0.06
@@ -111,15 +111,16 @@ def linear_spm(frame: pd.DataFrame, before_season: int) -> "pd.Series[float]":
     return pd.Series(value, index=frame.index)
 
 
-def small_spec(*, gbl: bool = False) -> M6Backtest:
-    """Two to three tuning seasons, one validation, two test; the GBL's tuning starts later."""
+def small_spec() -> M6Backtest:
+    """Two tuning seasons, one validation, two test and one checkpoint, for both competitions."""
     return M6Backtest(
         report=Path("unused.json"),
         players_report=Path("unused.csv"),
-        tuning=(2016, 2017) if gbl else (2015, 2016, 2017),
-        validation=(2018,),
-        test=(2019, 2020),
+        tuning=(2015, 2016),
+        validation=(2017,),
+        test=(2018, 2019),
         half_lives=(1.0, 2.0, 3.0),
+        checkpoints=(0.5,),
         bootstrap_resamples=200,
     )
 
@@ -332,7 +333,7 @@ def build_inputs(
     seasons: tuple[int, ...] = SEASONS,
     seed: int = 0,
     aging_strength: float = 1.0,
-    gbl_from: int = 2012,
+    gbl_from: int = 2011,
     brapm_from: int = 2012,
     translations_from: int | None = None,
     playoffs: bool = True,
@@ -341,7 +342,7 @@ def build_inputs(
     rng = np.random.default_rng(seed)
     pop = _population(rng, seasons, gbl_from)
     rates = _true_rates(pop, aging_strength)
-    games, player_games = {}, {}
+    games, player_games, regular = {}, {}, {}
     for competition in COMPETITIONS:
         schedule = pd.concat(
             [
@@ -355,6 +356,7 @@ def build_inputs(
         lines = _lines(
             rng, rates[mask].reset_index(drop=True), pop[mask].reset_index(drop=True), schedule
         )
+        regular[competition] = lines
         if playoffs:
             extra = pd.concat(
                 [
@@ -372,7 +374,7 @@ def build_inputs(
             ["season", "game_id", "team", "player_id", "sec", "poss", *COUNT_COLUMNS]
         ].reset_index(drop=True)
     ages = _ages(pop)
-    brapm = _brapm(rng, rates, pop, player_games["euroleague"], brapm_from)
+    brapm = _brapm(rng, rates, pop, regular["euroleague"], brapm_from)
     first = translations_from if translations_from is not None else seasons[1]
     translations = {
         s: Translation(delta=DELTA, c=PSEUDO, target_season=s) for s in seasons if s >= first
@@ -424,13 +426,13 @@ def _brapm(
     brapm_from: int,
 ) -> pd.DataFrame:
     """Season-end BRAPM snapshots of the EuroLeague player-seasons: the planted SPM of the true
-    rates, a persistent player effect and noise shrinking with the possessions."""
+    rates, a persistent player effect and noise shrinking with the regular-season possessions."""
     in_el = set(pop.loc[pop["competition"] == "euroleague", "pid"])
     el = rates[(rates["competition"] == "euroleague") & (rates["season"] >= brapm_from)]
-    poss = lines[lines["sec"] > 0].groupby(["player_id", "season"])["poss"].sum()
-    keys = [f"P{p:06d}" for p in el["pid"]]
+    poss = lines[lines["sec"] > 0].groupby(["pid", "season"])["poss"].sum()
     exposure = pd.Series(
-        [poss.get((k, s), 0.0) for k, s in zip(keys, el["season"], strict=True)], index=el.index
+        [poss.get((p, s), 0.0) for p, s in zip(el["pid"], el["season"], strict=True)],
+        index=el.index,
     )
     keep = (exposure > 0).to_numpy()
     el, exposure = el[keep], exposure[keep]
