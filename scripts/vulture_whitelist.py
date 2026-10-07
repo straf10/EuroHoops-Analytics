@@ -42,6 +42,14 @@ from eurohoops.models.rapm import ModelColumns, build_minutes_rows, fit_decayed_
 from eurohoops.models.rapm_posterior import Posterior, noise_variance, posterior, ridge_solution
 from eurohoops.models.rest import rest_features
 from eurohoops.models.rotation import projected_shares_variant
+from eurohoops.models.similarity import (
+    SIMILAR_SCHEMA,
+    SelfRetrieval,
+    embed,
+    neighbours,
+    raw_features,
+    self_retrieval_rate,
+)
 from eurohoops.models.translation import StatFit
 from eurohoops.standings import EUROLEAGUE_2026, GBL_2026, Format, Series, rank
 
@@ -130,3 +138,12 @@ build_player_seasons
 player_ages
 rate_table
 PROJECTED_STATS
+
+# weeks 16-18 D: the "plays like" search, called by the L9 `eurohoops project` command and the
+# L6 harness (later wave); self_retrieval_rate/SelfRetrieval.z are the embedding's own check
+SIMILAR_SCHEMA
+embed
+neighbours
+raw_features
+self_retrieval_rate
+SelfRetrieval.z
