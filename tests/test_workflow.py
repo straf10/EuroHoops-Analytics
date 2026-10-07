@@ -46,6 +46,15 @@ def test_daily_stages_el_history_and_stints_for_m5_softly() -> None:
         assert '|| echo "::warning::' in DAILY[start : DAILY.index("- name:", start)]
 
 
+def test_daily_keeps_the_committed_stints_report() -> None:
+    """The daily stints mart rewrites reports/stints_mart.json with live-season games; the M1
+    card quotes that report, so the step restores it before anything is committed."""
+    start = DAILY.index("eurohoops stints --mart")
+    step = DAILY[start : DAILY.index("- name:", start)]
+    assert "git checkout -- reports/stints_mart.json" in step
+    assert start < DAILY.index("git add predictions/ reports/")
+
+
 def test_daily_runs_are_closer_together_than_the_prediction_window() -> None:
     """With one run a day and a 36 h window, every game is inside at least one run's window."""
     (cron,) = re.findall(r'cron: "([^"]+)"', DAILY)

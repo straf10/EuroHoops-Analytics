@@ -75,10 +75,13 @@ jobs:
             || echo "::warning::EuroLeague history staging failed; M5 will be skipped"
       - name: Build marts
         run: uv run --no-dev eurohoops build
+      # The mart is for M5 only: its report (the historical validation the M1 card quotes) is
+      # put back, so the daily commit never moves it.
       - name: Build the stints mart for M5
         run: |
           uv run --no-dev eurohoops stints --mart \
             || echo "::warning::stints mart failed; M5 will be skipped"
+          git checkout -- reports/stints_mart.json
       # Market benchmark (EuroLeague only): one The Odds API call. The repository secret is
       # set by the owner; without it the step is skipped with a warning, never failed.
       - name: Record EuroLeague odds
