@@ -130,3 +130,10 @@ build_player_seasons
 player_ages
 rate_table
 PROJECTED_STATS
+
+# weeks 16-18 B: the aging curve, called by the projection (L1) and the L6 harness (wave 2)
+from eurohoops.models.aging import MIN_AGE_PAIRS, aging_curve, apply  # noqa: E402
+
+MIN_AGE_PAIRS
+aging_curve
+apply
