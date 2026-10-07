@@ -21,7 +21,9 @@ has no impact stats (D13). A stat whose truth is NaN for a player (no attempt) i
 player's loss and the stat weights are renormalised over the stats present: with K stats scored
 in the block and n present, the player's loss is ``K / n * sum of the present squared errors``.
 A stat any compared model cannot project for a player (e.g. no league impact mean) is left out
-the same way, for all models of the block, so the losses stay comparable.
+the same way, for all models of the block, so the losses stay comparable (on the tuning seasons'
+next-season targets the models of a block are every cell and baseline, elsewhere the chosen cell
+and the baselines).
 
 Impact inputs of a EuroLeague target. BRAPM rows: the committed snapshots of seasons before ``t``
 (never ``t``'s own: that is the truth). SPM rows: ``spm`` with ``before_season = t`` applied to
