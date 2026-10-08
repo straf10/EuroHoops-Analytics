@@ -19,13 +19,24 @@ A player with no s+1 row at all is not observable and cannot be paired: the corr
 the short seasons, not the departures. ``survivor_correction=False`` drops the short-season pairs
 (the planted bias in the tests).
 
+Regressed delta method (D18). Players qualify on season s partly because season s was lucky, and
+they regress in s+1 at every age; measured from the raw season-s rate that regression would be
+counted as aging. Each pair's delta is therefore measured from the season-s rate shrunk toward a
+prior mean by ``B = tau_s^2 / (tau_s^2 + var)``. The prior mean is the competition-season's league
+mean plus the mean deviation of the players of that age (young players are below the league mean
+and old ones above it; shrinking them toward the plain league mean would put that gap into the
+delta as aging). It and ``tau_s^2`` (method of moments, floored at 0) are estimated on every row of
+the competition-season, short seasons included, not on the qualified rows alone: those are the
+players who earned their minutes partly by luck, so their mean is too high and their spread too
+small. The delta's variance is ``B^2 var_s`` plus the s+1 side. Pre-cutoff rows only.
+
 Sampling variance of a rate: Poisson, 100 * mean / possessions, for per-100 counts; p(1-p) /
 attempts for percentages; the supplied sd squared for impact ratings. A pair's variance is the
 sum of its two seasons' (for a shrunk season, its posterior variance B * var, B being the
 shrinkage factor). Weights (D10): without the correction a pair is weighted by 1 / (variance +
 tau_d^2), the inverse sum of the two exposures (the harmonic-mean-of-exposure weight) plus a
 method-of-moments random effect for the spread of true changes between players. With the
-correction every pair is weighted by its season-s exposure only, 1 / (var_s + tau_d^2): season s
+correction every pair is weighted by its season-s exposure only, 1 / (raw var_s + tau_d^2): season s
 is the qualified season, fixed before the outcome is known, whereas a weight that grows with the
 s+1 exposure would under-represent exactly the players who then lost minutes (the decliners).
 The standard error of a weighted age mean always uses the pairs' own variances (the posterior
@@ -148,12 +159,49 @@ def _shrink_short(short: pd.DataFrame) -> pd.DataFrame:
     return short
 
 
+def _regress_season_s(rows: pd.DataFrame, ages: pd.DataFrame, min_poss: float) -> pd.DataFrame:
+    """The qualified rows with their rate shrunk toward the prior mean of their competition-season
+    and age, by ``B = tau^2 / (tau^2 + var)``. The prior is estimated on every row of the
+    competition-season, short ones included: the qualified rows alone are the players who earned
+    their minutes partly by luck, and their mean is too high. Season mean: weighted with
+    ``1 / (tau^2 + var)``; plus the mean deviation of the players of that age (same competition,
+    every pre-cutoff season; ``MIN_SHORT_ROWS`` rows needed); ``tau^2``: method of moments (spread
+    about that prior mean minus mean sampling variance, floored at 0), first about the unweighted
+    season mean for the weights. ``value`` becomes the shrunk rate, ``var`` the variance
+    ``B^2 var`` it contributes to a delta and ``var_raw`` keeps the sampling variance (the D10
+    weight)."""
+    keys = ["competition", "season"]
+    rows = rows.merge(ages[["person_id", "season", "age"]], on=["person_id", "season"])
+    rows["age_int"] = np.floor(rows["age"] + 0.5).astype("int64")
+    group = rows.groupby(keys)
+    first = np.maximum(
+        group["value"].transform("var", ddof=0) - group["var"].transform("mean"), 0.0
+    )
+    weight = 1.0 / (first + rows["var"])
+    rows["wv"] = weight * rows["value"]
+    rows["w"] = weight
+    rows["mean"] = group["wv"].transform("sum") / group["w"].transform("sum")
+    rows["wd"] = weight * (rows["value"] - rows["mean"])
+    by_age = rows.groupby(["competition", "age_int"])
+    effect = by_age["wd"].transform("sum") / by_age["w"].transform("sum")
+    rows["mean"] = rows["mean"] + effect.where(by_age["w"].transform("size") >= MIN_SHORT_ROWS, 0.0)
+    rows["excess"] = (rows["value"] - rows["mean"]) ** 2 - rows["var"]
+    rows["tau2"] = np.maximum(rows.groupby(keys)["excess"].transform("mean"), 0.0)
+    now = rows[rows["poss"] >= min_poss].copy()
+    now["var_raw"] = now["var"]
+    factor = now["tau2"] / (now["tau2"] + now["var"])
+    now["value"] = now["mean"] + factor * (now["value"] - now["mean"])
+    now["var"] = factor**2 * now["var"]
+    return now.drop(columns=["wv", "w", "wd", "mean", "excess", "tau2", "age", "age_int"])
+
+
 def _pairs(
-    rows: pd.DataFrame, ages: pd.DataFrame, min_poss: float, survivors: bool
+    rows: pd.DataFrame, ages: pd.DataFrame, min_poss: float, survivors: bool, regress: bool
 ) -> pd.DataFrame:
     """Pairs (s, s+1) of qualified rows, plus, with ``survivors``, those whose s+1 row is a
     short season (shrunk): integer age, delta and sampling variance."""
     now = rows[rows["poss"] >= min_poss]
+    now = _regress_season_s(rows, ages, min_poss) if regress else now.assign(var_raw=now["var"])
     nxt = rows.assign(season=rows["season"] - 1)
     nxt = nxt.rename(columns={"value": "value_next", "var": "var_next", "n": "n_next"})
     pairs = now.merge(
@@ -171,7 +219,7 @@ def _pairs(
             "age_int": pairs["age_int"],
             "delta": pairs["value_next"] - pairs["value"],
             "var": pairs["var"] + pairs["var_next"],
-            "wvar": pairs["var"] if survivors else pairs["var"] + pairs["var_next"],
+            "wvar": pairs["var_raw"] if survivors else pairs["var"] + pairs["var_next"],
         }
     )
 
@@ -250,6 +298,7 @@ def aging_curve(
     impact: pd.DataFrame | None = None,
     min_poss: float = 500.0,
     survivor_correction: bool = True,
+    regress_season_s: bool = True,
 ) -> AgingCurve:
     """The aging curve fitted on pairs (s, s+1) with ``s + 1 < cutoff_season``.
 
@@ -257,12 +306,16 @@ def aging_curve(
     ``ages``: ``player_ages`` output (in memory); ``impact``: impact frame (IMPACT_SCHEMA) to add
     ``spm``/``brapm``. The grid runs over the integer ages from the lowest to the highest age
     with at least ``MIN_AGE_PAIRS`` pairs of ``pts``; a stat with no pair on the grid is left out.
+    ``regress_season_s=False`` measures deltas from the raw season-s rate (the plain delta method,
+    biased by regression to the mean; kept for the tests).
     """
     rows = _stat_rows(history, cutoff_season, impact)
     pairs: dict[str, pd.DataFrame] = {}
     for stat, frame in rows.items():
+        if frame.empty:
+            continue
         noisy = _with_noise(stat, frame, min_poss)
-        pairs[stat] = _pairs(noisy, ages, min_poss, survivor_correction)
+        pairs[stat] = _pairs(noisy, ages, min_poss, survivor_correction, regress_season_s)
     base = pairs["pts"]["age_int"].value_counts() if len(pairs["pts"]) else pd.Series(dtype="int64")
     enough = base[base >= MIN_AGE_PAIRS]
     if enough.empty:

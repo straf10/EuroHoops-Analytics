@@ -236,3 +236,69 @@ def test_impact_stat_with_a_planted_linear_age_effect_is_recovered(
     assert np.all(np.abs(err[ok]) < 3 * curve.se["spm"][ok])
     assert np.all(curve.se["spm"][ok] < 0.3)
     assert "brapm" not in curve.delta
+
+
+def _flat_population(seed: int = 5) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """No aging at all: each player's true ast rate never changes (drawn from a prior). Season 1
+    qualifies only for players whose observed season-1 rate is above the league mean (the rest
+    are thinned to 300 possessions): minutes follow luck."""
+    rng = np.random.default_rng(seed)
+    n = N_PLAYERS
+    talent = MU + TALENT_SD * rng.standard_normal(n)
+    start_age = rng.integers(AGE_LOW, AGE_HIGH + 1, n)
+    full = rng.poisson(FULL_POSS * talent / 100.0, size=(3, n))
+    lucky = full[1] / FULL_POSS * 100.0 > MU
+    poss = np.full((3, n), FULL_POSS)
+    ast = full.copy()
+    poss[1, ~lucky] = 300.0
+    ast[1, ~lucky] = rng.binomial(full[1, ~lucky], 300.0 / FULL_POSS)
+    rows, ages = [], []
+    for k in range(3):
+        frame = pd.DataFrame(
+            {
+                "person_id": [f"P:{i}" for i in range(n)],
+                "competition": "euroleague",
+                "season": FIRST_SEASON + k,
+                "partial": False,
+                "mapped": True,
+                "team": "AAA",
+                "games": 20,
+                "minutes": poss[k] / 2.0,
+                "poss": poss[k],
+                **{c: 0 for c in COUNT_COLUMNS},
+                "debut_season": FIRST_SEASON,
+            }
+        )
+        frame["ast"] = ast[k]
+        frame["pts"] = rng.poisson(poss[k] * 0.2)
+        frame["dreb"] = rng.poisson(poss[k] * 0.08)
+        rows.append(frame)
+        ages.append(
+            pd.DataFrame(
+                {
+                    "person_id": frame["person_id"],
+                    "season": FIRST_SEASON + k,
+                    "age": start_age + k + 0.0,
+                }
+            )
+        )
+    return pd.concat(rows, ignore_index=True), pd.concat(ages, ignore_index=True)
+
+
+def test_regression_to_the_mean_is_not_counted_as_aging() -> None:
+    history, ages = _flat_population()
+    cutoff = FIRST_SEASON + 3
+    regressed = aging_curve(history, ages, cutoff)
+    raw = aging_curve(history, ages, cutoff, regress_season_s=False)
+    ok = regressed.n_pairs["ast"] >= 100
+    assert ok.sum() >= 10
+    # True curve is 0 everywhere: within 3 SE at every well-sampled age (0.3% miss each).
+    assert np.all(np.abs(regressed.delta["ast"][ok]) < 3 * regressed.se["ast"][ok])
+    # The mean over ages: the quadratic spline carries about 5 independent ages, so its SE is
+    # about the mean SE / sqrt(5).
+    band = 3 * regressed.se["ast"][ok].mean() / np.sqrt(5)
+    assert abs(regressed.delta["ast"][ok].mean()) < band
+    # Raw season-s rates: the lucky seasons that earned the minutes regress, a negative mean
+    # delta outside that band (the selected players are about 1/3 of the pairs and their luck is
+    # about 0.8 sampling sd, sqrt(100 * 30 / 1200) = 1.6).
+    assert raw.delta["ast"][ok].mean() < -3 * raw.se["ast"][ok].mean() / np.sqrt(5)
