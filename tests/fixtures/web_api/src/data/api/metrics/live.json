@@ -1,0 +1,108 @@
+{
+ "competitions": [
+  {
+   "competition": "euroleague",
+   "scorecard": {
+    "rows_in_log": 40,
+    "elo": {
+     "n": 28,
+     "log_loss": 0.593592,
+     "brier": 0.204167,
+     "accuracy": 0.642857,
+     "margin_mae": 8.467857,
+     "ece": 0.147593,
+     "reliability": [],
+     "margin_crps": null
+    },
+    "b0": {
+     "n": 28,
+     "log_loss": 0.65199,
+     "brier": 0.2297,
+     "accuracy": 0.642857,
+     "margin_mae": 9.682673,
+     "ece": 0.010391,
+     "reliability": [],
+     "margin_crps": null
+    },
+    "rolling": {
+     "window": 50,
+     "series": []
+    },
+    "m1": {
+     "rows_in_log": 27,
+     "m1": {
+      "n": 20,
+      "log_loss": 0.626762,
+      "brier": 0.221422,
+      "accuracy": 0.6,
+      "margin_mae": 8.738,
+      "ece": 0.150715,
+      "reliability": [],
+      "margin_crps": null
+     },
+     "same_games_as_elo": {
+      "n": 20,
+      "m1_log_loss": 0.626762,
+      "elo_log_loss": 0.619262
+     },
+     "rolling": {
+      "window": 50,
+      "series": []
+     }
+    },
+    "m5": {
+     "rows_in_log": 7,
+     "m5": {
+      "n": 0,
+      "log_loss": null,
+      "brier": null,
+      "accuracy": null,
+      "margin_mae": null,
+      "ece": null,
+      "reliability": [],
+      "margin_crps": null
+     },
+     "same_games_as_elo": {
+      "n": 0,
+      "m5_log_loss": null,
+      "elo_log_loss": null
+     },
+     "rolling": {
+      "window": 50,
+      "series": []
+     }
+    }
+   }
+  },
+  {
+   "competition": "gbl",
+   "scorecard": {
+    "rows_in_log": 12,
+    "elo": {
+     "n": 10,
+     "log_loss": 0.61,
+     "brier": 0.21,
+     "accuracy": 0.7,
+     "margin_mae": 9.1,
+     "ece": 0.2,
+     "reliability": [],
+     "margin_crps": null
+    },
+    "b0": {
+     "n": 10,
+     "log_loss": 0.66,
+     "brier": 0.23,
+     "accuracy": 0.6,
+     "margin_mae": 10.2,
+     "ece": 0.05,
+     "reliability": [],
+     "margin_crps": null
+    },
+    "rolling": {
+     "window": 50,
+     "series": []
+    }
+   }
+  }
+ ]
+}

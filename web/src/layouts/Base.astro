@@ -9,7 +9,7 @@ interface Props {
   title?: string;
   description: string;
   /** Which top-bar page is current. */
-  current?: "players" | "leaders" | "compare" | "teams" | "shots" | "forecasts";
+  current?: "players" | "leaders" | "compare" | "teams" | "shots" | "scouting" | "standings" | "forecasts" | "methodology";
   /** Show the EuroLeague / Greek League switch in the top bar. */
   compSwitch?: boolean;
   updated?: string;
@@ -25,7 +25,10 @@ const pages = [
   { key: "compare", href: `${root}/compare/`, label: "Compare" },
   { key: "teams", href: `${root}/teams/`, label: "Teams" },
   { key: "shots", href: `${root}/shots/`, label: "Shots" },
+  { key: "scouting", href: `${root}/scouting/`, label: "Scouting" },
+  { key: "standings", href: `${root}/standings/`, label: "Standings" },
   { key: "forecasts", href: `${root}/`, label: "Forecasts" },
+  { key: "methodology", href: `${root}/methodology/`, label: "Methodology" },
 ] as const;
 ---
 
