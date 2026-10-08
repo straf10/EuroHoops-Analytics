@@ -469,6 +469,8 @@ iteration 9 | L8 GBL (fixed EuroLeague choice, gated false) | proj_shrunk@1 vs m
 RUNTIME m6 gbl 63
 iteration 10 | fast gate, local merge to main (12a9384, owner request); L9 live projections, board, similarity, `sim-ungated`, crosswalk file (D22-D25), daily.yml steps | fast gate FAILS 0 in 594 s (1230 passed); tests/test_live_m6.py 27 passed; m6_live.py (item 57) PASS: two dry runs same sha256, tree untouched, no age or birth date, daily.yml per gate, actionlint clean; API + player-season tests 91 passed, M3 GBL 8 passed; ruff, format, mypy, vulture clean | green | (this commit)
 RUNTIME project 48
+iteration 11 | L12 docs part 1 (m6.md + card test, CONTEXT terms, PRODUCT.md owner-approved), checklist items 54-60, L10 (H) merged | item 54 m6 facts PASS, units 170 passed + 1 failed (the CLI wiring test's el_spm_models stub missed L9's `last` keyword: fixed in 5f52b50, rerun passed); item 55 35 passed; item 59 on real data PASS (API tests 124 passed, old-vs-new byte-identical 104 stats + 966 publish files, contract clean, docker compose config valid); model card test 7 passed. Note: item 54's m6_facts.py read the marts while H was running (read-only, H has no data/); no other real-data command ran during a subagent | green | 5f52b50, merge of w16-h
+RUNTIME export 66
 
 ## Subagent log
 | wave | subagent | deliverable | rounds | notes |
@@ -483,3 +485,4 @@ RUNTIME project 48
 | 2 | A | D17 (round 3) | 1 | (N, D) by lag-1/lag-2 moments, memoised per freeze season |
 | 2 | B | D18 (round 3) | 1 | prior on all rows with an age effect (accepted, recorded under D18) |
 | 1 | B | L2 aging | 2 | round 1 narrowed the synthetic possession gap (1200 → 1000) after a failure (rejected); root cause: outcome-dependent weights → D10; original 1200/450 design passes unchanged; impact-stat test added |
+| 3 | H | L10 export through the API | 1 | its one failing test came from my L9 change (stub), fixed by me; memoised committed reports and the projection-list check in the read model (outside its files, accepted: behaviour-neutral, the Store docstring updated by me); `daily.yml` artifact root moved to `web/` |
