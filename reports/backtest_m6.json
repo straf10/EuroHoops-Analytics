@@ -11,6 +11,9 @@
       2020,
       2021,
       2022
+    ],
+    "validation": [
+      2023
     ]
   },
   "stats": [
@@ -1156,9 +1159,484 @@
     "tuning_loss": 6.090287
   },
   "data_sha256": "2fcc727dc6572537b61d1d40c8c93ea20940a4510d5f6bdd275ddec954e8c3e0",
-  "tuning_only": true,
-  "validation_scored": false,
+  "tuning_only": false,
+  "validation_scored": true,
   "test_scored": false,
+  "validation": {
+    "seasons": [
+      2023
+    ],
+    "next_season": {
+      "proj_shrunk@1": {
+        "n": 164,
+        "loss": 5.39813,
+        "mae": {
+          "pts": 3.354012,
+          "fg3a": 1.206987,
+          "fta": 1.325624,
+          "ast": 0.909663,
+          "tov": 0.659544,
+          "oreb": 0.498815,
+          "dreb": 0.854834,
+          "stl": 0.388643,
+          "blk": 0.246719,
+          "ts": 0.040031,
+          "fg3": 0.058242,
+          "ft": 0.06094,
+          "spm": 1.244377,
+          "brapm": 0.766142
+        },
+        "coverage": {
+          "pts": 0.786585,
+          "fg3a": 0.847561,
+          "fta": 0.77439,
+          "ast": 0.853659,
+          "tov": 0.810976,
+          "oreb": 0.823171,
+          "dreb": 0.841463,
+          "stl": 0.847561,
+          "blk": 0.810976,
+          "ts": 0.841463,
+          "fg3": 0.806452,
+          "ft": 0.810976,
+          "spm": 0.77439,
+          "brapm": 0.817073
+        },
+        "crps": {
+          "spm": 0.892042,
+          "brapm": 0.56999
+        }
+      },
+      "same_as_last": {
+        "n": 164,
+        "loss": 8.512821,
+        "mae": {
+          "pts": 3.61553,
+          "fg3a": 1.330152,
+          "fta": 1.537049,
+          "ast": 1.114968,
+          "tov": 0.729877,
+          "oreb": 0.587836,
+          "dreb": 1.012684,
+          "stl": 0.49844,
+          "blk": 0.330636,
+          "ts": 0.054031,
+          "fg3": 0.086386,
+          "ft": 0.077274,
+          "spm": 1.706385,
+          "brapm": 0.688969
+        },
+        "coverage": null,
+        "crps": {
+          "spm": null,
+          "brapm": null
+        }
+      },
+      "league_mean": {
+        "n": 164,
+        "loss": 13.60421,
+        "mae": {
+          "pts": 5.144716,
+          "fg3a": 3.317523,
+          "fta": 2.0382,
+          "ast": 2.582411,
+          "tov": 0.990996,
+          "oreb": 1.381845,
+          "dreb": 1.712925,
+          "stl": 0.55747,
+          "blk": 0.600139,
+          "ts": 0.048236,
+          "fg3": 0.060367,
+          "ft": 0.083412,
+          "spm": 1.508469,
+          "brapm": 1.833284
+        },
+        "coverage": null,
+        "crps": {
+          "spm": null,
+          "brapm": null
+        }
+      },
+      "marcel": {
+        "n": 164,
+        "loss": 5.418873,
+        "mae": {
+          "pts": 3.296816,
+          "fg3a": 1.248769,
+          "fta": 1.344124,
+          "ast": 0.929969,
+          "tov": 0.669979,
+          "oreb": 0.505171,
+          "dreb": 0.871095,
+          "stl": 0.407713,
+          "blk": 0.263444,
+          "ts": 0.038382,
+          "fg3": 0.057966,
+          "ft": 0.062007,
+          "spm": 1.266112,
+          "brapm": 0.772489
+        },
+        "coverage": null,
+        "crps": {
+          "spm": null,
+          "brapm": null
+        }
+      }
+    },
+    "rest_of_season": {
+      "0.25": {
+        "proj_shrunk@1": {
+          "n": 164,
+          "loss": 5.331127,
+          "mae": {
+            "pts": 3.266551,
+            "fg3a": 1.133655,
+            "fta": 1.220086,
+            "ast": 0.845995,
+            "tov": 0.663164,
+            "oreb": 0.50318,
+            "dreb": 0.997092,
+            "stl": 0.404692,
+            "blk": 0.274325,
+            "ts": 0.04539,
+            "fg3": 0.066073,
+            "ft": 0.07156,
+            "spm": 1.153885,
+            "brapm": null
+          },
+          "coverage": {
+            "pts": 0.77439,
+            "fg3a": 0.835366,
+            "fta": 0.853659,
+            "ast": 0.859756,
+            "tov": 0.817073,
+            "oreb": 0.884146,
+            "dreb": 0.835366,
+            "stl": 0.823171,
+            "blk": 0.804878,
+            "ts": 0.829268,
+            "fg3": 0.74026,
+            "ft": 0.768293,
+            "spm": 0.841463,
+            "brapm": null
+          },
+          "crps": {
+            "spm": 0.843355,
+            "brapm": null
+          }
+        },
+        "same_as_last": {
+          "n": 164,
+          "loss": 17.909195,
+          "mae": {
+            "pts": 4.198193,
+            "fg3a": 1.402157,
+            "fta": 1.732514,
+            "ast": 1.356677,
+            "tov": 1.215175,
+            "oreb": 0.831986,
+            "dreb": 1.459346,
+            "stl": 0.839547,
+            "blk": 0.426145,
+            "ts": 0.077363,
+            "fg3": 0.122695,
+            "ft": 0.126907,
+            "spm": 2.375012,
+            "brapm": null
+          },
+          "coverage": null,
+          "crps": {
+            "spm": null,
+            "brapm": null
+          }
+        },
+        "league_mean": {
+          "n": 164,
+          "loss": 13.319228,
+          "mae": {
+            "pts": 5.417204,
+            "fg3a": 3.391589,
+            "fta": 2.083195,
+            "ast": 2.582477,
+            "tov": 1.009389,
+            "oreb": 1.397233,
+            "dreb": 1.824295,
+            "stl": 0.56797,
+            "blk": 0.621999,
+            "ts": 0.051622,
+            "fg3": 0.068368,
+            "ft": 0.092431,
+            "spm": 1.547729,
+            "brapm": null
+          },
+          "coverage": null,
+          "crps": {
+            "spm": null,
+            "brapm": null
+          }
+        },
+        "marcel": {
+          "n": 164,
+          "loss": 5.58166,
+          "mae": {
+            "pts": 3.463738,
+            "fg3a": 1.266,
+            "fta": 1.306331,
+            "ast": 0.912858,
+            "tov": 0.685838,
+            "oreb": 0.500267,
+            "dreb": 1.032091,
+            "stl": 0.406237,
+            "blk": 0.291084,
+            "ts": 0.044939,
+            "fg3": 0.068419,
+            "ft": 0.070658,
+            "spm": 1.191608,
+            "brapm": null
+          },
+          "coverage": null,
+          "crps": {
+            "spm": null,
+            "brapm": null
+          }
+        }
+      },
+      "0.5": {
+        "proj_shrunk@1": {
+          "n": 158,
+          "loss": 6.844133,
+          "mae": {
+            "pts": 3.354008,
+            "fg3a": 1.160757,
+            "fta": 1.337396,
+            "ast": 0.85099,
+            "tov": 0.697171,
+            "oreb": 0.632733,
+            "dreb": 0.989148,
+            "stl": 0.509141,
+            "blk": 0.291278,
+            "ts": 0.053125,
+            "fg3": 0.080218,
+            "ft": 0.078121,
+            "spm": 1.324395,
+            "brapm": null
+          },
+          "coverage": {
+            "pts": 0.803797,
+            "fg3a": 0.892405,
+            "fta": 0.810127,
+            "ast": 0.873418,
+            "tov": 0.841772,
+            "oreb": 0.829114,
+            "dreb": 0.841772,
+            "stl": 0.85443,
+            "blk": 0.822785,
+            "ts": 0.816456,
+            "fg3": 0.763514,
+            "ft": 0.815287,
+            "spm": 0.829114,
+            "brapm": null
+          },
+          "crps": {
+            "spm": 0.958724,
+            "brapm": null
+          }
+        },
+        "same_as_last": {
+          "n": 158,
+          "loss": 11.429961,
+          "mae": {
+            "pts": 3.832543,
+            "fg3a": 1.261671,
+            "fta": 1.392698,
+            "ast": 0.977001,
+            "tov": 0.884169,
+            "oreb": 0.700998,
+            "dreb": 1.115892,
+            "stl": 0.716071,
+            "blk": 0.365931,
+            "ts": 0.074203,
+            "fg3": 0.109768,
+            "ft": 0.094251,
+            "spm": 1.925583,
+            "brapm": null
+          },
+          "coverage": null,
+          "crps": {
+            "spm": null,
+            "brapm": null
+          }
+        },
+        "league_mean": {
+          "n": 158,
+          "loss": 15.400582,
+          "mae": {
+            "pts": 5.764972,
+            "fg3a": 3.383876,
+            "fta": 2.220726,
+            "ast": 2.637548,
+            "tov": 1.034739,
+            "oreb": 1.426142,
+            "dreb": 1.901712,
+            "stl": 0.658154,
+            "blk": 0.634269,
+            "ts": 0.058642,
+            "fg3": 0.082659,
+            "ft": 0.107671,
+            "spm": 1.684003,
+            "brapm": null
+          },
+          "coverage": null,
+          "crps": {
+            "spm": null,
+            "brapm": null
+          }
+        },
+        "marcel": {
+          "n": 158,
+          "loss": 7.061097,
+          "mae": {
+            "pts": 3.540738,
+            "fg3a": 1.297792,
+            "fta": 1.435594,
+            "ast": 0.920638,
+            "tov": 0.724634,
+            "oreb": 0.63965,
+            "dreb": 1.031933,
+            "stl": 0.504855,
+            "blk": 0.302889,
+            "ts": 0.051935,
+            "fg3": 0.080232,
+            "ft": 0.076935,
+            "spm": 1.331134,
+            "brapm": null
+          },
+          "coverage": null,
+          "crps": {
+            "spm": null,
+            "brapm": null
+          }
+        }
+      },
+      "0.75": {
+        "proj_shrunk@1": {
+          "n": 159,
+          "loss": 10.418009,
+          "mae": {
+            "pts": 3.656333,
+            "fg3a": 1.328649,
+            "fta": 1.639181,
+            "ast": 1.19599,
+            "tov": 0.844658,
+            "oreb": 0.765969,
+            "dreb": 1.351838,
+            "stl": 0.740161,
+            "blk": 0.344025,
+            "ts": 0.071265,
+            "fg3": 0.100679,
+            "ft": 0.091184,
+            "spm": 1.732824,
+            "brapm": null
+          },
+          "coverage": {
+            "pts": 0.767296,
+            "fg3a": 0.823899,
+            "fta": 0.779874,
+            "ast": 0.849057,
+            "tov": 0.867925,
+            "oreb": 0.805031,
+            "dreb": 0.767296,
+            "stl": 0.786164,
+            "blk": 0.842767,
+            "ts": 0.805031,
+            "fg3": 0.772414,
+            "ft": 0.846667,
+            "spm": 0.830189,
+            "brapm": null
+          },
+          "crps": {
+            "spm": 1.239166,
+            "brapm": null
+          }
+        },
+        "same_as_last": {
+          "n": 159,
+          "loss": 13.105616,
+          "mae": {
+            "pts": 3.819961,
+            "fg3a": 1.296183,
+            "fta": 1.586341,
+            "ast": 1.316039,
+            "tov": 0.937318,
+            "oreb": 0.843759,
+            "dreb": 1.350415,
+            "stl": 0.822506,
+            "blk": 0.376446,
+            "ts": 0.079484,
+            "fg3": 0.112321,
+            "ft": 0.101028,
+            "spm": 2.061357,
+            "brapm": null
+          },
+          "coverage": null,
+          "crps": {
+            "spm": null,
+            "brapm": null
+          }
+        },
+        "league_mean": {
+          "n": 159,
+          "loss": 19.353887,
+          "mae": {
+            "pts": 6.150602,
+            "fg3a": 3.419408,
+            "fta": 2.410658,
+            "ast": 2.767419,
+            "tov": 1.139949,
+            "oreb": 1.497119,
+            "dreb": 2.067376,
+            "stl": 0.846616,
+            "blk": 0.67571,
+            "ts": 0.077899,
+            "fg3": 0.102475,
+            "ft": 0.119976,
+            "spm": 1.972109,
+            "brapm": null
+          },
+          "coverage": null,
+          "crps": {
+            "spm": null,
+            "brapm": null
+          }
+        },
+        "marcel": {
+          "n": 159,
+          "loss": 10.605462,
+          "mae": {
+            "pts": 3.873936,
+            "fg3a": 1.424434,
+            "fta": 1.724482,
+            "ast": 1.239419,
+            "tov": 0.865933,
+            "oreb": 0.772634,
+            "dreb": 1.371177,
+            "stl": 0.732961,
+            "blk": 0.369719,
+            "ts": 0.071113,
+            "fg3": 0.099266,
+            "ft": 0.090843,
+            "spm": 1.71815,
+            "brapm": null
+          },
+          "coverage": null,
+          "crps": {
+            "spm": null,
+            "brapm": null
+          }
+        }
+      }
+    }
+  },
   "calibration": {
     "rule": "D19: sd x sqrt(c), c the mean squared standardised error of the chosen cell's tuning forecasts; a tuning block uses the earlier tuning seasons, later blocks all of them",
     "scale": {
@@ -1243,6 +1721,24 @@
         "n": 6,
         "loss": 6.538234
       }
+    },
+    "validation": {
+      "proj_shrunk@1": {
+        "n": 2,
+        "loss": 8.865012
+      },
+      "same_as_last": {
+        "n": 2,
+        "loss": 15.566462
+      },
+      "league_mean": {
+        "n": 2,
+        "loss": 11.482813
+      },
+      "marcel": {
+        "n": 2,
+        "loss": 9.604866
+      }
     }
   },
   "differences": {
@@ -1277,6 +1773,106 @@
         "resamples": 1000,
         "seed": 20261201
       }
+    },
+    "validation": {
+      "vs_same_as_last": {
+        "mean": -3.114691,
+        "ci95": [
+          -4.066925,
+          -2.178728
+        ],
+        "clusters": 164,
+        "resamples": 1000,
+        "seed": 20261201
+      },
+      "vs_league_mean": {
+        "mean": -8.206081,
+        "ci95": [
+          -9.58765,
+          -6.914887
+        ],
+        "clusters": 164,
+        "resamples": 1000,
+        "seed": 20261201
+      },
+      "vs_marcel": {
+        "mean": -0.020743,
+        "ci95": [
+          -0.166008,
+          0.139934
+        ],
+        "clusters": 164,
+        "resamples": 1000,
+        "seed": 20261201
+      }
+    }
+  },
+  "gate": {
+    "rule": "EuroLeague validation next-season projection loss: the chosen variant below marcel's and same_as_last's (point rule), and its pooled tuning + validation 80% interval coverage inside the band for every stat; player-cluster bootstrap 95% CIs of the loss differences reported",
+    "gated": true,
+    "variant": "proj_shrunk",
+    "half_life": 1.0,
+    "loss_chosen": 5.39813,
+    "loss_marcel": 5.418873,
+    "loss_same_as_last": 8.512821,
+    "loss_ok": true,
+    "coverage_pooled": {
+      "pts": 0.815951,
+      "fg3a": 0.803681,
+      "fta": 0.79667,
+      "ast": 0.84312,
+      "tov": 0.801928,
+      "oreb": 0.810692,
+      "dreb": 0.79404,
+      "stl": 0.811569,
+      "blk": 0.832603,
+      "ts": 0.815951,
+      "fg3": 0.825679,
+      "ft": 0.813872,
+      "spm": 0.809816,
+      "brapm": 0.820333
+    },
+    "coverage_validation": {
+      "pts": 0.786585,
+      "fg3a": 0.847561,
+      "fta": 0.77439,
+      "ast": 0.853659,
+      "tov": 0.810976,
+      "oreb": 0.823171,
+      "dreb": 0.841463,
+      "stl": 0.847561,
+      "blk": 0.810976,
+      "ts": 0.841463,
+      "fg3": 0.806452,
+      "ft": 0.810976,
+      "spm": 0.77439,
+      "brapm": 0.817073
+    },
+    "coverage_band": [
+      0.75,
+      0.85
+    ],
+    "coverage_ok": true,
+    "passed": true,
+    "loss_vs_marcel": {
+      "mean": -0.020743,
+      "ci95": [
+        -0.166008,
+        0.139934
+      ],
+      "clusters": 164,
+      "resamples": 1000,
+      "seed": 20261201
+    },
+    "loss_vs_same_as_last": {
+      "mean": -3.114691,
+      "ci95": [
+        -4.066925,
+        -2.178728
+      ],
+      "clusters": 164,
+      "resamples": 1000,
+      "seed": 20261201
     }
   }
 }
