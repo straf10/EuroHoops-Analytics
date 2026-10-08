@@ -829,10 +829,13 @@ def _m6_spm(el: ElSpm, league: pd.DataFrame) -> SpmFn:
     season; the latest one when there is none for it) applied to each row's per-100 box rates
     minus the league rate of the row's previous season (never the row's own season: at a
     checkpoint that would read games after the cutoff; the first season has none and uses
-    its own, which no checkpoint reads); SPM = O + D. Unshrunk rates."""
+    its own, which no checkpoint reads); SPM = O + D. Unshrunk rates. A season without its own
+    model raises: falling back to a later model would read data after the season's start."""
 
     def spm(frame: pd.DataFrame, before_season: int) -> "pd.Series[float]":
-        model = choose_model(el, el.fit_time.get(before_season, float("inf")))
+        if before_season not in el.fit_time:
+            raise ValueError(f"no EuroLeague SPM model for season {before_season}")
+        model = choose_model(el, el.fit_time[before_season])
         if model is None:
             raise ValueError(f"no EuroLeague SPM model for season {before_season}")
         base = []

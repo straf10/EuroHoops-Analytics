@@ -980,6 +980,10 @@ def test_the_wired_spm_is_the_models_o_plus_d_on_lagged_league_rates() -> None:
     features = np.array([[10.0 - 4.0] * len(STAT_COLUMNS), [20.0 - 6.0] * len(STAT_COLUMNS)])
     o, d = model.predict(features)
     assert frame.to_numpy() == pytest.approx(o + d)
+    # A season without its own model raises instead of reading a later season's model.
+    later = max(el.fit_time) + 1
+    with pytest.raises(ValueError, match="no EuroLeague SPM model"):
+        cli._m6_spm(el, league)(rates, later)
 
 
 def test_log_m6_backtest_logs_no_later_split_when_tuning_only(
