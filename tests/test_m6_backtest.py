@@ -40,6 +40,7 @@ from eurohoops.eval.m6_backtest import (
     run_m6_backtest,
     score_block,
     scored_splits,
+    spm_noise_unit,
     target_inputs,
 )
 from eurohoops.eval.tracking import log_m6_backtest
@@ -996,3 +997,51 @@ def test_log_m6_backtest_logs_no_later_split_when_tuning_only(
     assert not any("validation" in n or "seasons.test" in n for n in names), names
     assert any(n.startswith("tuning.next_season.") for n in names)
     assert not any(n.startswith("splits") for n in names)
+
+
+# --- D14: the impact truths are noisy measurements --------------------------------------------
+
+
+def test_the_chosen_cells_impact_intervals_cover_near_the_nominal_rate(
+    validation_run: Run,
+) -> None:
+    """Tuning + validation rows of the chosen cell: coverage of the SPM and BRAPM truths within
+    3 binomial SEs of 0.8 for the number of scored players n (SE = sqrt(0.8 * 0.2 / n); a few
+    hundred player-targets per stat here, so +-0.06 to +-0.09). Without the D14 noise
+    term the interval is that of the true impact and misses the noisy truth far more often."""
+    rows = validation_run.players
+    chosen = rows[rows["model"].str.startswith("proj_")]
+    for stat in ("spm", "brapm"):
+        mine = chosen[chosen["stat"] == stat]
+        n = len(mine)
+        assert n > 100
+        covered = float(((mine["truth"] >= mine["lo80"]) & (mine["truth"] <= mine["hi80"])).mean())
+        assert abs(covered - 0.8) <= 3 * math.sqrt(0.8 * 0.2 / n), (stat, n, covered)
+
+
+def test_the_impact_noise_is_walk_forward_and_by_hand(inputs: M6Inputs, world: Any) -> None:
+    season = 2016
+    ti = target_inputs(inputs, COMPETITION, season, 0.0, spec=SPEC, world=world)
+    snaps = inputs.brapm[
+        (inputs.brapm["stat"] == "brapm") & (inputs.brapm["season"] < season)
+    ].merge(
+        ti.history[["person_id", "competition", "season", "poss"]],
+        on=["person_id", "competition", "season"],
+    )
+    by_hand = float((snaps["poss"] * snaps["sd"] ** 2).sum() / snaps["poss"].sum())
+    assert ti.impact_noise is not None
+    assert ti.impact_noise["brapm"] == (pytest.approx(by_hand, rel=1e-12), 0.0)
+    assert ti.impact_noise["spm"] == (0.0, spm_noise_unit(world, season))
+    # a wild sd in the target season (and after) changes nothing
+    wild = inputs.brapm.copy()
+    wild.loc[wild["season"] >= season, "sd"] = 1e6
+    planted = replace(inputs, brapm=wild)
+    again = target_inputs(planted, COMPETITION, season, 0.0, spec=SPEC, world=prepare(planted))
+    assert again.impact_noise == ti.impact_noise
+    # no snapshot before the target: no BRAPM entry, SPM keeps its own
+    bare = replace(inputs, brapm=inputs.brapm[inputs.brapm["season"] >= season])
+    none = target_inputs(bare, COMPETITION, season, 0.0, spec=SPEC, world=prepare(bare))
+    assert none.impact_noise == {"spm": ti.impact_noise["spm"]}
+    # the GBL has no impact stats, so no noise
+    gbl = target_inputs(inputs, "gbl", SPEC.validation[0], 0.0, spec=SPEC, world=world)
+    assert gbl.impact_noise is None

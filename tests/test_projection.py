@@ -706,3 +706,136 @@ def test_output_follows_the_projections_schema():
         validated(target.assign(exposure=0.0), TARGET_SCHEMA)
     with pytest.raises(pa.errors.SchemaError):
         validated(impact.assign(stat="orapm"), IMPACT_SCHEMA)
+
+
+# --- impact measurement noise (D14) ------------------------------------------------------------
+
+IMPACT_SPM_B = 1500.0  # spm truth noise variance b / exposure
+IMPACT_BRAPM_A = 0.6  # brapm truth noise variance a
+IMPACT_NOISE = {"spm": (0.0, IMPACT_SPM_B), "brapm": (IMPACT_BRAPM_A, 0.0)}
+
+
+def impact_world(rng: np.random.Generator, players: int = 40) -> dict:
+    """One league whose true impact (spread 2, drift 0.5 per season) is seen in the history
+    through noisy measurements (SPM sd sqrt(1500 / poss), BRAPM sd 0.7) and in the target season
+    as a measurement with variance ``a + b / exposure`` (known a, b): what the harness scores."""
+    full = synth_league(rng, players=players, seasons=range(2020, 2025))
+    history = full[full["season"] < 2024]
+    last = full[full["season"] == 2024].reset_index(drop=True)
+    ids = full["person_id"].unique()
+    poss = full["poss"].to_numpy().reshape(players, 5)
+    parts, observed = [], {}
+    for stat in IMPACT_STATS:
+        truth = 2.0 * rng.standard_normal((players, 1)) + np.cumsum(
+            np.hstack([np.zeros((players, 1)), 0.5 * rng.standard_normal((players, 4))]), axis=1
+        )
+        sd = np.sqrt(IMPACT_SPM_B / poss) if stat == "spm" else np.full((players, 5), 0.7)
+        seen = truth + sd * rng.standard_normal((players, 5))
+        parts.append(
+            pd.DataFrame(
+                {
+                    "person_id": np.repeat(ids, 4),
+                    "competition": "euroleague",
+                    "season": np.tile(np.arange(2020, 2024), players),
+                    "stat": stat,
+                    "value": seen[:, :4].ravel(),
+                    "sd": sd[:, :4].ravel(),
+                }
+            )
+        )
+        a, b = IMPACT_NOISE[stat]
+        noise = np.sqrt(a + b / poss[:, 4])
+        observed[stat] = truth[:, 4] + noise * rng.standard_normal(players)
+    return {
+        "history": history,
+        "target": targets_for(ids.tolist(), "euroleague", 2024, exposure=last["poss"].to_numpy()),
+        "impact": pd.concat(parts, ignore_index=True),
+        "observed": observed,
+        "noise": {s: IMPACT_NOISE[s][0] + IMPACT_NOISE[s][1] / poss[:, 4] for s in IMPACT_STATS},
+    }
+
+
+@pytest.fixture(scope="module")
+def impact_coverage() -> dict:
+    """Coverage of the observed impact truth over 200 leagues with ``impact_noise`` and, on the
+    first 40 leagues, without it (with the coverage theory expects there)."""
+    rng = np.random.default_rng(20261208)
+    params = variant_params("proj_shrunk", half_life=2.0)
+    hits = {"with": dict.fromkeys(IMPACT_STATS, 0), "without": dict.fromkeys(IMPACT_STATS, 0)}
+    expected = dict.fromkeys(IMPACT_STATS, 0.0)
+    variance = dict.fromkeys(IMPACT_STATS, 0.0)
+    for league in range(200):
+        world = impact_world(rng)
+        drift = fit_drift(world["history"], 2024, world["impact"])
+        runs = {"with": IMPACT_NOISE} | ({"without": None} if league < 40 else {})
+        for name, noise in runs.items():
+            proj = project(
+                world["history"], world["target"], params, drift=drift,
+                impact=world["impact"], impact_noise=noise,
+            )  # fmt: skip
+            for stat in IMPACT_STATS:
+                rows = proj[proj["stat"] == stat]
+                seen = world["observed"][stat]
+                hits[name][stat] += int(((seen >= rows["lo80"]) & (seen <= rows["hi80"])).sum())
+                if name == "without":
+                    # the interval covers the truth with variance V; the observation adds noise n
+                    v = rows["sd"].to_numpy() ** 2
+                    p = 2 * special.ndtr(Z80 * np.sqrt(v / (v + world["noise"][stat]))) - 1
+                    expected[stat] += float(p.sum())
+                    variance[stat] += float((p * (1 - p)).sum())
+    return {"hits": hits, "expected": expected, "variance": variance}
+
+
+def test_impact_intervals_with_the_noise_term_cover_the_observed_truth(impact_coverage):
+    """200 leagues of 40 players: n = 8000 per stat, binomial SE sqrt(0.8 * 0.2 / n) = 0.0045, so
+    the +-3 point band is 6.7 SE wide."""
+    n = 200 * 40
+    assert 0.03 / math.sqrt(0.8 * 0.2 / n) > 6.5
+    for stat in IMPACT_STATS:
+        assert 0.77 <= impact_coverage["hits"]["with"][stat] / n <= 0.83, stat
+
+
+def test_impact_intervals_without_the_noise_term_undercover_as_theory_says(impact_coverage):
+    """Without the term the interval is that of the true impact, z90 * sqrt(V); the observation
+    adds noise n, so a player is covered with probability 2 Phi(z90 sqrt(V / (V + n))) - 1 (V from
+    the interval itself, n known). The sum of those probabilities is the expected hit count; the
+    observed count lies within 5 SD of it (Poisson-binomial variance), and the expected coverage
+    is under the band."""
+    n = 40 * 40
+    for stat in IMPACT_STATS:
+        expected = impact_coverage["expected"][stat]
+        sd = math.sqrt(impact_coverage["variance"][stat])
+        assert abs(impact_coverage["hits"]["without"][stat] - expected) < 5 * sd, stat
+        assert expected / n < 0.77, stat
+
+
+def test_no_impact_noise_is_the_old_output_bit_for_bit_and_the_term_is_exact():
+    world = impact_world(np.random.default_rng(2), players=30)
+    params = variant_params("proj_shrunk", 2.0)
+    args = (world["history"], world["target"], params)
+    drift = fit_drift(world["history"], 2024, world["impact"])
+    base = project(*args, drift=drift, impact=world["impact"])
+    for none in (None, {}):
+        same = project(*args, drift=drift, impact=world["impact"], impact_noise=none)
+        pd.testing.assert_frame_equal(same, base, check_exact=True)
+    noisy = project(*args, drift=drift, impact=world["impact"], impact_noise=IMPACT_NOISE)
+    for stat in IMPACT_STATS:
+        old, new = base[base["stat"] == stat], noisy[noisy["stat"] == stat]
+        np.testing.assert_allclose(
+            new["sd"] ** 2, old["sd"] ** 2 + world["noise"][stat], rtol=1e-12
+        )
+        assert (new["mean"].to_numpy() == old["mean"].to_numpy()).all()
+    other = base["stat"].isin(COUNT_STATS + PCT_STATS)
+    pd.testing.assert_frame_equal(
+        noisy[other].reset_index(drop=True), base[other].reset_index(drop=True), check_exact=True
+    )
+    # a stat without an entry keeps the old variance
+    only = project(*args, drift=drift, impact=world["impact"], impact_noise={"brapm": (0.6, 0.0)})
+    pd.testing.assert_frame_equal(
+        only[only["stat"] == "spm"].reset_index(drop=True),
+        base[base["stat"] == "spm"].reset_index(drop=True),
+        check_exact=True,
+    )
+    for bad in ({"spm": (-0.1, 0.0)}, {"spm": (0.0, -1.0)}, {"orapm": (1.0, 1.0)}):
+        with pytest.raises(ValueError, match="impact_noise"):
+            project(*args, drift=drift, impact=world["impact"], impact_noise=bad)
