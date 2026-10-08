@@ -169,6 +169,15 @@ already up to date on 2026-10-07). Orchestrator Opus 5.5; subagents Sonnet 5.5 i
   and the read model read it (the mart is the read model's fallback), so `daily.yml` runs
   `project --projections-only` after `score` (a warning on failure, like M5). The backtest still reads the
   mart (its reports stay byte-identical).
+- **D26 (`web_build.sh` fixtures, 2026-10-08):** the build always uses the `site.json` and API fixtures, so item 60
+  does not depend on whether `publish` ran; `WEB_REAL_DATA=1` keeps the real data for a review.
+- **D27 (item 10, owner 2026-10-08):** the stint validation samples completed seasons only (2015 to the season
+  before `LIVE_SEASON`): the live season's growing game list reshuffled its pool every round. Sample changed once
+  (two 2026 games replaced), still 50 games at 100% (cb416c6).
+- **D28 (items 35/37, owner 2026-10-08):** M3's `data_sha256` covers seasons up to `test[-1]` only; GBL hash
+  unchanged, EuroLeague regenerated once, every number identical (14fc9e7, `tests/test_m3_hash.py`).
+- **Checklist record (owner 2026-10-08):** the full run (HEAD 194ecd7) was stopped after item 24; split record of
+  the items this phase touched instead (see the closeout and `reports/week16-18_checklist_run.txt`).
 
 ## §3 findings (L0, real data, HEAD 6b2239b; re-checked by `scripts/checks/m6_facts.py`, item 54)
 Fixture: `tests/fixtures/m6_facts.json`.
@@ -473,6 +482,7 @@ iteration 11 | L12 docs part 1 (m6.md + card test, CONTEXT terms, PRODUCT.md own
 RUNTIME export 66
 iteration 12 | L11 (I, J) merged; follow-ups: live.ts reads the tested display-code map, Scouting current in the nav, item 60 runs both page scripts; web_build.sh always uses the site.json and API fixtures (WEB_REAL_DATA=1 keeps the real ones for a review: item 60 failed on a tree where publish had run, because the page scripts name fixture pages); docs/api.md; docker build | item 60 steps on the fixture build PASS (players 12/12, pages 24/24 ok, card + code-map tests 8 passed); real-data export (publish + export-stats) 139 s (965 API + 104 stats files, tree clean), real-data Astro build 69 s, real-data review run (standings, scouting, a player, a team, forecasts EL/GBL, methodology at 1440/390 light/dark) 28/28 ok, 271 player pages show M6 numbers = 271 exported EuroLeague persons; docker build OK (uvicorn 0.54.0 imports) | green | 536a690 90659bc merges b492b49 45689d1 (this commit)
 RUNTIME astro 69
+iteration 13 | full run stopped at item 24 (owner), split record; D26-D28; origin/main's daily rows merged (ff44d72); closeout | split pass A (cb416c6) 30 of 35 run items PASS (9 origin/main drift, 10 stint sample, 31 split artefact, 35/37 M3 hash drift); pass B item 9 PASS; pass C (14fc9e7) items 1-6, 33-37 FAILS 0 (M3 runtime 788 s) | green (10 green once pushed) | cb416c6 ff44d72 14fc9e7 (this commit)
 
 ## Subagent log
 | wave | subagent | deliverable | rounds | notes |
