@@ -15,8 +15,19 @@ from typing import Annotated, Any
 import numpy as np
 import pandas as pd
 import typer
+from fastapi.testclient import TestClient
 
 from eurohoops import research
+from eurohoops.api.app import create_app
+from eurohoops.api.export import (
+    WEB_DIR,
+    RawStore,
+    publish_files,
+    stats_files,
+    write_publish,
+    write_stats_files,
+)
+from eurohoops.api.readmodel import Store
 from eurohoops.config import (
     BIO_EL_SEASONS,
     BOX_INVARIANTS_REPORT,
@@ -189,12 +200,11 @@ from eurohoops.parse.stints import validate_sample
 from eurohoops.parse.stints_mart import build_stints_mart, mart_report
 from eurohoops.parse.team_box import TEAM_GAMES_SCHEMA, build_team_games
 from eurohoops.predict import LatePredictionError, predict_upcoming
-from eurohoops.publish import DISPLAY_CODES, Section, site_data
+from eurohoops.publish import DISPLAY_CODES
 from eurohoops.sim.formats import season_format
 from eurohoops.sim.played import regulation_scores
 from eurohoops.stats.box import build_box_games
-from eurohoops.stats.export import STATS_DIR, Inputs, build_payloads, load_cached_games, write_stats
-from eurohoops.stats.shots import build_shots
+from eurohoops.stats.export import STATS_DIR
 
 app = typer.Typer(no_args_is_help=True, add_completion=False)
 log = logging.getLogger("eurohoops")
@@ -1505,30 +1515,13 @@ def score(competition: CompetitionOption = CompetitionName.euroleague) -> None:
 
 @app.command()
 def publish() -> None:
-    """Write the site data (web/src/data/site.json) the Astro front-end renders."""
-    sections = []
-    for title, comp in (("EuroLeague", EUROLEAGUE), ("Greek Basket League", GBL)):
-        live = _live(comp)
-        sections.append(
-            Section(
-                key=comp.name,
-                title=title,
-                log=(
-                    pd.read_csv(comp.prediction_log, dtype={"game_id": str})
-                    if comp.prediction_log.exists()
-                    else pd.DataFrame()
-                ),
-                scorecard=json.loads(comp.scorecard.read_text(encoding="utf-8")),
-                backtest=json.loads(comp.live_backtest.report.read_text(encoding="utf-8")),
-                games=live.games,
-                names=dict(read_teams(MART_PATH, comp.name).itertuples(index=False)),
-                model=live.model,
-                season=live.season,
-                replay_from=live.replay_from,
-            )
-        )
-    write_json(SITE_DATA, site_data(sections, utc_now()))
-    typer.echo(f"wrote {SITE_DATA}")
+    """Write the site data (site.json and api/) the Astro front-end renders, from the API."""
+    now = utc_now()
+    store = Store()
+    client = TestClient(create_app(store, lambda: now))
+    files = publish_files(client, store, typer.echo)
+    write_publish(WEB_DIR, files)
+    typer.echo(f"wrote {SITE_DATA} and {len(files) - 1} API files")
 
 
 @app.command("export-stats")
@@ -1540,27 +1533,14 @@ def export_stats(
     raw_dir: Annotated[Path, typer.Option(help="EuroLeague raw cache")] = EUROLEAGUE.raw_dir,
     out: Annotated[Path, typer.Option(help="Where the stats JSON goes")] = STATS_DIR,
 ) -> None:
-    """Write the EuroLeague stats-site data (players, teams, game logs, shot hex bins)."""
-    if from_cache:
-        games, teams = load_cached_games(raw_dir)
-    else:
-        games, teams = (
-            read_games(MART_PATH, EUROLEAGUE.name),
-            read_teams(MART_PATH, EUROLEAGUE.name),
-        )
-    inputs = Inputs(
-        games=games,
-        names=dict(teams.itertuples(index=False)),
-        box=build_box_games(raw_dir, games),
-        shots=build_shots(raw_dir, games),
-        codes=DISPLAY_CODES[EUROLEAGUE.name],
-        live_season=LIVE_SEASON,
-    )
-    files = build_payloads(inputs, utc_now())
-    write_stats(out, files)
-    seasons = files["meta.json"]["seasons"]
+    """Write the EuroLeague stats-site data (players, teams, game logs, shots), from the API."""
+    now = utc_now()
+    store = RawStore(from_cache=from_cache, raw_dir=raw_dir)
+    files = stats_files(TestClient(create_app(store, lambda: now)))
+    write_stats_files(out, files)
+    seasons = json.loads(files["meta.json"])["seasons"]
     typer.echo(
         f"wrote {len(files)} files to {out}: {len(seasons)} seasons, "
-        f"{len(files['players.json']['players'])} players, "
-        f"{len(inputs.box.missing)} played games without a box score"
+        f"{len(json.loads(files['players.json'])['players'])} players, "
+        f"{sum(s['games_without_box'] for s in seasons)} played games without a box score"
     )
