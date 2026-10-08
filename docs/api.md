@@ -49,6 +49,10 @@ Without Docker:
 uv run uvicorn --factory eurohoops.api.app:local_app --port 8000
 ```
 
+The first `/players/...` request builds the player-season frame from the marts, and the frame is
+then kept for later requests. That first request took about 10 s on the local tree and about a
+minute in Docker on a Windows bind mount; later ones answer in well under a second.
+
 `EUROHOOPS_ROOT` sets the tree the API reads (the default is the working directory).
 `EUROHOOPS_FROM_CACHE=1` makes the stats routes read the cached schedules.
 
