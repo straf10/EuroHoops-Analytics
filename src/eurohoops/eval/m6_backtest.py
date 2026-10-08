@@ -444,6 +444,7 @@ class TargetInputs:
     translation: Translation | None
     targets: pd.DataFrame
     truth: pd.DataFrame
+    impact_noise: dict[str, tuple[float, float]] | None = None
 
 
 def _history(
@@ -488,11 +489,11 @@ def _newest(history: pd.DataFrame, competition: str) -> pd.DataFrame:
     return usable.drop_duplicates("person_id", keep="last").set_index("person_id")
 
 
-def _impact_rows(world: World, history: pd.DataFrame, season: int) -> pd.DataFrame:
-    """IMPACT_SCHEMA rows of a EuroLeague target (module docstring)."""
+def _impact_rows(world: World, history: pd.DataFrame, season: int, unit: float) -> pd.DataFrame:
+    """IMPACT_SCHEMA rows of a EuroLeague target (module docstring); ``unit`` is the SPM noise
+    unit before ``season``."""
     inputs = world.inputs
     el = history[(history["competition"] == IMPACT_COMPETITION) & (history["poss"] > 0)]
-    unit = spm_noise_unit(world, season)
     spm = pd.DataFrame(
         {
             "person_id": el["person_id"].to_numpy(),
@@ -512,6 +513,27 @@ def _impact_rows(world: World, history: pd.DataFrame, season: int) -> pd.DataFra
     rows = pd.concat([snaps[list(IMPACT_SCHEMA.columns)], spm], ignore_index=True)
     rows = rows.sort_values(["stat", "season", "person_id"]).reset_index(drop=True)
     return validated(rows, IMPACT_SCHEMA)
+
+
+def _impact_noise(
+    impact: pd.DataFrame, history: pd.DataFrame, unit: float
+) -> dict[str, tuple[float, float]]:
+    """D14: the measurement noise of the impact truths as ``(a, b)`` of ``a + b / exposure``. SPM
+    is a one-season box line: ``(0, u)``. BRAPM is a snapshot of fixed precision: ``a`` is the
+    possession-weighted mean of ``sd^2`` over the snapshots before the target (``impact`` holds
+    nothing later), omitted when there are none."""
+    noise = {"spm": (0.0, unit)}
+    snaps = impact[impact["stat"] == "brapm"].merge(
+        history[["person_id", "competition", "season", "poss"]],
+        on=["person_id", "competition", "season"],
+    )
+    snaps = snaps[snaps["poss"] > 0]
+    if not snaps.empty:
+        noise["brapm"] = (
+            float((snaps["poss"] * snaps["sd"] ** 2).sum() / snaps["poss"].sum()),
+            0.0,
+        )
+    return noise
 
 
 def _exposure(
@@ -610,7 +632,12 @@ def target_inputs(
         }
     )
     targets = validated(targets.astype({"season": "int64", "checkpoint": "float64"}), TARGET_SCHEMA)
-    impact = _impact_rows(world, history, season) if competition == IMPACT_COMPETITION else None
+    impact = None
+    impact_noise = None
+    if competition == IMPACT_COMPETITION:
+        unit = spm_noise_unit(world, season)
+        impact = _impact_rows(world, history, season, unit)
+        impact_noise = _impact_noise(impact, history, unit)
     truth = _truth(inputs, scored, competition, season, checkpoint)
     truth.insert(2, "mover", movers)
     ages = inputs.ages.merge(
@@ -636,6 +663,7 @@ def target_inputs(
         translation=translation,
         targets=targets,
         truth=truth,
+        impact_noise=impact_noise,
     )
 
 
@@ -654,6 +682,7 @@ def project_cell(ti: TargetInputs, variant: str, half_life: float) -> pd.DataFra
         ages=ti.ages,
         aging=partial(apply, ti.curve) if params.aging else None,
         translation=ti.translation,
+        impact_noise=ti.impact_noise,
     )
 
 

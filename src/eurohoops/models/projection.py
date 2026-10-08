@@ -37,7 +37,10 @@ Impact stats (``spm``, ``brapm``) are measurements with a known ``sd``: rows ble
 ``decay / sd^2``, the prior is the possession-weighted mean of the competition's impact rows in
 ``t-3 .. t-1`` (or, for ``brapm`` with ``impact_prior="spm"``, the target's own projected SPM,
 its spread being the BRAPM-minus-SPM second moment plus the SPM projection variance), and there
-is no sampling term. A stat whose league prior cannot be formed (fewer than two impact rows with
+is no sampling term unless the caller names one (``impact_noise``: the truth of an impact
+stat is itself a noisy measurement, so ``a + b / exposure`` is added to its predictive variance,
+``exposure`` the target's reference possessions; the SPM that centres the BRAPM prior does not
+carry it). A stat whose league prior cannot be formed (fewer than two impact rows with
 possessions in the window, e.g. BRAPM for GBL) is left out for those targets.
 
 Drift (``fit_drift``) is estimated by the caller's choice of ``before_season`` (walk-forward on
@@ -574,13 +577,16 @@ def project(
     ages: pd.DataFrame | None = None,
     aging: AgeAdjust | None = None,
     translation: Translation | None = None,
+    impact_noise: Mapping[str, tuple[float, float]] | None = None,
 ) -> pd.DataFrame:
     """Projections (``PROJECTIONS_SCHEMA``) for every target, from the rows it may use.
 
     ``drift`` is ``fit_drift`` (box stats required; an impact stat missing from it has drift 0).
     ``aging`` is required when ``params.aging``; ``translation`` when ``params.translation`` and a
     target has a usable row of the other competition, and its ``target_season`` may not be after
-    any such target's season (walk-forward). A target with no age is not aged (flag ``no_age``).
+    any such target's season (walk-forward). ``impact_noise`` maps an impact stat to ``(a, b)``,
+    both >= 0 (an absent stat or ``None``: no term). A target with no age is not aged
+    (flag ``no_age``).
     """
     # cast only: a duplicate, a checkpoint outside [0, 1) or a non-positive exposure fails the
     # PROJECTIONS_SCHEMA check of the output
@@ -588,6 +594,10 @@ def project(
     targets = targets.reset_index(drop=True)
     if params.aging and aging is None:
         raise ValueError("params.aging needs an aging callable")
+    noise = dict(impact_noise or {})
+    for stat, (a, b) in noise.items():
+        if stat not in IMPACT_STATS or a < 0 or b < 0:
+            raise ValueError(f"impact_noise[{stat!r}] must name an impact stat with a, b >= 0")
     if impact is not None:
         impact = validated(impact, IMPACT_SCHEMA)
     rates = rate_table(history)
@@ -644,7 +654,12 @@ def project(
             "no_impact_input": res.no_input,
         }
         mask = sum(picked[name].astype("int64") << j for j, name in enumerate(names))
-        sd = np.sqrt(res.var)
+        extra = (
+            noise[stat][0] + noise[stat][1] / targets["exposure"].to_numpy()
+            if stat in noise
+            else 0.0
+        )
+        sd = np.sqrt(res.var + extra)
         low = res.mean - z * sd
         keep = res.present
         columns_out = {
