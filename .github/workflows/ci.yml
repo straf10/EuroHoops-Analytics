@@ -24,7 +24,7 @@ jobs:
       - name: Types
         run: uv run mypy src
       - name: Tests
-        run: uv run pytest -q --cov=eurohoops --cov-fail-under=85
+        run: uv run pytest -q -n auto --cov=eurohoops --cov-fail-under=85
       - name: Dead code
         run: uv run vulture src scripts/vulture_whitelist.py --min-confidence 60
 
