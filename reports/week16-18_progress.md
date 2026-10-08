@@ -471,6 +471,8 @@ iteration 10 | fast gate, local merge to main (12a9384, owner request); L9 live 
 RUNTIME project 48
 iteration 11 | L12 docs part 1 (m6.md + card test, CONTEXT terms, PRODUCT.md owner-approved), checklist items 54-60, L10 (H) merged | item 54 m6 facts PASS, units 170 passed + 1 failed (the CLI wiring test's el_spm_models stub missed L9's `last` keyword: fixed in 5f52b50, rerun passed); item 55 35 passed; item 59 on real data PASS (API tests 124 passed, old-vs-new byte-identical 104 stats + 966 publish files, contract clean, docker compose config valid); model card test 7 passed. Note: item 54's m6_facts.py read the marts while H was running (read-only, H has no data/); no other real-data command ran during a subagent | green | 5f52b50, merge of w16-h
 RUNTIME export 66
+iteration 12 | L11 (I, J) merged; follow-ups: live.ts reads the tested display-code map, Scouting current in the nav, item 60 runs both page scripts; web_build.sh always uses the site.json and API fixtures (WEB_REAL_DATA=1 keeps the real ones for a review: item 60 failed on a tree where publish had run, because the page scripts name fixture pages); docs/api.md; docker build | item 60 steps on the fixture build PASS (players 12/12, pages 24/24 ok, card + code-map tests 8 passed); real-data export (publish + export-stats) 139 s (965 API + 104 stats files, tree clean), real-data Astro build 69 s, real-data review run (standings, scouting, a player, a team, forecasts EL/GBL, methodology at 1440/390 light/dark) 28/28 ok, 271 player pages show M6 numbers = 271 exported EuroLeague persons; docker build OK (uvicorn 0.54.0 imports) | green | 536a690 90659bc merges b492b49 45689d1 (this commit)
+RUNTIME astro 69
 
 ## Subagent log
 | wave | subagent | deliverable | rounds | notes |
@@ -486,3 +488,6 @@ RUNTIME export 66
 | 2 | B | D18 (round 3) | 1 | prior on all rows with an age effect (accepted, recorded under D18) |
 | 1 | B | L2 aging | 2 | round 1 narrowed the synthetic possession gap (1200 → 1000) after a failure (rejected); root cause: outcome-dependent weights → D10; original 1200/450 design passes unchanged; impact-stat test added |
 | 3 | H | L10 export through the API | 1 | its one failing test came from my L9 change (stub), fixed by me; memoised committed reports and the projection-list check in the read model (outside its files, accepted: behaviour-neutral, the Store docstring updated by me); `daily.yml` artifact root moved to `web/` |
+
+| 3b | I | L11 player card + Scouting | 2 | round 1 stopped by me at the usage limit before it wrote anything; round 2 delivered; copied DISPLAY_CODES to m6_codes.json with a drift test (outside its list, accepted); web_build.sh also copies the stats fixture |
+| 3b | J | L11 Teams, Standings, Methodology, performance, nav | 1 | hand copy of DISPLAY_CODES in live.ts replaced by me with I's tested map; only own four factors exported (no defence column); wins carry a rank interval, not a wins interval |
