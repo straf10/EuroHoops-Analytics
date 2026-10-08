@@ -79,6 +79,15 @@ already up to date on 2026-10-07). Orchestrator Opus 5.5; subagents Sonnet 5.5 i
 - **D13 (impact truth for next-season targets):** BRAPM truth = the target season's committed season-end snapshot
   (`m3_players.json`, D4), scored with its own sd ignored; SPM truth = the SPM model fitted before the target
   season applied to the target season's box rates. Both enter the loss and CRPS only for EuroLeague targets.
+- **D14 (impact measurement noise, amends I2; found by F on synthetic data before any real-data run):** I2 gave
+  the impact stats no target-season measurement term, but their truth is itself a noisy measurement (a season-end
+  BRAPM snapshot; the SPM of one season's box line). On F's synthetic world 80% intervals covered BRAPM ~4% and
+  SPM ~70%. Fix: `project(..., impact_noise={stat: (a, b)})` adds `a + b / exposure` to the impact predictive
+  variance; the harness passes SPM `(0, u)` with `u` = F's split-half SPM noise unit fitted before the target, and
+  BRAPM `(possession-weighted mean of sd² of the snapshots before the target, 0)`. Decided on synthetic evidence
+  only, before the tuning run (pre-registration intact).
+- **D15 (regular season only, F's call accepted):** history, truth and exposure use regular-season games only.
+  R = the season's last played regular-season round (equals M7's R except in 2019-20, which was cut short).
 
 ## §3 findings (L0, real data, HEAD 6b2239b; re-checked by `scripts/checks/m6_facts.py`, item 54)
 Fixture: `tests/fixtures/m6_facts.json`.
@@ -363,6 +372,7 @@ is the one exception, written today by `logs.write_json` (indent 2): the `/site`
 ## Iterations
 iteration 1 | L0 branch, progress file, decisions, §3 facts, interfaces, `player_seasons.py`, M6 config, fastapi + pytest-xdist | m6_facts.py PASS (36 checks); fast gate (D8 skip list) FAILS 0 in 441 s; ruff/format/mypy/vulture clean | green | (this commit)
 iteration 2 | wave 1 merged: L1 (A), L2 (B, round 2), L3 (C), L4 (D), L5 (E) | each Done-when test file rerun in the main tree after merge (projection/aging/board/similarity/player_seasons 65 passed, API 85 passed), ruff, format, mypy, vulture clean, `docker compose config` valid; fast gate deferred while F runs | green | merges ff1bae2 310c5fb d69573c 3436934 fd9a628
+iteration 3 | L6 harness (F) merged; fast gate | F's tests 42 passed in the main tree; the interrupted gate (session end) showed 4 F in item 5, a clean rerun of the whole suite 1180 passed (cause not identified: logged, watched); fast gate (D8 list) FAILS 0 in 649 s, item 5 1180 passed 93.37%; possessions.json restored | green | merge 71a7df4
 
 ## Subagent log
 | wave | subagent | deliverable | rounds | notes |
@@ -371,4 +381,5 @@ iteration 2 | wave 1 merged: L1 (A), L2 (B, round 2), L3 (C), L4 (D), L5 (E) | e
 | 1 | C | L3 board | 1 | whitelist merge conflict resolved (both blocks kept) |
 | 1 | A | L1 projection | 1 | coverage test on 7 of the 12 box stats with the true target exposure (real-data coverage is the L-h check); `fit_drift` gained an optional `impact` argument |
 | 1 | E | L5 read model + API | 1 | `docker build` not run (daemon off); `docker compose config` valid; `/simulations/latest` reason text built from the committed gate numbers (`passed` read from the report); `tests/api_tree.py` shared test helper outside its file list (accepted) |
+| 2 | F | L6 harness | 1 | no whitelist block needed; found the impact-noise gap of I2 (D14); R from played rounds; CSV holds the chosen cell + baselines only |
 | 1 | B | L2 aging | 2 | round 1 narrowed the synthetic possession gap (1200 → 1000) after a failure (rejected); root cause: outcome-dependent weights → D10; original 1200/450 design passes unchanged; impact-stat test added |
