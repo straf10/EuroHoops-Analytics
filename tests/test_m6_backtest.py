@@ -22,6 +22,7 @@ from eurohoops.eval.m6_backtest import (
     GATE_BASELINES,
     PLAYER_COLUMNS,
     PLAYERS_SCHEMA,
+    SNAPSHOT_FLOOR,
     M6Inputs,
     TargetInputs,
     _exposure,
@@ -37,9 +38,11 @@ from eurohoops.eval.m6_backtest import (
     model_scores,
     player_losses,
     prepare,
+    project_cell,
     run_m6_backtest,
     score_block,
     scored_splits,
+    snapshot_noise,
     spm_noise_unit,
     target_inputs,
 )
@@ -1040,29 +1043,100 @@ def test_the_chosen_cells_impact_intervals_cover_near_the_nominal_rate(
         assert abs(covered - 0.8) <= 3 * math.sqrt(0.8 * 0.2 / n), (stat, n, covered)
 
 
+def _snapshot_series(
+    rng: np.random.Generator, people: int, seasons: int, d: float, n: float
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Snapshots = random walk (step variance d) + white noise (variance n), and a history frame
+    giving every player-season 1000 possessions."""
+    walk = np.cumsum(math.sqrt(d) * rng.standard_normal((people, seasons)), axis=1)
+    value = walk + math.sqrt(n) * rng.standard_normal((people, seasons))
+    keys = pd.DataFrame(
+        {
+            "person_id": np.repeat([f"x{i}" for i in range(people)], seasons),
+            "competition": COMPETITION,
+            "season": np.tile(np.arange(2000, 2000 + seasons), people),
+        }
+    )
+    snaps = keys.assign(stat="brapm", value=value.ravel(), sd=3.0)
+    return snaps, keys.assign(poss=1000.0)
+
+
+def test_snapshot_noise_recovers_the_walk_and_the_noise() -> None:
+    """3000 players x 6 seasons, D = 0.5, N = 2: the lag-1 and lag-2 change variances are
+    estimated from m1 = 3000 * 5 and m2 = 3000 * 4 pairs; a variance has SE V * sqrt(2 / m) (the
+    pairs overlap within a player, so use the number of players, 3000, which is conservative):
+    V1 = D + 2N = 4.5, V2 = 2D + 2N = 5, so SE(V1) = 0.116, SE(V2) = 0.129, SE(D) = SE(V1 - V2)
+    <= SE(V1) + SE(V2), SE(N) <= SE(V1) + SE(V2) / 2; the bands are 5 of those."""
+    d, n = 0.5, 2.0
+    snaps, history = _snapshot_series(np.random.default_rng(6), 3000, 6, d, n)
+    got = snapshot_noise(snaps, history, 2006, 500.0)
+    assert got is not None
+    se1, se2 = 4.5 * math.sqrt(2 / 3000), 5.0 * math.sqrt(2 / 3000)
+    assert abs(got[1] - d) < 5 * (se1 + se2)
+    assert abs(got[0] - n) < 5 * (se1 + se2 / 2)
+    # players below the possession floor in a season drop out of the pairs they would make
+    assert snapshot_noise(snaps, history.assign(poss=100.0), 2006, 500.0) is None
+    # both are floored: a series with no drift and no noise gives the floor
+    flat = snaps.assign(value=1.0)
+    assert snapshot_noise(flat, history, 2006, 500.0) == (SNAPSHOT_FLOOR, SNAPSHOT_FLOOR)
+
+
+def test_snapshot_noise_reads_only_seasons_before_the_cutoff() -> None:
+    snaps, history = _snapshot_series(np.random.default_rng(7), 200, 6, 0.5, 2.0)
+    base = snapshot_noise(snaps, history, 2004, 500.0)
+    later = snaps.copy()
+    later.loc[later["season"] >= 2004, "value"] += 1e3 * (later["season"] - 2003)
+    assert snapshot_noise(later, history, 2004, 500.0) == base
+    earlier = snaps.copy()
+    earlier.loc[earlier["season"] == 2002, "value"] += 5.0 * np.arange(
+        len(earlier[earlier["season"] == 2002])
+    )
+    assert snapshot_noise(earlier, history, 2004, 500.0) != base
+
+
 def test_the_impact_noise_is_walk_forward_and_by_hand(inputs: M6Inputs, world: Any) -> None:
     season = 2016
     ti = target_inputs(inputs, COMPETITION, season, 0.0, spec=SPEC, world=world)
-    snaps = inputs.brapm[
-        (inputs.brapm["stat"] == "brapm") & (inputs.brapm["season"] < season)
-    ].merge(
-        ti.history[["person_id", "competition", "season", "poss"]],
-        on=["person_id", "competition", "season"],
-    )
-    by_hand = float((snaps["poss"] * snaps["sd"] ** 2).sum() / snaps["poss"].sum())
-    assert ti.impact_noise is not None
-    assert ti.impact_noise["brapm"] == (pytest.approx(by_hand, rel=1e-12), 0.0)
-    assert ti.impact_noise["spm"] == (0.0, spm_noise_unit(world, season))
-    # a wild sd in the target season (and after) changes nothing
+    assert season in SPEC.tuning
+    noise = snapshot_noise(inputs.brapm, ti.history, season, SPEC.min_poss)
+    assert noise is not None
+    assert ti.impact_noise == {
+        "spm": (0.0, spm_noise_unit(world, season)),
+        "brapm": (noise[0], 0.0),
+    }
+    assert ti.drift["brapm"] == noise[1]
+    assert ti.impact is not None
+    brapm = ti.impact[ti.impact["stat"] == "brapm"]
+    assert (brapm["sd"] == math.sqrt(noise[0])).all()
+    # a wild sd or value in the target season (and after) changes nothing
     wild = inputs.brapm.copy()
     wild.loc[wild["season"] >= season, "sd"] = 1e6
+    wild.loc[wild["season"] >= season, "value"] += 1e3
     planted = replace(inputs, brapm=wild)
     again = target_inputs(planted, COMPETITION, season, 0.0, spec=SPEC, world=prepare(planted))
     assert again.impact_noise == ti.impact_noise
-    # no snapshot before the target: no BRAPM entry, SPM keeps its own
+    assert again.drift["brapm"] == ti.drift["brapm"]
+    # a validation target freezes the noise and drift at the first validation season
+    val = SPEC.validation[0]
+    late = target_inputs(inputs, COMPETITION, val, 0.0, spec=SPEC, world=world)
+    frozen = snapshot_noise(inputs.brapm, late.history, val, SPEC.min_poss)
+    assert frozen is not None and late.impact_noise is not None
+    assert late.impact_noise["brapm"] == (frozen[0], 0.0) and late.drift["brapm"] == frozen[1]
+    # no usable snapshot pairs before the target: no BRAPM entry, no BRAPM rows, SPM keeps its own
     bare = replace(inputs, brapm=inputs.brapm[inputs.brapm["season"] >= season])
     none = target_inputs(bare, COMPETITION, season, 0.0, spec=SPEC, world=prepare(bare))
     assert none.impact_noise == {"spm": ti.impact_noise["spm"]}
+    assert none.impact is not None and (none.impact["stat"] != "brapm").all()
     # the GBL has no impact stats, so no noise
     gbl = target_inputs(inputs, "gbl", SPEC.validation[0], 0.0, spec=SPEC, world=world)
     assert gbl.impact_noise is None
+
+
+def test_brapm_weights_of_players_with_history_are_positive(inputs: M6Inputs, world: Any) -> None:
+    """The D17 regression: the snapshot sd is the noise, not the posterior sd, so the
+    between-player variance is positive and a player with snapshots keeps part of his own."""
+    ti = target_inputs(inputs, COMPETITION, 2016, 0.0, spec=SPEC, world=world)
+    out = project_cell(ti, "proj_full_spm", 2.0)
+    rows = out[(out["stat"] == "brapm") & (out["n_seasons"] > 0)]
+    assert len(rows) > 20
+    assert (rows["weight"] > 0).all()
