@@ -10,8 +10,8 @@ Rules
   (``read_only=True``); no function writes a file.
 - A ``Store`` is a snapshot. It holds the root of a data tree (repo-root-relative paths from
   ``eurohoops.config``) and memoises the expensive loads (marts, box scores, shots, the stats
-  payloads, the player-season frame) for its lifetime, so one process builds each once. Logs and
-  small reports are read on every call. Start a new ``Store`` to see newer marts.
+  payloads, the player-season frame) for its lifetime, so one process builds each once. Logs are
+  read on every call; committed reports once per Store. Start a new ``Store`` to see newer data.
 - ``NotFound`` carries the reason a route answers 404 with; a malformed committed report is a bug
   and raises its own error (pandera / KeyError), not a 404.
 - Source team codes everywhere (``team.code``); ``team.display_code`` is the site's real-life code
