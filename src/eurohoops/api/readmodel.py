@@ -256,6 +256,10 @@ def _report(store: Store, relative: Path) -> dict[str, Any] | None:
     path = store.path(relative)
     if not path.exists():
         return None
+    return store.memo(f"report:{relative}", lambda: _load(path))  # read once per Store
+
+
+def _load(path: Path) -> dict[str, Any]:
     report: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
     return report
 
@@ -826,7 +830,8 @@ def player(store: Store, person_id: str) -> dict[str, Any]:
 
 def player_projection(store: Store, person_id: str) -> dict[str, Any]:
     report = _required(store, M6_PROJECTIONS, "the M6 projections")
-    _check(report["players"], PROJECTION_ROWS_SCHEMA)
+    # the whole list is validated once per Store, not once per person (the export asks for each)
+    store.memo("checked:m6_projections", lambda: _check(report["players"], PROJECTION_ROWS_SCHEMA))
     rows = [p for p in report["players"] if p["person_id"] == person_id]
     if not rows:
         raise NotFound(

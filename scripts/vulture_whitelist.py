@@ -206,3 +206,12 @@ CompactJSON.render
 IndentedJSON.media_type
 IndentedJSON.render
 local_app
+
+# weeks 16-18 H (L10): route_for is the inverse of file_for, read by the contract check
+# (scripts/checks/api_export.py, tests/test_api_contract.py); write_stats is the pre-L10 writer,
+# kept as the reference the byte-identical check compares the API export against
+from eurohoops.api.export import route_for  # noqa: E402
+from eurohoops.stats.export import write_stats  # noqa: E402
+
+route_for
+write_stats

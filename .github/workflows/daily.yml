@@ -130,6 +130,8 @@ jobs:
           path: |
             web/src/data/site.json
             web/src/data/stats/
+            web/src/data/api/
+            web/public/api/
           if-no-files-found: error
           retention-days: 1
       # main may have moved during the run: replay the run's commit on top of it. A conflict (an
@@ -166,10 +168,11 @@ jobs:
       - uses: actions/checkout@v5
         with:
           persist-credentials: false
+      # the artifact's root is the paths' common ancestor, web/: it holds src/data/ and public/api/
       - uses: actions/download-artifact@v4
         with:
           name: site-data
-          path: web/src/data
+          path: web
       - uses: actions/setup-node@v4
         with:
           node-version: 24
