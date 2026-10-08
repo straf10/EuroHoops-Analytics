@@ -423,6 +423,9 @@ iteration 2 | wave 1 merged: L1 (A), L2 (B, round 2), L3 (C), L4 (D), L5 (E) | e
 iteration 3 | L6 harness (F) merged; fast gate | F's tests 42 passed in the main tree; the interrupted gate (session end) showed 4 F in item 5, a clean rerun of the whole suite 1180 passed (cause not identified: logged, watched); fast gate (D8 list) FAILS 0 in 649 s, item 5 1180 passed 93.37%; possessions.json restored | green | merge 71a7df4
 iteration 4 | D14 (A round 2) merged; SPM wiring hardened (a season without its own SPM model raises, f7d22be); L7 leakage suite (G) merged | projection + harness + leakage files 104 passed in the main tree on the merged code; ruff, format, mypy, vulture clean | green | merges 3db32ab f7d22be fe1dc58
 iteration 5 | tuning attempts 1-2 (no verdict; recorded), D15 group stages (3ed1195), D16 implausible birth dates (675d81a), D17 BRAPM snapshot noise (A round 3), D18 regressed aging deltas (B round 3) | harness, leakage, projection, aging tests rerun in the main tree after each merge; ruff, mypy clean | green | 3ed1195 675d81a merges 47cb308 ebe5231
+iteration 6 | L8 tuning (attempt 4, HEAD 536fe17 with D17-D20) and verdict | tuning-only run: report and CSV hold tuning rows only (202,732 CSV rows, no 2023-2025 key), validation_scored false, test_scored false; chosen proj_shrunk@1 (6.090287; @0.5 6.2493, @2 6.0924, @3 6.1302; marcel 6.1902, same_as_last 10.1897, league_mean 13.6611), on_edge false after D20 | green | ab8264b
+RUNTIME m6 euroleague 126
+VERDICT ab8264b
 
 ## Subagent log
 | wave | subagent | deliverable | rounds | notes |
