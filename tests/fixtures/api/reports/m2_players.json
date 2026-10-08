@@ -1,0 +1,10 @@
+{
+  "units": "points above expected per 100 field-goal",
+  "xpts_source": "shot_xpts mart (out of fold)",
+  "shown_min_fga": 100,
+  "players": [
+    {"shooter": "P013382", "name": "RANDOLPH, LEVI", "season": 2023, "split": "validation", "fga": 150, "points": 160.0, "xpts": 150.0, "raw": 6.667, "shrunk": 2.5, "ci90": [-4.0, 9.0]},
+    {"shooter": "P013382", "name": "RANDOLPH, LEVI", "season": 2024, "split": "test", "fga": 120, "points": 140.0, "xpts": 130.0, "raw": 8.333, "shrunk": 3.0, "ci90": [-5.0, 11.0]},
+    {"shooter": "P006835", "name": "HOARD, JAYLEN", "season": 2024, "split": "test", "fga": 200, "points": 210.0, "xpts": 215.0, "raw": -2.5, "shrunk": -1.0, "ci90": [-6.0, 4.0]}
+  ]
+}

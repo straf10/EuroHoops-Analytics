@@ -1,0 +1,41 @@
+{
+  "checked": "2026-10-07",
+  "live_season": 2026,
+  "min_poss": 500,
+  "m4_fit_targets": [2019, 2020, 2021, 2022, 2023, 2024, 2025],
+  "first_gbl_box_season": 2018,
+  "m3_snapshot_seasons": [2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025],
+  "scored": {
+    "euroleague": {
+      "2007": {"ge_min_poss": 166, "scored": 0, "birth_share": null},
+      "2008": {"ge_min_poss": 115, "scored": 82, "birth_share": 1.0},
+      "2009": {"ge_min_poss": 110, "scored": 85, "birth_share": 1.0},
+      "2010": {"ge_min_poss": 119, "scored": 94, "birth_share": 1.0},
+      "2011": {"ge_min_poss": 117, "scored": 93, "birth_share": 1.0},
+      "2012": {"ge_min_poss": 149, "scored": 120, "birth_share": 1.0},
+      "2013": {"ge_min_poss": 147, "scored": 122, "birth_share": 1.0},
+      "2014": {"ge_min_poss": 152, "scored": 119, "birth_share": 1.0},
+      "2015": {"ge_min_poss": 145, "scored": 126, "birth_share": 1.0},
+      "2016": {"ge_min_poss": 159, "scored": 141, "birth_share": 1.0},
+      "2017": {"ge_min_poss": 160, "scored": 128, "birth_share": 1.0},
+      "2018": {"ge_min_poss": 164, "scored": 128, "birth_share": 1.0},
+      "2019": {"ge_min_poss": 168, "scored": 128, "birth_share": 1.0},
+      "2020": {"ge_min_poss": 184, "scored": 167, "birth_share": 1.0},
+      "2021": {"ge_min_poss": 176, "scored": 150, "birth_share": 1.0},
+      "2022": {"ge_min_poss": 196, "scored": 158, "birth_share": 1.0},
+      "2023": {"ge_min_poss": 194, "scored": 165, "birth_share": 1.0},
+      "2024": {"ge_min_poss": 193, "scored": 157, "birth_share": 1.0},
+      "2025": {"ge_min_poss": 230, "scored": 181, "birth_share": 1.0}
+    },
+    "gbl": {
+      "2018": {"ge_min_poss": 100, "scored": 26, "birth_share": 1.0},
+      "2019": {"ge_min_poss": 74, "scored": 46, "birth_share": 1.0},
+      "2020": {"ge_min_poss": 100, "scored": 75, "birth_share": 1.0},
+      "2021": {"ge_min_poss": 118, "scored": 80, "birth_share": 1.0},
+      "2022": {"ge_min_poss": 105, "scored": 68, "birth_share": 1.0},
+      "2023": {"ge_min_poss": 112, "scored": 71, "birth_share": 1.0},
+      "2024": {"ge_min_poss": 112, "scored": 75, "birth_share": 1.0},
+      "2025": {"ge_min_poss": 116, "scored": 81, "birth_share": 1.0}
+    }
+  }
+}

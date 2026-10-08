@@ -8,6 +8,7 @@ license-files = ["LICENSE"]
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "duckdb>=1.5.5",
+    "fastapi>=0.141.1",
     "httpx>=0.28.1",
     "numpy>=2.5.3",
     "openpyxl>=3.1.5",
@@ -38,9 +39,11 @@ dev = [
     "pre-commit>=4.6.2",
     "pytest>=9.1.1",
     "pytest-cov>=7.1.0",
+    "pytest-xdist>=3.8.0",
     "ruff>=0.16.8",
     "scipy-stubs>=1.18.1.1",
     "types-openpyxl>=3.1.5.20260827",
+    "uvicorn>=0.54.0",
     "vulture>=2.16",
 ]
 

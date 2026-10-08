@@ -1,0 +1,16 @@
+{
+  "model": "m7",
+  "model_version": "0.1.0+m7.fixture",
+  "competition": "euroleague",
+  "chosen": {"key": "sim_full", "spread": 1.0, "net": false, "tuning_rps": 0.078114, "tuning_brier": 0.10932},
+  "gate": {
+    "rule": "validation mean Brier of the direct-playoff cut: the chosen variant below point_sim's and standings_now's (point rule), and the Spiegelhalter |z| pooled over tuning and validation below 1.96",
+    "variant": "sim_full",
+    "brier_chosen": 0.091951,
+    "brier_point_sim": 0.088277,
+    "brier_standings_now": 0.148148,
+    "spiegelhalter_z_pooled": -0.870358,
+    "passed": false,
+    "gated": true
+  }
+}

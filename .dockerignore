@@ -1,0 +1,20 @@
+# The image needs pyproject.toml, uv.lock, README.md, LICENSE and src/ only.
+.git
+.github
+.venv
+.mypy_cache
+.pytest_cache
+.ruff_cache
+__pycache__
+*.pyc
+data
+site
+web
+docs
+tests
+reports
+predictions
+odds
+injuries
+entity
+scripts

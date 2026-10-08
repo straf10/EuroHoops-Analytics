@@ -1,0 +1,14 @@
+{
+  "model": "m4",
+  "gate": {
+    "rule": "chosen translation variant beats same_stats iff the person-level bootstrap 95% CI of loss(chosen) - loss(same_stats) on validation has upper bound < 0",
+    "metric": "standardised squared error, minutes-weighted",
+    "variant": "translate",
+    "reference": "same_stats",
+    "pooled": true,
+    "seasons": [2019, 2020, 2021, 2022, 2023],
+    "n_movers": 6,
+    "loss_diff": {"mean": -0.137504, "ci95": [-0.429934, 0.018067], "resamples": 1000, "seed": 20261015},
+    "passed": false
+  }
+}

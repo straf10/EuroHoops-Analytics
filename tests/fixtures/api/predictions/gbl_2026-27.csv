@@ -1,0 +1,2 @@
+game_id,season,round,phase,tipoff_utc,home,away,p_home,exp_margin,model,model_version,predicted_at_utc
+GBL2026_4,2026,2,RS,2026-10-08T18:00:00Z,AAA,EEE,0.5200,1.00,elo,0.1.0+fixture,2026-10-07T08:00:00Z
