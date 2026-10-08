@@ -1,0 +1,33 @@
+---
+import Base from "../../layouts/Base.astro";
+import MethodologyModels from "../../components/MethodologyModels.astro";
+import "../../styles/stats.css";
+
+const REPO = "https://github.com/straf10/EuroHoops-Analytics";
+const description = "The seven EuroHoops models in one line each, with their validation gate verdicts and model cards.";
+---
+
+<Base title="Methodology" description={description} current="methodology">
+  <header class="wrap head">
+    <h1>Methodology</h1>
+    <p class="lede">
+      The forecasts on this site come from a MOV-adjusted Elo. Seven models sit beside it, each with a model card that
+      states what it does, the data and splits it used, its pre-registered gate and how it did.
+    </p>
+  </header>
+
+  <section class="wrap band" aria-labelledby="models-title">
+    <header class="sec-head">
+      <h2 id="models-title">The models</h2>
+      <p>
+        A gate is a rule declared before the model was scored on its validation seasons. A model that fails it is still
+        shown where it helps, always labelled. The cards are on GitHub.
+      </p>
+    </header>
+    <MethodologyModels />
+    <p class="note">
+      This is a stub. The full write-up of the methods, with the numbers behind each verdict, comes later; until then
+      the <a class="ink-link" href={`${REPO}/tree/main/docs/models`}>model cards</a> are the record.
+    </p>
+  </section>
+</Base>

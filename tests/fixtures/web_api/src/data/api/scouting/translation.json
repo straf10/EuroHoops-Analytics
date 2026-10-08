@@ -1,0 +1,129 @@
+{
+  "model": "m4",
+  "gate": {
+    "rule": "chosen translation variant beats same_stats iff the person-level bootstrap 95% CI of loss(chosen) - loss(same_stats) on validation has upper bound < 0",
+    "metric": "standardised squared error, minutes-weighted",
+    "variant": "translate",
+    "reference": "same_stats",
+    "pooled": true,
+    "seasons": [
+      2019,
+      2020,
+      2021,
+      2022,
+      2023
+    ],
+    "n_movers": 6,
+    "loss_diff": {
+      "mean": -0.137504,
+      "ci95": [
+        -0.429934,
+        0.018067
+      ],
+      "resamples": 1000,
+      "seed": 20261015
+    },
+    "passed": false
+  },
+  "gate_passed": false,
+  "fits_by_target_season": {
+    "2024": {
+      "translate": {
+        "pts": {
+          "c": 11.0,
+          "delta": -0.049,
+          "delta_lo90": -0.082,
+          "delta_hi90": -0.016,
+          "n_pairs": 118,
+          "n_persons": 55
+        }
+      }
+    },
+    "2025": {
+      "translate": {
+        "pts": {
+          "c": 11.436921,
+          "delta": -0.056783,
+          "delta_lo90": -0.087549,
+          "delta_hi90": -0.026016,
+          "n_pairs": 126,
+          "n_persons": 59
+        },
+        "fg3a": {
+          "c": 4.1,
+          "delta": -0.091,
+          "delta_lo90": -0.162,
+          "delta_hi90": -0.02,
+          "n_pairs": 126,
+          "n_persons": 59
+        },
+        "fta": {
+          "c": 2.689846,
+          "delta": -0.105476,
+          "delta_lo90": -0.173732,
+          "delta_hi90": -0.03722,
+          "n_pairs": 126,
+          "n_persons": 59
+        },
+        "ast": {
+          "c": 2.2,
+          "delta": -0.031,
+          "delta_lo90": -0.098,
+          "delta_hi90": 0.036,
+          "n_pairs": 126,
+          "n_persons": 59
+        },
+        "tov": {
+          "c": 1.9,
+          "delta": 0.012,
+          "delta_lo90": -0.061,
+          "delta_hi90": 0.085,
+          "n_pairs": 126,
+          "n_persons": 59
+        },
+        "oreb": {
+          "c": 1.1,
+          "delta": -0.074,
+          "delta_lo90": -0.19,
+          "delta_hi90": 0.042,
+          "n_pairs": 126,
+          "n_persons": 59
+        },
+        "dreb": {
+          "c": 3.0,
+          "delta": -0.022,
+          "delta_lo90": -0.081,
+          "delta_hi90": 0.037,
+          "n_pairs": 126,
+          "n_persons": 59
+        },
+        "stl": {
+          "c": 1.0,
+          "delta": -0.048,
+          "delta_lo90": -0.141,
+          "delta_hi90": 0.045,
+          "n_pairs": 126,
+          "n_persons": 59
+        },
+        "blk": {
+          "c": 0.4,
+          "delta": -0.12,
+          "delta_lo90": -0.31,
+          "delta_hi90": 0.07,
+          "n_pairs": 126,
+          "n_persons": 59
+        }
+      }
+    }
+  },
+  "team_offset": {
+    "label": "points per 100 possessions the average GBL club sits below its EuroLeague level",
+    "mean": 20.202848,
+    "ci95": [
+      16.856517,
+      23.5
+    ],
+    "resamples": 1000,
+    "seed": 20261015
+  }
+}

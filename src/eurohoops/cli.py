@@ -1,5 +1,6 @@
 """``eurohoops`` command line: ingest -> build -> backtest -> predict -> score -> publish."""
 
+import hashlib
 import json
 import logging
 import os
@@ -9,13 +10,24 @@ from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from functools import partial
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
 import numpy as np
 import pandas as pd
 import typer
+from fastapi.testclient import TestClient
 
 from eurohoops import research
+from eurohoops.api.app import create_app
+from eurohoops.api.export import (
+    WEB_DIR,
+    RawStore,
+    publish_files,
+    stats_files,
+    write_publish,
+    write_stats_files,
+)
+from eurohoops.api.readmodel import Store
 from eurohoops.config import (
     BIO_EL_SEASONS,
     BOX_INVARIANTS_REPORT,
@@ -31,6 +43,7 @@ from eurohoops.config import (
     INJURY_LOG,
     INJURY_RAW_DIR,
     LIVE_SEASON,
+    M2_REPORT,
     M3,
     M3_GBL,
     M3_PLAYERS_REPORT,
@@ -38,7 +51,10 @@ from eurohoops.config import (
     M5,
     M5_GBL,
     M6,
+    M6_BOARD,
     M6_GBL,
+    M6_PROJECTIONS,
+    M6_SIMILARITY,
     M7,
     M7_GBL,
     MART_PATH,
@@ -46,9 +62,11 @@ from eurohoops.config import (
     ODDS_RAW_DIR,
     ODDS_TEAMS,
     PLAYER_BIOS,
+    PLAYER_XWALK_FILE,
     POSSESSION_REPORT,
     SIM_LATEST,
     SIM_LOGS,
+    SIM_UNGATED,
     SITE_DATA,
     SQL_DIR,
     STINT_REPORT,
@@ -85,7 +103,10 @@ from eurohoops.eval.m5_backtest import (
 from eurohoops.eval.m6_backtest import (
     M6Inputs,
     SpmFn,
+    TargetInputs,
+    World,
     format_m6_table,
+    prepare,
     run_m6_backtest,
 )
 from eurohoops.eval.m7_backtest import M7Inputs, format_m7_table, run_m7_backtest, scored_splits
@@ -104,7 +125,28 @@ from eurohoops.ingest.http import Fetcher, make_client
 from eurohoops.injuries import InjuryPaths, record_injuries, team_name_map
 from eurohoops.live_m1 import load_m1, predict_upcoming_m1
 from eurohoops.live_m5 import live_spec, load_m5, predict_upcoming_m5
-from eurohoops.live_sim import LIVE_SIMS, load_sim, log_rows, run_live_sim, write_live_sim
+from eurohoops.live_m6 import (
+    board_report,
+    inputs_digest,
+    live_checkpoint,
+    live_people,
+    live_projections,
+    person_names,
+    personal_fields,
+    player_rows,
+    projections_report,
+    query_rows,
+    similarity_report,
+    undervalued,
+)
+from eurohoops.live_sim import (
+    LIVE_SIMS,
+    latest_report,
+    load_sim,
+    log_rows,
+    run_live_sim,
+    write_live_sim,
+)
 from eurohoops.logs import write_json
 from eurohoops.marts import (
     box_invariants,
@@ -115,16 +157,28 @@ from eurohoops.marts import (
     refresh_box_gaps,
     write_tables,
 )
+from eurohoops.models.board import (
+    DIMENSIONS,
+    Stability,
+    board,
+    fg3_observations,
+    on_off_observations,
+    shot_making_observations,
+    stability,
+)
 from eurohoops.models.box_impact import STAT_COLUMNS, BoxGrid, box_only_margins, pir_margins
 from eurohoops.models.elo import FloatArray
 from eurohoops.models.minutes import expected_possessions
 from eurohoops.models.player_seasons import (
+    AGES_SCHEMA,
     COUNT_STATS,
     build_player_seasons,
     person_ids,
     player_ages,
+    read_xwalk_file,
 )
 from eurohoops.models.projection import Translation
+from eurohoops.models.similarity import BOX_FEATURES, embed, neighbours, raw_features
 from eurohoops.models.spm import fit_spm
 from eurohoops.odds import OddsApiError, OddsPaths, api_key, record_odds
 from eurohoops.parse.box import build_box_tables
@@ -139,17 +193,18 @@ from eurohoops.parse.games import (
 )
 from eurohoops.parse.gbl_box_lines import build_gbl_player_games
 from eurohoops.parse.gbl_pbp import build_pbp_table
+from eurohoops.parse.player_names import gbl_names
 from eurohoops.parse.possession_report import possession_report
+from eurohoops.parse.schemas import validated
 from eurohoops.parse.stints import validate_sample
 from eurohoops.parse.stints_mart import build_stints_mart, mart_report
 from eurohoops.parse.team_box import TEAM_GAMES_SCHEMA, build_team_games
 from eurohoops.predict import LatePredictionError, predict_upcoming
-from eurohoops.publish import DISPLAY_CODES, Section, site_data
+from eurohoops.publish import DISPLAY_CODES
 from eurohoops.sim.formats import season_format
 from eurohoops.sim.played import regulation_scores
 from eurohoops.stats.box import build_box_games
-from eurohoops.stats.export import STATS_DIR, Inputs, build_payloads, load_cached_games, write_stats
-from eurohoops.stats.shots import build_shots
+from eurohoops.stats.export import STATS_DIR
 
 app = typer.Typer(no_args_is_help=True, add_completion=False)
 log = logging.getLogger("eurohoops")
@@ -799,13 +854,14 @@ def _m6_brapm(xwalk: pd.DataFrame) -> pd.DataFrame:
     return rows.sort_values(["season", "person_id"]).reset_index(drop=True)
 
 
-def _m6_translations() -> dict[int, Translation]:
-    """M4's fit for each target season (``reports/m4_translation.json``), the count stats only."""
+def _m6_translations(stats: tuple[str, ...] = COUNT_STATS) -> dict[int, Translation]:
+    """M4's fit for each target season (``reports/m4_translation.json``) for ``stats``: the count
+    stats, or SPM's eleven for the undervalued list."""
     fits = json.loads(M4.translation_report.read_text(encoding="utf-8"))["fits_by_target_season"]
     return {
         int(season): Translation(
-            delta={s: float(fit["translate"][s]["delta"]) for s in COUNT_STATS},
-            c={s: float(fit["translate"][s]["c"]) for s in COUNT_STATS},
+            delta={s: float(fit["translate"][s]["delta"]) for s in stats},
+            c={s: float(fit["translate"][s]["c"]) for s in stats},
             target_season=int(season),
         )
         for season, fit in fits.items()
@@ -857,15 +913,17 @@ def _m6_bios() -> pd.DataFrame:
     return pd.read_parquet(PLAYER_BIOS)
 
 
-def _m6_inputs(spec: M6Backtest) -> M6Inputs:
+def _m6_inputs(spec: M6Backtest, *, live: bool = False) -> M6Inputs:
     """M6's inputs: both competitions' games and player games up to the last test season (the live
     season never enters, so the daily log cannot move the report), the crosswalk, in-memory ages,
-    the BRAPM snapshots, M4's translations and the SPM wired from M3's EuroLeague models."""
-    last = spec.test[-1]
+    the BRAPM snapshots, M4's translations and the SPM wired from M3's EuroLeague models.
+    ``live`` (``eurohoops project``): up to the live season, the committed crosswalk file (D25)
+    and no ages (the chosen variant does not age, and the daily workflow has no bios)."""
+    last = LIVE_SEASON if live else spec.test[-1]
     games = {c.name: read_games(MART_PATH, c.name) for c in (EUROLEAGUE, GBL)}
     games = {name: g[g["season"] <= last].reset_index(drop=True) for name, g in games.items()}
     team_games = read_table(MART_PATH, "team_games", GBL.name)
-    xwalk = read_table(MART_PATH, "player_xwalk")
+    xwalk = read_xwalk_file(PLAYER_XWALK_FILE) if live else read_table(MART_PATH, "player_xwalk")
     stints = read_table(MART_PATH, "stints")
     checks = read_table(MART_PATH, "stint_game_checks")
     if team_games is None or xwalk is None or stints is None or checks is None:
@@ -876,17 +934,23 @@ def _m6_inputs(spec: M6Backtest) -> M6Inputs:
         EUROLEAGUE.name: build_box_games(EUROLEAGUE.raw_dir, games[EUROLEAGUE.name]).players,
         GBL.name: build_gbl_player_games(GBL.raw_dir, games[GBL.name], team_games).table,
     }
-    ages = player_ages(_m6_bios(), xwalk, build_player_seasons(player_games, xwalk))
+    ages = (
+        validated(pd.DataFrame({"person_id": [], "season": [], "age": []}), AGES_SCHEMA)
+        if live
+        else player_ages(_m6_bios(), xwalk, build_player_seasons(player_games, xwalk))
+    )
     chosen = json.loads(M3.report.read_text(encoding="utf-8"))["chosen"]
     if chosen["variant"] != "rapm_spm":
         log.error("M3 chosen variant must be rapm_spm (see reports/backtest_m3.json)")
         raise typer.Exit(code=1)
+    el_games = read_games(MART_PATH, EUROLEAGUE.name)
     el = el_spm_models(
-        read_games(MART_PATH, EUROLEAGUE.name),
+        el_games[el_games["played"]] if live else el_games,
         player_games[EUROLEAGUE.name],
         stints,
         checks,
         chosen,
+        last=LIVE_SEASON if live else M3.test[-1],
     )
     return M6Inputs(
         games=games,
@@ -930,6 +994,262 @@ def _backtest_m6(
     run_id = log_m6_backtest(report, comp.name, tracking_uri)
     if run_id is not None:
         typer.echo(f"MLflow run {run_id}")
+
+
+def _live_names(inputs: M6Inputs) -> dict[str, str]:
+    """Display names: EuroLeague box spellings, the GBL live season's box pages and, locally, the
+    ``player_names`` mart for the older GBL seasons."""
+    live = inputs.player_games[GBL.name]
+    live = live[live["season"] == LIVE_SEASON]
+    box = live[["game_id", "team", "player_id", "sec"]].rename(columns={"sec": "seconds"})
+    frames = [gbl_names(GBL.raw_dir, box)]
+    mart = read_table(MART_PATH, "player_names", GBL.name) if MART_PATH.exists() else None
+    if mart is not None:
+        frames.insert(0, mart[mart["season"] < LIVE_SEASON])
+    gbl = pd.concat(frames, ignore_index=True)
+    return person_names(inputs.player_games[EUROLEAGUE.name], gbl, inputs.xwalk)
+
+
+def _m2_shots(season: int) -> tuple[pd.DataFrame, pd.DataFrame, str]:
+    """The ``shots`` and ``shot_xpts`` marts up to ``season`` and M2's chosen xPTS variant."""
+    shots, xpts = read_table(MART_PATH, "shots"), read_table(MART_PATH, "shot_xpts")
+    if shots is None or xpts is None:
+        log.error("shots/shot_xpts missing; run: eurohoops shots, backtest --model m2")
+        raise typer.Exit(code=1)
+    variant = str(json.loads(M2_REPORT.read_text(encoding="utf-8"))["gate"]["chosen"])
+    return shots[shots["season"] <= season], xpts, variant
+
+
+def _m6_board(
+    world: World, season: int, shots: pd.DataFrame, xpts: pd.DataFrame, variant: str
+) -> tuple[pd.DataFrame, dict[str, Stability]]:
+    """The over/under board of ``season`` (D23), stabilities from the M6 tuning seasons."""
+    stints, checks = read_table(MART_PATH, "stints"), read_table(MART_PATH, "stint_game_checks")
+    if stints is None or checks is None:
+        log.error("no stints mart; run: eurohoops stints --mart")
+        raise typer.Exit(code=1)
+    xwalk = world.inputs.xwalk
+    seasons = json.loads(M3_PLAYERS_REPORT.read_text(encoding="utf-8"))["seasons"]
+    brapm = pd.concat(
+        [
+            pd.DataFrame(block["players"])[["player_id", "total", "sd_total"]].assign(season=int(s))
+            for s, block in seasons.items()
+        ],
+        ignore_index=True,
+    )
+    complete = world.complete[~world.complete["partial"]]
+    found: dict[str, dict[int, pd.DataFrame]] = {d: {} for d in DIMENSIONS}
+    for s in (*M6.tuning, season):
+        found["shot_making"][s] = shot_making_observations(shots, xpts, xwalk, s, variant)
+        found["fg3_pct"][s] = fg3_observations(complete, s)
+        found["on_off"][s] = on_off_observations(stints, checks, brapm, xwalk, s)
+    stabilities = {
+        d: stability(pd.concat([found[d][s] for s in M6.tuning]), d, M6.tuning) for d in DIMENSIONS
+    }
+    return board({d: found[d][season] for d in DIMENSIONS}, stabilities), stabilities
+
+
+def _m6_similar(  # noqa: PLR0917 -- the live inputs, passed through
+    world: World,
+    people: list[str],
+    season: int,
+    shots: pd.DataFrame,
+    xpts: pd.DataFrame,
+    variant: str,
+) -> tuple[pd.DataFrame, list[int], bool]:
+    """Each live person's "plays like" list: his newest complete season with ``min_poss``
+    possessions against every complete season up to ``season``."""
+    joined = shots.merge(
+        xpts.loc[xpts["variant"] == variant, ["game_id", "event", "p_make"]],
+        on=["game_id", "event"],
+    )
+    mapped = person_ids(joined["shooter"], EUROLEAGUE.name, world.inputs.xwalk)["person_id"]
+    frame = joined.assign(person_id=mapped.to_numpy(), xpts=joined["p_make"] * joined["value"])
+    frame = frame[["person_id", "season", "made", "value", "x", "y", "band", "xpts"]]
+    done = world.complete[~world.complete["partial"] & (world.complete["season"] <= season)]
+    pool = sorted(int(s) for s in done["season"].unique())
+    emb = embed(done, frame, pool_seasons=pool, min_poss=M6.min_poss)
+    query = query_rows(world.complete, people, LIVE_SEASON, M6.min_poss)
+    features = raw_features(query, frame[frame["person_id"].isin(set(query["person_id"]))])
+    return neighbours(features, emb), pool, len(emb.features) > len(BOX_FEATURES)
+
+
+def _payload_sha(payload: dict[str, Any]) -> str:
+    return hashlib.sha256((json.dumps(payload, indent=2) + "\n").encode("utf-8")).hexdigest()
+
+
+def _live_block(  # noqa: PLR0917 -- one competition's live inputs
+    inputs: M6Inputs,
+    world: World,
+    comp: Competition,
+    spec: M6Backtest,
+    report: dict[str, Any],
+    chosen: dict[str, Any],
+    translation: Translation,
+) -> tuple[float, pd.DataFrame, TargetInputs]:
+    """One competition's live checkpoint, projections and inputs."""
+    games = inputs.games[comp.name]
+    regular = games[(games["season"] == LIVE_SEASON) & (games["phase"] == "RS")]
+    rounds = season_format(comp.name, LIVE_SEASON).regular_season_rounds
+    checkpoint = live_checkpoint(regular, rounds, spec.checkpoints)
+    rows, ti = live_projections(
+        inputs,
+        comp.name,
+        LIVE_SEASON,
+        checkpoint,
+        live_people(world.complete, comp.name, LIVE_SEASON),
+        chosen=chosen,
+        scale=report["calibration"]["scale"][f"{checkpoint:g}"],
+        spec=spec,
+        translation=translation,
+        rounds=rounds,
+        world=world,
+    )
+    return checkpoint, rows, ti
+
+
+@app.command()
+def project(
+    *,
+    dry_run: Annotated[
+        bool, typer.Option(help="Compute and print each report's sha256; write nothing")
+    ] = False,
+    projections_only: Annotated[
+        bool,
+        typer.Option(
+            help="Only reports/m6_projections.json: the board and the comparables need the local "
+            "M2 shot marts (the daily workflow)"
+        ),
+    ] = False,
+) -> None:
+    """Live M6 (weeks 16-18 L9): the 2026-27 projections and the GBL undervalued list
+    (reports/m6_projections.json), the over/under board (m6_board.json) and the "plays like"
+    lists (m6_similarity.json). Runs only when the EuroLeague M6 gate passed (L-l)."""
+    started = time.perf_counter()
+    specs = ((EUROLEAGUE, M6), (GBL, M6_GBL))
+    if not all(spec.report.exists() for _, spec in specs):
+        log.error("no committed M6 reports; run: eurohoops backtest --model m6")
+        raise typer.Exit(code=1)
+    reports = {c.name: json.loads(s.report.read_text(encoding="utf-8")) for c, s in specs}
+    if not reports[EUROLEAGUE.name]["gate"]["passed"]:
+        typer.echo("M6 did not pass its validation gate: the committed reports stay (L-l)")
+        return
+    chosen = reports[EUROLEAGUE.name]["chosen"]
+    inputs = _m6_inputs(M6, live=True)
+    world = prepare(inputs)
+    newest = max(inputs.translations)  # D5: M4's newest fit, pairs strictly before it
+    names = _live_names(inputs)
+    checkpoints, blocks, players = {}, [], []
+    projected = {}
+    for comp, spec in specs:
+        checkpoint, rows, ti = _live_block(
+            inputs, world, comp, spec, reports[comp.name], chosen, inputs.translations[newest]
+        )
+        checkpoints[comp.name] = checkpoint
+        projected[comp.name] = rows
+        blocks.append(ti)
+        live = world.complete[
+            (world.complete["season"] == LIVE_SEASON) & (world.complete["competition"] == comp.name)
+        ]
+        players += player_rows(rows, live, names)
+    gbl = world.complete[
+        (world.complete["season"] == LIVE_SEASON) & (world.complete["competition"] == GBL.name)
+    ]
+    cheap = undervalued(
+        projected[GBL.name],
+        world.complete,
+        LIVE_SEASON,
+        translation=_m6_translations(STAT_COLUMNS)[newest],
+        spm=inputs.spm,
+        names=names,
+        teams=dict(zip(gbl["person_id"], gbl["team"], strict=True)),
+        min_poss=M6.min_poss,
+    )
+    payloads = {
+        M6_PROJECTIONS: projections_report(
+            chosen=chosen,
+            gate_passed=True,
+            season=LIVE_SEASON,
+            checkpoints=checkpoints,
+            digest=inputs_digest(blocks),
+            players=players,
+            undervalued_rows=cheap,
+        )
+    }
+    if not projections_only:
+        m3_seasons = json.loads(M3_PLAYERS_REPORT.read_text(encoding="utf-8"))["seasons"]
+        season = max(int(s) for s in m3_seasons)  # D23: the newest complete season
+        shots, xpts, variant = _m2_shots(season)
+        rows, stabilities = _m6_board(world, season, shots, xpts, variant)
+        done = world.complete[world.complete["season"] == season]
+        teams = {
+            (str(p), str(c)): str(t)
+            for p, c, t in zip(done["person_id"], done["competition"], done["team"], strict=True)
+        }
+        payloads[M6_BOARD] = board_report(rows, stabilities, season, names, teams)
+        people = sorted({p["person_id"] for p in players})
+        similar, pool, shot_features = _m6_similar(world, people, season, shots, xpts, variant)
+        payloads[M6_SIMILARITY] = similarity_report(
+            similar, LIVE_SEASON, pool, shot_features, names
+        )
+    for path, payload in payloads.items():
+        if found := personal_fields(payload):
+            log.error("%s would carry an age or a birth date: %s", path, found[:5])
+            raise typer.Exit(code=1)
+        typer.echo(f"{path}: sha256 {_payload_sha(payload)}")
+        if not dry_run:
+            write_json(path, payload)
+    typer.echo(
+        f"{len(players)} projections (checkpoints {checkpoints}), {len(cheap)} undervalued"
+        + ("; dry run, nothing written" if dry_run else "")
+    )
+    typer.echo(f"RUNTIME project: {time.perf_counter() - started:.0f} s")
+
+
+@app.command("sim-ungated")
+def sim_ungated(competition: CompetitionOption = CompetitionName.euroleague) -> None:
+    """The ungated live season simulation for the Standings page (owner, D1): ``simulate``'s run
+    written to reports/sim_ungated_{competition}.json whatever M7's gate says, labelled "not
+    gated". Never appends to the simulation log; rewritten only when the number of completed
+    rounds changed (its time stamp is the cutoff), so a day without a completed round changes
+    nothing."""
+    comp = COMPETITIONS[competition]
+    model = load_sim(M7.report)
+    if comp.m1 is None or model is None or not comp.m1.report.exists():
+        log.error("no committed M7 or M1 report; run: eurohoops backtest --model m7")
+        raise typer.Exit(code=1)
+    started = time.perf_counter()
+    games = read_games(MART_PATH, comp.name)
+    games = games[games["season"] <= LIVE_SEASON].reset_index(drop=True)
+    team_games = read_table(MART_PATH, "team_games", comp.name)
+    if team_games is None:
+        log.error("no team_games in the marts; run: eurohoops build")
+        raise typer.Exit(code=1)
+    fmt = season_format(comp.name, LIVE_SEASON)
+    tuned = json.loads(comp.m1.report.read_text(encoding="utf-8"))["tuned"]
+    spec = M7 if comp is EUROLEAGUE else M7_GBL
+    run = run_live_sim(
+        games, team_games, tuned, model, fmt=fmt, season=LIVE_SEASON, spec=spec, n_sims=LIVE_SIMS
+    )
+    path = SIM_UNGATED[comp.name]
+    if run is None:
+        typer.echo(f"{comp.name}: the {LIVE_SEASON} regular season is over; {path} stays")
+        return
+    old = json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
+    if old is not None and (old["season"], old["after_round"]) == (LIVE_SEASON, run.after_round):
+        typer.echo(f"{comp.name}: after round {run.after_round} already in {path}")
+        return
+    report = latest_report(run, model, fmt, LIVE_SEASON, run.cutoff.to_pydatetime())
+    reason = (
+        "M7 passed its validation gate"
+        if model.gate_passed
+        else f"M7 failed its validation gate ({M7.report.as_posix()}): this run is not gated"
+    )
+    write_json(
+        path, {**report, "gated": False, "gate": {"passed": model.gate_passed, "reason": reason}}
+    )
+    typer.echo(f"wrote {path}: after round {run.after_round}, seed {run.seed} (not gated)")
+    typer.echo(f"RUNTIME sim-ungated {comp.name}: {time.perf_counter() - started:.0f} s")
 
 
 @app.command()
@@ -1195,30 +1515,13 @@ def score(competition: CompetitionOption = CompetitionName.euroleague) -> None:
 
 @app.command()
 def publish() -> None:
-    """Write the site data (web/src/data/site.json) the Astro front-end renders."""
-    sections = []
-    for title, comp in (("EuroLeague", EUROLEAGUE), ("Greek Basket League", GBL)):
-        live = _live(comp)
-        sections.append(
-            Section(
-                key=comp.name,
-                title=title,
-                log=(
-                    pd.read_csv(comp.prediction_log, dtype={"game_id": str})
-                    if comp.prediction_log.exists()
-                    else pd.DataFrame()
-                ),
-                scorecard=json.loads(comp.scorecard.read_text(encoding="utf-8")),
-                backtest=json.loads(comp.live_backtest.report.read_text(encoding="utf-8")),
-                games=live.games,
-                names=dict(read_teams(MART_PATH, comp.name).itertuples(index=False)),
-                model=live.model,
-                season=live.season,
-                replay_from=live.replay_from,
-            )
-        )
-    write_json(SITE_DATA, site_data(sections, utc_now()))
-    typer.echo(f"wrote {SITE_DATA}")
+    """Write the site data (site.json and api/) the Astro front-end renders, from the API."""
+    now = utc_now()
+    store = Store()
+    client = TestClient(create_app(store, lambda: now))
+    files = publish_files(client, store, typer.echo)
+    write_publish(WEB_DIR, files)
+    typer.echo(f"wrote {SITE_DATA} and {len(files) - 1} API files")
 
 
 @app.command("export-stats")
@@ -1230,27 +1533,14 @@ def export_stats(
     raw_dir: Annotated[Path, typer.Option(help="EuroLeague raw cache")] = EUROLEAGUE.raw_dir,
     out: Annotated[Path, typer.Option(help="Where the stats JSON goes")] = STATS_DIR,
 ) -> None:
-    """Write the EuroLeague stats-site data (players, teams, game logs, shot hex bins)."""
-    if from_cache:
-        games, teams = load_cached_games(raw_dir)
-    else:
-        games, teams = (
-            read_games(MART_PATH, EUROLEAGUE.name),
-            read_teams(MART_PATH, EUROLEAGUE.name),
-        )
-    inputs = Inputs(
-        games=games,
-        names=dict(teams.itertuples(index=False)),
-        box=build_box_games(raw_dir, games),
-        shots=build_shots(raw_dir, games),
-        codes=DISPLAY_CODES[EUROLEAGUE.name],
-        live_season=LIVE_SEASON,
-    )
-    files = build_payloads(inputs, utc_now())
-    write_stats(out, files)
-    seasons = files["meta.json"]["seasons"]
+    """Write the EuroLeague stats-site data (players, teams, game logs, shots), from the API."""
+    now = utc_now()
+    store = RawStore(from_cache=from_cache, raw_dir=raw_dir)
+    files = stats_files(TestClient(create_app(store, lambda: now)))
+    write_stats_files(out, files)
+    seasons = json.loads(files["meta.json"])["seasons"]
     typer.echo(
         f"wrote {len(files)} files to {out}: {len(seasons)} seasons, "
-        f"{len(files['players.json']['players'])} players, "
-        f"{len(inputs.box.missing)} played games without a box score"
+        f"{len(json.loads(files['players.json'])['players'])} players, "
+        f"{sum(s['games_without_box'] for s in seasons)} played games without a box score"
     )

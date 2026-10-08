@@ -32,6 +32,8 @@ web/node_modules/
 web/.astro/
 web/src/data/site.json
 web/src/data/stats/
+web/src/data/api/
+web/public/api/
 
 # AI agent tooling (Claude Code config, skill state); local only, not part of the repo
 .claude/

@@ -1,0 +1,36 @@
+{
+ "competition": "euroleague",
+ "team": {
+  "code": "BAR",
+  "name": "FC Barcelona"
+ },
+ "season": 2026,
+ "available_seasons": [
+  2026
+ ],
+ "games": 3,
+ "factors": {
+  "efg_pct": {
+   "value": 0.5412,
+   "reason": null
+  },
+  "tov_pct": {
+   "value": 0.1388,
+   "reason": null
+  },
+  "orb_pct": {
+   "value": 0.2976,
+   "reason": null
+  },
+  "ft_rate": {
+   "value": 0.2531,
+   "reason": null
+  }
+ },
+ "schedule_strength": {
+  "value": 1578.4,
+  "reason": null,
+  "games": 34,
+  "rating": "Elo as published, end of the replay through the season; mean over the team's scheduled games (played and remaining)"
+ }
+}

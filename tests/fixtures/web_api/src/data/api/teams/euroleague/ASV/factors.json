@@ -1,0 +1,33 @@
+{
+ "competition": "euroleague",
+ "team": {
+  "code": "ASV",
+  "name": "LDLC ASVEL Villeurbanne"
+ },
+ "season": 2026,
+ "available_seasons": [],
+ "games": 0,
+ "factors": {
+  "efg_pct": {
+   "value": null,
+   "reason": "no box-score games for 'ASV' in 2026"
+  },
+  "tov_pct": {
+   "value": null,
+   "reason": "no box-score games for 'ASV' in 2026"
+  },
+  "orb_pct": {
+   "value": null,
+   "reason": "no box-score games for 'ASV' in 2026"
+  },
+  "ft_rate": {
+   "value": null,
+   "reason": "no box-score games for 'ASV' in 2026"
+  }
+ },
+ "schedule_strength": {
+  "value": null,
+  "reason": "no scheduled games in 2026",
+  "rating": "Elo as published, end of the replay through the season; mean over the team's scheduled games (played and remaining)"
+ }
+}

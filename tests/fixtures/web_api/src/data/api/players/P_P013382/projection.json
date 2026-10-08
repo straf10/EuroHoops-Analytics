@@ -1,0 +1,112 @@
+{
+  "model": "m6",
+  "variant": "proj_full",
+  "half_life": 2.0,
+  "gated": true,
+  "gate_passed": true,
+  "season": 2026,
+  "checkpoint": 0.0,
+  "data_sha256": "0123456789abcdef0123456789abcdef01234567",
+  "stats": [
+    "pts",
+    "fg3a",
+    "fta",
+    "ast",
+    "tov",
+    "oreb",
+    "dreb",
+    "stl",
+    "blk",
+    "ts",
+    "fg3",
+    "ft",
+    "spm",
+    "brapm"
+  ],
+  "projections": [
+    {
+      "person_id": "P:P013382",
+      "competition": "euroleague",
+      "team": "TEL",
+      "name": "Levi Randolph",
+      "debut_season": 2016,
+      "stats": {
+        "pts": {
+          "mean": 24.5,
+          "lo80": 19.8,
+          "hi80": 29.4
+        },
+        "fg3a": {
+          "mean": 8.9,
+          "lo80": 6.6,
+          "hi80": 11.3
+        },
+        "fta": {
+          "mean": 5.1,
+          "lo80": 3.4,
+          "hi80": 7.0
+        },
+        "ast": {
+          "mean": 4.6,
+          "lo80": 3.1,
+          "hi80": 6.2
+        },
+        "tov": {
+          "mean": 2.6,
+          "lo80": 1.6,
+          "hi80": 3.7
+        },
+        "oreb": {
+          "mean": 1.6,
+          "lo80": 0.8,
+          "hi80": 2.5
+        },
+        "dreb": {
+          "mean": 4.5,
+          "lo80": 3.3,
+          "hi80": 5.8
+        },
+        "stl": {
+          "mean": 1.5,
+          "lo80": 0.8,
+          "hi80": 2.3
+        },
+        "blk": {
+          "mean": 0.3,
+          "lo80": 0.0,
+          "hi80": 0.8
+        },
+        "ts": {
+          "mean": 0.572,
+          "lo80": 0.534,
+          "hi80": 0.61
+        },
+        "fg3": {
+          "mean": 0.371,
+          "lo80": 0.322,
+          "hi80": 0.421
+        },
+        "ft": {
+          "mean": 0.812,
+          "lo80": 0.752,
+          "hi80": 0.866
+        },
+        "spm": {
+          "mean": 1.4,
+          "lo80": -0.9,
+          "hi80": 3.7
+        },
+        "brapm": {
+          "mean": 1.1,
+          "lo80": -1.2,
+          "hi80": 3.4
+        }
+      },
+      "exposure": 2650.0,
+      "n_seasons": 5,
+      "flags": [
+        "no_age"
+      ]
+    }
+  ]
+}

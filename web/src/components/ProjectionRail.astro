@@ -1,0 +1,56 @@
+---
+// Impact ladder: one row per estimate, a dot on a rail with its interval as a whisker, a dashed
+// line at zero (an average player). Blue above zero, red below, as the rating ladder.
+import { signed } from "../lib/format";
+
+export interface RailRow {
+  label: string;
+  value: number;
+  lo: number;
+  hi: number;
+  /** Interval wording, e.g. "80% interval". */
+  level: string;
+  /** The sample behind the row, shown beside it. */
+  sample: string;
+}
+
+interface Props {
+  rows: RailRow[];
+}
+const { rows } = Astro.props;
+const reach = Math.max(1, ...rows.flatMap((r) => [Math.abs(r.lo), Math.abs(r.hi)]));
+const limit = Math.ceil(reach);
+const pos = (x: number) => 50 + (50 * x) / limit;
+---
+
+<ol class="m6-rail">
+  <li class="axis" aria-hidden="true">
+    <span></span>
+    <span class="scale">
+      <span>{signed(-limit, 0)}</span>
+      <span class="zero">0</span>
+      <span>{signed(limit, 0)}</span>
+    </span>
+    <span></span>
+  </li>
+  {
+    rows.map((r) => (
+      <li class:list={{ below: r.value < 0, even: r.value === 0 }} style={`--x:${pos(r.value).toFixed(1)};--lo:${pos(r.lo).toFixed(1)};--hi:${pos(r.hi).toFixed(1)}`}>
+        <span class="who">
+          <b>{r.label}</b>
+          <small data-sample>{r.sample}</small>
+        </span>
+        <span class="track" aria-hidden="true">
+          <span class="whisker"></span>
+          <span class="dot"></span>
+        </span>
+        <span class="val">
+          <b data-num>{signed(r.value)}</b>
+          <span data-interval>
+            {r.level} <span data-num>{signed(r.lo)}</span> to <span data-num>{signed(r.hi)}</span>
+          </span>
+        </span>
+      </li>
+    ))
+  }
+</ol>

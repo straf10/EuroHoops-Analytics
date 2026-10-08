@@ -2,6 +2,7 @@
 import type { Bin, Competition, RollingPoint } from "../lib/format";
 import { athensDay, seasonSpan } from "../lib/format";
 import { tip } from "../lib/tip";
+import { count, liveScorecard, plural, type ScoreBlock } from "../lib/live";
 
 interface Props {
   comp: Competition;
@@ -60,6 +61,32 @@ if (end && Math.abs(eloY - b0Y) < 14) {
   b0Y = mid + (up ? 7 : -7);
 }
 const yTicks = [0, 0.5, 1].map((f) => ymin + (ymax - ymin) * (0.1 + 0.8 * f));
+
+// The live scorecards from the API (metrics/live.json): Elo and the baseline beside M1 and the M5
+// shadow, each on its own scored games, so each column carries its n.
+const card = await liveScorecard(comp.key);
+type Row = { label: string; lower: boolean; get: (b: ScoreBlock) => number | null; fmt: (x: number) => string };
+const liveRows: Row[] = [
+  { label: "Log loss", lower: true, get: (b) => b.log_loss, fmt: (x) => x.toFixed(3) },
+  { label: "Brier score", lower: true, get: (b) => b.brier, fmt: (x) => x.toFixed(3) },
+  { label: "Accuracy", lower: false, get: (b) => b.accuracy, fmt: (x) => `${(x * 100).toFixed(1)}%` },
+  { label: "Margin error, pts", lower: true, get: (b) => b.margin_mae, fmt: (x) => x.toFixed(1) },
+  { label: "Calibration error", lower: true, get: (b) => b.ece, fmt: (x) => x.toFixed(3) },
+];
+const liveCols = card
+  ? [
+      { key: "elo", head: "Elo", note: "published", block: card.elo, dot: "k-elo" },
+      { key: "b0", head: "Baseline", note: "home-win rate", block: card.b0, dot: "k-b0" },
+      { key: "m1", head: "M1", note: "shadow", block: card.m1.own, dot: "" },
+      { key: "m5", head: "M5", note: "shadow", block: card.m5.own, dot: "" },
+    ]
+  : [];
+const sameGames = card
+  ? ([
+      ["M1", card.m1.same],
+      ["M5", card.m5.same],
+    ] as const)
+  : [];
 ---
 
 <div class="performance" data-comp={comp.key}>
@@ -223,6 +250,75 @@ const yTicks = [0, 0.5, 1].map((f) => ymin + (ymax - ymin) * (0.1 + 0.8 * f));
       )
     }
   </figure>
+
+  <figure class="panel wide" data-figure>
+    <figcaption class="cap">
+      <h3 id={`live-${comp.key}`}>Elo beside the team models</h3>
+      <p id={`live-${comp.key}-cap`}>
+        The live season, each model on the games it has scored. M1 and M5 are shadow models: logged before tip-off like
+        the forecasts, not published as a forecast. A column with fewer games than Elo has not logged every game.
+      </p>
+    </figcaption>
+    {
+      card ? (
+        <>
+          <div class="scroll">
+            <table class="live" aria-labelledby={`live-${comp.key} live-${comp.key}-cap`}>
+              <thead>
+                <tr>
+                  <th scope="col">
+                    <span class="sr-only">Metric</span>
+                  </th>
+                  {liveCols.map((c) => (
+                    <th scope="col" class="num">
+                      {c.dot && <i class={c.dot} aria-hidden="true" />}
+                      {c.head}
+                      <small>{c.note}</small>
+                      <small data-sample>{plural(c.block?.n ?? 0, "game")}</small>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {liveRows.map((r) => (
+                  <tr>
+                    <th scope="row">
+                      {r.label}
+                      <small>{r.lower ? "lower is better" : "higher is better"}</small>
+                    </th>
+                    {liveCols.map((c) => {
+                      const v = c.block ? r.get(c.block) : null;
+                      return v === null ? (
+                        <td class="num na">n/a</td>
+                      ) : (
+                        <td class="num" data-num>
+                          {r.fmt(v)}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {sameGames.map(
+            ([name, same]) =>
+              same &&
+              same.n > 0 &&
+              same.own !== null &&
+              same.elo !== null && (
+                <p class="note" data-sample>
+                  {name} against Elo on the same {plural(same.n, "game")}: log loss <b data-num>{same.own.toFixed(3)}</b> vs{" "}
+                  <b data-num>{same.elo.toFixed(3)}</b>.
+                </p>
+              ),
+          )}
+        </>
+      ) : (
+        <p class="empty">The live scorecards are not available yet.</p>
+      )
+    }
+  </figure>
 </div>
 
 <style>
@@ -358,6 +454,70 @@ const yTicks = [0, 0.5, 1].map((f) => ymin + (ymax - ymin) * (0.1 + 0.8 * f));
   .empty b {
     color: var(--ink);
     font-weight: 600;
+  }
+  .wide {
+    grid-column: 1 / -1;
+  }
+  .live {
+    width: 100%;
+    max-width: 680px;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+  }
+  .live thead th {
+    padding: 0 0 8px 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--muted);
+    text-align: right;
+    white-space: nowrap;
+    vertical-align: bottom;
+  }
+  .live thead th:first-child {
+    padding-left: 0;
+  }
+  .live thead i {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin-right: 5px;
+    border-radius: 50%;
+    vertical-align: 0.05em;
+  }
+  .live small {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+  }
+  .live tbody th {
+    padding: 10px 12px 10px 0;
+    border-top: 1px solid var(--rule);
+    text-align: left;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .live td.num {
+    padding: 10px 0 10px 12px;
+    border-top: 1px solid var(--rule);
+    color: var(--ink-2);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .live .na {
+    color: var(--muted);
+  }
+  .note {
+    margin-top: 12px;
+    color: var(--muted);
+    font-size: 0.8125rem;
+  }
+  .note b {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .scroll {
+    overflow-x: auto;
   }
   @media (max-width: 820px) {
     .performance {

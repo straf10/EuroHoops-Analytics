@@ -87,3 +87,22 @@ The regular-season places that decide a team's path: the direct playoffs (top 8 
 
 **Simulation log**:
 The append-only per-team record of the live season simulation (`predictions/{competition}_sim_2026-27.csv`), one set of rows per completed round; written only when M7's gate passed.
+
+## Player projections and scouting (M6)
+
+**Projection**:
+A player's expected per-100-possession rates, shooting percentages and (EuroLeague) impact for the next season or the rest of the current one, each with an 80% interval: his past seasons decayed and shrunk to the league, calibrated on tuning seasons. Minutes are not projected.
+_Avoid_: prediction (a game forecast in the log)
+
+**Aging curve**:
+The expected year-over-year change of a rate at each age, from players with 500+ possessions in consecutive seasons (delta method on regressed rates, survivor corrected). Ages stay inside the pipeline; no age is published.
+
+**Over/under board**:
+Players doing better or worse than expected on shot-making, 3P% or on/off, with a z score and the share of the gap expected to last (from that dimension's year-to-year stability).
+
+**Comparable**:
+A past player-season nearest to a player's newest season in standardised box rates (and EuroLeague shot zones); a player is never his own comparable. Shown as "plays like".
+_Avoid_: twin (the Shot Profile Twin, shot profile only)
+
+**Read model**:
+The one module (`api/readmodel.py`) that turns the marts, logs and committed reports into the JSON the API serves; the static site files are its responses, written in-process.

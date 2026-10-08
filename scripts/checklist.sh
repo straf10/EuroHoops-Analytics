@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # The phase checklist, top to bottom (weeks 5-7 §6 items 1-20, weeks 7-10 items 21-30, weeks
 # 7-10b items 31-32, weeks 9-12 items 33-37,
-# weeks 14-16 M7 items 48-53). Prints PASS/FAIL per
+# weeks 14-16 M7 items 48-53, weeks 16-18 M6/API/pages items 54-60). Prints PASS/FAIL per
 # item; the exit code is the number of FAILs. Run from anywhere: `bash scripts/checklist.sh`.
 #
 #   BASE      git ref the predictions and the stint sample are compared with (default origin/main)
@@ -184,5 +184,32 @@ skip 53 "M7 card" || {
   item "53 docs/models/m7.md numbers = reports; CONTEXT terms"
   uv run pytest -q -p no:cacheprovider tests/test_model_card_m7.py 2>&1 | tail -1
   res "${PIPESTATUS[0]}"
+}
+skip 54 "M6 units + facts" || {
+  item "54 M6 unit tests (player seasons, projection, aging, board, similarity, live), section 3 facts, Twin unchanged"
+  PYTHONIOENCODING=utf-8 uv run python "$CHECKS/m6_facts.py" | tail -1 &&     uv run pytest -q -p no:cacheprovider tests/test_player_seasons.py tests/test_projection.py tests/test_aging.py tests/test_board.py tests/test_player_similarity.py tests/test_m6_backtest.py tests/test_m6_order.py tests/test_live_m6.py tests/test_stats.py 2>&1 | tail -1
+  res "${PIPESTATUS[0]}"
+}
+skip 55 "M6 leakage" || {
+  item "55 M6 leakage suite (planted leaks detected)"
+  uv run pytest -q -p no:cacheprovider tests/test_m6_leakage.py 2>&1 | tail -1
+  res "${PIPESTATUS[0]}"
+}
+skip 56 "M6 report" || { item "56 backtest_m6.json + gate/coverage/movers, two runs identical, GBL fixed choice, verdict < validation < test"; bash "$CHECKS/m6_reports.sh"; res $?; }
+skip 57 "project dry run" || {
+  item "57 live project: two dry runs identical, tree untouched, no age or birth date, workflow per gate; actionlint"
+  PYTHONIOENCODING=utf-8 uv run python "$CHECKS/m6_live.py"
+  res $?
+}
+skip 58 "M6 runtimes" || { item "58 RUNTIMEs within L-m: backtest m6 EL < 1,200 s, GBL < 300 s, project < 90 s, export < 180 s, astro < 240 s"; bash "$CHECKS/m6_runtime.sh"; res $?; }
+skip 59 "API" || {
+  item "59 API: route, read-only and OpenAPI tests; old-vs-new export byte-identical; contract (web/src/data = API); docker compose config"
+  uv run pytest -q -p no:cacheprovider tests/test_api_app.py tests/test_api_readmodel.py tests/test_api_export.py tests/test_api_contract.py 2>&1 | tail -1 &&     PYTHONIOENCODING=utf-8 uv run python "$CHECKS/api_export.py"
+  res $?
+}
+skip 60 "site + M6 card" || {
+  item "60 site: web build, M6 page screenshots 1440/390 light/dark, sample/interval DOM check, no console errors; m6.md numbers = reports; CONTEXT terms"
+  (bash "$CHECKS/web_build.sh" >/dev/null 2>&1     && uv run --with playwright python "$CHECKS/screenshots_m6_players.py" "$SCRATCH/web/site" "$SCRATCH/shots_m6"     && uv run --with playwright python "$CHECKS/screenshots_m6_pages.py" "$SCRATCH/web/site" "$SCRATCH/shots_m6"     && uv run pytest -q -p no:cacheprovider tests/test_model_card_m6.py tests/test_web_m6_codes.py 2>&1 | tail -1)
+  res $?
 }
 echo; echo "FAILS: $fails (end $(date -u +%H:%MZ))"; exit "$fails"

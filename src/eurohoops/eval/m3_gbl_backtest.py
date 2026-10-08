@@ -33,6 +33,7 @@ from eurohoops.eval.m3_backtest import (
     build_rapm_inputs,
     m1_margins_for,
     rmse_diff_bootstrap_ci,
+    through,
 )
 from eurohoops.models import box_impact as bi
 from eurohoops.models.box_impact import STAT_COLUMNS
@@ -70,9 +71,13 @@ def el_spm_models(
     stints: pd.DataFrame,
     checks: pd.DataFrame,
     chosen: dict[str, Any],
+    *,
+    last: int = M3.test[-1],
 ) -> ElSpm:
-    """Build EL ``SpmModel`` per season on the M3 EuroLeague frame (same seasons as ``M3``)."""
-    first, last = M3.warmup[0], M3.test[-1]
+    """Build EL ``SpmModel`` per season on the M3 EuroLeague frame (same seasons as ``M3``;
+    ``last`` extends it, e.g. to the live season for M6's live SPM: each season's model still
+    reads only the seasons before it)."""
+    first = M3.warmup[0]
     frame = (
         el_games[el_games["season"].between(first, last)]
         .sort_values("tipoff_utc")
@@ -259,7 +264,7 @@ def run_m3_gbl_backtest(
     shares = projected_shares(frame, gbl_player_games, spec.projection_games)
     oracle = oracle_shares(frame, gbl_player_games)
     possessions = expected_possessions(frame, gbl_team_games)
-    snapshot = _data_sha256(frame, gbl_team_games, gbl_player_games)
+    snapshot = _data_sha256(frame, through(gbl_team_games, last), through(gbl_player_games, last))
     data = Data(
         games=frame,
         margin=home - away,

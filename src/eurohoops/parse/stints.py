@@ -17,6 +17,7 @@ from typing import Any
 
 import numpy as np
 
+from eurohoops.config import LIVE_SEASON
 from eurohoops.ingest.cache import read_cached
 
 QUARTERS = ("FirstQuarter", "SecondQuarter", "ThirdQuarter", "ForthQuarter")  # sic, API keys
@@ -26,7 +27,9 @@ OVERTIME_S = 300
 # before 2015-16 made layups and dunks have their own codes.
 POINTS = {"2FGM": 2, "LAYUPMD": 2, "DUNK": 2, "3FGM": 3, "FTM": 1}
 MINUTES_TOLERANCE_S = 60
-SAMPLE_SEASONS = tuple(range(2015, 2027))
+# Completed seasons only: the live season gains games every round, which would reshuffle its pool
+# and change the committed sample (checklist item 10) without any code change.
+SAMPLE_SEASONS = tuple(range(2015, LIVE_SEASON))
 SAMPLE_SIZE = 50
 SAMPLE_SEED = 20260925
 CHECKS = ("five_on_court", "seconds", "minutes", "points")

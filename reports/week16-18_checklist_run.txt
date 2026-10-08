@@ -1,0 +1,663 @@
+Weeks 16-18 checklist run, 2026-10-08 (scripts/checklist.sh, Git Bash; times UTC)
+
+Split record by owner decision (2026-10-08): a full run (HEAD 194ecd7) was stopped after item 24 (items 1-9 and
+11-21 and 23 PASS, 10 FAIL on live-season drift, 22 FAIL known-red) to save time; the owner chose a split record
+of the items this phase touched. Unchanged-model items (12-16, 21-29, 40-51, 53) are skipped and run in the next
+full pass.
+
+Pass A (HEAD cb416c6): items 1-11, 17-20, 30-39, 52, 54-60 (full log below). Failures: 9 (origin/main gained the
+2026-10-08 daily rows after a fetch: fixed by merging origin/main, ff44d72), 10 (stint sample fixed in cb416c6;
+compares against origin/main, green once pushed), 31 (needs item 24's runs, skipped in this split), 35 and 37
+(M3 input hash covered live-season games: fixed in 14fc9e7, every number identical).
+Pass B (HEAD ff44d72, after the merge): items 9 and 10 only.
+  9: removed/changed lines vs origin/main: 0; backtest_elo.json base=0.2.0+425e6393 now=0.2.0+425e6393;
+     backtest_elo_gbl.json base=0.2.0+df05260c now=0.2.0+df05260c -> PASS
+  10: 50 games, all checks 100%; reports/stint_validation.json differs from origin/main only by the
+      intended change of cb416c6 ("seasons": [2015, 2025], two 2026 games replaced) -> FAIL until pushed
+Pass C (HEAD 14fc9e7): items 1-6 and 33-37, FAILS 0 (full log below).
+
+================================ Pass A ================================
+HEAD cb416c6, base origin/main, scratch /tmp/tmp.WbHkHoYHOk, start 16:02Z
+
+===== 1 uv sync --frozen =====
+Checked 139 packages in 12ms
+PASS
+
+===== 2 ruff check =====
+All checks passed!
+PASS
+
+===== 3 ruff format --check =====
+296 files already formatted
+PASS
+
+===== 4 mypy src =====
+Success: no issues found in 100 source files
+PASS
+
+===== 5 pytest + coverage =====
+50 files skipped due to complete coverage.
+Required test coverage of 85% reached. Total coverage: 92.44%
+1305 passed, 9 warnings in 500.68s (0:08:20)
+PASS
+
+===== 6 vulture =====
+PASS
+
+===== 7 web build from the fixture (copy of web/) =====
+npm warn allow-scripts Run `npm approve-scripts --allow-scripts-pending` to review, or `npm approve-scripts <pkg>` to allow.
+[2m19:12:43[22m [34m[build][39m 2315 page(s) built in [1m25.01s[22m
+[2m19:12:43[22m [34m[build][39m [1mComplete![22m
+built 12 entries into site/
+PASS
+
+===== 8 Elo backtests reproduce the committed reports =====
+5 passed in 0.10s
+PASS
+
+===== 9 predictions append-only vs origin/main, Elo model_version unchanged =====
+removed/changed lines vs origin/main: 9
+reports/backtest_elo.json base=0.2.0+425e6393 now=0.2.0+425e6393
+reports/backtest_elo_gbl.json base=0.2.0+df05260c now=0.2.0+df05260c
+FAIL
+
+===== 10 stint sample reproduces origin/main =====
+50 games: all checks 100% (five_on_court 100%, seconds 100%, minutes 100%, points 100%); wrote reports\stint_validation.json
+diff --git a/reports/stint_validation.json b/reports/stint_validation.json
+index fe7e2a0..b42b323 100644
+--- a/reports/stint_validation.json
++++ b/reports/stint_validation.json
+@@ -2,7 +2,7 @@
+   "seed": 20260925,
+   "seasons": [
+     2015,
+-    2026
++    2025
+   ],
+   "games": 50,
+   "minutes_tolerance_s": 60,
+@@ -25,7 +25,6 @@
+     "E2023_172",
+     "E2024_220",
+     "E2025_126",
+-    "E2026_3",
+     "E2015_195",
+     "E2016_154",
+     "E2017_73",
+@@ -37,7 +36,6 @@
+     "E2023_40",
+     "E2024_133",
+     "E2025_120",
+-    "E2026_2",
+     "E2015_117",
+     "E2016_85",
+     "E2017_128",
+@@ -63,7 +61,9 @@
+     "E2015_146",
+     "E2016_7",
+     "E2017_252",
+-    "E2018_219"
++    "E2018_219",
++    "E2019_35",
++    "E2020_306"
+   ],
+   "failing_games": {}
+ }
+FAIL
+
+===== 11 team_games coverage, points, possessions =====
+4 games missing, 0 points mismatches; EuroLeague sample within 2: 94.0% of teams; wrote reports\possessions.json
+rated games: 6417 with rows: 6413 missing (listed with reasons): 4
+points = games scores for every row
+PASS
+
+===== 12 stints mart =====
+SKIPPED
+
+===== 13 M1 unit tests + runtime =====
+SKIPPED
+
+===== 14 leakage tests =====
+SKIPPED
+
+===== 15 M1 reports =====
+SKIPPED
+
+===== 16 MLflow =====
+SKIPPED
+
+===== 17 live M1 dry run =====
+euroleague: clock 2026-10-07T08:45Z, first run 7 M1 rows, second run 0; log unchanged by run 2: True; Elo log byte-identical: True
+    game_id,season,round,phase,tipoff_utc,home,away,p_home,exp_margin,exp_total,margin_sigma,margin_df,total_sigma,model,model_version,predicted_at_utc
+    E2026_31,2026,4,RS,2026-10-07T18:45:00Z,PRS,ASV,0.7617,7.82,173.87,10.4024,7,16.5309,m1,0.2.0+m1.cbd9aaa3,2026-10-07T08:45:00Z
+    E2026_32,2026,4,RS,2026-10-08T16:00:00Z,TEL,MIL,0.5664,1.80,177.67,10.4024,7,16.5309,m1,0.2.0+m1.cbd9aaa3,2026-10-07T08:45:00Z
+gbl: clock 2026-09-16T23:15Z, first run 1 M1 rows, second run 0; log unchanged by run 2: True; Elo log byte-identical: True
+    game_id,season,round,phase,tipoff_utc,home,away,p_home,exp_margin,exp_total,margin_sigma,margin_df,total_sigma,model,model_version,predicted_at_utc
+    GBL2026_3690EC22,2026,26,RS,2026-09-17T09:15:00Z,BB4B460F,2A25C696,0.5650,1.93,170.98,11.6551,20,16.9827,m1,0.2.0+m1.51ab8739,2026-09-16T23:15:00Z
+PASS
+
+===== 18 build + score + publish twice leaves the tree unchanged =====
+unchanged on the second run
+PASS
+
+===== 19 actionlint =====
+clean
+PASS
+
+===== 20 screenshots 1440/390, light/dark =====
+127.0.0.1 - - [08/Oct/2026 19:15:46] "GET /EuroHoops-Analytics/ HTTP/1.1" 200 -
+127.0.0.1 - - [08/Oct/2026 19:15:47] "GET /EuroHoops-Analytics/_astro/Base.CKP8QpI_.css HTTP/1.1" 200 -
+127.0.0.1 - - [08/Oct/2026 19:15:47] "GET /EuroHoops-Analytics/_astro/index.B_cWZvNM.css HTTP/1.1" 200 -
+127.0.0.1 - - [08/Oct/2026 19:15:47] "GET /EuroHoops-Analytics/_astro/geist-latin-wght-normal.BgDaEnEv.woff2 HTTP/1.1" 200 -
+127.0.0.1 - - [08/Oct/2026 19:15:48] "GET /EuroHoops-Analytics/ HTTP/1.1" 200 -
+127.0.0.1 - - [08/Oct/2026 19:15:48] "GET /EuroHoops-Analytics/_astro/Base.CKP8QpI_.css HTTP/1.1" 200 -
+127.0.0.1 - - [08/Oct/2026 19:15:48] "GET /EuroHoops-Analytics/_astro/index.B_cWZvNM.css HTTP/1.1" 200 -
+127.0.0.1 - - [08/Oct/2026 19:15:48] "GET /EuroHoops-Analytics/_astro/geist-latin-wght-normal.BgDaEnEv.woff2 HTTP/1.1" 200 -
+127.0.0.1 - - [08/Oct/2026 19:15:48] "GET /EuroHoops-Analytics/ HTTP/1.1" 200 -
+127.0.0.1 - - [08/Oct/2026 19:15:48] "GET /EuroHoops-Analytics/_astro/Base.CKP8QpI_.css HTTP/1.1" 200 -
+127.0.0.1 - - [08/Oct/2026 19:15:48] "GET /EuroHoops-Analytics/_astro/index.B_cWZvNM.css HTTP/1.1" 200 -
+127.0.0.1 - - [08/Oct/2026 19:15:49] "GET /EuroHoops-Analytics/_astro/geist-latin-wght-normal.BgDaEnEv.woff2 HTTP/1.1" 200 -
+127.0.0.1 - - [08/Oct/2026 19:15:49] "GET /EuroHoops-Analytics/ HTTP/1.1" 200 -
+127.0.0.1 - - [08/Oct/2026 19:15:49] "GET /EuroHoops-Analytics/_astro/Base.CKP8QpI_.css HTTP/1.1" 200 -
+127.0.0.1 - - [08/Oct/2026 19:15:49] "GET /EuroHoops-Analytics/_astro/index.B_cWZvNM.css HTTP/1.1" 200 -
+127.0.0.1 - - [08/Oct/2026 19:15:49] "GET /EuroHoops-Analytics/_astro/geist-latin-wght-normal.BgDaEnEv.woff2 HTTP/1.1" 200 -
+light 1440: horizontal overflow 0 px; M1 line visible: True
+light 390: horizontal overflow 0 px; M1 line visible: True
+dark 1440: horizontal overflow 0 px; M1 line visible: True
+dark 390: horizontal overflow 0 px; M1 line visible: True
+PASS
+
+===== 21 F1 shots =====
+SKIPPED
+
+===== 22 F2 free throws =====
+SKIPPED
+
+===== 23 F3/F4 models =====
+SKIPPED
+
+===== 24 F5 report =====
+SKIPPED
+
+===== 25 F6 teams =====
+SKIPPED
+
+===== 26 F7 players =====
+SKIPPED
+
+===== 27 F8 charts =====
+SKIPPED
+
+===== 28 F9 MLflow + leakage =====
+SKIPPED
+
+===== 29 F10 model card =====
+SKIPPED
+
+===== 30 uv sync --no-dev, then build + predict =====
+no-dev env without ['lightgbm', 'optuna', 'matplotlib', 'mlflow']
+INFO eurohoops.predict: 0 upcoming games in window, 0 already logged, 0 rows appended
+0 predictions appended to predictions\euroleague_2026-27.csv
+INFO eurohoops.live_m1: M1: 0 rows appended to predictions\euroleague_m1_2026-27.csv
+0 M1 predictions appended to predictions\euroleague_m1_2026-27.csv
+0 M5 predictions appended to predictions\euroleague_m5_2026-27.csv
+INFO eurohoops.predict: 0 upcoming games in window, 0 already logged, 0 rows appended
+0 predictions appended to predictions\gbl_2026-27.csv
+INFO eurohoops.live_m1: M1: 0 rows appended to predictions\gbl_m1_2026-27.csv
+0 M1 predictions appended to predictions\gbl_m1_2026-27.csv
+build + predict ran without the dev group; predictions/ as before
+PASS
+
+===== 31 G5 level variants: fields, post-hoc labels, two runs identical, leakage, declaration < run =====
+14 passed in 6.24s
+lgbm_level: CV log loss 0.629688, validation ECE 0.010049 (meets F-f: False), calibration in the large 0.983489-1.013094
+spline_level: CV log loss 0.631511, validation ECE 0.009796 (meets F-f: False), calibration in the large 0.971405-1.010862
+missing or unlabelled fields: []
+G-g condition: {'meets_f_f_on_validation': False, 'cv_log_loss_below_lgbm': True, 'holds': False}
+item 24's runs not found in $SCRATCH (run item 24 first)
+declaration 1de203c, first run 327d0a3
+declaration < first run: yes
+weeks 7-10 numbers unchanged since the declaration: yes
+FAIL
+
+===== 32 G1 no outcome-coded M2 feature level (both builders, development shots) =====
+spline: 15 flag/level columns, 26 levels, make rates 0.3613-0.5754 on 385604 development shots
+lgbm: 5 flag/level columns, 29 levels, make rates 0.0256-0.9378 on 385604 development shots
+guard: feed flag fastbreak audited as a feature: 11537 shots, make rate 0.9997 -> caught
+guard: feed flag second_chance audited as a feature: 17459 shots, make rate 0.9992 -> caught
+guard: feed flag points_off_turnover audited as a feature: 22878 shots, make rate 0.9997 -> caught
+no outcome-coded M2 feature level
+PASS
+
+===== 33 M3 unit tests, §3 facts =====
+93 passed in 31.07s
+1. players with stints 2011-2025: 1727 (< 5,000 for a dense posterior)
+2. ids with several spellings: 84 of 1727; names with several ids: ['SIMONOVIC, MARKO', 'YURTSEVEN, OMER']
+3. player-games of passing games within 60 s: 0.99997 of 89289 (>= 0.999)
+4. gbl 2018: 302 team box scores with the 17 H-e columns
+4. gbl 2019: 226 team box scores with the 17 H-e columns
+4. gbl 2020: 318 team box scores with the 17 H-e columns
+4. gbl 2021: 360 team box scores with the 17 H-e columns
+4. gbl 2022: 312 team box scores with the 17 H-e columns
+4. gbl 2023: 326 team box scores with the 17 H-e columns
+4. gbl 2024: 332 team box scores with the 17 H-e columns
+4. gbl 2025: 348 team box scores with the 17 H-e columns
+4. gbl 2026: 14 team box scores with the 17 H-e columns
+4. gbl box headers that differ: 0
+m3 facts: hold
+PASS
+
+===== 34 M3 leakage (RAPM, dummy, SPM, box-only, minutes, GBL) =====
+19 passed, 41 deselected in 9.72s
+PASS
+
+===== 35 backtest_m3.json + gate, two runs identical, verdict < validation < test =====
+reports/backtest_m3.json: two runs byte-identical
+reports/backtest_m3.json differs from the committed report
+FAIL
+
+===== 36 backtest --model m3 runtime < 1,800 s =====
+timed by item 35 in this run
+RUNTIME 864 s (limit 1800 s)
+recorded RUNTIME 875 s
+PASS
+
+===== 37 m3.md numbers = reports; gbl_stints.json pass rates, two builds identical =====
+3 passed in 0.13s
+reports/gbl_stints.json: two builds byte-identical
+reports/gbl_stints.json: equals the committed report
+  2018 0.5567 {'five_on_court': 0.9606, 'points': 1.0, 'possessions': 0.5813}
+  2019 0.5683 {'five_on_court': 0.9928, 'points': 1.0, 'possessions': 0.5755}
+reports/backtest_m3_gbl.json: two runs byte-identical
+reports/backtest_m3_gbl.json differs from the committed report
+FAIL
+
+===== 38 entity: unit tests, two builds identical, runtime, matcher < labels < label overrides =====
+67 passed in 3.13s
+reports/entity_resolution.json: two builds byte-identical
+marts identical:
+player_names 7907 fecc928fe2ee12be4508f11e65d75649ae831bff5ab88c479fef663eb6ab0883
+player_xwalk 3189 3d03d405d103fad311a70fa77dde40e17bee980ffd36474fc376d017edbbd838
+player_xwalk_frozen 3189 557319d8606895fa0344abae428394c935c50b8c57a9b1f431c099dec982f5bf
+reports/entity_resolution.json: equals the committed report
+entity RUNTIME 81 s (limit 300 s)
+matcher d17fc3a, labels 2799c49
+first label override 96a4d65
+matcher < labels < label overrides: yes
+PASS
+
+===== 39 crosswalk invariants: every box id in one person, overrides held =====
+crosswalk rows 3189, persons 2997, duplicate ids 0
+GBL player_box ids without a person: 0; EL box ids: 0
+override P005353 match P005983: held
+override PLRU no_match P012711: held
+override 00000069 match P003469: held
+crosswalk invariants: hold
+PASS
+
+===== 40 M4 units + leakage =====
+SKIPPED
+
+===== 41 M4 report =====
+SKIPPED
+
+===== 42 M4 card + entity doc =====
+SKIPPED
+
+===== 43 M5 units + facts =====
+SKIPPED
+
+===== 44 M5 leakage =====
+SKIPPED
+
+===== 45 M5 report =====
+SKIPPED
+
+===== 46 M5 runtime =====
+SKIPPED
+
+===== 47 M5 card =====
+SKIPPED
+
+===== 48 M7 units + facts =====
+SKIPPED
+
+===== 49 M7 leakage =====
+SKIPPED
+
+===== 50 M7 report =====
+SKIPPED
+
+===== 51 M7 runtime =====
+SKIPPED
+
+===== 52 live simulate: probability sums, gated and idempotent log, existing logs untouched, workflow per gate; actionlint =====
+euroleague: after round 3, 20 teams, sums hold True, gate passed False -> rows with the committed gate 0, forced gate idempotent True
+gbl: after round 1, 14 teams, sums hold True, gate passed False -> rows with the committed gate 0, forced gate idempotent True
+predictions/ and reports/ untouched: True
+daily.yml runs simulate: False (gate passed: False)
+RUNTIME simulate 7
+simulate dry run: PASS
+daily.yml clean
+PASS
+
+===== 53 M7 card =====
+SKIPPED
+
+===== 54 M6 unit tests (player seasons, projection, aging, board, similarity, live), section 3 facts, Twin unchanged =====
+m6 facts: PASS
+171 passed, 2 warnings in 203.22s (0:03:23)
+PASS
+
+===== 55 M6 leakage suite (planted leaks detected) =====
+35 passed in 150.78s (0:02:30)
+PASS
+
+===== 56 backtest_m6.json + gate/coverage/movers, two runs identical, GBL fixed choice, verdict < validation < test =====
+reports/backtest_m6.json, reports/backtest_m6_players.csv: two runs byte-identical
+reports/backtest_m6.json, reports/backtest_m6_players.csv: equal the committed files
+GBL M6 report equals the committed one
+  gate proj_shrunk@1 PASS 5.39813 5.418873 8.512821 coverage ok True
+verdict ab8264b, validation 00cc78c, test 5efeec8
+verdict < validation < test: yes
+PASS
+
+===== 57 live project: two dry runs identical, tree untouched, no age or birth date, workflow per gate; actionlint =====
+two dry runs, same sha256 for 3 reports: True
+predictions/, reports/ and entity/ untouched: True
+reports/m6_projections.json: age or birth-date fields none
+reports/m6_board.json: age or birth-date fields none
+reports/m6_similarity.json: age or birth-date fields none
+reports/sim_ungated_euroleague.json: age or birth-date fields none
+reports/sim_ungated_gbl.json: age or birth-date fields none
+reports/m6_projections.json equals today's rebuild: True
+reports/m6_board.json equals today's rebuild: True
+reports/m6_similarity.json equals today's rebuild: True
+daily.yml runs project: True (gate passed: True); sim-ungated both: True
+actionlint daily.yml: clean
+RUNTIME project 51
+m6 live: PASS
+PASS
+
+===== 58 RUNTIMEs within L-m: backtest m6 EL < 1,200 s, GBL < 300 s, project < 90 s, export < 180 s, astro < 240 s =====
+RUNTIME m6 euroleague 178 s (limit 1200 s), m6 gbl 70 s (limit 300 s), project 54 s (limit 90 s)
+recorded m6 euroleague 161, m6 gbl 63, project 48, export 66, astro 69
+PASS
+
+===== 59 API: route, read-only and OpenAPI tests; old-vs-new export byte-identical; contract (web/src/data = API); docker compose config =====
+124 passed, 1 warning in 76.55s (0:01:16)
+stats from-cache: 104 stats files, 966 publish files
+skipped routes: 0
+RUNTIME export 70
+docker compose config -q: PASS
+PASS
+PASS
+
+===== 60 site: web build, M6 page screenshots 1440/390 light/dark, sample/interval DOM check, no console errors; m6.md numbers = reports; CONTEXT terms =====
+player light 1440: overflow 0 px; 71 model numbers, 0 unlabelled; 0 console errors
+player light 390: overflow 0 px; 71 model numbers, 0 unlabelled; 0 console errors
+player dark 1440: overflow 0 px; 71 model numbers, 0 unlabelled; 0 console errors
+player dark 390: overflow 0 px; 71 model numbers, 0 unlabelled; 0 console errors
+player_sparse light 1440: overflow 0 px; 12 model numbers, 0 unlabelled; 0 console errors
+player_sparse light 390: overflow 0 px; 12 model numbers, 0 unlabelled; 0 console errors
+player_sparse dark 1440: overflow 0 px; 12 model numbers, 0 unlabelled; 0 console errors
+player_sparse dark 390: overflow 0 px; 12 model numbers, 0 unlabelled; 0 console errors
+scouting light 1440: overflow 0 px; 504 model numbers, 0 unlabelled; 0 console errors
+scouting light 390: overflow 0 px; 462 model numbers, 0 unlabelled; 0 console errors
+scouting dark 1440: overflow 0 px; 504 model numbers, 0 unlabelled; 0 console errors
+scouting dark 390: overflow 0 px; 462 model numbers, 0 unlabelled; 0 console errors
+ok   standings 1440 light: overflow 0 px, 100 numbers, unlabelled [], console errors [], text 'Not gated' shown
+ok   standings 390 light: overflow 0 px, 100 numbers, unlabelled [], console errors [], text 'Not gated' shown
+ok   standings 1440 dark: overflow 0 px, 100 numbers, unlabelled [], console errors [], text 'Not gated' shown
+ok   standings 390 dark: overflow 0 px, 100 numbers, unlabelled [], console errors [], text 'Not gated' shown
+ok   methodology 1440 light: overflow 0 px, 0 numbers, unlabelled [], console errors [], text 'Gate failed' shown
+ok   methodology 390 light: overflow 0 px, 0 numbers, unlabelled [], console errors [], text 'Gate failed' shown
+ok   methodology 1440 dark: overflow 0 px, 0 numbers, unlabelled [], console errors [], text 'Gate failed' shown
+ok   methodology 390 dark: overflow 0 px, 0 numbers, unlabelled [], console errors [], text 'Gate failed' shown
+ok   team_fbt 1440 light: overflow 0 px, 5 numbers, unlabelled [], console errors [], text 'Four factors' shown
+ok   team_fbt 390 light: overflow 0 px, 5 numbers, unlabelled [], console errors [], text 'Four factors' shown
+ok   team_fbt 1440 dark: overflow 0 px, 5 numbers, unlabelled [], console errors [], text 'Four factors' shown
+ok   team_fbt 390 dark: overflow 0 px, 5 numbers, unlabelled [], console errors [], text 'Four factors' shown
+ok   team_asv 1440 light: overflow 0 px, 0 numbers, unlabelled [], console errors [], text 'no box-score games' shown
+ok   team_asv 390 light: overflow 0 px, 0 numbers, unlabelled [], console errors [], text 'no box-score games' shown
+ok   team_asv 1440 dark: overflow 0 px, 0 numbers, unlabelled [], console errors [], text 'no box-score games' shown
+ok   team_asv 390 dark: overflow 0 px, 0 numbers, unlabelled [], console errors [], text 'no box-score games' shown
+ok   forecasts 1440 light: overflow 0 px, 17 numbers, unlabelled [], console errors [], text 'Elo beside the team models' shown
+ok   forecasts 390 light: overflow 0 px, 17 numbers, unlabelled [], console errors [], text 'Elo beside the team models' shown
+ok   forecasts 1440 dark: overflow 0 px, 17 numbers, unlabelled [], console errors [], text 'Elo beside the team models' shown
+ok   forecasts 390 dark: overflow 0 px, 17 numbers, unlabelled [], console errors [], text 'Elo beside the team models' shown
+ok   forecasts_gbl 1440 light: overflow 0 px, 10 numbers, unlabelled [], console errors [], text 'Elo beside the team models' shown
+ok   forecasts_gbl 390 light: overflow 0 px, 10 numbers, unlabelled [], console errors [], text 'Elo beside the team models' shown
+ok   forecasts_gbl 1440 dark: overflow 0 px, 10 numbers, unlabelled [], console errors [], text 'Elo beside the team models' shown
+ok   forecasts_gbl 390 dark: overflow 0 px, 10 numbers, unlabelled [], console errors [], text 'Elo beside the team models' shown
+8 passed in 0.16s
+PASS
+
+FAILS: 5 (end 17:13Z)
+exit=5 elapsed=4260s
+Binary file C:/Users/nikos/AppData/Local/Temp/claude/C--Python-Sports-Project/c55a6f0e-7490-47bc-be2c-4fe6d1206c99/scratchpad/split_checklist.log matches
+
+================================ Pass C ================================
+HEAD 14fc9e7, base origin/main, scratch /tmp/tmp.ukt1OpYrTj, start 17:41Z
+
+===== 1 uv sync --frozen =====
+Checked 139 packages in 12ms
+PASS
+
+===== 2 ruff check =====
+All checks passed!
+PASS
+
+===== 3 ruff format --check =====
+297 files already formatted
+PASS
+
+===== 4 mypy src =====
+Success: no issues found in 100 source files
+PASS
+
+===== 5 pytest + coverage =====
+50 files skipped due to complete coverage.
+Required test coverage of 85% reached. Total coverage: 92.45%
+1306 passed, 9 warnings in 457.44s (0:07:37)
+PASS
+
+===== 6 vulture =====
+PASS
+
+===== 7 web build from the fixture =====
+SKIPPED
+
+===== 8 Elo backtests reproduce the committed reports =====
+SKIPPED
+
+===== 9 predictions append-only =====
+SKIPPED
+
+===== 10 stint sample =====
+SKIPPED
+
+===== 11 team_games =====
+SKIPPED
+
+===== 12 stints mart =====
+SKIPPED
+
+===== 13 M1 unit tests + runtime =====
+SKIPPED
+
+===== 14 leakage tests =====
+SKIPPED
+
+===== 15 M1 reports =====
+SKIPPED
+
+===== 16 MLflow =====
+SKIPPED
+
+===== 17 live M1 dry run =====
+SKIPPED
+
+===== 18 build + score + publish twice =====
+SKIPPED
+
+===== 19 actionlint =====
+SKIPPED
+
+===== 20 screenshots =====
+SKIPPED
+
+===== 21 F1 shots =====
+SKIPPED
+
+===== 22 F2 free throws =====
+SKIPPED
+
+===== 23 F3/F4 models =====
+SKIPPED
+
+===== 24 F5 report =====
+SKIPPED
+
+===== 25 F6 teams =====
+SKIPPED
+
+===== 26 F7 players =====
+SKIPPED
+
+===== 27 F8 charts =====
+SKIPPED
+
+===== 28 F9 MLflow + leakage =====
+SKIPPED
+
+===== 29 F10 model card =====
+SKIPPED
+
+===== 30 no-dev build + predict =====
+SKIPPED
+
+===== 31 G5 level variants =====
+SKIPPED
+
+===== 32 G1 outcome coding =====
+SKIPPED
+
+===== 33 M3 unit tests, §3 facts =====
+93 passed in 30.67s
+1. players with stints 2011-2025: 1727 (< 5,000 for a dense posterior)
+2. ids with several spellings: 84 of 1727; names with several ids: ['SIMONOVIC, MARKO', 'YURTSEVEN, OMER']
+3. player-games of passing games within 60 s: 0.99997 of 89289 (>= 0.999)
+4. gbl 2018: 302 team box scores with the 17 H-e columns
+4. gbl 2019: 226 team box scores with the 17 H-e columns
+4. gbl 2020: 318 team box scores with the 17 H-e columns
+4. gbl 2021: 360 team box scores with the 17 H-e columns
+4. gbl 2022: 312 team box scores with the 17 H-e columns
+4. gbl 2023: 326 team box scores with the 17 H-e columns
+4. gbl 2024: 332 team box scores with the 17 H-e columns
+4. gbl 2025: 348 team box scores with the 17 H-e columns
+4. gbl 2026: 14 team box scores with the 17 H-e columns
+4. gbl box headers that differ: 0
+m3 facts: hold
+PASS
+
+===== 34 M3 leakage (RAPM, dummy, SPM, box-only, minutes, GBL) =====
+19 passed, 41 deselected in 8.90s
+PASS
+
+===== 35 backtest_m3.json + gate, two runs identical, verdict < validation < test =====
+reports/backtest_m3.json: two runs byte-identical
+reports/backtest_m3.json: equals the committed report
+  gate rapm_spm PASS -0.27147 [-0.560519, -0.001924]
+verdict b09d19a, validation e58ae3e, test 33ec255
+verdict < validation < test: yes
+PASS
+
+===== 36 backtest --model m3 runtime < 1,800 s =====
+timed by item 35 in this run
+RUNTIME 788 s (limit 1800 s)
+recorded RUNTIME 875 s
+PASS
+
+===== 37 m3.md numbers = reports; gbl_stints.json pass rates, two builds identical =====
+3 passed in 0.10s
+reports/gbl_stints.json: two builds byte-identical
+reports/gbl_stints.json: equals the committed report
+  2018 0.5567 {'five_on_court': 0.9606, 'points': 1.0, 'possessions': 0.5813}
+  2019 0.5683 {'five_on_court': 0.9928, 'points': 1.0, 'possessions': 0.5755}
+reports/backtest_m3_gbl.json: two runs byte-identical
+reports/backtest_m3_gbl.json: equals the committed report
+  m3_gbl metrics ok for ['tuning', 'validation', 'test']
+PASS
+
+===== 38 entity =====
+SKIPPED
+
+===== 39 crosswalk invariants =====
+SKIPPED
+
+===== 40 M4 units + leakage =====
+SKIPPED
+
+===== 41 M4 report =====
+SKIPPED
+
+===== 42 M4 card + entity doc =====
+SKIPPED
+
+===== 43 M5 units + facts =====
+SKIPPED
+
+===== 44 M5 leakage =====
+SKIPPED
+
+===== 45 M5 report =====
+SKIPPED
+
+===== 46 M5 runtime =====
+SKIPPED
+
+===== 47 M5 card =====
+SKIPPED
+
+===== 48 M7 units + facts =====
+SKIPPED
+
+===== 49 M7 leakage =====
+SKIPPED
+
+===== 50 M7 report =====
+SKIPPED
+
+===== 51 M7 runtime =====
+SKIPPED
+
+===== 52 simulate dry run =====
+SKIPPED
+
+===== 53 M7 card =====
+SKIPPED
+
+===== 54 M6 units + facts =====
+SKIPPED
+
+===== 55 M6 leakage =====
+SKIPPED
+
+===== 56 M6 report =====
+SKIPPED
+
+===== 57 project dry run =====
+SKIPPED
+
+===== 58 M6 runtimes =====
+SKIPPED
+
+===== 59 API =====
+SKIPPED
+
+===== 60 site + M6 card =====
+SKIPPED
+
+FAILS: 0 (end 18:18Z)
+exit=0

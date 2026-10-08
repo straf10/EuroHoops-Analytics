@@ -1,0 +1,103 @@
+---
+import { athensDay } from "../lib/format";
+import { count, plural, share, type Simulation } from "../lib/live";
+import { tip } from "../lib/tip";
+
+interface Props {
+  sim: Simulation;
+  title: string;
+  /** Source code -> [display code, name], for the clubs of this competition. */
+  clubs: Record<string, [string, string]>;
+  /** Where a club's page lives, by display code (EuroLeague clubs only). */
+  href: (code: string) => string | null;
+}
+const { sim, title, clubs, href } = Astro.props;
+const key = sim.competition;
+const euroleague = key === "euroleague";
+
+// [key, head, tooltip, value]; the EuroLeague has a play-in and a Final Four, the GBL semifinals.
+type Col = [string, string, string, (t: Simulation["teams"][number]) => number];
+const cols: Col[] = [
+  ["wins", "Wins", "Projected wins: the average over the simulations, regular season", (t) => Number(t.expected_wins)],
+  ...(euroleague
+    ? ([
+        ["direct", "Direct", "Chance of finishing in the top six, straight into the playoffs", (t) => Number(t.p_direct_playoffs)],
+        ["playin", "Play-in", "Chance of finishing seventh to tenth, in the play-in", (t) => Number(t.p_play_in)],
+      ] as Col[])
+    : []),
+  ["playoffs", "Playoffs", "Chance of reaching the playoffs", (t) => sim.p_playoffs[t.team] ?? NaN],
+  ["semis", euroleague ? "Final Four" : "Semifinals", euroleague ? "Chance of reaching the Final Four" : "Chance of reaching the semifinals", (t) => Number(t.p_final_four)],
+  ["final", "Final", "Chance of reaching the final", (t) => sim.p_final[t.team] ?? NaN],
+  ["title", "Title", "Chance of winning the title", (t) => Number(t.p_title)],
+];
+const rows = sim.teams
+  .map((t) => {
+    const [code, name] = clubs[t.team] ?? [t.team, t.team];
+    return { t, code, name, href: href(code), values: cols.map(([, , , v]) => v(t)) };
+  })
+  .sort((a, b) => b.values[0] - a.values[0] || a.name.localeCompare(b.name));
+const cell = (key: string, v: number) => (Number.isNaN(v) ? "n/a" : key === "wins" ? v.toFixed(1) : share(v));
+---
+
+<figure class="standings-fig" data-figure data-competition={key}>
+  <figcaption class="cap">
+    <h3>{title}</h3>
+    <p class="gate" data-gate={sim.gated ? "gated" : "not-gated"}>
+      <b>{sim.gated ? "Gated" : "Not gated"}</b>
+      {sim.gate.reason}
+    </p>
+    <p class="sample" data-sample>
+      {count(sim.n_sims)} simulations of the rest of the {sim.season}-{String(sim.season + 1).slice(2)} season, after round {sim.after_round}{" "}
+      <span class="when">(cut off {athensDay(sim.cutoff_utc)})</span>
+    </p>
+    <p class="how" data-interval>
+      Final place is the 10th to 90th percentile of the simulated tables (an 80% interval), with the median beside it.
+      Chances are shares of the {count(sim.n_sims)} simulations.
+    </p>
+  </figcaption>
+  <div class="scroll">
+    <table class="grid standings" id={`standings-${key}`}>
+      <caption class="sr-only">{title}, projected season from {plural(sim.n_sims, "simulation")}, not gated</caption>
+      <thead>
+        <tr>
+          <th scope="col" class="num">#</th>
+          <th scope="col" aria-sort="none"><button type="button" data-sort="name">Club</button></th>
+          {cols.map(([k, head, about], i) => (
+            <>
+              <th scope="col" class="num" aria-sort={i === 0 ? "descending" : "none"} class:list={{ on: i === 0 }}>
+                <button type="button" data-sort={k} data-tip={tip`<b>${head}</b><br>${about}`}>{head}</button>
+              </th>
+              {i === 0 && (
+                <th scope="col" class="num" aria-sort="none">
+                  <button type="button" data-sort="place" data-tip={tip`<b>Final place</b><br>10th to 90th percentile of the simulated tables, median beside it`}>Place</button>
+                </th>
+              )}
+            </>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((r, n) => (
+          <tr data-name={r.name}>
+            <td class="num muted rk">{n + 1}</td>
+            <th scope="row">
+              {r.href ? <a href={r.href}><span class="code">{r.code}</span>{r.name !== r.code ? r.name : ""}</a> : <><span class="code">{r.code}</span>{r.name !== r.code ? r.name : ""}</>}
+            </th>
+            {r.values.map((v, i) => (
+              <>
+                <td class:list={["num", { strong: i === 0 }]} data-num data-k={cols[i][0]} data-v={Number.isNaN(v) ? "" : v}>
+                  {cell(cols[i][0], v)}
+                </td>
+                {i === 0 && (
+                  <td class="num" data-interval data-num data-k="place" data-v={r.t.rank_p50}>
+                    {r.t.rank_p10}–{r.t.rank_p90} <span class="med">({r.t.rank_p50})</span>
+                  </td>
+                )}
+              </>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</figure>

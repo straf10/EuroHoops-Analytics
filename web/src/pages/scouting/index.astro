@@ -1,0 +1,84 @@
+---
+import Base from "../../layouts/Base.astro";
+import "../../styles/stats.css";
+import ScoutingBoard from "../../components/ScoutingBoard.astro";
+import ScoutingTranslation from "../../components/ScoutingTranslation.astro";
+import ScoutingUndervalued from "../../components/ScoutingUndervalued.astro";
+import { playerSlugs, scoutingData, seasonLabel } from "../../lib/m6";
+
+const { board, undervalued, translation } = await scoutingData();
+const slugs = await playerSlugs();
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const description =
+  "Who over- and under-performs what was expected, which Greek League players are undervalued, and how Greek League numbers translate to the EuroLeague.";
+---
+
+<Base title="Scouting" description={description} current="scouting">
+  <header class="wrap head">
+    <h1>Scouting</h1>
+    <p class="lede">
+      Who is doing better or worse than expected, how much of it should last, and which Greek League players the model rates above their minutes.
+    </p>
+  </header>
+
+  <section class="wrap band" id="board" aria-labelledby="board-title">
+    <header class="sec-head">
+      <h2 id="board-title">Over and under</h2>
+      <p>
+        {
+          board
+            ? `${seasonLabel(board.season)}: players against what the model expected of them, on the three things that carry over from one year to the next.`
+            : "Players against what the model expected of them."
+        }
+      </p>
+    </header>
+    {board && board.rows.length > 0 ? <ScoutingBoard board={board} slugs={slugs} base={base} /> : <p class="note">The over/under board is not available.</p>}
+  </section>
+
+  <section class="wrap band" id="undervalued" aria-labelledby="undervalued-title">
+    <header class="sec-head">
+      <h2 id="undervalued-title">Undervalued</h2>
+      <p>Young Greek League players with little playing time and a high projected impact.</p>
+    </header>
+    {
+      undervalued ? (
+        <ScoutingUndervalued data={undervalued} translationPassed={translation ? translation.gate_passed : null} />
+      ) : (
+        <p class="note">The undervalued list is not available.</p>
+      )
+    }
+  </section>
+
+  <section class="wrap band" id="translation" aria-labelledby="translation-title">
+    <header class="sec-head">
+      <h2 id="translation-title">Greek League to EuroLeague</h2>
+      <p>How the model carries a Greek League rate over to the EuroLeague, and how far to trust it.</p>
+    </header>
+    {translation ? <ScoutingTranslation data={translation} /> : <p class="note">The translation table is not available.</p>}
+  </section>
+</Base>
+
+<script>
+  // Re-sort a panel's rows on a click of a column head; the page is sorted by z on load.
+  document.addEventListener("click", (e) => {
+    const button = (e.target as Element).closest<HTMLButtonElement>("button[data-sort]");
+    const table = button?.closest<HTMLTableElement>("table.board");
+    if (!button || !table) return;
+    const th = button.closest("th")!;
+    const column = th.cellIndex;
+    const key = button.dataset.sort!;
+    const next = th.getAttribute("aria-sort") === "descending" ? "ascending" : "descending";
+    const sign = next === "descending" ? -1 : 1;
+    const body = table.tBodies[0];
+    const rows = [...body.rows];
+    const value = (row: HTMLTableRowElement) => Number(row.cells[column].dataset.v);
+    rows.sort((a, b) => sign * (value(a) - value(b)));
+    body.append(...rows);
+    for (const head of table.tHead!.rows[0].cells) {
+      head.classList.toggle("on", head === th);
+      head.setAttribute("aria-sort", head === th ? next : "none");
+    }
+    for (const row of rows) for (const [i, cell] of [...row.cells].entries()) cell.classList.toggle("on", i === column);
+    table.dataset.sorted = key;
+  });
+</script>

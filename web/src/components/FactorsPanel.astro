@@ -1,0 +1,84 @@
+---
+import { count, percent, plural, type Factors } from "../lib/live";
+import { tip } from "../lib/tip";
+
+interface Props {
+  factors: Factors | null;
+  /** The live season as the site labels it, e.g. 2026-27. */
+  label: string;
+}
+const { factors, label } = Astro.props;
+
+const rows = [
+  { key: "efg_pct", name: "Effective FG%", about: "(FGM + 0.5 × 3PM) / FGA: shooting, with threes worth more", fmt: (x: number) => percent(x) },
+  { key: "tov_pct", name: "Turnover rate", about: "Turnovers per possession; lower is better", fmt: (x: number) => percent(x) },
+  { key: "orb_pct", name: "Offensive rebound %", about: "Own offensive rebounds / (own offensive + opponent defensive rebounds)", fmt: (x: number) => percent(x) },
+  { key: "ft_rate", name: "Free-throw rate", about: "Free-throw attempts per field-goal attempt", fmt: (x: number) => x.toFixed(3) },
+] as const;
+const schedule = factors?.schedule_strength;
+---
+
+<figure class="factors" data-figure>
+  {
+    factors ? (
+      <>
+        <figcaption class="cap">
+          <h3>Four factors, {label}</h3>
+          <p data-sample>
+            {factors.games > 0 ? `From ${plural(factors.games, "game")} with a box score.` : "No game with a box score yet."}
+          </p>
+        </figcaption>
+        <div class="scroll">
+          <table class="grid factor-table">
+            <caption class="sr-only">Four factors of the {label} season, offence, from {plural(factors.games, "game")}</caption>
+            <thead>
+              <tr>
+                <th scope="col">Factor</th>
+                <th scope="col" class="num">Offence</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => {
+                const f = factors.factors[r.key];
+                return (
+                  <tr>
+                    <th scope="row">
+                      <span data-tip={tip`<b>${r.name}</b><br>${r.about}`} tabindex="0">{r.name}</span>
+                    </th>
+                    {f.value === null ? (
+                      <td class="num na">{f.reason ?? "not available"}</td>
+                    ) : (
+                      <td class="num strong" data-num>{r.fmt(f.value)}</td>
+                    )}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        <p class="note">Offence only: these are the club's own shooting, turnovers, rebounds and free throws. Opponents' are not exported yet.</p>
+        <h4>Schedule strength</h4>
+        {schedule && schedule.value !== null ? (
+          <>
+            <p class="strength">
+              Mean opponent Elo <b data-num>{schedule.value.toFixed(1)}</b>
+            </p>
+            <p class="note" data-sample>
+              Over {plural(schedule.games ?? 0, "scheduled game")}, played and remaining; {count(factors.games)} played so far with a box score.
+              Opponents are rated by the Elo published on the Forecasts page.
+            </p>
+          </>
+        ) : (
+          <p class="strength na">{schedule?.reason ?? "not available"}</p>
+        )}
+      </>
+    ) : (
+      <>
+        <figcaption class="cap">
+          <h3>Four factors, {label}</h3>
+        </figcaption>
+        <p class="note">Not available for this club yet.</p>
+      </>
+    )
+  }
+</figure>

@@ -143,6 +143,41 @@ already up to date on 2026-10-07). Orchestrator Opus 5.5; subagents Sonnet 5.5 i
   add a fourth version, and rewriting history (filter, squash, LFS migration) would change the VERDICT /
   VALIDATION / TEST shas the pre-registration proof rests on. `.gitattributes` marks
   `reports/backtest_*_players.csv` as `-diff linguist-generated` so diffs and GitHub do not render them.
+- **D22 (live checkpoint, L9):** the live block's checkpoint is the largest of {0, 0.25, 0.5, 0.75} whose
+  k = ⌊f·R⌋ regular-season rounds are complete (M7's live `completed_rounds`, R from `season_format`), so a
+  projection changes four times a season, each with the D19 scale frozen at the verdict for that checkpoint
+  (the GBL's from its own fixed-cell report). On 2026-10-08 both competitions are at 0 (EuroLeague 3 of 38
+  rounds, GBL 1 of 26): next-season projections from every season before 2026. The live set is every person
+  with a group-stage line in the live season; a newcomer without a usable season takes `min_poss` as the
+  interval's reference exposure and the `no_history` flag (103 of 403). `data_sha256` hashes the block's
+  history, targets, impact rows, drift and translation, not the schedule. No ages are read (proj_shrunk
+  does not age; the daily workflow has no bios). The live SPM needs a model fitted before 2026:
+  `el_spm_models` gained a keyword `last` (default `M3.test[-1]`, M3's outputs unchanged), the live run
+  passes the played EuroLeague games and `last = 2026`.
+- **D23 (board and comparables season):** both use the newest complete season (2025: the last with a BRAPM
+  snapshot and M2 xPTS); board stabilities from the M6 tuning seasons (2016–2022); the "plays like" pool is
+  every complete season 2007–2025 with ≥ 500 possessions, each live person's query his newest such season.
+  They do not move during the live season, need the local shot marts, and are rebuilt locally only
+  (`project` without `--projections-only`).
+- **D24 (GBL undervalued rule):** a GBL live player with ≤ 3 seasons since his debut (L-e), < 20 minutes per
+  game in his newest complete GBL season, whose projected count rates translated by M4's newest fit
+  (fg2a and pf, not projected, from that season), floored at 0, give a EuroLeague SPM (the 2026 SPM model)
+  at or above the 75th percentile of the GBL live players with ≥ 500 possessions in their newest GBL season.
+  `projected_brapm` is null (no GBL BRAPM). 3 players on 2026-10-08.
+- **D25 (crosswalk for the daily run, owner 2026-10-08):** `entity/player_xwalk.csv` (competition, source_id,
+  person_id; 3,189 rows; no names, no dates) is committed and rewritten by `eurohoops entity`; `project`
+  and the read model read it (the mart is the read model's fallback), so `daily.yml` runs
+  `project --projections-only` after `score` (a warning on failure, like M5). The backtest still reads the
+  mart (its reports stay byte-identical).
+- **D26 (`web_build.sh` fixtures, 2026-10-08):** the build always uses the `site.json` and API fixtures, so item 60
+  does not depend on whether `publish` ran; `WEB_REAL_DATA=1` keeps the real data for a review.
+- **D27 (item 10, owner 2026-10-08):** the stint validation samples completed seasons only (2015 to the season
+  before `LIVE_SEASON`): the live season's growing game list reshuffled its pool every round. Sample changed once
+  (two 2026 games replaced), still 50 games at 100% (cb416c6).
+- **D28 (items 35/37, owner 2026-10-08):** M3's `data_sha256` covers seasons up to `test[-1]` only; GBL hash
+  unchanged, EuroLeague regenerated once, every number identical (14fc9e7, `tests/test_m3_hash.py`).
+- **Checklist record (owner 2026-10-08):** the full run (HEAD 194ecd7) was stopped after item 24; split record of
+  the items this phase touched instead (see the closeout and `reports/week16-18_checklist_run.txt`).
 
 ## §3 findings (L0, real data, HEAD 6b2239b; re-checked by `scripts/checks/m6_facts.py`, item 54)
 Fixture: `tests/fixtures/m6_facts.json`.
@@ -441,6 +476,13 @@ RUNTIME m6 euroleague 161
 TEST 5efeec8
 iteration 9 | L8 GBL (fixed EuroLeague choice, gated false) | proj_shrunk@1 vs marcel: tuning -0.092705 [-0.242576, 0.063066], validation 2023 +0.363647 [-0.075924, 0.953323] (6.3149 vs 5.9513, 53 players), test +0.024464 [-0.206626, 0.235886] (6.2337 vs 6.2093); pooled coverage out of band: blk 0.868, fg3 0.882 (reported, not gated) | reported | 1c158a7
 RUNTIME m6 gbl 63
+iteration 10 | fast gate, local merge to main (12a9384, owner request); L9 live projections, board, similarity, `sim-ungated`, crosswalk file (D22-D25), daily.yml steps | fast gate FAILS 0 in 594 s (1230 passed); tests/test_live_m6.py 27 passed; m6_live.py (item 57) PASS: two dry runs same sha256, tree untouched, no age or birth date, daily.yml per gate, actionlint clean; API + player-season tests 91 passed, M3 GBL 8 passed; ruff, format, mypy, vulture clean | green | (this commit)
+RUNTIME project 48
+iteration 11 | L12 docs part 1 (m6.md + card test, CONTEXT terms, PRODUCT.md owner-approved), checklist items 54-60, L10 (H) merged | item 54 m6 facts PASS, units 170 passed + 1 failed (the CLI wiring test's el_spm_models stub missed L9's `last` keyword: fixed in 5f52b50, rerun passed); item 55 35 passed; item 59 on real data PASS (API tests 124 passed, old-vs-new byte-identical 104 stats + 966 publish files, contract clean, docker compose config valid); model card test 7 passed. Note: item 54's m6_facts.py read the marts while H was running (read-only, H has no data/); no other real-data command ran during a subagent | green | 5f52b50, merge of w16-h
+RUNTIME export 66
+iteration 12 | L11 (I, J) merged; follow-ups: live.ts reads the tested display-code map, Scouting current in the nav, item 60 runs both page scripts; web_build.sh always uses the site.json and API fixtures (WEB_REAL_DATA=1 keeps the real ones for a review: item 60 failed on a tree where publish had run, because the page scripts name fixture pages); docs/api.md; docker build | item 60 steps on the fixture build PASS (players 12/12, pages 24/24 ok, card + code-map tests 8 passed); real-data export (publish + export-stats) 139 s (965 API + 104 stats files, tree clean), real-data Astro build 69 s, real-data review run (standings, scouting, a player, a team, forecasts EL/GBL, methodology at 1440/390 light/dark) 28/28 ok, 271 player pages show M6 numbers = 271 exported EuroLeague persons; docker build OK (uvicorn 0.54.0 imports) | green | 536a690 90659bc merges b492b49 45689d1 (this commit)
+RUNTIME astro 69
+iteration 13 | full run stopped at item 24 (owner), split record; D26-D28; origin/main's daily rows merged (ff44d72); closeout | split pass A (cb416c6) 30 of 35 run items PASS (9 origin/main drift, 10 stint sample, 31 split artefact, 35/37 M3 hash drift); pass B item 9 PASS; pass C (14fc9e7) items 1-6, 33-37 FAILS 0 (M3 runtime 788 s) | green (10 green once pushed) | cb416c6 ff44d72 14fc9e7 (this commit)
 
 ## Subagent log
 | wave | subagent | deliverable | rounds | notes |
@@ -455,3 +497,6 @@ RUNTIME m6 gbl 63
 | 2 | A | D17 (round 3) | 1 | (N, D) by lag-1/lag-2 moments, memoised per freeze season |
 | 2 | B | D18 (round 3) | 1 | prior on all rows with an age effect (accepted, recorded under D18) |
 | 1 | B | L2 aging | 2 | round 1 narrowed the synthetic possession gap (1200 → 1000) after a failure (rejected); root cause: outcome-dependent weights → D10; original 1200/450 design passes unchanged; impact-stat test added |
+| 3 | H | L10 export through the API | 1 | its one failing test came from my L9 change (stub), fixed by me; memoised committed reports and the projection-list check in the read model (outside its files, accepted: behaviour-neutral, the Store docstring updated by me); `daily.yml` artifact root moved to `web/` |
+| 3b | I | L11 player card + Scouting | 2 | round 1 stopped by me at the usage limit before it wrote anything; round 2 delivered; copied DISPLAY_CODES to m6_codes.json with a drift test (outside its list, accepted); web_build.sh also copies the stats fixture |
+| 3b | J | L11 Teams, Standings, Methodology, performance, nav | 1 | hand copy of DISPLAY_CODES in live.ts replaced by me with I's tested map; only own four factors exported (no defence column); wins carry a rank interval, not a wins interval |

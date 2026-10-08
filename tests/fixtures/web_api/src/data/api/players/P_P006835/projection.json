@@ -1,0 +1,69 @@
+{
+  "model": "m6",
+  "variant": "proj_full",
+  "half_life": 2.0,
+  "gated": true,
+  "gate_passed": true,
+  "season": 2026,
+  "checkpoint": 0.0,
+  "data_sha256": "0123456789abcdef0123456789abcdef01234567",
+  "stats": [
+    "pts",
+    "fg3a",
+    "fta",
+    "ast",
+    "tov",
+    "oreb",
+    "dreb",
+    "stl",
+    "blk",
+    "ts",
+    "fg3",
+    "ft",
+    "spm",
+    "brapm"
+  ],
+  "projections": [
+    {
+      "person_id": "P:P006835",
+      "competition": "euroleague",
+      "team": "TEL",
+      "name": "Jaylen Hoard",
+      "debut_season": 2019,
+      "stats": {
+        "pts": {
+          "mean": 17.2,
+          "lo80": 12.9,
+          "hi80": 21.9
+        },
+        "ast": {
+          "mean": 2.4,
+          "lo80": 1.4,
+          "hi80": 3.6
+        },
+        "ts": {
+          "mean": 0.588,
+          "lo80": 0.541,
+          "hi80": 0.634
+        },
+        "spm": {
+          "mean": -0.4,
+          "lo80": -2.5,
+          "hi80": 1.7
+        },
+        "brapm": {
+          "mean": -0.2,
+          "lo80": -2.4,
+          "hi80": 2.0
+        }
+      },
+      "exposure": 1480.0,
+      "n_seasons": 3,
+      "flags": [
+        "translated",
+        "partial_season",
+        "no_impact_input"
+      ]
+    }
+  ]
+}

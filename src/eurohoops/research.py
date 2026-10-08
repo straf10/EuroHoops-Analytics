@@ -42,6 +42,7 @@ from eurohoops.config import (
     M5_GBL,
     M5_REST_REPORT,
     MART_PATH,
+    PLAYER_XWALK_FILE,
     SHOTS_REPORT,
 )
 from eurohoops.entity.pipeline import (
@@ -66,6 +67,7 @@ from eurohoops.eval.tracking import log_m2_backtest
 from eurohoops.ingest.bios import build_bios
 from eurohoops.logs import write_json
 from eurohoops.marts import read_games, read_table, write_tables
+from eurohoops.models.player_seasons import xwalk_file
 from eurohoops.models.translation_pairs import build_pairs, season_rates, team_net
 from eurohoops.parse.free_throws import LEVEL_CHECK, build_ft_team_games, ft_report
 from eurohoops.parse.games import write_table
@@ -396,6 +398,7 @@ def entity(
         MART_PATH,
         {"player_names": names, "player_xwalk": run.xwalk, "player_xwalk_frozen": run.xwalk_frozen},
     )
+    xwalk_file(run.xwalk).to_csv(PLAYER_XWALK_FILE, index=False, lineterminator="\n")
     report = run.report
     pos, neg = silver_set(names, bios, GREEK_EL_CLUBS)
     report["silver"] = silver_metrics(run.matches, pos, neg)

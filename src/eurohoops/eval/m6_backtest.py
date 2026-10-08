@@ -451,7 +451,7 @@ class TargetInputs:
     history: pd.DataFrame
     ages: pd.DataFrame
     impact: pd.DataFrame | None
-    curve: AgingCurve
+    curve: AgingCurve | None  # None: not fitted (a live variant that does not age)
     drift: dict[str, float]
     translation: Translation | None
     targets: pd.DataFrame
@@ -631,6 +631,25 @@ def _played_rounds(regular: pd.DataFrame) -> int:
     return int(regular.loc[regular["played"], "round"].max())
 
 
+def _cutoff(
+    inputs: M6Inputs,
+    competition: str,
+    season: int,
+    checkpoint: float,
+    rounds: Callable[[str, int], int] | None,
+) -> pd.Timestamp | None:
+    """None for a next-season target; else the first tip-off of regular-season round
+    floor(f * R) + 1 (D12)."""
+    if not 0.0 <= checkpoint < 1.0:
+        raise ValueError(f"checkpoint must be in [0, 1), not {checkpoint}")
+    if checkpoint == 0.0:
+        return None
+    games = inputs.games[competition]
+    regular = games[(games["season"] == season) & (games["phase"] == "RS")]
+    total = rounds(competition, season) if rounds else _played_rounds(regular)
+    return checkpoint_cutoff(regular, math.floor(checkpoint * total))
+
+
 def target_inputs(
     inputs: M6Inputs,
     competition: str,
@@ -644,16 +663,8 @@ def target_inputs(
     """The inputs of one target block (``checkpoint`` 0.0: next-season; else the fraction of the
     season's regular-season rounds played at the cutoff). ``world`` is ``prepare(inputs)``, passed
     to share it between calls."""
-    if not 0.0 <= checkpoint < 1.0:
-        raise ValueError(f"checkpoint must be in [0, 1), not {checkpoint}")
+    cutoff = _cutoff(inputs, competition, season, checkpoint, rounds)
     world = prepare(inputs) if world is None else world
-    cutoff = None
-    if checkpoint > 0.0:
-        games = inputs.games[competition]
-        regular = games[(games["season"] == season) & (games["phase"] == "RS")]
-        total = rounds(competition, season) if rounds else _played_rounds(regular)
-        done = math.floor(checkpoint * total)
-        cutoff = checkpoint_cutoff(regular, done)
     history = _history(world, competition, season, cutoff)
     window = _target_rows(world, competition, season, cutoff)
     prior_people = set(history.loc[history["season"] < season, "person_id"])
@@ -668,13 +679,91 @@ def target_inputs(
     translation = inputs.translations.get(season)
     if translation is None and movers.any():
         raise ValueError(f"a mover in {competition} {season} but no M4 translation for it (D5)")
+    truth = _truth(inputs, scored, competition, season, checkpoint)
+    truth.insert(2, "mover", movers)
+    return _block(
+        world,
+        competition,
+        season,
+        checkpoint,
+        cutoff=cutoff,
+        history=history,
+        people=people,
+        exposure=_exposure(history, people, season, checkpoint),
+        truth=truth,
+        translation=translation,
+        spec=spec,
+        with_curve=True,
+    )
+
+
+def live_inputs(
+    inputs: M6Inputs,
+    competition: str,
+    season: int,
+    checkpoint: float,
+    people: Sequence[str],
+    *,
+    spec: M6Backtest,
+    translation: Translation | None,
+    rounds: Callable[[str, int], int] | None = None,
+    world: World | None = None,
+    with_curve: bool = False,
+) -> TargetInputs:
+    """``target_inputs`` for a live target (weeks 16-18 L9): the same history, impact rows, drift
+    and noise for the given ``people`` instead of a scored set, and no truth. A person without
+    a usable season gets ``spec.min_poss`` as the interval's reference exposure (the scored-set
+    floor; ``project`` flags him ``no_history``). ``translation`` is M4's newest fit (D5);
+    ``with_curve`` fits the aging curve (only a variant that ages needs it, and with it the
+    ages)."""
+    cutoff = _cutoff(inputs, competition, season, checkpoint, rounds)
+    world = prepare(inputs) if world is None else world
+    history = _history(world, competition, season, cutoff)
+    ids = pd.Series(sorted(set(people)), dtype=str)
+    if ids.empty:
+        raise ValueError(f"no live players in {competition} {season}")
+    exposure = _exposure(history, ids, season, checkpoint)
+    return _block(
+        world,
+        competition,
+        season,
+        checkpoint,
+        cutoff=cutoff,
+        history=history,
+        people=ids,
+        exposure=np.where(np.isfinite(exposure), exposure, spec.min_poss),
+        truth=pd.DataFrame({"person_id": ids.to_numpy()}),
+        translation=translation,
+        spec=spec,
+        with_curve=with_curve,
+    )
+
+
+def _block(
+    world: World,
+    competition: str,
+    season: int,
+    checkpoint: float,
+    *,
+    cutoff: pd.Timestamp | None,
+    history: pd.DataFrame,
+    people: pd.Series,
+    exposure: FloatArray,
+    truth: pd.DataFrame,
+    translation: Translation | None,
+    spec: M6Backtest,
+    with_curve: bool,
+) -> TargetInputs:
+    """What every target of a block shares: the target frame, the impact rows and noise, the
+    ages, the aging curve and the drift (memoised per competition and season)."""
+    inputs = world.inputs
     targets = pd.DataFrame(
         {
             "person_id": people.to_numpy(),
             "competition": competition,
             "season": season,
             "checkpoint": checkpoint,
-            "exposure": _exposure(history, people, season, checkpoint),
+            "exposure": exposure,
         }
     )
     targets = validated(targets.astype({"season": "int64", "checkpoint": "float64"}), TARGET_SCHEMA)
@@ -691,13 +780,11 @@ def target_inputs(
         brapm = world.memo["brapm_noise", drift_before]
         impact = _impact_rows(world, history, season, unit, None if brapm is None else brapm[0])
         impact_noise = _impact_noise(unit, None if brapm is None else brapm[0])
-    truth = _truth(inputs, scored, competition, season, checkpoint)
-    truth.insert(2, "mover", movers)
     ages = inputs.ages.merge(
         history[["person_id", "season"]].drop_duplicates(), on=["person_id", "season"]
     )
     memo = world.memo
-    if ("curve", competition, season) not in memo:
+    if with_curve and ("curve", competition, season) not in memo:
         memo["curve", competition, season] = aging_curve(history, ages, season, impact=impact)
     if ("drift", competition, season, drift_before) not in memo:
         drift = fit_drift(history, drift_before, impact)
@@ -713,7 +800,7 @@ def target_inputs(
         history=history,
         ages=ages,
         impact=impact,
-        curve=memo["curve", competition, season],
+        curve=memo.get(("curve", competition, season)),
         drift=memo["drift", competition, season, drift_before],
         translation=translation,
         targets=targets,
@@ -735,10 +822,16 @@ def project_cell(ti: TargetInputs, variant: str, half_life: float) -> pd.DataFra
         drift=ti.drift,
         impact=ti.impact,
         ages=ti.ages,
-        aging=partial(apply, ti.curve) if params.aging else None,
+        aging=_aging(ti) if params.aging else None,
         translation=ti.translation,
         impact_noise=ti.impact_noise,
     )
+
+
+def _aging(ti: TargetInputs) -> Callable[[str, FloatArray, FloatArray], FloatArray]:
+    if ti.curve is None:
+        raise ValueError(f"{ti.competition} {ti.season}: a variant that ages needs the aging curve")
+    return partial(apply, ti.curve)
 
 
 def _stat_rows(ti: TargetInputs, rates: pd.DataFrame, stat: str) -> pd.DataFrame:
@@ -930,18 +1023,25 @@ def variance_scale(rows: pd.DataFrame) -> dict[str, float]:
     return {str(stat): float(v) for stat, v in z2[ok].groupby(rows.loc[ok, "stat"]).mean().items()}
 
 
-def rescale(rows: pd.DataFrame, scale: Mapping[str, float], interval: float) -> pd.DataFrame:
+def scale_intervals(
+    rows: pd.DataFrame, scale: Mapping[str, float], interval: float
+) -> pd.DataFrame:
     """D19: multiply each row's predictive sd by ``sqrt(scale[stat])`` (1 if absent) and recompute
     lo80 / hi80 as the Normal quantiles about the unchanged mean (clipped at 0 below except for
-    the impact stats, as ``project`` does), then ``covered`` and ``crps``. Means, errors and so
-    the projection loss are untouched."""
+    the impact stats, as ``project`` does). Means are untouched."""
     z = float(special.ndtri(0.5 + interval / 2.0))
     factor = np.sqrt(rows["stat"].map(scale).fillna(1.0).to_numpy(dtype=np.float64))
     sd = rows["sd"].to_numpy(dtype=np.float64) * factor
     mean = rows["mean"].to_numpy(dtype=np.float64)
     low = mean - z * sd
     low = np.where(rows["stat"].isin(IMPACT_STATS).to_numpy(), low, np.maximum(low, 0.0))
-    return _interval_scores(rows.assign(sd=sd, lo80=low, hi80=mean + z * sd))
+    return rows.assign(sd=sd, lo80=low, hi80=mean + z * sd)
+
+
+def rescale(rows: pd.DataFrame, scale: Mapping[str, float], interval: float) -> pd.DataFrame:
+    """``scale_intervals``, then ``covered`` and ``crps`` from the scaled sd. Means, errors and
+    so the projection loss are untouched."""
+    return _interval_scores(scale_intervals(rows, scale, interval))
 
 
 def player_losses(rows: pd.DataFrame) -> pd.DataFrame:
