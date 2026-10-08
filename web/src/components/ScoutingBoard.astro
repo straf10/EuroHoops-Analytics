@@ -1,0 +1,165 @@
+---
+// The over/under board: who shoots (or rates) above or below what was expected, how sure that is
+// (z), the sample behind it, and how much of the gap is expected to last. One panel per dimension.
+import {
+  COMPETITIONS,
+  DIMENSIONS,
+  LABEL_WORDS,
+  boardNumber,
+  displayCode,
+  fixed,
+  thousands,
+  type Board,
+} from "../lib/m6";
+import { signed } from "../lib/format";
+import { tip } from "../lib/tip";
+
+interface Props {
+  board: Board;
+  slugs: Record<string, string>;
+  base: string;
+}
+const { board, slugs, base } = Astro.props;
+const dims = DIMENSIONS.filter((d) => board.dimensions[d.key]);
+const leagues = [...new Set(board.rows.map((r) => r.competition))];
+const pos = (z: number) => 50 + (50 * Math.max(-4, Math.min(4, z))) / 4;
+const HEADS = [
+  { key: "z", head: "z", about: "The gap in standard errors: how far from chance the gap is" },
+  { key: "gap", head: "Gap", about: "Observed minus expected" },
+  { key: "observed", head: "Observed", about: "What he did" },
+  { key: "expected", head: "Expected", about: "What the model expected of him" },
+  { key: "n", head: "n", about: "The sample behind the row" },
+  { key: "persist", head: "Lasts", about: "The share of the gap expected to last into next season" },
+  { key: "next", head: "Next", about: "Expected next season: expected plus the share of the gap that lasts" },
+];
+---
+
+<div class="board-wrap">
+<div class="board-controls filters">
+  <fieldset class="field">
+    <legend>Dimension</legend>
+    <div class="seg" role="radiogroup" aria-label="Dimension">
+      {
+        dims.map((d, i) => (
+          <label>
+            <input type="radio" name="dim" value={d.key} checked={i === 0} />
+            {d.title}
+          </label>
+        ))
+      }
+    </div>
+  </fieldset>
+  {
+    leagues.length > 1 && (
+      <fieldset class="field">
+        <legend>League</legend>
+        <div class="seg" role="radiogroup" aria-label="League">
+          <label>
+            <input type="radio" name="league" value="all" checked />
+            Both
+          </label>
+          {leagues.map((c) => (
+            <label>
+              <input type="radio" name="league" value={c} />
+              {COMPETITIONS[c] ?? c}
+            </label>
+          ))}
+        </div>
+      </fieldset>
+    )
+  }
+</div>
+
+{
+  dims.map((d) => {
+    const meta = board.dimensions[d.key];
+    const rows = board.rows.filter((r) => r.dimension === d.key).sort((a, b) => b.z - a.z);
+    return (
+      <figure class="m6-fig board-panel" data-figure data-panel={d.key}>
+        <figcaption>
+          <h3>{d.title}</h3>
+          <p class="m6-sub">{d.about} Observed and expected in {d.unit}.</p>
+          <p class="m6-facts">
+            Stability: a player's gap this season correlates <span data-num>{fixed(meta.stability, 2)}</span> with his gap the next
+            {meta.pairs ? <span data-sample> (over {meta.pairs} player pairs)</span> : null}. A gap measured on n {d.nUnit} is expected to
+            keep n / (n + {thousands(meta.k)}) of itself. A label needs at least <span data-sample>{thousands(meta.n_min)} {d.nUnit}</span>.
+          </p>
+        </figcaption>
+        <div class="cols-wrap">
+          <fieldset class="seg cols" aria-label="Columns">
+            <label>
+              <input type="radio" name={`cols-${d.key}`} checked />
+              Gap
+            </label>
+            <label>
+              <input type="radio" name={`cols-${d.key}`} />
+              Lasting
+            </label>
+          </fieldset>
+          <div class="scroll tall">
+            <table class="grid board" data-sorted="z">
+              <caption class="sr-only">{d.title}, one row per player, {d.unit}</caption>
+              <thead>
+                <tr>
+                  <th scope="col" class="c-nm">Player</th>
+                  {HEADS.map((h) => (
+                    <th scope="col" class:list={["num", { on: h.key === "z" }]} aria-sort={h.key === "z" ? "descending" : "none"}>
+                      <button type="button" data-sort={h.key} data-tip={tip`<b>${h.head}</b><br>${h.about}`}>
+                        {h.head}
+                      </button>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r) => {
+                  const slug = r.competition === "euroleague" ? slugs[r.person_id] : undefined;
+                  return (
+                    <tr data-comp={r.competition}>
+                      <th scope="row" class="c-nm">
+                        {slug ? <a href={`${base}/players/${slug}/`}>{r.name}</a> : r.name}
+                        <small>
+                          {displayCode(r.competition, r.team)}, {COMPETITIONS[r.competition] ?? r.competition}
+                        </small>
+                        <span class:list={["m6-chip", r.label.replaceAll(" ", "-")]}>{LABEL_WORDS[r.label] ?? r.label}</span>
+                      </th>
+                      <td class="num on" data-v={r.z}>
+                        <span class="zrail" aria-hidden="true" style={`--x:${pos(r.z).toFixed(1)}`}>
+                          <i class:list={{ below: r.z < 0 }} />
+                        </span>
+                        <span data-num>{signed(r.z, 2)}</span>
+                      </td>
+                      <td class="num" data-v={r.gap}>
+                        <span data-num>{boardNumber(d, r.gap, true)}</span>
+                      </td>
+                      <td class="num" data-v={r.observed}>
+                        <span data-num>{boardNumber(d, r.observed)}</span>
+                      </td>
+                      <td class="num" data-v={r.expected}>
+                        <span data-num>{boardNumber(d, r.expected)}</span>
+                      </td>
+                      <td class="num" data-v={r.n}>
+                        <span data-sample>{thousands(r.n)}</span>
+                      </td>
+                      <td class="num" data-v={r.persist}>
+                        <span data-num>{Math.round(100 * r.persist)}%</span>
+                      </td>
+                      <td class="num" data-v={r.expected_next}>
+                        <span data-num>{boardNumber(d, r.expected_next)}</span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <p class="note">
+          {rows.length} players. Sorted by z; click a head to re-sort. z is the gap over its standard error; with |z| of 1.645 or
+          more and at least half the gap expected to last, a gap is labelled likely real, otherwise likely regression.
+        </p>
+      </figure>
+    );
+  })
+}
+</div>

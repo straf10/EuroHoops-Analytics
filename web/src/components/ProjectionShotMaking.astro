@@ -1,0 +1,34 @@
+---
+// Shot-making: M2's points above expected per 100 field-goal attempts, by season, with its 90%
+// interval and the attempts behind it.
+import ProjectionRail, { type RailRow } from "./ProjectionRail.astro";
+import { seasonLabel, thousands, type PlayerIndex } from "../lib/m6";
+
+interface Props {
+  index: PlayerIndex | null;
+}
+const { index } = Astro.props;
+const rows: RailRow[] = [...(index?.shot_making?.seasons ?? [])].reverse().slice(0, 6).map((s) => ({
+  label: seasonLabel(s.season),
+  value: s.shot_making,
+  lo: s.ci90[0],
+  hi: s.ci90[1],
+  level: "90% interval",
+  sample: `${thousands(s.fga)} field-goal attempts`,
+}));
+---
+
+{
+  rows.length > 0 ? (
+    <figure class="m6-fig" data-figure>
+      <figcaption>
+        <h3>Shot-making</h3>
+        <p class="m6-sub">Points per 100 field-goal attempts above what each shot's place and type predict (M2), pulled toward zero on small samples.</p>
+      </figcaption>
+      <ProjectionRail rows={rows} />
+      <p class="m6-facts">A season measured on few attempts has a wide interval and stays near zero. Measured, not forecast.</p>
+    </figure>
+  ) : (
+    <p class="note">No shot-making rating for this player: too few located EuroLeague attempts.</p>
+  )
+}

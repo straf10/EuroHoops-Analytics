@@ -1,0 +1,70 @@
+{
+  "model": "m6",
+  "season": 2025,
+  "person_id": "P:P013382",
+  "features": {
+    "euroleague": [
+      "rim",
+      "mid",
+      "three",
+      "shot_making"
+    ],
+    "gbl": [
+      "rim",
+      "mid",
+      "three"
+    ]
+  },
+  "pool_seasons": [
+    2023,
+    2024,
+    2025
+  ],
+  "similar": [
+    {
+      "rank": 1,
+      "person_id": "P:P006835",
+      "competition": "euroleague",
+      "season": 2024,
+      "name": "Jaylen Hoard",
+      "score": 0.93,
+      "query_season": 2025
+    },
+    {
+      "rank": 2,
+      "person_id": "P:P011987",
+      "competition": "euroleague",
+      "season": 2024,
+      "name": "Carsen Edwards",
+      "score": 0.91,
+      "query_season": 2025
+    },
+    {
+      "rank": 3,
+      "person_id": "G:ABCD1234",
+      "competition": "gbl",
+      "season": 2025,
+      "name": "Nikos Papas",
+      "score": 0.88,
+      "query_season": 2025
+    },
+    {
+      "rank": 4,
+      "person_id": "P:P003469",
+      "competition": "euroleague",
+      "season": 2023,
+      "name": "Sasha Vezenkov",
+      "score": 0.86,
+      "query_season": 2025
+    },
+    {
+      "rank": 5,
+      "person_id": "P:P012640",
+      "competition": "euroleague",
+      "season": 2025,
+      "name": "Nadir Hifi",
+      "score": 0.84,
+      "query_season": 2025
+    }
+  ]
+}

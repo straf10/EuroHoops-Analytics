@@ -9,6 +9,11 @@ import { SEASON_COLS, bandsHtml, logHtml, perGame, shotChart, totalsOf, ts, type
 import { meta, playerData, playerIndex, twinData, type PlayerIndexRow } from "../../lib/stats";
 import { tip } from "../../lib/tip";
 import ShotTwin from "../../components/ShotTwin.astro";
+import Comparables from "../../components/Comparables.astro";
+import ProjectionBlock from "../../components/ProjectionBlock.astro";
+import ProjectionImpact from "../../components/ProjectionImpact.astro";
+import ProjectionShotMaking from "../../components/ProjectionShotMaking.astro";
+import { playerM6, playerSlugs } from "../../lib/m6";
 import { GROUPS, colsHtml } from "../../lib/cols";
 
 export async function getStaticPaths() {
@@ -19,6 +24,8 @@ const { p } = Astro.props as { p: PlayerIndexRow };
 const m = (await meta())!;
 const data = await playerData(p);
 const twins = await twinData(p.id);
+const m6 = await playerM6(p.id);
+const slugs = await playerSlugs();
 const seasons = data.seasons;
 const latest = seasons[seasons.length - 1];
 const withShots = seasons.filter((s) => s.hex.length > 0);
@@ -122,6 +129,26 @@ const seasonOptions = (list: typeof seasons, chosen: number) =>
     </div>
   </section>
 
+  <section class="wrap band" id="projection" aria-labelledby="projection-title">
+    <header class="sec-head">
+      <h2 id="projection-title">Projection and impact</h2>
+      <p>What the M6 model expects next season, how much he moves the score, and how well he shoots against his shot mix.</p>
+    </header>
+    {
+      m6.projection || m6.index ? (
+        <>
+          <ProjectionBlock report={m6.projection} />
+          <div class="m6-pair">
+            <ProjectionImpact report={m6.projection} index={m6.index} />
+            <ProjectionShotMaking index={m6.index} />
+          </div>
+        </>
+      ) : (
+        <p class="note">No M6 projection, impact rating or shot-making rating is published for this player.</p>
+      )
+    }
+  </section>
+
   <section class="wrap band" id="shots" aria-labelledby="shots-title" data-slug={data.slug} data-base={base} data-radius={radius}>
     <header class="sec-head split">
       <div>
@@ -213,6 +240,8 @@ const seasonOptions = (list: typeof seasons, chosen: number) =>
   </section>
 
   <ShotTwin data={twins} name={data.name} base={base} />
+
+  <Comparables report={m6.similar} name={data.name} slugs={slugs} base={base} />
 
   <section class="wrap band" id="log" aria-labelledby="log-title">
     <header class="sec-head split">

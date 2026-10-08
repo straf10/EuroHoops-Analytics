@@ -1,0 +1,62 @@
+{
+  "model": "m6",
+  "variant": "proj_full",
+  "half_life": 2.0,
+  "gated": true,
+  "gate_passed": true,
+  "season": 2026,
+  "checkpoint": 0.0,
+  "data_sha256": "0123456789abcdef0123456789abcdef01234567",
+  "stats": [
+    "pts",
+    "fg3a",
+    "fta",
+    "ast",
+    "tov",
+    "oreb",
+    "dreb",
+    "stl",
+    "blk",
+    "ts",
+    "fg3",
+    "ft",
+    "spm",
+    "brapm"
+  ],
+  "projections": [
+    {
+      "person_id": "P:P013389",
+      "competition": "euroleague",
+      "team": "TEL",
+      "name": "Saben Lee",
+      "debut_season": 2026,
+      "stats": {
+        "pts": {
+          "mean": 15.0,
+          "lo80": 8.6,
+          "hi80": 22.1
+        },
+        "ast": {
+          "mean": 3.0,
+          "lo80": 1.4,
+          "hi80": 5.2
+        },
+        "ts": {
+          "mean": 0.545,
+          "lo80": 0.47,
+          "hi80": 0.62
+        },
+        "spm": {
+          "mean": -1.0,
+          "lo80": -4.1,
+          "hi80": 2.2
+        }
+      },
+      "exposure": 0.0,
+      "n_seasons": 0,
+      "flags": [
+        "no_history"
+      ]
+    }
+  ]
+}
