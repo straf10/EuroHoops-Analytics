@@ -2,6 +2,8 @@
 // simulation, the live scorecards and a team's four factors. Every file may be absent (a fresh
 // checkout, a route that answered 404): each loader then gives null and the page says so.
 
+import codes from "./m6_codes.json";
+
 export interface SimTeam {
   team: string;
   expected_wins: string | number;
@@ -113,39 +115,9 @@ export async function liveScorecard(competition: string): Promise<LiveScorecard 
   };
 }
 
-// Display codes (what the site shows) by source code; a copy of publish.py's DISPLAY_CODES.
-// The API files are keyed by source code, the stats and site files by display code: keep in step.
-const DISPLAY: Record<string, Record<string, string>> = {
-  euroleague: {
-    BAS: "KBA",
-    TEL: "MTA",
-    PAN: "PAO",
-    ULK: "FBT",
-    RED: "CZV",
-    IST: "EFS",
-    PAM: "VBC",
-    MUN: "BAY",
-    PRS: "PBB",
-    BES: "BJK",
-    MAD: "RMB",
-  },
-  gbl: {
-    "00000001": "PAO",
-    "00000002": "OLY",
-    "00000005": "ARI",
-    "0000000A": "KOL",
-    "0000000C": "PAOK",
-    "0000000D": "PER",
-    "0000000F": "MAR",
-    "00000010": "AEK",
-    "00000011": "IRA",
-    "0041ADCB": "FAL",
-    "2A25C696": "PRO",
-    "3CA10C07": "DOX",
-    B742845D: "KAR",
-    BB4B460F: "MYK",
-  },
-};
+// Display codes (what the site shows) by source code: publish.py's DISPLAY_CODES, the copy
+// tests/test_web_m6_codes.py keeps in step. API files use source codes, stats and site files display codes.
+const DISPLAY: Record<string, Record<string, string>> = codes;
 
 export const displayCode = (competition: string, source: string) => DISPLAY[competition]?.[source] ?? source;
 

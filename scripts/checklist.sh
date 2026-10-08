@@ -209,7 +209,7 @@ skip 59 "API" || {
 }
 skip 60 "site + M6 card" || {
   item "60 site: web build, M6 page screenshots 1440/390 light/dark, sample/interval DOM check, no console errors; m6.md numbers = reports; CONTEXT terms"
-  (bash "$CHECKS/web_build.sh" >/dev/null 2>&1     && uv run --with playwright python "$CHECKS/screenshots_m6.py" "$SCRATCH/web/site" reports/screenshots     && uv run pytest -q -p no:cacheprovider tests/test_model_card_m6.py 2>&1 | tail -1)
+  (bash "$CHECKS/web_build.sh" >/dev/null 2>&1     && uv run --with playwright python "$CHECKS/screenshots_m6_players.py" "$SCRATCH/web/site" "$SCRATCH/shots_m6"     && uv run --with playwright python "$CHECKS/screenshots_m6_pages.py" "$SCRATCH/web/site" "$SCRATCH/shots_m6"     && uv run pytest -q -p no:cacheprovider tests/test_model_card_m6.py tests/test_web_m6_codes.py 2>&1 | tail -1)
   res $?
 }
 echo; echo "FAILS: $fails (end $(date -u +%H:%MZ))"; exit "$fails"
