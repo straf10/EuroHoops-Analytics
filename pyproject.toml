@@ -72,6 +72,9 @@ python_version = "3.12"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "--strict-markers"
+markers = [
+    "slow: heavy leakage/backtest tests; CI skips them on plain pushes that leave model code alone",
+]
 pythonpath = ["."]
 
 [tool.coverage.run]

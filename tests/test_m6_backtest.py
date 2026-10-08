@@ -59,6 +59,9 @@ from eurohoops.models.projection import VARIANTS
 from eurohoops.models.spm import SpmModel
 from tests.m6_synthetic import build_inputs, small_spec, synthetic_rounds
 
+# Heavy (whole synthetic leagues per test): CI runs it on PRs, nightly and model changes.
+pytestmark = pytest.mark.slow
+
 SPEC = small_spec()
 FIXTURES = Path(__file__).parent / "fixtures" / "m6"
 COMPETITION = "euroleague"

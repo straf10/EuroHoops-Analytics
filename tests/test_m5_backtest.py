@@ -37,6 +37,9 @@ from eurohoops.eval.m5_backtest import (
 )
 from tests.m5_synthetic import build_inputs, fake_player_part, small_spec
 
+# Heavy (whole synthetic leagues per test): CI runs it on PRs, nightly and model changes.
+pytestmark = pytest.mark.slow
+
 SPEC = small_spec()
 REPO = Path(__file__).parent.parent
 ORDER_SCRIPT = REPO / "scripts" / "checks" / "m5_order.py"

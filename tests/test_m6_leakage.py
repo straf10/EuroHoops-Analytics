@@ -60,6 +60,9 @@ from eurohoops.models.player_seasons import COUNT_COLUMNS, rate_table
 from eurohoops.models.similarity import embed, neighbours, raw_features
 from tests.m6_synthetic import build_inputs, small_spec, synthetic_rounds
 
+# Heavy (whole synthetic leagues per test): CI runs it on PRs, nightly and model changes.
+pytestmark = pytest.mark.slow
+
 # Tuning 2015-16, validation 2017, test 2018-19; first tuning season 2015. The possessions floor of
 # the scored set is lowered to 1 (a truth-side filter on the target window): a deletion would
 # otherwise shrink the scored set, and the checks compare whole frames of the same players.

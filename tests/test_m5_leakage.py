@@ -38,6 +38,9 @@ from eurohoops.parse.games import conform
 from tests.conftest import make_team_games
 from tests.m5_synthetic import build_inputs, fake_player_part, small_spec
 
+# Heavy (whole synthetic leagues per test): CI runs it on PRs, nightly and model changes.
+pytestmark = pytest.mark.slow
+
 SPEC = small_spec()
 SEED = 0
 
