@@ -426,6 +426,9 @@ iteration 5 | tuning attempts 1-2 (no verdict; recorded), D15 group stages (3ed1
 iteration 6 | L8 tuning (attempt 4, HEAD 536fe17 with D17-D20) and verdict | tuning-only run: report and CSV hold tuning rows only (202,732 CSV rows, no 2023-2025 key), validation_scored false, test_scored false; chosen proj_shrunk@1 (6.090287; @0.5 6.2493, @2 6.0924, @3 6.1302; marcel 6.1902, same_as_last 10.1897, league_mean 13.6611), on_edge false after D20 | green | ab8264b
 RUNTIME m6 euroleague 126
 VERDICT ab8264b
+iteration 7 | L8 validation 2023 scored once | gate PASS (point rule): proj_shrunk@1 5.39813 vs marcel 5.418873 (diff -0.020743, 95% CI [-0.166008, 0.139934]: a tie in CI terms) and same_as_last 8.512821 (diff -3.114691, CI [-4.066925, -2.178728]); coverage pooled 0.794-0.843, validation-only 0.774-0.854, all 14 stats in 0.75-0.85; 164 scored players | green | 00cc78c
+RUNTIME m6 euroleague 137
+VALIDATION 00cc78c
 
 ## Subagent log
 | wave | subagent | deliverable | rounds | notes |
