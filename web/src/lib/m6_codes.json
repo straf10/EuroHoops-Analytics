@@ -1,0 +1,31 @@
+{
+  "euroleague": {
+    "BAS": "KBA",
+    "TEL": "MTA",
+    "PAN": "PAO",
+    "ULK": "FBT",
+    "RED": "CZV",
+    "IST": "EFS",
+    "PAM": "VBC",
+    "MUN": "BAY",
+    "PRS": "PBB",
+    "BES": "BJK",
+    "MAD": "RMB"
+  },
+  "gbl": {
+    "00000001": "PAO",
+    "00000002": "OLY",
+    "00000005": "ARI",
+    "0000000A": "KOL",
+    "0000000C": "PAOK",
+    "0000000D": "PER",
+    "0000000F": "MAR",
+    "00000010": "AEK",
+    "00000011": "IRA",
+    "0041ADCB": "FAL",
+    "2A25C696": "PRO",
+    "3CA10C07": "DOX",
+    "B742845D": "KAR",
+    "BB4B460F": "MYK"
+  }
+}

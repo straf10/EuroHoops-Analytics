@@ -1,0 +1,51 @@
+---
+// Impact: the projected SPM and BRAPM (80% interval) above the player's past M3 ratings by season
+// (RAPM with an SPM prior, 90% interval), all as points per 100 possessions against an average player.
+import ProjectionRail, { type RailRow } from "./ProjectionRail.astro";
+import { gateWords, seasonLabel, thousands, type PlayerIndex, type ProjectionReport } from "../lib/m6";
+
+interface Props {
+  report: ProjectionReport | null;
+  index: PlayerIndex | null;
+}
+const { report, index } = Astro.props;
+const row = report?.projections[0];
+const rows: RailRow[] = [];
+if (report && row) {
+  const history = `${thousands(row.exposure)} possessions of history, ${row.n_seasons} season${row.n_seasons === 1 ? "" : "s"}`;
+  for (const [key, label] of [["spm", "SPM"], ["brapm", "BRAPM"]] as const) {
+    const b = row.stats[key];
+    if (b) rows.push({ label: `${label}, ${seasonLabel(report.season)} projection`, value: b.mean, lo: b.lo80, hi: b.hi80, level: "80% interval", sample: history });
+  }
+}
+const past = [...(index?.impact?.seasons ?? [])].reverse().slice(0, 6);
+for (const s of past) {
+  rows.push({
+    label: `${seasonLabel(s.season)} rating`,
+    value: s.total,
+    lo: s.ci90_total[0],
+    hi: s.ci90_total[1],
+    level: "90% interval",
+    sample: `${thousands(s.minutes)} minutes, ${s.games} games`,
+  });
+}
+---
+
+{
+  rows.length > 0 ? (
+    <figure class="m6-fig" data-figure>
+      <figcaption>
+        <h3>Impact</h3>
+        <p class="m6-sub">Net points per 100 possessions against an average player, offence plus defence. Dashed line: average.</p>
+      </figcaption>
+      <ProjectionRail rows={rows} />
+      <p class="m6-facts">
+        Past ratings are M3 (regularised adjusted plus-minus with a box-score prior), measured on stints, not forecast.
+        Projections are SPM (box-score impact) and BRAPM (adjusted plus-minus), each with its interval.
+        {report && ` ${gateWords(report)}`}
+      </p>
+    </figure>
+  ) : (
+    <p class="note">No impact rating or projection for this player.</p>
+  )
+}

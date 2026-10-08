@@ -1,0 +1,64 @@
+{
+  "model": "m6",
+  "variant": "proj_full",
+  "gated": true,
+  "gate_passed": true,
+  "season": 2026,
+  "checkpoint": 0.0,
+  "undervalued": [
+    {
+      "person_id": "G:ABCD1234",
+      "team": "00000005",
+      "name": "Nikos Papas",
+      "seasons_since_debut": 2,
+      "minutes": 17.4,
+      "projected_brapm": null,
+      "projected_spm": 1.5,
+      "translated_el": {
+        "pts": 16.2,
+        "fg3a": 6.4,
+        "fta": 4.1,
+        "ast": 3.1,
+        "oreb": 2.4,
+        "dreb": 6.1
+      },
+      "reason": "translated EuroLeague SPM +1.5 (GBL rotation top quarter: >= -0.6) at 17.4 minutes per game in 2025, 2 season(s) since his debut"
+    },
+    {
+      "person_id": "G:EFGH5678",
+      "team": "00000002",
+      "name": "Giorgos Nikou",
+      "seasons_since_debut": 3,
+      "minutes": 14.8,
+      "projected_brapm": null,
+      "projected_spm": 0.9,
+      "translated_el": {
+        "pts": 14.1,
+        "fg3a": 5.0,
+        "fta": 3.6,
+        "ast": 2.2,
+        "oreb": 1.9,
+        "dreb": 5.2
+      },
+      "reason": "translated EuroLeague SPM +0.9 (GBL rotation top quarter: >= -0.6) at 14.8 minutes per game in 2025, 3 season(s) since his debut"
+    },
+    {
+      "person_id": "G:MNOP3456",
+      "team": "3CA10C07",
+      "name": "Stelios Rigas",
+      "seasons_since_debut": 1,
+      "minutes": 11.2,
+      "projected_brapm": null,
+      "projected_spm": 0.4,
+      "translated_el": {
+        "pts": 11.8,
+        "fg3a": 3.1,
+        "fta": 3.0,
+        "ast": 1.7,
+        "oreb": 3.0,
+        "dreb": 7.0
+      },
+      "reason": "translated EuroLeague SPM +0.4 (GBL rotation top quarter: >= -0.6) at 11.2 minutes per game in 2025, 1 season(s) since his debut"
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+---
+// The player card's M6 projection: each stat of the next season with its 80% interval and the
+// exposure behind it, the model's gate verdict and the flags in words.
+import { FLAGS, PROJECTED, fixed, gateWords, percent, seasonLabel, thousands, type ProjectionReport } from "../lib/m6";
+import { tip } from "../lib/tip";
+
+interface Props {
+  report: ProjectionReport | null;
+}
+const { report } = Astro.props;
+const row = report?.projections[0];
+const shown = row ? PROJECTED.filter((s) => row.stats[s.key]) : [];
+const show = (key: string, x: number) => (PROJECTED.find((s) => s.key === key)?.pct ? percent(x) : fixed(x));
+---
+
+{
+  report && row ? (
+    <figure class="m6-fig" data-figure>
+      <figcaption>
+        <h3>{seasonLabel(report.season)} projection</h3>
+        <p class="m6-sub">Rates per 100 possessions, shooting as percentages. The interval holds the player's rate 4 times in 5.</p>
+      </figcaption>
+      <div class="scroll">
+        <table class="grid m6-proj">
+          <caption class="sr-only">{seasonLabel(report.season)} projection with its 80% interval</caption>
+          <thead>
+            <tr>
+              <th scope="col">Stat</th>
+              <th scope="col" class="num">
+                <span data-tip={tip`<b>Projected</b><br>The model's central estimate`} tabindex="0">Projected</span>
+              </th>
+              <th scope="col" class="num">
+                <span data-tip={tip`<b>80% interval</b><br>The player's rate falls inside it 4 times in 5, if the model is calibrated`} tabindex="0">
+                  80% interval
+                </span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {shown.map((s) => {
+              const b = row.stats[s.key];
+              return (
+                <tr>
+                  <th scope="row">
+                    {s.label}
+                    <small>{s.unit}</small>
+                  </th>
+                  <td class="num strong">
+                    <span data-num>{show(s.key, b.mean)}</span>
+                  </td>
+                  <td class="num">
+                    <span data-interval>
+                      <span data-num>{show(s.key, b.lo80)}</span> to <span data-num>{show(s.key, b.hi80)}</span>
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <p class="m6-facts" data-sample>
+        {
+          row.n_seasons > 0
+            ? `Built from ${thousands(row.exposure)} possessions of history (decayed: older seasons count for less, half-life ${report.half_life} season${report.half_life === 1 ? "" : "s"}) over ${row.n_seasons} season${row.n_seasons === 1 ? "" : "s"}.`
+            : "No past season behind it: 0 possessions of history."
+        }
+      </p>
+      <p class="m6-facts">
+        {report.model.toUpperCase()}, variant {report.variant}. {gateWords(report)}
+      </p>
+      {
+        row.flags.length > 0 && (
+          <ul class="m6-flags">
+            {row.flags.map((f) => (
+              <li>{FLAGS[f] ?? f}</li>
+            ))}
+          </ul>
+        )
+      }
+    </figure>
+  ) : (
+    <p class="note">No M6 projection for this player: he is not in the projected set.</p>
+  )
+}
