@@ -942,3 +942,180 @@ button.s-rank[aria-expanded="true"]::after {
     white-space: normal;
   }
 }
+
+/* Live pages (weeks 16-18 J) */
+.standings-fig {
+  margin: 0;
+}
+.standings-fig .cap {
+  margin-bottom: 20px;
+}
+.standings-fig .cap h3 {
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--rule-strong);
+  font-size: 1rem;
+  font-weight: 600;
+}
+.standings-fig .cap p {
+  margin-top: 8px;
+  max-width: 72ch;
+  color: var(--ink-2);
+  font-size: 0.875rem;
+}
+.standings-fig .cap .gate b {
+  margin-right: 6px;
+  padding: 1px 8px;
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  color: var(--ink);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.standings-fig .cap .how,
+.standings-fig .cap .when {
+  color: var(--muted);
+}
+.standings .code {
+  display: inline-block;
+  width: 3.25em;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+.standings td.strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+.standings .med {
+  color: var(--muted);
+}
+.standings thead button {
+  width: 100%;
+  padding: 8px 0 8px 10px;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: right;
+  cursor: pointer;
+}
+.standings thead th:nth-child(2) button {
+  padding-left: 0;
+  text-align: left;
+}
+.standings thead th.on,
+.standings thead th[aria-sort="ascending"],
+.standings thead th[aria-sort="descending"] {
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: inset 0 -2px 0 var(--ink);
+}
+.standings thead button:focus-visible {
+  outline: 2px solid var(--data-1);
+  outline-offset: 2px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .standings thead button:hover {
+    color: var(--ink);
+  }
+}
+.factors {
+  margin: 0;
+  max-width: 560px;
+}
+.factors .cap {
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--rule-strong);
+}
+.factors .cap h3 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+.factors .cap p {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+.factors .factor-table thead th {
+  padding-top: 12px;
+}
+.factors td.strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+.factors td.na,
+.factors .strength.na {
+  color: var(--muted);
+  font-size: 0.8125rem;
+  white-space: normal;
+}
+.factors h4 {
+  margin-top: 28px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--rule-strong);
+  font-size: 1rem;
+  font-weight: 600;
+}
+.factors .strength {
+  margin-top: 12px;
+  color: var(--ink-2);
+  font-size: 0.9375rem;
+}
+.factors .strength b {
+  color: var(--ink);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.models {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.models li {
+  display: grid;
+  grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+  gap: 4px 40px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.models h3 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+.models h3 a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--rule-strong);
+  text-underline-offset: 3px;
+}
+.models .id {
+  display: inline-block;
+  width: 2.5em;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.models li > p {
+  max-width: 64ch;
+  color: var(--ink-2);
+  font-size: 0.9375rem;
+}
+.models .verdict {
+  grid-column: 2;
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+.models .verdict b {
+  margin-right: 6px;
+  color: var(--ink);
+  font-weight: 600;
+}
+@media (max-width: 560px) {
+  .models li {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .models .verdict {
+    grid-column: 1;
+  }
+}

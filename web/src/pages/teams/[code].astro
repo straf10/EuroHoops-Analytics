@@ -7,6 +7,8 @@ import "../../styles/stats.css";
 import { SEASON_COLS } from "../../lib/player";
 import { defaultSeason, meta, teamIndex, teamSeason, type TeamIndexRow } from "../../lib/stats";
 import { DEFENSE, OFFENSE, facts, rosterHtml, stripHtml, strips, teamBands, teamCharts } from "../../lib/team";
+import FactorsPanel from "../../components/FactorsPanel.astro";
+import { sourceCode, teamFactors } from "../../lib/live";
 import { tip } from "../../lib/tip";
 import { GROUPS, colsHtml } from "../../lib/cols";
 
@@ -27,6 +29,10 @@ const bands = teamBands(t, up, down);
 const labels = new Map(m.seasons.map((s) => [s.season, s.label]));
 const count = `${club.seasons.length} EuroLeague season${club.seasons.length === 1 ? "" : "s"}`;
 const description = `${club.name}: EuroLeague record, ratings, four factors, shot charts and roster, ${count}.`;
+// Four factors and schedule strength come from the API's live-season file, keyed by source code.
+const factors = await teamFactors("euroleague", sourceCode("euroleague", club.code));
+const liveSeason = factors?.season ?? m.seasons.find((s) => s.live)?.season ?? open;
+const liveLabel = labels.get(liveSeason) ?? `${liveSeason}-${String(liveSeason + 1).slice(2)}`;
 const bandHead = [
   ["Shots", ""],
   ["Share", ""],
@@ -103,6 +109,17 @@ const bandHead = [
       Ratings are points per 100 possessions. Ranks count from the best: for turnover rate, defensive rating
       and the opponent measures, lower is better.
     </p>
+  </section>
+
+  <section class="wrap band" id="factors" aria-labelledby="factors-title">
+    <header class="sec-head">
+      <h2 id="factors-title">Four factors and schedule</h2>
+      <p>
+        How the club has played this season so far and who it has played, always for the live {liveLabel} season
+        whichever season is open above.
+      </p>
+    </header>
+    <FactorsPanel factors={factors} label={liveLabel} />
   </section>
 
   <section class="wrap band" id="shots" aria-labelledby="shots-title">

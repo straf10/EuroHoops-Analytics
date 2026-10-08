@@ -1,0 +1,89 @@
+---
+import Base from "../../layouts/Base.astro";
+import StandingsTable from "../../components/StandingsTable.astro";
+import "../../styles/stats.css";
+import raw from "../../data/site.json";
+import type { SiteData } from "../../lib/format";
+import { displayCode, simulation } from "../../lib/live";
+import { meta } from "../../lib/stats";
+import { teamHref } from "../../lib/players";
+
+const data = raw as SiteData;
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const stats = await meta();
+const comps = await Promise.all(
+  data.competitions.map(async (c) => {
+    const sim = await simulation(c.key);
+    // The simulation names clubs by source code; the site and the stats know them by display code.
+    const names = new Map(c.ratings.map((r) => [r.code, r.name]));
+    const clubs = Object.fromEntries(
+      (sim?.teams ?? []).map(({ team }) => {
+        const code = displayCode(c.key, team);
+        const name = names.get(code) ?? (c.key === "euroleague" ? stats?.teams[code] : undefined) ?? code;
+        return [team, [code, name]];
+      }),
+    ) as Record<string, [string, string]>;
+    return { c, sim, clubs };
+  }),
+);
+const known = new Set(stats ? Object.keys(stats.teams) : []);
+const href = (code: string) => (known.has(code) ? teamHref(base, code) : null);
+const description = "Projected EuroLeague and Greek Basket League tables from the daily season simulation, not gated.";
+---
+
+<Base title="Standings" description={description} current="standings">
+  <header class="wrap head">
+    <h1>Standings</h1>
+    <p class="lede">
+      How each season could finish: the rest of the fixtures played many times over, then the tables counted. This
+      projection has not passed its validation gate, so treat it as a sketch, not a forecast.
+    </p>
+  </header>
+
+  {
+    comps.map(({ c, sim, clubs }) => (
+      <section class="wrap band" aria-labelledby={`stand-${c.key}`}>
+        <header class="sec-head">
+          <h2 id={`stand-${c.key}`}>{c.title}</h2>
+        </header>
+        {sim ? (
+          <StandingsTable sim={sim} title="Projected final table" clubs={clubs} href={c.key === "euroleague" ? href : () => null} />
+        ) : (
+          <p class="note">No simulation is available for the {c.title} yet.</p>
+        )}
+      </section>
+    ))
+  }
+</Base>
+
+<script>
+  // Sort a table by a header button: numbers high to low first, names A to Z first.
+  document.querySelectorAll<HTMLTableElement>("table.standings").forEach((table) => {
+    const body = table.tBodies[0];
+    table.tHead!.addEventListener("click", (e) => {
+      const button = (e.target as Element).closest<HTMLButtonElement>("button[data-sort]");
+      if (!button) return;
+      const key = button.dataset.sort!;
+      const th = button.parentElement as HTMLTableCellElement;
+      const text = key === "name";
+      const now = th.getAttribute("aria-sort");
+      const next = now === "none" ? (text ? "ascending" : "descending") : now === "ascending" ? "descending" : "ascending";
+      const sign = next === "ascending" ? 1 : -1;
+      const value = (row: HTMLTableRowElement) =>
+        text ? row.dataset.name! : Number(row.querySelector<HTMLElement>(`[data-k="${key}"]`)!.dataset.v || -1);
+      const rows = [...body.rows].sort((a, b) => {
+        const [x, y] = [value(a), value(b)];
+        return sign * (typeof x === "string" ? x.localeCompare(y as string) : x - (y as number));
+      });
+      body.append(...rows);
+      rows.forEach((row, i) => (row.querySelector(".rk")!.textContent = String(i + 1)));
+      table.querySelectorAll("thead th").forEach((h) => {
+        h.setAttribute("aria-sort", "none");
+        h.classList.remove("on");
+      });
+      th.classList.add("on");
+      th.setAttribute("aria-sort", next);
+      button.focus();
+    });
+  });
+</script>
