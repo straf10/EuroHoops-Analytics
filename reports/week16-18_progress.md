@@ -488,6 +488,5 @@ RUNTIME astro 69
 | 2 | B | D18 (round 3) | 1 | prior on all rows with an age effect (accepted, recorded under D18) |
 | 1 | B | L2 aging | 2 | round 1 narrowed the synthetic possession gap (1200 → 1000) after a failure (rejected); root cause: outcome-dependent weights → D10; original 1200/450 design passes unchanged; impact-stat test added |
 | 3 | H | L10 export through the API | 1 | its one failing test came from my L9 change (stub), fixed by me; memoised committed reports and the projection-list check in the read model (outside its files, accepted: behaviour-neutral, the Store docstring updated by me); `daily.yml` artifact root moved to `web/` |
-
 | 3b | I | L11 player card + Scouting | 2 | round 1 stopped by me at the usage limit before it wrote anything; round 2 delivered; copied DISPLAY_CODES to m6_codes.json with a drift test (outside its list, accepted); web_build.sh also copies the stats fixture |
 | 3b | J | L11 Teams, Standings, Methodology, performance, nav | 1 | hand copy of DISPLAY_CODES in live.ts replaced by me with I's tested map; only own four factors exported (no defence column); wins carry a rank interval, not a wins interval |
