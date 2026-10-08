@@ -61,7 +61,8 @@ Walk-forward. ``target_inputs`` is the one place that touches the data of a targ
 (rows of seasons before ``t``, plus the partial season-``t`` row at a checkpoint), the ages of
 the history rows, the impact rows, the aging curve (``aging_curve(history, ages, t)``), the drift
 (D6: ``fit_drift(history, t)`` for a tuning target, frozen at ``fit_drift(history, first
-validation season)`` for a validation or test target), the translation (D5: M4's fit for ``t``;
+validation season)`` for a validation or test target; its BRAPM entry is the snapshots' D of
+``snapshot_noise`` for the same season, D17), the translation (D5: M4's fit for ``t``;
 a target without a fit may have no mover, asserted) and the truth. Nothing else reads a table.
 
 Choice (L-i). On the tuning seasons' next-season targets only: the lowest loss over every
@@ -491,9 +492,12 @@ def _newest(history: pd.DataFrame, competition: str) -> pd.DataFrame:
     return usable.drop_duplicates("person_id", keep="last").set_index("person_id")
 
 
-def _impact_rows(world: World, history: pd.DataFrame, season: int, unit: float) -> pd.DataFrame:
+def _impact_rows(
+    world: World, history: pd.DataFrame, season: int, unit: float, brapm_noise: float | None
+) -> pd.DataFrame:
     """IMPACT_SCHEMA rows of a EuroLeague target (module docstring); ``unit`` is the SPM noise
-    unit before ``season``."""
+    unit before ``season``. The BRAPM snapshots enter with ``sd = sqrt(brapm_noise)`` (D17), or
+    not at all when it is None."""
     inputs = world.inputs
     el = history[(history["competition"] == IMPACT_COMPETITION) & (history["poss"] > 0)]
     spm = pd.DataFrame(
@@ -512,29 +516,60 @@ def _impact_rows(world: World, history: pd.DataFrame, season: int, unit: float) 
         & (snaps["stat"] == "brapm")
         & (snaps["season"] < season)
     ]
-    rows = pd.concat([snaps[list(IMPACT_SCHEMA.columns)], spm], ignore_index=True)
+    snaps = snaps[list(IMPACT_SCHEMA.columns)].assign(
+        sd=0.0 if brapm_noise is None else math.sqrt(brapm_noise)
+    )
+    if brapm_noise is None:
+        snaps = snaps.iloc[:0]
+    rows = pd.concat([snaps, spm], ignore_index=True)
     rows = rows.sort_values(["stat", "season", "person_id"]).reset_index(drop=True)
     return validated(rows, IMPACT_SCHEMA)
 
 
-def _impact_noise(
-    impact: pd.DataFrame, history: pd.DataFrame, unit: float
-) -> dict[str, tuple[float, float]]:
-    """D14: the measurement noise of the impact truths as ``(a, b)`` of ``a + b / exposure``. SPM
-    is a one-season box line: ``(0, u)``. BRAPM is a snapshot of fixed precision: ``a`` is the
-    possession-weighted mean of ``sd^2`` over the snapshots before the target (``impact`` holds
-    nothing later), omitted when there are none."""
-    noise = {"spm": (0.0, unit)}
-    snaps = impact[impact["stat"] == "brapm"].merge(
+SNAPSHOT_FLOOR = (
+    1e-6  # N and D stay positive: a noiseless or driftless estimate is a limit, not a fit
+)
+
+
+def snapshot_noise(
+    snaps: pd.DataFrame, history: pd.DataFrame, before_season: int, min_poss: float
+) -> tuple[float, float] | None:
+    """``(N, D)`` of the BRAPM snapshots of seasons strictly before ``before_season`` (D17):
+    the truth is a random walk of step variance ``D`` seen with white noise of variance ``N``, so
+    ``Var(x_{s+1} - x_s) = D + 2N`` and ``Var(x_{s+2} - x_s) = 2D + 2N``, i.e. ``D = V2 - V1``
+    and ``N = (2 V1 - V2) / 2``. ``V1`` and ``V2`` are the plain (unweighted) variances of the
+    lag-1 and lag-2 changes of the same person's snapshots, each of the two snapshots from a
+    player-season with at least ``min_poss`` possessions in ``history``; the variance is about the
+    mean change so a common drift does not count. Both are floored at ``SNAPSHOT_FLOOR``. None
+    when either lag has fewer than two such pairs."""
+    own = snaps[
+        (snaps["stat"] == "brapm")
+        & (snaps["competition"] == IMPACT_COMPETITION)
+        & (snaps["season"] < before_season)
+    ]
+    rows = own.merge(
         history[["person_id", "competition", "season", "poss"]],
         on=["person_id", "competition", "season"],
     )
-    snaps = snaps[snaps["poss"] > 0]
-    if not snaps.empty:
-        noise["brapm"] = (
-            float((snaps["poss"] * snaps["sd"] ** 2).sum() / snaps["poss"].sum()),
-            0.0,
-        )
+    values = rows.loc[rows["poss"] >= min_poss, ["person_id", "season", "value"]]
+    variances = []
+    for lag in (1, 2):
+        later = values.assign(season=values["season"] - lag)
+        pairs = values.merge(later, on=["person_id", "season"], suffixes=("", "_b"))
+        if len(pairs) < 2:
+            return None
+        variances.append(float((pairs["value_b"] - pairs["value"]).var(ddof=0)))
+    v1, v2 = variances
+    return max((2.0 * v1 - v2) / 2.0, SNAPSHOT_FLOOR), max(v2 - v1, SNAPSHOT_FLOOR)
+
+
+def _impact_noise(unit: float, brapm_noise: float | None) -> dict[str, tuple[float, float]]:
+    """D14 and D17: the measurement noise of the impact truths as ``(a, b)`` of
+    ``a + b / exposure``. SPM is a one-season box line: ``(0, u)``. BRAPM is a snapshot of fixed
+    precision: ``(N, 0)`` with ``N`` from ``snapshot_noise``, omitted without one."""
+    noise = {"spm": (0.0, unit)}
+    if brapm_noise is not None:
+        noise["brapm"] = (brapm_noise, 0.0)
     return noise
 
 
@@ -634,23 +669,32 @@ def target_inputs(
         }
     )
     targets = validated(targets.astype({"season": "int64", "checkpoint": "float64"}), TARGET_SCHEMA)
+    drift_before = season if season in spec.tuning else spec.validation[0]
     impact = None
     impact_noise = None
+    brapm = None
     if competition == IMPACT_COMPETITION:
         unit = spm_noise_unit(world, season)
-        impact = _impact_rows(world, history, season, unit)
-        impact_noise = _impact_noise(impact, history, unit)
+        if ("brapm_noise", drift_before) not in world.memo:
+            world.memo["brapm_noise", drift_before] = snapshot_noise(
+                inputs.brapm, history, drift_before, spec.min_poss
+            )
+        brapm = world.memo["brapm_noise", drift_before]
+        impact = _impact_rows(world, history, season, unit, None if brapm is None else brapm[0])
+        impact_noise = _impact_noise(unit, None if brapm is None else brapm[0])
     truth = _truth(inputs, scored, competition, season, checkpoint)
     truth.insert(2, "mover", movers)
     ages = inputs.ages.merge(
         history[["person_id", "season"]].drop_duplicates(), on=["person_id", "season"]
     )
-    drift_before = season if season in spec.tuning else spec.validation[0]
     memo = world.memo
     if ("curve", competition, season) not in memo:
         memo["curve", competition, season] = aging_curve(history, ages, season, impact=impact)
     if ("drift", competition, season, drift_before) not in memo:
-        memo["drift", competition, season, drift_before] = fit_drift(history, drift_before, impact)
+        drift = fit_drift(history, drift_before, impact)
+        if brapm is not None:
+            drift["brapm"] = brapm[1]  # D17: the snapshot series' own drift
+        memo["drift", competition, season, drift_before] = drift
     return TargetInputs(
         competition=competition,
         season=season,
