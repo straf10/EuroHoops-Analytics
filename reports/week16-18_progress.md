@@ -136,6 +136,13 @@ already up to date on 2026-10-07). Orchestrator Opus 5.5; subagents Sonnet 5.5 i
   out-of-sample check; the report gives validation-only coverage next to the pooled gate number.
 - **D20 (grid widened once, L8 rule):** the best tuning cell had half-life 1, the grid's edge: the half-life grid
   becomes {0.5, 1, 2, 3} before the verdict. No further widening.
+- **D21 (per-player CSV size, owner request 2026-10-08):** `backtest_m6_players.csv` (17-26 MB raw per version)
+  and `backtest_m6_gbl_players.csv` (7 MB) are kept exactly as committed. Measured: every object added from 536fe17
+  to 610cf6b packs to 7.3 MB (the three EuroLeague versions delta against each other); nothing regenerates them
+  (not the daily workflow; item 56 compares without committing), so the cost is paid once. Shrinking them now would
+  add a fourth version, and rewriting history (filter, squash, LFS migration) would change the VERDICT /
+  VALIDATION / TEST shas the pre-registration proof rests on. `.gitattributes` marks
+  `reports/backtest_*_players.csv` as `-diff linguist-generated` so diffs and GitHub do not render them.
 
 ## §3 findings (L0, real data, HEAD 6b2239b; re-checked by `scripts/checks/m6_facts.py`, item 54)
 Fixture: `tests/fixtures/m6_facts.json`.

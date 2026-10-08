@@ -1,3 +1,6 @@
 # LF everywhere: the append-only prediction log must stay byte-identical across platforms.
 * text=auto eol=lf
 *.gz binary
+# Per-player backtest CSVs: generated, written once per pre-registration step (never by the daily
+# workflow); no text diffs, collapsed on GitHub.
+reports/backtest_*_players.csv -diff linguist-generated=true
