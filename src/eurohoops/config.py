@@ -415,7 +415,7 @@ class M6Backtest:
     test: tuple[int, ...]
     checkpoints: tuple[float, ...] = (0.25, 0.5, 0.75)  # fractions of the regular-season rounds
     min_poss: float = 500.0  # scored set: possessions in the target season (L-g)
-    half_lives: tuple[float, ...] = (1.0, 2.0, 3.0)  # season-decay grid, in seasons (L-f)
+    half_lives: tuple[float, ...] = (0.5, 1.0, 2.0, 3.0)  # season decay (L-f; 0.5 added once, D20)
     interval: float = 0.8
     coverage_band: tuple[float, float] = (0.75, 0.85)  # pooled tuning + validation (L-h)
     tie_tolerance: float = 0.005  # relative tuning-loss difference below which the simpler wins

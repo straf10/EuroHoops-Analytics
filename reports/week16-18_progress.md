@@ -121,6 +121,21 @@ already up to date on 2026-10-07). Orchestrator Opus 5.5; subagents Sonnet 5.5 i
   same_as_last 10.1897, league_mean 13.6611; BRAPM MAE variants 1.5956 vs marcel 0.8211; box-stat MAE below marcel
   on 7 of 12 stats. Its outputs were discarded; D17 and D18 are method fixes on that tuning evidence, made before
   the verdict, and the tuning run is repeated after them.
+- **Tuning attempt 3 (HEAD 942c64a, 123 s, tuning only; outputs discarded):** proj_shrunk@1 6.0903, @2 6.0924,
+  @3 6.1302; proj_age@1 6.1696; proj_full@1 6.1661; proj_full_spm@1 6.1683; marcel 6.1902; same_as_last 10.1897;
+  league_mean 13.6611. Chosen proj_shrunk@1, on the grid's edge. Coverage of proj_shrunk@1 (tuning, next season):
+  9 of 14 stats above 85% (pts 0.879, fta 0.916, blk 0.928, …; fg3a 0.802). Mean squared standardised error
+  0.55 (blk, fta) to 0.94, fg3a 1.10–1.19. Probe: flooring the interval's reference exposure at 500 possessions
+  moves coverage by ~0.01 (not the cause; not adopted).
+- **D19 (interval calibration, on tuning only; decided before the verdict):** L-c's "season-to-season noise
+  estimated on tuning only" is estimated from the tuning forecasts: per (stat, checkpoint) a variance scale
+  c = mean squared standardised error of the chosen cell's tuning forecasts; the predictive sd is multiplied by
+  √c. Walk-forward: a tuning target of season t uses the tuning targets before t (the first tuning season: c = 1);
+  validation and test use c from all tuning seasons, frozen at the verdict. Means, the projection loss and the
+  choice are unchanged (the choice is made first; c is fitted for the chosen cell). Validation coverage stays an
+  out-of-sample check; the report gives validation-only coverage next to the pooled gate number.
+- **D20 (grid widened once, L8 rule):** the best tuning cell had half-life 1, the grid's edge: the half-life grid
+  becomes {0.5, 1, 2, 3} before the verdict. No further widening.
 
 ## §3 findings (L0, real data, HEAD 6b2239b; re-checked by `scripts/checks/m6_facts.py`, item 54)
 Fixture: `tests/fixtures/m6_facts.json`.
