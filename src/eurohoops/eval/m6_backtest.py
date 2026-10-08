@@ -65,6 +65,12 @@ validation season)`` for a validation or test target; its BRAPM entry is the sna
 ``snapshot_noise`` for the same season, D17), the translation (D5: M4's fit for ``t``;
 a target without a fit may have no mover, asserted) and the truth. Nothing else reads a table.
 
+Calibration (D19). After the choice, the chosen cell's predictive sd is multiplied by
+``sqrt(c)`` per (stat, checkpoint), ``c`` the mean squared standardised error of its raw tuning
+forecasts (``variance_scale``); lo80 / hi80, coverage and CRPS use the scaled sd (``rescale``),
+the means and the projection loss do not change. A tuning target of season ``t`` uses the tuning
+seasons before ``t`` (the first: ``c = 1``); validation and test use all tuning seasons.
+
 Choice (L-i). On the tuning seasons' next-season targets only: the lowest loss over every
 (variant, half-life) cell; a relative difference below ``tie_tolerance`` goes to the simpler
 variant (``VARIANTS`` order) and within a variant to the smaller half-life. ``on_edge`` says
@@ -91,6 +97,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 import pandera.pandas as pa
+from scipy import special
 
 from eurohoops.config import M6Backtest
 from eurohoops.eval.m3_backtest import _data_sha256
@@ -243,6 +250,7 @@ def gate_block(
     band: tuple[float, float],
     differences: Mapping[str, Any],
     gated: bool,
+    coverage_validation: Mapping[str, float | None] | None = None,
 ) -> dict[str, Any]:
     """The gate (L-h, point rule) from unrounded values; ``None`` anywhere leaves it undecided."""
     passed = None
@@ -265,6 +273,7 @@ def gate_block(
         "loss_same_as_last": _round(loss_same_as_last),
         "loss_ok": loss_ok,
         "coverage_pooled": {k: _round(v) for k, v in coverage.items()},
+        "coverage_validation": {k: _round(v) for k, v in (coverage_validation or {}).items()},
         "coverage_band": list(band),
         "coverage_ok": coverage_ok,
         "passed": passed,
@@ -893,19 +902,46 @@ def score_block(
         rows["k"] = len(stats)
         rows["sq_err_std"] = (error / scale) ** 2
         rows["abs_err"] = np.abs(error)
-        inside = (rows["truth"] >= rows["lo80"]) & (rows["truth"] <= rows["hi80"])
-        rows["covered"] = np.where(rows["lo80"].notna(), inside.astype(float), np.nan)
-        crps = np.full(len(rows), np.nan)
-        impact = rows["stat"].isin(IMPACT_STATS).to_numpy() & rows["sd"].notna().to_numpy()
-        if impact.any():
-            crps[impact] = crps_normal(
-                rows.loc[impact, "mean"].to_numpy(dtype=np.float64),
-                np.maximum(rows.loc[impact, "sd"].to_numpy(dtype=np.float64), SD_FLOOR),
-                rows.loc[impact, "truth"].to_numpy(dtype=np.float64),
-            )
-        rows["crps"] = crps
-        out[model] = rows.reset_index(drop=True)
+        out[model] = _interval_scores(rows).reset_index(drop=True)
     return out
+
+
+def _interval_scores(rows: pd.DataFrame) -> pd.DataFrame:
+    """``covered`` and (impact stats) ``crps`` of rows with truth, mean, lo80, hi80 and sd."""
+    inside = (rows["truth"] >= rows["lo80"]) & (rows["truth"] <= rows["hi80"])
+    rows = rows.assign(covered=np.where(rows["lo80"].notna(), inside.astype(float), np.nan))
+    crps = np.full(len(rows), np.nan)
+    impact = rows["stat"].isin(IMPACT_STATS).to_numpy() & rows["sd"].notna().to_numpy()
+    if impact.any():
+        crps[impact] = crps_normal(
+            rows.loc[impact, "mean"].to_numpy(dtype=np.float64),
+            np.maximum(rows.loc[impact, "sd"].to_numpy(dtype=np.float64), SD_FLOOR),
+            rows.loc[impact, "truth"].to_numpy(dtype=np.float64),
+        )
+    return rows.assign(crps=crps)
+
+
+def variance_scale(rows: pd.DataFrame) -> dict[str, float]:
+    """D19: per stat the mean squared standardised error ``((truth - mean) / sd)^2`` of the rows
+    (``truth``, ``mean``, ``sd``, ``stat``; rows without a positive finite sd are skipped). A
+    stat without such rows is absent: its scale is 1."""
+    z2 = ((rows["truth"] - rows["mean"]) / rows["sd"]) ** 2
+    ok = np.isfinite(z2) & (rows["sd"] > 0)
+    return {str(stat): float(v) for stat, v in z2[ok].groupby(rows.loc[ok, "stat"]).mean().items()}
+
+
+def rescale(rows: pd.DataFrame, scale: Mapping[str, float], interval: float) -> pd.DataFrame:
+    """D19: multiply each row's predictive sd by ``sqrt(scale[stat])`` (1 if absent) and recompute
+    lo80 / hi80 as the Normal quantiles about the unchanged mean (clipped at 0 below except for
+    the impact stats, as ``project`` does), then ``covered`` and ``crps``. Means, errors and so
+    the projection loss are untouched."""
+    z = float(special.ndtri(0.5 + interval / 2.0))
+    factor = np.sqrt(rows["stat"].map(scale).fillna(1.0).to_numpy(dtype=np.float64))
+    sd = rows["sd"].to_numpy(dtype=np.float64) * factor
+    mean = rows["mean"].to_numpy(dtype=np.float64)
+    low = mean - z * sd
+    low = np.where(rows["stat"].isin(IMPACT_STATS).to_numpy(), low, np.maximum(low, 0.0))
+    return _interval_scores(rows.assign(sd=sd, lo80=low, hi80=mean + z * sd))
 
 
 def player_losses(rows: pd.DataFrame) -> pd.DataFrame:
@@ -1107,6 +1143,7 @@ def run_m6_backtest(
             predictions = {chosen: project_cell(ti, variant, half_life)}
             predictions |= baseline_predictions(ti)
             scored.append(_Scored(split, season, checkpoint, score_block(ti, predictions, sds)))
+    scored, scales = _calibrated(scored, chosen, spec)
     rows = _stacked(scored, models)
     report = _report(
         inputs=inputs,
@@ -1117,6 +1154,7 @@ def run_m6_backtest(
         stats=stats,
         grid=grid,
         grid_metrics=grid_metrics,
+        scales=scales,
         rows=rows,
         variant=variant,
         half_life=half_life,
@@ -1125,6 +1163,33 @@ def run_m6_backtest(
         fixed=fixed,
     )
     return report, _players_frame(rows)
+
+
+def _calibrated(
+    scored: Sequence[_Scored], chosen: str, spec: M6Backtest
+) -> tuple[list[_Scored], dict[float, dict[str, float]]]:
+    """D19: the chosen cell's rows with their intervals rescaled. A tuning block of season ``t``
+    and checkpoint ``f`` uses the scales of the chosen cell's raw tuning blocks of seasons before
+    ``t`` at ``f`` (none: 1); a validation or test block uses all tuning blocks at ``f``. Returns
+    the blocks and the frozen all-tuning scales by checkpoint."""
+    raw = {(s.split, s.season, s.checkpoint): s.rows[chosen] for s in scored}
+
+    def scale_from(checkpoint: float, before: int | None) -> dict[str, float]:
+        parts = [
+            rows
+            for (split, season, f), rows in raw.items()
+            if split == "tuning" and f == checkpoint and (before is None or season < before)
+        ]
+        return variance_scale(pd.concat(parts, ignore_index=True)) if parts else {}
+
+    out = []
+    for block in scored:
+        before = block.season if block.split == "tuning" else None
+        scale = scale_from(block.checkpoint, before)
+        rows = {**block.rows, chosen: rescale(block.rows[chosen], scale, spec.interval)}
+        out.append(_Scored(block.split, block.season, block.checkpoint, rows))
+    frozen = {f: scale_from(f, None) for f in (0.0, *spec.checkpoints)}
+    return out, frozen
 
 
 def _players_frame(rows: pd.DataFrame) -> pd.DataFrame:
@@ -1164,6 +1229,7 @@ def _report(
     stats: Sequence[str],
     grid: Sequence[tuple[str, float]],
     grid_metrics: Mapping[str, dict[str, Any]],
+    scales: Mapping[float, Mapping[str, float]],
     rows: pd.DataFrame,
     variant: str,
     half_life: float,
@@ -1224,6 +1290,12 @@ def _report(
                 stats=stats,
                 checkpoints=spec.checkpoints,
             )
+    report["calibration"] = {
+        "rule": "D19: sd x sqrt(c), c the mean squared standardised error of the chosen cell's "
+        "tuning forecasts; a tuning block uses the earlier tuning seasons, later blocks all "
+        "of them",
+        "scale": {f"{f:g}": {k: _round(v) for k, v in c.items()} for f, c in scales.items()},
+    }
     report["movers"] = {
         name: {m: _mover_slice(nxt[(nxt["split"] == name) & (nxt["model"] == m)]) for m in models}
         for name in splits
@@ -1281,6 +1353,9 @@ def _gate(
             f"loss_vs_{b}": report["differences"]["validation"][f"vs_{b}"] for b in GATE_BASELINES
         },
         gated=gated,
+        coverage_validation=model_scores(validation[validation["model"] == chosen], stats)[
+            "coverage"
+        ],
     )
 
 

@@ -16,6 +16,7 @@ import typer
 
 from eurohoops import cli
 from eurohoops.config import M3, M4
+from eurohoops.eval import m6_backtest as module
 from eurohoops.eval.m3_gbl_backtest import ElSpm
 from eurohoops.eval.m6_backtest import (
     BASELINES,
@@ -25,7 +26,9 @@ from eurohoops.eval.m6_backtest import (
     SNAPSHOT_FLOOR,
     M6Inputs,
     TargetInputs,
+    _calibrated,
     _exposure,
+    _Scored,
     baseline_predictions,
     cell_key,
     cells,
@@ -39,12 +42,14 @@ from eurohoops.eval.m6_backtest import (
     player_losses,
     prepare,
     project_cell,
+    rescale,
     run_m6_backtest,
     score_block,
     scored_splits,
     snapshot_noise,
     spm_noise_unit,
     target_inputs,
+    variance_scale,
 )
 from eurohoops.eval.tracking import log_m6_backtest
 from eurohoops.logs import write_json
@@ -156,7 +161,7 @@ def test_report_keys_and_types(tuning_run: Run, full_run: Run) -> None:
     top = {
         "model", "model_version", "competition", "splits", "stats", "checkpoints", "min_poss",
         "interval", "sd", "grid", "tuning", "chosen", "data_sha256", "tuning_only",
-        "validation_scored", "test_scored", "movers", "differences",
+        "validation_scored", "test_scored", "movers", "differences", "calibration",
     }  # fmt: skip
     assert set(tuning_run.report) == top
     assert set(full_run.report) == top | {"validation", "test", "gate"}
@@ -207,8 +212,8 @@ def test_report_keys_and_types(tuning_run: Run, full_run: Run) -> None:
     gate = report["gate"]
     assert set(gate) == {
         "rule", "gated", "variant", "half_life", "loss_chosen", "loss_marcel", "loss_same_as_last",
-        "loss_ok", "coverage_pooled", "coverage_band", "coverage_ok", "passed", "loss_vs_marcel",
-        "loss_vs_same_as_last",
+        "loss_ok", "coverage_pooled", "coverage_validation", "coverage_band", "coverage_ok",
+        "passed", "loss_vs_marcel", "loss_vs_same_as_last",
     }  # fmt: skip
     assert set(gate["coverage_pooled"]) == set(stats)
 
@@ -1140,3 +1145,155 @@ def test_brapm_weights_of_players_with_history_are_positive(inputs: M6Inputs, wo
     rows = out[(out["stat"] == "brapm") & (out["n_seasons"] > 0)]
     assert len(rows) > 20
     assert (rows["weight"] > 0).all()
+
+
+# --- D19: interval calibration ------------------------------------------------------------------
+
+Z80 = 1.2815515655446004  # the Normal 0.9 quantile
+
+
+def _forecasts(
+    stat: list[str], truth: list[float], mean: list[float], sd: list[float]
+) -> pd.DataFrame:
+    return pd.DataFrame(
+        {
+            "person_id": [f"p{i}" for i in range(len(stat))],
+            "stat": stat,
+            "truth": truth,
+            "mean": mean,
+            "sd": sd,
+            "lo80": np.nan,
+            "hi80": np.nan,
+            "weight": 1000.0,
+        }
+    )
+
+
+def test_the_variance_scale_and_the_rescaled_interval_by_hand() -> None:
+    rows = _forecasts(
+        ["pts", "pts", "spm", "spm", "ast"],
+        [12.0, 8.0, -3.0, 1.0, 5.0],
+        [10.0, 10.0, 0.0, 0.0, 5.0],
+        [2.0, 1.0, 1.0, 1.0, 0.0],  # the last has no usable sd: skipped
+    )
+    scale = variance_scale(rows)
+    # pts: ((2/2)^2 + (-2/1)^2) / 2 = 2.5; spm: ((-3)^2 + 1^2) / 2 = 5; ast: no row
+    assert scale == pytest.approx({"pts": 2.5, "spm": 5.0})
+    out = rescale(
+        _forecasts(["pts", "spm", "ast"], [10.0, -9.0, 5.0], [1.0, 0.0, 4.0], [1.0, 1.0, 1.0]),
+        scale,
+        0.8,
+    )
+    sd_pts, sd_spm = math.sqrt(2.5), math.sqrt(5.0)
+    assert out["sd"].tolist() == pytest.approx([sd_pts, sd_spm, 1.0])  # ast: scale 1
+    assert out["lo80"].tolist() == pytest.approx([0.0, -Z80 * sd_spm, 4.0 - Z80])  # pts clipped
+    assert out["hi80"].tolist() == pytest.approx([1.0 + Z80 * sd_pts, Z80 * sd_spm, 4.0 + Z80])
+    assert out["covered"].tolist() == [0.0, 0.0, 1.0]  # 10 is far above; -9 is below -Z80 * sd
+    assert out["mean"].tolist() == [1.0, 0.0, 4.0]
+
+
+def _block(split: str, season: int, checkpoint: float, shift: float = 0.0) -> _Scored:
+    rows = _forecasts(["pts"] * 4, [1.0 + shift, -1.0, 2.0, -2.0], [0.0] * 4, [1.0] * 4)
+    return _Scored(split, season, checkpoint, {"m": rows, "marcel": rows})
+
+
+def test_the_scale_of_a_tuning_season_reads_only_earlier_tuning_seasons() -> None:
+    def sds(blocks: list[_Scored]) -> dict[tuple[str, int, float], float]:
+        done, scales = _calibrated(blocks, "m", SPEC)
+        assert set(scales) == {0.0, *SPEC.checkpoints}
+        return {(b.split, b.season, b.checkpoint): float(b.rows["m"]["sd"].iloc[0]) for b in done}
+
+    blocks = [
+        _block("tuning", 2015, 0.0),
+        _block("tuning", 2016, 0.0, shift=1.0),
+        _block("validation", 2017, 0.0),
+        _block("test", 2018, 0.0),
+    ]
+    base = sds(blocks)
+    assert base[("tuning", 2015, 0.0)] == 1.0  # the first tuning season: c = 1
+    # 2016 uses 2015 alone: z^2 = (1 + 1 + 4 + 4) / 4
+    assert base[("tuning", 2016, 0.0)] == pytest.approx(math.sqrt(2.5))
+    # validation and test use both tuning seasons
+    both = variance_scale(pd.concat([b.rows["m"] for b in blocks[:2]]))["pts"]
+    expected = pytest.approx(math.sqrt(both))
+    assert base[("validation", 2017, 0.0)] == base[("test", 2018, 0.0)] == expected
+    # changing a tuning truth in 2016 leaves 2015 and 2016 alone and moves the frozen scale
+    moved = sds([blocks[0], _block("tuning", 2016, 0.0, shift=5.0), *blocks[2:]])
+    assert moved[("tuning", 2015, 0.0)] == base[("tuning", 2015, 0.0)]
+    assert moved[("tuning", 2016, 0.0)] == base[("tuning", 2016, 0.0)]
+    assert moved[("validation", 2017, 0.0)] != base[("validation", 2017, 0.0)]
+    # changing 2015 moves 2016
+    first = sds([_block("tuning", 2015, 0.0, shift=3.0), *blocks[1:]])
+    assert first[("tuning", 2016, 0.0)] != base[("tuning", 2016, 0.0)]
+    # a checkpoint is scaled by its own tuning blocks only
+    mixed = sds([*blocks, _block("tuning", 2015, 0.5, shift=9.0), _block("validation", 2017, 0.5)])
+    assert mixed[("tuning", 2016, 0.0)] == base[("tuning", 2016, 0.0)]
+    assert mixed[("validation", 2017, 0.5)] != mixed[("validation", 2017, 0.0)]
+
+
+@pytest.fixture(scope="module")
+def inflated(inputs: M6Inputs) -> dict[str, Run]:
+    """The chosen cell (fixed, to keep the run short) with its sd inflated by a known factor of 2,
+    scored with and without the D19 calibration."""
+    original = module.project_cell
+
+    def wide(ti: TargetInputs, variant: str, half_life: float) -> pd.DataFrame:
+        out = original(ti, variant, half_life)
+        out["sd"] = out["sd"] * 2.0
+        low = out["mean"] - Z80 * out["sd"]
+        out["lo80"] = np.where(out["stat"].isin(["spm", "brapm"]), low, np.maximum(low, 0.0))
+        out["hi80"] = out["mean"] + Z80 * out["sd"]
+        return out
+
+    fixed = {"variant": "proj_full_spm", "half_life": 2.0}
+    patch = pytest.MonkeyPatch()
+    patch.setattr(module, "project_cell", wide)
+    try:
+        calibrated = _run(inputs, fixed=fixed, score_test=True)
+        patch.setattr(module, "_calibrated", lambda scored, chosen, spec: (list(scored), {}))
+        raw = _run(inputs, fixed=fixed, score_test=True)
+    finally:
+        patch.undo()
+    return {"calibrated": calibrated, "raw": raw}
+
+
+def _chosen_coverage(run: Run, splits: tuple[str, ...]) -> tuple[float, int]:
+    rows = run.players
+    mine = rows[rows["model"].str.startswith("proj_") & rows["split"].isin(splits)]
+    mine = mine[mine["checkpoint"] == 0.0]
+    covered = (mine["truth"] >= mine["lo80"]) & (mine["truth"] <= mine["hi80"])
+    return float(covered.mean()), len(mine)
+
+
+def test_calibration_brings_a_mis_scaled_interval_back_to_its_band(
+    inflated: dict[str, Run],
+) -> None:
+    """Pooled over every stat, validation + test next-season rows (the scales are frozen on the
+    tuning seasons; a tuning season's own scale comes from fewer seasons, the first from none):
+    n rows, coverage within 4 binomial SEs of 0.8 (the rows of a player are correlated, so 3 SE
+    would be too tight). The
+    raw interval is twice too wide, so a Normal truth would sit inside it with probability
+    2 Phi(2 * 1.2816) - 1 = 0.99, far above the band."""
+    splits = ("validation", "test")
+    cal, n = _chosen_coverage(inflated["calibrated"], splits)
+    raw, m = _chosen_coverage(inflated["raw"], splits)
+    assert n == m
+    assert abs(cal - 0.8) <= 4 * math.sqrt(0.8 * 0.2 / n)
+    assert raw > 0.8 + 4 * math.sqrt(0.8 * 0.2 / n)
+    report = inflated["calibrated"].report
+    assert set(report["calibration"]["scale"]) == {"0", "0.5"}
+    gate = report["gate"]
+    assert set(gate["coverage_validation"]) == set(gate["coverage_pooled"])
+
+
+def test_calibration_leaves_means_and_losses_bit_identical(inflated: dict[str, Run]) -> None:
+    a, b = inflated["calibrated"], inflated["raw"]
+    cols = ["split", "season", "checkpoint", "model", "person_id", "stat"]
+    cols += ["truth", "mean", "sq_err_std", "weight"]
+    pd.testing.assert_frame_equal(a.players[cols], b.players[cols], check_exact=True)
+    for split in ("validation", "test"):
+        for model, scores in a.report[split]["next_season"].items():
+            other = b.report[split]["next_season"][model]
+            assert scores["loss"] == other["loss"] and scores["mae"] == other["mae"]
+    assert a.report["chosen"] == b.report["chosen"]
+    assert a.report["tuning"]["next_season"] == b.report["tuning"]["next_season"]  # raw cells
