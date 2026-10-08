@@ -86,7 +86,12 @@ already up to date on 2026-10-07). Orchestrator Opus 5.5; subagents Sonnet 5.5 i
   variance; the harness passes SPM `(0, u)` with `u` = F's split-half SPM noise unit fitted before the target, and
   BRAPM `(possession-weighted mean of sd² of the snapshots before the target, 0)`. Decided on synthetic evidence
   only, before the tuning run (pre-registration intact).
-- **D15 (regular season only, F's call accepted):** history, truth and exposure use regular-season games only.
+- **D15 (group stages only; amended before any number was scored):** history, truth and exposure use the
+  group-stage games (`GROUP_PHASES = ("RS", "TS")`: the regular season and the EuroLeague Top 16 of 2007-2015),
+  never the knockouts (PO, PI, FF). F's first version kept `RS` only, which dropped the 688 Top 16 games and left
+  26 EuroLeague player pairs with 500+ possessions in consecutive seasons before 2016 (the aging curve could not be
+  fitted); found by the first tuning attempt, which stopped in `aging_curve` before any projection or score
+  existed.
   R = the season's last played regular-season round (equals M7's R except in 2019-20, which was cut short).
 - **D16 (implausible birth dates, found by the real-data wiring probe):** 5 GBL players have a source birth
   date that gives an age under 15 in a season they played (placeholders on their ESAKE pages; counted, never

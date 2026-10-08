@@ -6,8 +6,9 @@ Targets (L-a). *Next-season*: season ``t`` projected from everything before its 
 k = floor(f * R) completed rounds, cutoff = the first tip-off of round k + 1, D12), from every game
 before the cutoff, the current season entering as a ``partial`` row. R is the season's last played
 regular-season round (``rounds`` overrides it): M7's format R except in a season cut short, and
-``season_format`` does not cover every season M6 scores. Both use the regular-season
-games only (history, truth and exposure alike). A target is scored when the player has at least
+``season_format`` does not cover every season M6 scores. History, truth and exposure use the
+group-stage games only (``GROUP_PHASES``: the regular season and, through 2015-16, the EuroLeague
+Top 16), never the knockouts (D15). A target is scored when the player has at least
 ``min_poss`` possessions in the target window (``min_poss * (1 - f)`` at a checkpoint: the floor
 scaled to the window) and a senior season before ``t`` in either league.
 
@@ -119,6 +120,7 @@ SPLITS = ("tuning", "validation", "test")
 BASELINES = ("same_as_last", "league_mean", "marcel")
 GATE_BASELINES = ("marcel", "same_as_last")
 BOX_STATS = COUNT_STATS + PCT_STATS
+GROUP_PHASES = ("RS", "TS")  # D15: regular season + EuroLeague Top 16 (2007-2015); no PO/PI/FF
 IMPACT_COMPETITION = "euroleague"  # the only competition with impact stats (D13)
 MARCEL_WEIGHTS = (5, 4, 3)
 MARCEL_REGRESSION = 1200.0  # possessions of the league mean added to the weighted sums
@@ -274,9 +276,9 @@ def gate_block(
 
 @dataclass
 class World:
-    """The regular-season player lines of each competition with their tip-offs, the player-season
-    frame over every season (``complete``: a target filters it by season, never reads past ``t``)
-    and memos of what depends on (competition, season) alone."""
+    """The group-stage player lines (``GROUP_PHASES``) of each competition with their tip-offs,
+    the player-season frame over every season (``complete``: a target filters it by season, never
+    reads past ``t``) and memos of what depends on (competition, season) alone."""
 
     inputs: M6Inputs
     lines: dict[str, pd.DataFrame]
@@ -289,7 +291,7 @@ def prepare(inputs: M6Inputs) -> World:
     lines = {}
     for competition, player_games in inputs.player_games.items():
         games = inputs.games[competition]
-        keep = games.loc[games["phase"] == "RS", ["game_id", "tipoff_utc"]]
+        keep = games.loc[games["phase"].isin(GROUP_PHASES), ["game_id", "tipoff_utc"]]
         lines[competition] = player_games.merge(keep, on="game_id", how="inner")
     return World(inputs, lines, build_player_seasons(lines, inputs.xwalk))
 

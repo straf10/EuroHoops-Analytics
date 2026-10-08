@@ -456,6 +456,23 @@ def test_playoff_games_never_enter_a_number(inputs: M6Inputs, world: Any) -> Non
     assert not (bare.games["euroleague"]["phase"] == "PO").any()
 
 
+def test_a_top_16_game_counts_and_a_knockout_does_not(inputs: M6Inputs, world: Any) -> None:
+    """D15: the EuroLeague's Top 16 (phase TS, 2007-2015) is a group stage like the regular season;
+    the knockouts (PO, PI, FF) are not. Relabelling a regular-season game as TS changes nothing;
+    relabelling it FF removes its lines."""
+    games = inputs.games["euroleague"]
+    first = games.loc[games["phase"] == "RS", "game_id"].iloc[0]
+
+    def relabel(phase: str) -> Any:
+        changed = games.assign(phase=games["phase"].where(games["game_id"] != first, phase))
+        return prepare(replace(inputs, games={**inputs.games, "euroleague": changed}))
+
+    pd.testing.assert_frame_equal(relabel("TS").complete, world.complete)
+    knocked = relabel("FF")
+    assert not knocked.lines["euroleague"]["game_id"].eq(first).any()
+    assert len(knocked.lines["euroleague"]) < len(world.lines["euroleague"])
+
+
 def test_planted_aging_makes_the_aged_variants_better(tuning_run: Run) -> None:
     """Ignoring a planted decline of -0.006 (age - 26)^2 in the log rate is costly on the tuning
     seasons; projecting with the fitted curve is not."""
