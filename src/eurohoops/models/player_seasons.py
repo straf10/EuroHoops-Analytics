@@ -57,6 +57,9 @@ TS_FTA_WEIGHT = 0.44
 _PREFIX = {"euroleague": "P:", "gbl": "G:"}
 AGE_DAY = (10, 1)  # ages are taken at 1 October of the season's start year
 DAYS_PER_YEAR = 365.2425
+# A birth date that puts a player outside these ages in a season he played is a source error
+# (5 GBL placeholder dates, D16): the person's date is dropped and he takes the no-age path.
+AGE_RANGE = (15.0, 45.0)
 
 PLAYER_SEASONS_SCHEMA = pa.DataFrameSchema(
     {
@@ -80,7 +83,7 @@ AGES_SCHEMA = pa.DataFrameSchema(
     {
         "person_id": pa.Column(str),
         "season": pa.Column("int64"),
-        "age": pa.Column("float64", pa.Check.in_range(10.0, 60.0)),
+        "age": pa.Column("float64", pa.Check.in_range(*AGE_RANGE)),
     },
     unique=["person_id", "season"],
     strict=True,
@@ -161,7 +164,9 @@ def build_player_seasons(
 def player_ages(bios: pd.DataFrame, xwalk: pd.DataFrame, seasons: pd.DataFrame) -> pd.DataFrame:
     """Age in years at 1 October of each ``(person_id, season)`` in ``seasons``, for persons
     with a known birth date (``bios``: ``competition, source_id, birth_date``; the EuroLeague
-    date wins over the GBL one). In-memory only: never written out (L-e)."""
+    date wins over the GBL one). A person whose date gives an age outside ``AGE_RANGE`` in any
+    of his seasons has a wrong date and gets no ages at all. In-memory only: never written out
+    (L-e)."""
     dated = bios.dropna(subset=["birth_date"])
     frames = []
     for competition in COMPETITIONS:
@@ -184,6 +189,8 @@ def player_ages(bios: pd.DataFrame, xwalk: pd.DataFrame, seasons: pd.DataFrame) 
             "age": ages,
         }
     )
+    wrong = out.loc[~out["age"].between(*AGE_RANGE), "person_id"].unique()
+    out = out[~out["person_id"].isin(wrong)]
     return validated(out.reset_index(drop=True), AGES_SCHEMA)
 
 

@@ -88,6 +88,11 @@ already up to date on 2026-10-07). Orchestrator Opus 5.5; subagents Sonnet 5.5 i
   only, before the tuning run (pre-registration intact).
 - **D15 (regular season only, F's call accepted):** history, truth and exposure use regular-season games only.
   R = the season's last played regular-season round (equals M7's R except in 2019-20, which was cut short).
+- **D16 (implausible birth dates, found by the real-data wiring probe):** 5 GBL players have a source birth
+  date that gives an age under 15 in a season they played (placeholders on their ESAKE pages; counted, never
+  printed). `player_ages` drops the date of any person whose age falls outside 15–45 in any season (`AGE_RANGE`):
+  he takes the no-age path (`no_age` flag). None of the 5 is in a scored set: `m6_facts.py` (now counting
+  plausible dates only) still finds 100% coverage, fixture unchanged.
 
 ## §3 findings (L0, real data, HEAD 6b2239b; re-checked by `scripts/checks/m6_facts.py`, item 54)
 Fixture: `tests/fixtures/m6_facts.json`.

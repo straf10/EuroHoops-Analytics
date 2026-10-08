@@ -5,7 +5,8 @@
 2. Scored-set sizes per competition and season (``models.player_seasons``: >= 500 possessions in
    the season and a senior season before it in either league) and the >= 500 counts equal
    ``tests/fixtures/m6_facts.json``.
-3. Birth-date coverage among the scored player-seasons equals the fixture (all 1.0 on 2026-10-07).
+3. Birth-date coverage among the scored player-seasons equals the fixture: a plausible date
+   (``player_ages``, D16; 2026-10-08).
    Only the share is printed: no date or age is.
 4. M4 walk-forward: ``fits_by_target_season`` covers 2019-2025; the targets without a fit
    (2016-2018) cannot have a GBL->EL mover, because GBL box scores start in 2018-19.
@@ -23,7 +24,7 @@ import pandas as pd
 
 from eurohoops.config import EUROLEAGUE, GBL, M4, MART_PATH, PLAYER_BIOS
 from eurohoops.marts import read_games, read_table
-from eurohoops.models.player_seasons import build_player_seasons
+from eurohoops.models.player_seasons import build_player_seasons, player_ages
 from eurohoops.parse.gbl_box_lines import build_gbl_player_games
 from eurohoops.stats.box import build_box_games
 
@@ -58,10 +59,9 @@ for comp, lines in games.items():
 # 2-3. scored sets and birth-date coverage
 seasons = build_player_seasons(games, xwalk)
 seasons = seasons[seasons["season"] < FACTS["live_season"]]
-bios = pd.read_parquet(PLAYER_BIOS).dropna(subset=["birth_date"])
-dated = {(c, str(s)) for c, s in zip(bios["competition"], bios["source_id"], strict=True)}
-keys = zip(xwalk["competition"], xwalk["source_id"].astype(str), strict=True)
-dated_persons = set(xwalk.loc[[key in dated for key in keys], "person_id"])
+# A person counts as dated only if his date gives a plausible age in every season he played
+# (player_ages drops the others, D16): the share the projections can actually use.
+dated_persons = set(player_ages(pd.read_parquet(PLAYER_BIOS), xwalk, seasons)["person_id"])
 found: dict[str, dict[str, dict[str, float]]] = {}
 for (comp, season), rows in seasons.groupby(["competition", "season"]):
     scored = rows[(rows["poss"] >= FACTS["min_poss"]) & (rows["season"] > rows["debut_season"])]

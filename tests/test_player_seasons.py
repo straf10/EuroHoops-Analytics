@@ -112,3 +112,19 @@ def test_rate_table_by_hand() -> None:
     assert (a["fg3"], a["fg3_n"], a["ft"], a["ft_n"]) == pytest.approx((1 / 3, 3, 5 / 6, 6))
     x = rates[rates["person_id"] == "P:PX"].iloc[0]
     assert np.isnan(x["fg3"]) and x["fg3_n"] == 0  # no attempt: no percentage
+
+
+def test_a_birth_date_outside_the_age_range_is_dropped_for_the_person() -> None:
+    bios = pd.DataFrame(
+        {
+            "competition": ["euroleague", "euroleague"],
+            "source_id": ["PA", "PB"],
+            # PA: a placeholder date in the season it played (age ~0); PB: plausible.
+            "birth_date": [pd.Timestamp("2020-09-01").date(), pd.Timestamp("1995-06-01").date()],
+            "country": [None, None],
+        }
+    )
+    seasons = pd.DataFrame({"person_id": ["P:PA", "P:PA", "P:PB"], "season": [2020, 2041, 2020]})
+    ages = player_ages(bios, XWALK, seasons)
+    # PA is 20 in 2041 but ~0 in 2020: the date is wrong, so PA has no ages at all.
+    assert ages["person_id"].tolist() == ["P:PB"]
