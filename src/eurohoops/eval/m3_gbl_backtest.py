@@ -33,6 +33,7 @@ from eurohoops.eval.m3_backtest import (
     build_rapm_inputs,
     m1_margins_for,
     rmse_diff_bootstrap_ci,
+    through,
 )
 from eurohoops.models import box_impact as bi
 from eurohoops.models.box_impact import STAT_COLUMNS
@@ -263,7 +264,7 @@ def run_m3_gbl_backtest(
     shares = projected_shares(frame, gbl_player_games, spec.projection_games)
     oracle = oracle_shares(frame, gbl_player_games)
     possessions = expected_possessions(frame, gbl_team_games)
-    snapshot = _data_sha256(frame, gbl_team_games, gbl_player_games)
+    snapshot = _data_sha256(frame, through(gbl_team_games, last), through(gbl_player_games, last))
     data = Data(
         games=frame,
         margin=home - away,

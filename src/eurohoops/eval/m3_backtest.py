@@ -95,6 +95,12 @@ def _data_sha256(*frames: pd.DataFrame) -> str:
     return digest.hexdigest()
 
 
+def through(table: pd.DataFrame, last: int) -> pd.DataFrame:
+    """The table's rows up to season ``last``: the input hash covers only the seasons a backtest
+    scores, so the live season's games, added each round, do not move a committed report."""
+    return table[table["season"] <= last].reset_index(drop=True)
+
+
 @dataclass(frozen=True)
 class Data:
     games: pd.DataFrame  # warmup..test seasons, sorted by tip-off
@@ -140,7 +146,9 @@ def prepare_data(
         shares=projected_shares(frame, player_games, spec.projection_games),
         oracle=oracle_shares(frame, player_games),
         possessions=expected_possessions(frame, team_games),
-        snapshot=_data_sha256(frame, team_games, player_games, stints, checks),
+        snapshot=_data_sha256(
+            frame, *(through(t, last) for t in (team_games, player_games, stints, checks))
+        ),
         player_games=player_games,
     )
 
