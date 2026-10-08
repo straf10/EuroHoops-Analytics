@@ -373,6 +373,7 @@ is the one exception, written today by `logs.write_json` (indent 2): the `/site`
 iteration 1 | L0 branch, progress file, decisions, §3 facts, interfaces, `player_seasons.py`, M6 config, fastapi + pytest-xdist | m6_facts.py PASS (36 checks); fast gate (D8 skip list) FAILS 0 in 441 s; ruff/format/mypy/vulture clean | green | (this commit)
 iteration 2 | wave 1 merged: L1 (A), L2 (B, round 2), L3 (C), L4 (D), L5 (E) | each Done-when test file rerun in the main tree after merge (projection/aging/board/similarity/player_seasons 65 passed, API 85 passed), ruff, format, mypy, vulture clean, `docker compose config` valid; fast gate deferred while F runs | green | merges ff1bae2 310c5fb d69573c 3436934 fd9a628
 iteration 3 | L6 harness (F) merged; fast gate | F's tests 42 passed in the main tree; the interrupted gate (session end) showed 4 F in item 5, a clean rerun of the whole suite 1180 passed (cause not identified: logged, watched); fast gate (D8 list) FAILS 0 in 649 s, item 5 1180 passed 93.37%; possessions.json restored | green | merge 71a7df4
+iteration 4 | D14 (A round 2) merged; SPM wiring hardened (a season without its own SPM model raises, f7d22be); L7 leakage suite (G) merged | projection + harness + leakage files 104 passed in the main tree on the merged code; ruff, format, mypy, vulture clean | green | merges 3db32ab f7d22be fe1dc58
 
 ## Subagent log
 | wave | subagent | deliverable | rounds | notes |
@@ -382,4 +383,6 @@ iteration 3 | L6 harness (F) merged; fast gate | F's tests 42 passed in the main
 | 1 | A | L1 projection | 1 | coverage test on 7 of the 12 box stats with the true target exposure (real-data coverage is the L-h check); `fit_drift` gained an optional `impact` argument |
 | 1 | E | L5 read model + API | 1 | `docker build` not run (daemon off); `docker compose config` valid; `/simulations/latest` reason text built from the committed gate numbers (`passed` read from the report); `tests/api_tree.py` shared test helper outside its file list (accepted) |
 | 2 | F | L6 harness | 1 | no whitelist block needed; found the impact-noise gap of I2 (D14); R from played rounds; CSV holds the chosen cell + baselines only |
+| 1 | A | D14 (round 2) | 1 | `impact_noise` added at output assembly; harness passes SPM (0, u) and BRAPM (a, 0) |
+| 2b | G | L7 leakage | 1 | no real leak; scored-set floor lowered to 1 possession in the suite (scoring side only) so whole frames compare exactly; 35 tests, ~40 s at -n 6 |
 | 1 | B | L2 aging | 2 | round 1 narrowed the synthetic possession gap (1200 → 1000) after a failure (rejected); root cause: outcome-dependent weights → D10; original 1200/450 design passes unchanged; impact-stat test added |
