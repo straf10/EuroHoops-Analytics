@@ -110,7 +110,11 @@ already up to date on 2026-10-07). Orchestrator Opus 5.5; subagents Sonnet 5.5 i
   season-s rates counts the regression of players selected on a lucky season as aging (2018 curve: pts −0.78 per
   year at 29; every projection aged down ~1.0 pts per 100). Fix: each pair's delta is measured from the
   empirical-Bayes-shrunk season-s rate (shrunk toward that season's league mean by its exposure, EB variance from
-  that season's qualified rows), the regressed delta method.
+  that season's qualified rows), the regressed delta method. Amended by subagent B (round 3), accepted: the shrinkage prior is
+  estimated on every row of the competition-season (the qualified rows are the lucky ones: their own mean biased
+  the no-aging test by −0.2 per year), and its mean includes the age effect of the pre-cutoff rows (young players
+  sit below the league mean and old ones above it; shrinking to the plain mean turned that gap into aging and broke
+  the unchanged planted-curve test). `aging_curve(..., regress_season_s=False)` keeps the raw method for the test.
 - **Tuning attempts (recorded, nothing committed):** attempt 1 stopped in `aging_curve` (D15 Top 16 bug) before any
   projection existed. Attempt 2 (HEAD 3ed1195, 118 s, tuning seasons only, no validation/test number anywhere)
   scored: marcel 6.1902, proj_full_spm@2 6.4206, proj_full_spm@1 6.4448, proj_shrunk@2 6.8489, proj_age@2 7.0827,
@@ -403,6 +407,7 @@ iteration 1 | L0 branch, progress file, decisions, §3 facts, interfaces, `playe
 iteration 2 | wave 1 merged: L1 (A), L2 (B, round 2), L3 (C), L4 (D), L5 (E) | each Done-when test file rerun in the main tree after merge (projection/aging/board/similarity/player_seasons 65 passed, API 85 passed), ruff, format, mypy, vulture clean, `docker compose config` valid; fast gate deferred while F runs | green | merges ff1bae2 310c5fb d69573c 3436934 fd9a628
 iteration 3 | L6 harness (F) merged; fast gate | F's tests 42 passed in the main tree; the interrupted gate (session end) showed 4 F in item 5, a clean rerun of the whole suite 1180 passed (cause not identified: logged, watched); fast gate (D8 list) FAILS 0 in 649 s, item 5 1180 passed 93.37%; possessions.json restored | green | merge 71a7df4
 iteration 4 | D14 (A round 2) merged; SPM wiring hardened (a season without its own SPM model raises, f7d22be); L7 leakage suite (G) merged | projection + harness + leakage files 104 passed in the main tree on the merged code; ruff, format, mypy, vulture clean | green | merges 3db32ab f7d22be fe1dc58
+iteration 5 | tuning attempts 1-2 (no verdict; recorded), D15 group stages (3ed1195), D16 implausible birth dates (675d81a), D17 BRAPM snapshot noise (A round 3), D18 regressed aging deltas (B round 3) | harness, leakage, projection, aging tests rerun in the main tree after each merge; ruff, mypy clean | green | 3ed1195 675d81a merges 47cb308 ebe5231
 
 ## Subagent log
 | wave | subagent | deliverable | rounds | notes |
@@ -414,4 +419,6 @@ iteration 4 | D14 (A round 2) merged; SPM wiring hardened (a season without its 
 | 2 | F | L6 harness | 1 | no whitelist block needed; found the impact-noise gap of I2 (D14); R from played rounds; CSV holds the chosen cell + baselines only |
 | 1 | A | D14 (round 2) | 1 | `impact_noise` added at output assembly; harness passes SPM (0, u) and BRAPM (a, 0) |
 | 2b | G | L7 leakage | 1 | no real leak; scored-set floor lowered to 1 possession in the suite (scoring side only) so whole frames compare exactly; 35 tests, ~40 s at -n 6 |
+| 2 | A | D17 (round 3) | 1 | (N, D) by lag-1/lag-2 moments, memoised per freeze season |
+| 2 | B | D18 (round 3) | 1 | prior on all rows with an age effect (accepted, recorded under D18) |
 | 1 | B | L2 aging | 2 | round 1 narrowed the synthetic possession gap (1200 → 1000) after a failure (rejected); root cause: outcome-dependent weights → D10; original 1200/450 design passes unchanged; impact-stat test added |
