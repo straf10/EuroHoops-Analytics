@@ -429,6 +429,9 @@ VERDICT ab8264b
 iteration 7 | L8 validation 2023 scored once | gate PASS (point rule): proj_shrunk@1 5.39813 vs marcel 5.418873 (diff -0.020743, 95% CI [-0.166008, 0.139934]: a tie in CI terms) and same_as_last 8.512821 (diff -3.114691, CI [-4.066925, -2.178728]); coverage pooled 0.794-0.843, validation-only 0.774-0.854, all 14 stats in 0.75-0.85; 164 scored players | green | 00cc78c
 RUNTIME m6 euroleague 137
 VALIDATION 00cc78c
+iteration 8 | L8 test 2024-2025 scored once | proj_shrunk@1 5.9018 vs marcel 6.0582 (diff -0.156434, 95% CI [-0.289809, -0.032009]), same_as_last 13.3393, league_mean 13.9634; 327 scored; tuning diff vs marcel -0.099909 [-0.172649, -0.024649] | green | 5efeec8
+RUNTIME m6 euroleague 161
+TEST 5efeec8
 
 ## Subagent log
 | wave | subagent | deliverable | rounds | notes |
