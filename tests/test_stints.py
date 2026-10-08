@@ -5,6 +5,7 @@ from typing import Any
 
 import pytest
 
+from eurohoops.config import LIVE_SEASON
 from eurohoops.parse.stints import (
     CHECKS,
     SAMPLE_SEASONS,
@@ -173,6 +174,16 @@ def test_sample_is_seeded_and_spread_over_seasons(tmp_path: Path) -> None:
     assert max(per_season) - min(per_season) <= 1
     assert (2015, 1) not in sample
     assert sample_games(tmp_path) == sample
+
+
+def test_the_live_season_is_never_sampled(tmp_path: Path) -> None:
+    for season in (*SAMPLE_SEASONS, LIVE_SEASON):
+        for endpoint in ("playbyplay", "boxscore"):
+            path = tmp_path / endpoint / f"E{season}" / "1.json.gz"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.touch()
+    assert LIVE_SEASON not in SAMPLE_SEASONS
+    assert all(season != LIVE_SEASON for season, _ in sample_games(tmp_path))
 
 
 def test_validate_sample_is_reproducible_and_lists_failures(tmp_path: Path) -> None:
