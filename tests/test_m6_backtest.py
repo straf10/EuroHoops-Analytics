@@ -908,7 +908,7 @@ def _stub_loaders(monkeypatch: pytest.MonkeyPatch, inputs: M6Inputs, tmp_path: P
     }
     bios = inputs.xwalk.assign(birth_date=inputs.xwalk["person_id"].map(born))
     monkeypatch.setattr(cli, "_m6_bios", lambda: bios[["competition", "source_id", "birth_date"]])
-    monkeypatch.setattr(cli, "el_spm_models", lambda *_args: _el_spm())
+    monkeypatch.setattr(cli, "el_spm_models", lambda *_args, **_kwargs: _el_spm())
     # the committed reports the wiring reads
     snaps = inputs.brapm.assign(
         player_id=lambda d: d["person_id"].str.removeprefix("P:"), total=lambda d: d["value"]
