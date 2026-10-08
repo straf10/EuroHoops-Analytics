@@ -98,6 +98,25 @@ already up to date on 2026-10-07). Orchestrator Opus 5.5; subagents Sonnet 5.5 i
   printed). `player_ages` drops the date of any person whose age falls outside 15–45 in any season (`AGE_RANGE`):
   he takes the no-age path (`no_age` flag). None of the 5 is in a scored set: `m6_facts.py` (now counting
   plausible dates only) still finds 100% coverage, fixture unchanged.
+- **D17 (BRAPM snapshot noise; tuning attempt 2 evidence, before any verdict):** M3's snapshot `sd_total` is a
+  posterior sd, not the noise of a raw measurement: snapshots spread less (sd 1.74 in 2017) than their posterior sd
+  (mean 2.28), so I2's empirical-Bayes prior variance came out negative, was clipped to 0, and every BRAPM weight
+  was 0 (the projection was the league mean; tuning MAE 1.60 vs 0.74 for same_as_last; consecutive snapshots
+  correlate 0.885). Fix: the snapshot noise N and drift D are estimated from the snapshots before the target by the
+  method of moments on lag-1 and lag-2 differences (random-walk truth plus white noise:
+  Var(x_{s+1} − x_s) = D + 2N, Var(x_{s+2} − x_s) = 2D + 2N), possession-qualified rows only; BRAPM rows enter
+  `project` with sd = √N, `impact_noise["brapm"] = (N, 0)` and the BRAPM drift = D.
+- **D18 (aging regression to the mean; tuning attempt 2 evidence, before any verdict):** the delta method on raw
+  season-s rates counts the regression of players selected on a lucky season as aging (2018 curve: pts −0.78 per
+  year at 29; every projection aged down ~1.0 pts per 100). Fix: each pair's delta is measured from the
+  empirical-Bayes-shrunk season-s rate (shrunk toward that season's league mean by its exposure, EB variance from
+  that season's qualified rows), the regressed delta method.
+- **Tuning attempts (recorded, nothing committed):** attempt 1 stopped in `aging_curve` (D15 Top 16 bug) before any
+  projection existed. Attempt 2 (HEAD 3ed1195, 118 s, tuning seasons only, no validation/test number anywhere)
+  scored: marcel 6.1902, proj_full_spm@2 6.4206, proj_full_spm@1 6.4448, proj_shrunk@2 6.8489, proj_age@2 7.0827,
+  same_as_last 10.1897, league_mean 13.6611; BRAPM MAE variants 1.5956 vs marcel 0.8211; box-stat MAE below marcel
+  on 7 of 12 stats. Its outputs were discarded; D17 and D18 are method fixes on that tuning evidence, made before
+  the verdict, and the tuning run is repeated after them.
 
 ## §3 findings (L0, real data, HEAD 6b2239b; re-checked by `scripts/checks/m6_facts.py`, item 54)
 Fixture: `tests/fixtures/m6_facts.json`.
