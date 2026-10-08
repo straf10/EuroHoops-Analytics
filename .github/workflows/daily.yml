@@ -105,6 +105,21 @@ jobs:
         run: |
           uv run --no-dev eurohoops score
           uv run --no-dev eurohoops score --competition gbl
+      # Live M6 (its gate passed, weeks 16-18 L-l): the 2026-27 projections and the GBL
+      # undervalued list, from the committed crosswalk (entity/player_xwalk.csv). They change
+      # only at a checkpoint (25/50/75% of the rounds). The board and the comparables need the
+      # local M2 shot marts and stay as committed. A failure is a warning: the pages keep the
+      # last committed report.
+      - name: Project players (M6)
+        run: |
+          uv run --no-dev eurohoops project --projections-only \
+            || echo "::warning::M6 projections failed; the committed report stays"
+      # The Standings page (owner, weeks 16-18 D1): M7's run, labelled "not gated", rewritten
+      # only after a newly completed round. The gated, append-only `simulate` stays off.
+      - name: Ungated season simulation
+        run: |
+          uv run --no-dev eurohoops sim-ungated
+          uv run --no-dev eurohoops sim-ungated --competition gbl
       - name: Export the site data
         run: |
           uv run --no-dev eurohoops publish

@@ -55,10 +55,12 @@ from eurohoops.config import (
     M6_SIMILARITY,
     M7,
     MART_PATH,
+    PLAYER_XWALK_FILE,
     SIM_UNGATED,
     Competition,
 )
 from eurohoops.eval.backtest import TunedModel, load_tuned_model
+from eurohoops.live_m6 import person_names
 from eurohoops.logs import TIME_FORMAT
 from eurohoops.marts import read_games, read_table, read_teams
 from eurohoops.models.elo import prepare, season_ratings
@@ -69,12 +71,13 @@ from eurohoops.models.player_seasons import (
     build_player_seasons,
     person_ids,
     rate_table,
+    read_xwalk_file,
 )
 from eurohoops.parse.gbl_box_lines import build_gbl_player_games
 from eurohoops.parse.schemas import validated
 from eurohoops.publish import DISPLAY_CODES, Section, site_data
 from eurohoops.stats.box import BoxGames, build_box_games
-from eurohoops.stats.export import Inputs, build_payloads, display_name, load_cached_games
+from eurohoops.stats.export import Inputs, build_payloads, load_cached_games
 from eurohoops.stats.shots import build_shots
 
 T = TypeVar("T")
@@ -675,7 +678,11 @@ def team_factors(store: Store, competition: str, team: str, season: int | None) 
 
 
 def _xwalk(store: Store) -> pd.DataFrame:
+    """The committed crosswalk file (D25; what CI has), else the ``player_xwalk`` mart."""
+
     def make() -> pd.DataFrame:
+        if store.path(PLAYER_XWALK_FILE).exists():
+            return read_xwalk_file(store.path(PLAYER_XWALK_FILE))
         found = read_table(_mart(store), "player_xwalk") if store.path(MART_PATH).exists() else None
         if found is None:
             return pd.DataFrame(columns=["person_id", "competition", "source_id"])
@@ -709,25 +716,12 @@ def _person_names(store: Store) -> dict[str, str]:
     """Person id -> display name: the EuroLeague box-score spelling, else the GBL name table's."""
 
     def make() -> dict[str, str]:
-        xwalk = _xwalk(store)
-        names: dict[str, str] = {}
+        gbl = None
         if store.path(MART_PATH).exists():
             gbl = read_table(_mart(store), "player_names", "gbl")
-            if gbl is not None and not gbl.empty:
-                last = gbl.sort_values("season").drop_duplicates("source_id", keep="last")
-                ids = person_ids(last["source_id"], "gbl", xwalk)["person_id"]
-                for pid, surname, first in zip(
-                    ids, last["surname_raw"], last["first_raw"], strict=True
-                ):
-                    names[pid] = display_name(f"{surname}, {first}")
-        players = _el_box(store).players
-        if not players.empty:
-            last_line = players.drop_duplicates("player_id", keep="last")
-            ids = person_ids(last_line["player_id"], "euroleague", xwalk)["person_id"]
-            names.update(
-                {pid: display_name(str(n)) for pid, n in zip(ids, last_line["player"], strict=True)}
-            )
-        return names
+        return person_names(
+            _el_box(store).players, pd.DataFrame() if gbl is None else gbl, _xwalk(store)
+        )
 
     return store.memo("person_names", make)
 

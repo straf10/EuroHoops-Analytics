@@ -143,6 +143,32 @@ already up to date on 2026-10-07). Orchestrator Opus 5.5; subagents Sonnet 5.5 i
   add a fourth version, and rewriting history (filter, squash, LFS migration) would change the VERDICT /
   VALIDATION / TEST shas the pre-registration proof rests on. `.gitattributes` marks
   `reports/backtest_*_players.csv` as `-diff linguist-generated` so diffs and GitHub do not render them.
+- **D22 (live checkpoint, L9):** the live block's checkpoint is the largest of {0, 0.25, 0.5, 0.75} whose
+  k = ⌊f·R⌋ regular-season rounds are complete (M7's live `completed_rounds`, R from `season_format`), so a
+  projection changes four times a season, each with the D19 scale frozen at the verdict for that checkpoint
+  (the GBL's from its own fixed-cell report). On 2026-10-08 both competitions are at 0 (EuroLeague 3 of 38
+  rounds, GBL 1 of 26): next-season projections from every season before 2026. The live set is every person
+  with a group-stage line in the live season; a newcomer without a usable season takes `min_poss` as the
+  interval's reference exposure and the `no_history` flag (103 of 403). `data_sha256` hashes the block's
+  history, targets, impact rows, drift and translation, not the schedule. No ages are read (proj_shrunk
+  does not age; the daily workflow has no bios). The live SPM needs a model fitted before 2026:
+  `el_spm_models` gained a keyword `last` (default `M3.test[-1]`, M3's outputs unchanged), the live run
+  passes the played EuroLeague games and `last = 2026`.
+- **D23 (board and comparables season):** both use the newest complete season (2025: the last with a BRAPM
+  snapshot and M2 xPTS); board stabilities from the M6 tuning seasons (2016–2022); the "plays like" pool is
+  every complete season 2007–2025 with ≥ 500 possessions, each live person's query his newest such season.
+  They do not move during the live season, need the local shot marts, and are rebuilt locally only
+  (`project` without `--projections-only`).
+- **D24 (GBL undervalued rule):** a GBL live player with ≤ 3 seasons since his debut (L-e), < 20 minutes per
+  game in his newest complete GBL season, whose projected count rates translated by M4's newest fit
+  (fg2a and pf, not projected, from that season), floored at 0, give a EuroLeague SPM (the 2026 SPM model)
+  at or above the 75th percentile of the GBL live players with ≥ 500 possessions in their newest GBL season.
+  `projected_brapm` is null (no GBL BRAPM). 3 players on 2026-10-08.
+- **D25 (crosswalk for the daily run, owner 2026-10-08):** `entity/player_xwalk.csv` (competition, source_id,
+  person_id; 3,189 rows; no names, no dates) is committed and rewritten by `eurohoops entity`; `project`
+  and the read model read it (the mart is the read model's fallback), so `daily.yml` runs
+  `project --projections-only` after `score` (a warning on failure, like M5). The backtest still reads the
+  mart (its reports stay byte-identical).
 
 ## §3 findings (L0, real data, HEAD 6b2239b; re-checked by `scripts/checks/m6_facts.py`, item 54)
 Fixture: `tests/fixtures/m6_facts.json`.
@@ -441,6 +467,8 @@ RUNTIME m6 euroleague 161
 TEST 5efeec8
 iteration 9 | L8 GBL (fixed EuroLeague choice, gated false) | proj_shrunk@1 vs marcel: tuning -0.092705 [-0.242576, 0.063066], validation 2023 +0.363647 [-0.075924, 0.953323] (6.3149 vs 5.9513, 53 players), test +0.024464 [-0.206626, 0.235886] (6.2337 vs 6.2093); pooled coverage out of band: blk 0.868, fg3 0.882 (reported, not gated) | reported | 1c158a7
 RUNTIME m6 gbl 63
+iteration 10 | fast gate, local merge to main (12a9384, owner request); L9 live projections, board, similarity, `sim-ungated`, crosswalk file (D22-D25), daily.yml steps | fast gate FAILS 0 in 594 s (1230 passed); tests/test_live_m6.py 27 passed; m6_live.py (item 57) PASS: two dry runs same sha256, tree untouched, no age or birth date, daily.yml per gate, actionlint clean; API + player-season tests 91 passed, M3 GBL 8 passed; ruff, format, mypy, vulture clean | green | (this commit)
+RUNTIME project 48
 
 ## Subagent log
 | wave | subagent | deliverable | rounds | notes |

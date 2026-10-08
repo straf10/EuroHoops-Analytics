@@ -23,6 +23,7 @@ ages are model inputs only: they never reach a committed file, a report or the s
 from __future__ import annotations
 
 from collections.abc import Mapping
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -88,6 +89,19 @@ AGES_SCHEMA = pa.DataFrameSchema(
     unique=["person_id", "season"],
     strict=True,
 )
+
+
+XWALK_FILE_COLUMNS = ("competition", "source_id", "person_id")
+
+
+def xwalk_file(xwalk: pd.DataFrame) -> pd.DataFrame:
+    """The committed copy of the crosswalk: its ids only, sorted (``PLAYER_XWALK_FILE``)."""
+    rows = xwalk[list(XWALK_FILE_COLUMNS)].astype(str)
+    return rows.sort_values(["competition", "source_id"]).reset_index(drop=True)
+
+
+def read_xwalk_file(path: Path) -> pd.DataFrame:
+    return pd.read_csv(path, dtype=str, keep_default_na=False)[list(XWALK_FILE_COLUMNS)]
 
 
 def person_ids(player_ids: pd.Series, competition: str, xwalk: pd.DataFrame) -> pd.DataFrame:

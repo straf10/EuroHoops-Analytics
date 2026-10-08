@@ -70,9 +70,13 @@ def el_spm_models(
     stints: pd.DataFrame,
     checks: pd.DataFrame,
     chosen: dict[str, Any],
+    *,
+    last: int = M3.test[-1],
 ) -> ElSpm:
-    """Build EL ``SpmModel`` per season on the M3 EuroLeague frame (same seasons as ``M3``)."""
-    first, last = M3.warmup[0], M3.test[-1]
+    """Build EL ``SpmModel`` per season on the M3 EuroLeague frame (same seasons as ``M3``;
+    ``last`` extends it, e.g. to the live season for M6's live SPM: each season's model still
+    reads only the seasons before it)."""
+    first = M3.warmup[0]
     frame = (
         el_games[el_games["season"].between(first, last)]
         .sort_values("tipoff_utc")

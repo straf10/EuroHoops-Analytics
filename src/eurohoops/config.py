@@ -280,6 +280,10 @@ ENTITY_OVERRIDES = Path("entity/overrides.csv")
 ENTITY_LABELS = Path("entity/labels.csv")
 ENTITY_LABELS_TODO = Path("data/entity/labels_todo.csv")  # shows birth dates: never committed
 ENTITY_REPORT = Path("reports/entity_resolution.json")
+# The player_xwalk mart's ids (competition, source_id, person_id; no names, no dates), committed
+# so the daily workflow can run `eurohoops project` without the local `entity` step (owner,
+# 2026-10-08, weeks 16-18 D25). `entity` rewrites it with the mart.
+PLAYER_XWALK_FILE = Path("entity/player_xwalk.csv")
 ENTITY_TUNING_REPORT = Path("reports/entity_tuning.json")
 
 
