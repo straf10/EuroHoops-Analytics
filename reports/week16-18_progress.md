@@ -432,6 +432,8 @@ VALIDATION 00cc78c
 iteration 8 | L8 test 2024-2025 scored once | proj_shrunk@1 5.9018 vs marcel 6.0582 (diff -0.156434, 95% CI [-0.289809, -0.032009]), same_as_last 13.3393, league_mean 13.9634; 327 scored; tuning diff vs marcel -0.099909 [-0.172649, -0.024649] | green | 5efeec8
 RUNTIME m6 euroleague 161
 TEST 5efeec8
+iteration 9 | L8 GBL (fixed EuroLeague choice, gated false) | proj_shrunk@1 vs marcel: tuning -0.092705 [-0.242576, 0.063066], validation 2023 +0.363647 [-0.075924, 0.953323] (6.3149 vs 5.9513, 53 players), test +0.024464 [-0.206626, 0.235886] (6.2337 vs 6.2093); pooled coverage out of band: blk 0.868, fg3 0.882 (reported, not gated) | reported | 1c158a7
+RUNTIME m6 gbl 63
 
 ## Subagent log
 | wave | subagent | deliverable | rounds | notes |
