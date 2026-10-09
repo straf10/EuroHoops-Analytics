@@ -1,0 +1,776 @@
+{
+  "model": "m7",
+  "gate": "v2",
+  "model_version": "m7-gate-v2",
+  "competition": "euroleague",
+  "seasons": [
+    2016,
+    2017,
+    2018,
+    2020,
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "checkpoints": [
+    0.25,
+    0.5,
+    0.75
+  ],
+  "n_sims": 4000,
+  "seeds": [
+    {
+      "season": 2016,
+      "fraction": 0.25,
+      "round": 7,
+      "cutoff": "2016-11-17T16:00:00Z",
+      "seed": 20261101
+    },
+    {
+      "season": 2016,
+      "fraction": 0.5,
+      "round": 15,
+      "cutoff": "2017-01-05T17:30:00Z",
+      "seed": 20261102
+    },
+    {
+      "season": 2016,
+      "fraction": 0.75,
+      "round": 22,
+      "cutoff": "2017-02-23T17:00:00Z",
+      "seed": 20261103
+    },
+    {
+      "season": 2017,
+      "fraction": 0.25,
+      "round": 7,
+      "cutoff": "2017-11-16T17:00:00Z",
+      "seed": 20261104
+    },
+    {
+      "season": 2017,
+      "fraction": 0.5,
+      "round": 15,
+      "cutoff": "2018-01-04T19:15:00Z",
+      "seed": 20261105
+    },
+    {
+      "season": 2017,
+      "fraction": 0.75,
+      "round": 22,
+      "cutoff": "2018-02-22T17:00:00Z",
+      "seed": 20261106
+    },
+    {
+      "season": 2018,
+      "fraction": 0.25,
+      "round": 7,
+      "cutoff": "2018-11-20T17:00:00Z",
+      "seed": 20261107
+    },
+    {
+      "season": 2018,
+      "fraction": 0.5,
+      "round": 15,
+      "cutoff": "2019-01-03T17:30:00Z",
+      "seed": 20261108
+    },
+    {
+      "season": 2018,
+      "fraction": 0.75,
+      "round": 22,
+      "cutoff": "2019-02-21T17:00:00Z",
+      "seed": 20261109
+    },
+    {
+      "season": 2020,
+      "fraction": 0.25,
+      "round": 8,
+      "cutoff": "2020-11-17T17:00:00Z",
+      "seed": 20261110
+    },
+    {
+      "season": 2020,
+      "fraction": 0.5,
+      "round": 17,
+      "cutoff": "2021-01-07T18:00:00Z",
+      "seed": 20261111
+    },
+    {
+      "season": 2020,
+      "fraction": 0.75,
+      "round": 25,
+      "cutoff": "2021-02-25T17:00:00Z",
+      "seed": 20261112
+    },
+    {
+      "season": 2022,
+      "fraction": 0.25,
+      "round": 8,
+      "cutoff": "2022-11-22T18:00:00Z",
+      "seed": 20261113
+    },
+    {
+      "season": 2022,
+      "fraction": 0.5,
+      "round": 17,
+      "cutoff": "2023-01-10T18:00:00Z",
+      "seed": 20261114
+    },
+    {
+      "season": 2022,
+      "fraction": 0.75,
+      "round": 25,
+      "cutoff": "2023-03-02T18:00:00Z",
+      "seed": 20261115
+    },
+    {
+      "season": 2023,
+      "fraction": 0.25,
+      "round": 8,
+      "cutoff": "2023-11-16T19:05:00Z",
+      "seed": 20261116
+    },
+    {
+      "season": 2023,
+      "fraction": 0.5,
+      "round": 17,
+      "cutoff": "2024-01-02T17:45:00Z",
+      "seed": 20261117
+    },
+    {
+      "season": 2023,
+      "fraction": 0.75,
+      "round": 25,
+      "cutoff": "2024-02-08T17:30:00Z",
+      "seed": 20261118
+    },
+    {
+      "season": 2024,
+      "fraction": 0.25,
+      "round": 8,
+      "cutoff": "2024-11-12T17:45:00Z",
+      "seed": 20261119
+    },
+    {
+      "season": 2024,
+      "fraction": 0.5,
+      "round": 17,
+      "cutoff": "2024-12-26T18:00:00Z",
+      "seed": 20261120
+    },
+    {
+      "season": 2024,
+      "fraction": 0.75,
+      "round": 25,
+      "cutoff": "2025-02-06T17:30:00Z",
+      "seed": 20261121
+    },
+    {
+      "season": 2025,
+      "fraction": 0.25,
+      "round": 9,
+      "cutoff": "2025-11-11T16:00:00Z",
+      "seed": 20261122
+    },
+    {
+      "season": 2025,
+      "fraction": 0.5,
+      "round": 19,
+      "cutoff": "2026-01-06T17:45:00Z",
+      "seed": 20261123
+    },
+    {
+      "season": 2025,
+      "fraction": 0.75,
+      "round": 28,
+      "cutoff": "2026-02-25T17:45:00Z",
+      "seed": 20261124
+    }
+  ],
+  "formats": {
+    "2016": {
+      "label": "2016-17",
+      "teams": 16,
+      "rounds": 30,
+      "sources": [
+        "official final table https://api-live.euroleague.net/v1/standings?seasonCode=E2016&roundNumber=30 (accessed 2026-10-07) and the playoff/play-in field in the API games feed, checked by scripts/checks/m7_facts.py"
+      ],
+      "unverified": [
+        "series lengths and playoff home order from the games feed (games 1-2 at the higher seed), no bylaws for this season (earlier bylaws are not published at the ftpserver path, 404)"
+      ]
+    },
+    "2017": {
+      "label": "2017-18",
+      "teams": 16,
+      "rounds": 30,
+      "sources": [
+        "official final table https://api-live.euroleague.net/v1/standings?seasonCode=E2017&roundNumber=30 (accessed 2026-10-07) and the playoff/play-in field in the API games feed, checked by scripts/checks/m7_facts.py"
+      ],
+      "unverified": [
+        "series lengths and playoff home order from the games feed (games 1-2 at the higher seed), no bylaws for this season (earlier bylaws are not published at the ftpserver path, 404)"
+      ]
+    },
+    "2018": {
+      "label": "2018-19",
+      "teams": 16,
+      "rounds": 30,
+      "sources": [
+        "official final table https://api-live.euroleague.net/v1/standings?seasonCode=E2018&roundNumber=30 (accessed 2026-10-07) and the playoff/play-in field in the API games feed, checked by scripts/checks/m7_facts.py"
+      ],
+      "unverified": [
+        "series lengths and playoff home order from the games feed (games 1-2 at the higher seed), no bylaws for this season (earlier bylaws are not published at the ftpserver path, 404)"
+      ]
+    },
+    "2020": {
+      "label": "2020-21",
+      "teams": 18,
+      "rounds": 34,
+      "sources": [
+        "official final table https://api-live.euroleague.net/v1/standings?seasonCode=E2020&roundNumber=34 (accessed 2026-10-07) and the playoff/play-in field in the API games feed, checked by scripts/checks/m7_facts.py"
+      ],
+      "unverified": [
+        "series lengths and playoff home order from the games feed (games 1-2 at the higher seed), no bylaws for this season (earlier bylaws are not published at the ftpserver path, 404)"
+      ]
+    },
+    "2022": {
+      "label": "2022-23",
+      "teams": 18,
+      "rounds": 34,
+      "sources": [
+        "official final table https://api-live.euroleague.net/v1/standings?seasonCode=E2022&roundNumber=34 (accessed 2026-10-07) and the playoff/play-in field in the API games feed, checked by scripts/checks/m7_facts.py"
+      ],
+      "unverified": [
+        "series lengths and playoff home order from the games feed (games 1-2 at the higher seed), no bylaws for this season (earlier bylaws are not published at the ftpserver path, 404)"
+      ]
+    },
+    "2023": {
+      "label": "2023-24",
+      "teams": 18,
+      "rounds": 34,
+      "sources": [
+        "official final table https://api-live.euroleague.net/v1/standings?seasonCode=E2023&roundNumber=34 (accessed 2026-10-07) and the playoff/play-in field in the API games feed, checked by scripts/checks/m7_facts.py"
+      ],
+      "unverified": [
+        "series lengths and playoff home order from the games feed (games 1-2 at the higher seed), no bylaws for this season (earlier bylaws are not published at the ftpserver path, 404)"
+      ]
+    },
+    "2024": {
+      "label": "2024-25",
+      "teams": 18,
+      "rounds": 34,
+      "sources": [
+        "official final table https://api-live.euroleague.net/v1/standings?seasonCode=E2024&roundNumber=34 (accessed 2026-10-07) and the playoff/play-in field in the API games feed, checked by scripts/checks/m7_facts.py"
+      ],
+      "unverified": [
+        "series lengths and playoff home order from the games feed (games 1-2 at the higher seed), no bylaws for this season (earlier bylaws are not published at the ftpserver path, 404)"
+      ]
+    },
+    "2025": {
+      "label": "2025-26",
+      "teams": 20,
+      "rounds": 38,
+      "sources": [
+        "https://ftpserver.euroleague.net/general/2025_26_EuroLeague_Bylaws.pdf Art. 18-19 (cached data/raw/regulations/, accessed 2026-10-07)",
+        "official final table https://api-live.euroleague.net/v1/standings?seasonCode=E2025&roundNumber=38 (accessed 2026-10-07) and the playoff/play-in field in the API games feed, checked by scripts/checks/m7_facts.py"
+      ],
+      "unverified": []
+    }
+  },
+  "data_sha256": "6376e4a68ee22cbb67cf12ef376fef6ecf21b9e3c8de7494c58c206d37b41ccb",
+  "candidates": [
+    "sim_full",
+    "sim_net",
+    "sim_inflate_1.5",
+    "sim_inflate_2"
+  ],
+  "tie_tolerance": null,
+  "chosen_per_origin": {
+    "2017": "sim_full",
+    "2018": "sim_full",
+    "2020": "sim_full",
+    "2022": "sim_full",
+    "2023": "sim_full",
+    "2024": "sim_full",
+    "2025": "sim_full"
+  },
+  "gate_v2": {
+    "rule": "rolling origin, expanding window: per scored season the variant with the lowest pooled final-place RPS on all earlier seasons; pass = (a) season-cluster bootstrap 95% CI upper bound of the pooled direct-cut Brier difference (chosen - point_sim) below the margin, (b) pooled Brier below standings_now, (c) pooled Spiegelhalter |z| < 1.96",
+    "selection_seasons": [
+      2016
+    ],
+    "scored_seasons": [
+      2017,
+      2018,
+      2020,
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "n_team_checkpoints": 372,
+    "origins": [
+      {
+        "season": 2017,
+        "seen_seasons": [
+          2016
+        ],
+        "chosen": "sim_full",
+        "pooled_rps": {
+          "sim_full": 0.085089,
+          "sim_net": 0.085411,
+          "sim_inflate_1.5": 0.085417,
+          "sim_inflate_2": 0.085661
+        }
+      },
+      {
+        "season": 2018,
+        "seen_seasons": [
+          2016,
+          2017
+        ],
+        "chosen": "sim_full",
+        "pooled_rps": {
+          "sim_full": 0.073897,
+          "sim_net": 0.074016,
+          "sim_inflate_1.5": 0.074996,
+          "sim_inflate_2": 0.076008
+        }
+      },
+      {
+        "season": 2020,
+        "seen_seasons": [
+          2016,
+          2017,
+          2018
+        ],
+        "chosen": "sim_full",
+        "pooled_rps": {
+          "sim_full": 0.071593,
+          "sim_net": 0.071621,
+          "sim_inflate_1.5": 0.07246,
+          "sim_inflate_2": 0.0734
+        }
+      },
+      {
+        "season": 2022,
+        "seen_seasons": [
+          2016,
+          2017,
+          2018,
+          2020
+        ],
+        "chosen": "sim_full",
+        "pooled_rps": {
+          "sim_full": 0.075689,
+          "sim_net": 0.075789,
+          "sim_inflate_1.5": 0.076465,
+          "sim_inflate_2": 0.077224
+        }
+      },
+      {
+        "season": 2023,
+        "seen_seasons": [
+          2016,
+          2017,
+          2018,
+          2020,
+          2022
+        ],
+        "chosen": "sim_full",
+        "pooled_rps": {
+          "sim_full": 0.078104,
+          "sim_net": 0.078221,
+          "sim_inflate_1.5": 0.078791,
+          "sim_inflate_2": 0.07943
+        }
+      },
+      {
+        "season": 2024,
+        "seen_seasons": [
+          2016,
+          2017,
+          2018,
+          2020,
+          2022,
+          2023
+        ],
+        "chosen": "sim_full",
+        "pooled_rps": {
+          "sim_full": 0.079151,
+          "sim_net": 0.079237,
+          "sim_inflate_1.5": 0.079751,
+          "sim_inflate_2": 0.080361
+        }
+      },
+      {
+        "season": 2025,
+        "seen_seasons": [
+          2016,
+          2017,
+          2018,
+          2020,
+          2022,
+          2023,
+          2024
+        ],
+        "chosen": "sim_full",
+        "pooled_rps": {
+          "sim_full": 0.077874,
+          "sim_net": 0.077904,
+          "sim_inflate_1.5": 0.078511,
+          "sim_inflate_2": 0.079226
+        }
+      }
+    ],
+    "pooled": {
+      "chosen": {
+        "n": 372,
+        "brier": 0.111728,
+        "rps": 0.078064,
+        "log_loss": 0.343558,
+        "brier_top10": 0.075532,
+        "spiegelhalter_z": -0.679161
+      },
+      "point_sim": {
+        "n": 372,
+        "brier": 0.111867,
+        "rps": 0.077877,
+        "log_loss": 0.342777,
+        "brier_top10": 0.069424,
+        "spiegelhalter_z": 1.403112
+      },
+      "elo_sim": {
+        "n": 372,
+        "brier": 0.112589,
+        "rps": 0.077026,
+        "log_loss": 0.342104,
+        "brier_top10": 0.073538,
+        "spiegelhalter_z": 1.134118
+      },
+      "standings_now": {
+        "n": 372,
+        "brier": 0.182796,
+        "rps": 0.127237,
+        "log_loss": 1.683692,
+        "brier_top10": 0.095238,
+        "spiegelhalter_z": null
+      },
+      "sim_full": {
+        "n": 372,
+        "brier": 0.111728,
+        "rps": 0.078064,
+        "log_loss": 0.343558,
+        "brier_top10": 0.075532,
+        "spiegelhalter_z": -0.679161
+      },
+      "sim_net": {
+        "n": 372,
+        "brier": 0.11165,
+        "rps": 0.07803,
+        "log_loss": 0.343365,
+        "brier_top10": 0.075537,
+        "spiegelhalter_z": -0.619232
+      },
+      "sim_inflate_1.5": {
+        "n": 372,
+        "brier": 0.11218,
+        "rps": 0.078649,
+        "log_loss": 0.345619,
+        "brier_top10": 0.078108,
+        "spiegelhalter_z": -1.240114
+      },
+      "sim_inflate_2": {
+        "n": 372,
+        "brier": 0.11299,
+        "rps": 0.079369,
+        "log_loss": 0.34899,
+        "brier_top10": 0.080619,
+        "spiegelhalter_z": -1.698003
+      }
+    },
+    "per_season": {
+      "2017": {
+        "chosen": "sim_full",
+        "chosen_metrics": {
+          "n": 48,
+          "brier": 0.06063,
+          "rps": 0.062705,
+          "log_loss": 0.213538,
+          "brier_top10": null,
+          "spiegelhalter_z": -2.054561
+        },
+        "point_sim": {
+          "n": 48,
+          "brier": 0.051742,
+          "rps": 0.05835,
+          "log_loss": 0.180621,
+          "brier_top10": null,
+          "spiegelhalter_z": -1.677053
+        },
+        "standings_now": {
+          "n": 48,
+          "brier": 0.125,
+          "rps": 0.102778,
+          "log_loss": 1.15138,
+          "brier_top10": null,
+          "spiegelhalter_z": null
+        }
+      },
+      "2018": {
+        "chosen": "sim_full",
+        "chosen_metrics": {
+          "n": 48,
+          "brier": 0.144665,
+          "rps": 0.066983,
+          "log_loss": 0.452814,
+          "brier_top10": null,
+          "spiegelhalter_z": 1.796424
+        },
+        "point_sim": {
+          "n": 48,
+          "brier": 0.144352,
+          "rps": 0.06633,
+          "log_loss": 0.459583,
+          "brier_top10": null,
+          "spiegelhalter_z": 2.601944
+        },
+        "standings_now": {
+          "n": 48,
+          "brier": 0.25,
+          "rps": 0.116667,
+          "log_loss": 2.30266,
+          "brier_top10": null,
+          "spiegelhalter_z": null
+        }
+      },
+      "2020": {
+        "chosen": "sim_full",
+        "chosen_metrics": {
+          "n": 54,
+          "brier": 0.120348,
+          "rps": 0.086612,
+          "log_loss": 0.364531,
+          "brier_top10": null,
+          "spiegelhalter_z": -0.211444
+        },
+        "point_sim": {
+          "n": 54,
+          "brier": 0.123906,
+          "rps": 0.088137,
+          "log_loss": 0.373955,
+          "brier_top10": null,
+          "spiegelhalter_z": 0.798758
+        },
+        "standings_now": {
+          "n": 54,
+          "brier": 0.185185,
+          "rps": 0.137255,
+          "log_loss": 1.7057,
+          "brier_top10": null,
+          "spiegelhalter_z": null
+        }
+      },
+      "2022": {
+        "chosen": "sim_full",
+        "chosen_metrics": {
+          "n": 54,
+          "brier": 0.130172,
+          "rps": 0.08696,
+          "log_loss": 0.378283,
+          "brier_top10": null,
+          "spiegelhalter_z": 0.821257
+        },
+        "point_sim": {
+          "n": 54,
+          "brier": 0.137447,
+          "rps": 0.088669,
+          "log_loss": 0.396055,
+          "brier_top10": null,
+          "spiegelhalter_z": 2.156604
+        },
+        "standings_now": {
+          "n": 54,
+          "brier": 0.148148,
+          "rps": 0.124183,
+          "log_loss": 1.36458,
+          "brier_top10": null,
+          "spiegelhalter_z": null
+        }
+      },
+      "2023": {
+        "chosen": "sim_full",
+        "chosen_metrics": {
+          "n": 54,
+          "brier": 0.091951,
+          "rps": 0.084036,
+          "log_loss": 0.294073,
+          "brier_top10": 0.116972,
+          "spiegelhalter_z": -1.150789
+        },
+        "point_sim": {
+          "n": 54,
+          "brier": 0.088277,
+          "rps": 0.084108,
+          "log_loss": 0.286795,
+          "brier_top10": 0.116752,
+          "spiegelhalter_z": -0.805287
+        },
+        "standings_now": {
+          "n": 54,
+          "brier": 0.148148,
+          "rps": 0.12854,
+          "log_loss": 1.36458,
+          "brier_top10": 0.148148,
+          "spiegelhalter_z": null
+        }
+      },
+      "2024": {
+        "chosen": "sim_full",
+        "chosen_metrics": {
+          "n": 54,
+          "brier": 0.119643,
+          "rps": 0.07064,
+          "log_loss": 0.368396,
+          "brier_top10": 0.073608,
+          "spiegelhalter_z": -0.589432
+        },
+        "point_sim": {
+          "n": 54,
+          "brier": 0.115977,
+          "rps": 0.068209,
+          "log_loss": 0.359076,
+          "brier_top10": 0.067634,
+          "spiegelhalter_z": -0.060121
+        },
+        "standings_now": {
+          "n": 54,
+          "brier": 0.222222,
+          "rps": 0.139434,
+          "log_loss": 2.04682,
+          "brier_top10": 0.111111,
+          "spiegelhalter_z": null
+        }
+      },
+      "2025": {
+        "chosen": "sim_full",
+        "chosen_metrics": {
+          "n": 60,
+          "brier": 0.112575,
+          "rps": 0.084821,
+          "log_loss": 0.332225,
+          "brier_top10": 0.039968,
+          "spiegelhalter_z": -0.28539
+        },
+        "point_sim": {
+          "n": 60,
+          "brier": 0.117658,
+          "rps": 0.086883,
+          "log_loss": 0.338759,
+          "brier_top10": 0.028439,
+          "spiegelhalter_z": 0.984509
+        },
+        "standings_now": {
+          "n": 60,
+          "brier": 0.2,
+          "rps": 0.136842,
+          "log_loss": 1.842148,
+          "brier_top10": 0.033333,
+          "spiegelhalter_z": null
+        }
+      }
+    },
+    "brier_vs_point_sim": {
+      "mean": -0.000139,
+      "ci95": [
+        -0.003839,
+        0.003782
+      ],
+      "clusters": 7,
+      "resamples": 10000,
+      "seed": 20261102
+    },
+    "brier_vs_standings_now": {
+      "mean": -0.071068,
+      "ci95": [
+        -0.090278,
+        -0.048401
+      ],
+      "clusters": 7,
+      "resamples": 10000,
+      "seed": 20261102
+    },
+    "spiegelhalter_z_pooled": -0.679161,
+    "brier_chosen": 0.111728,
+    "brier_point_sim": 0.111867,
+    "brier_standings_now": 0.182796,
+    "criteria": {
+      "a_non_inferior_to_point_sim": true,
+      "b_beats_standings_now": true,
+      "c_calibrated": true,
+      "margin": 0.005,
+      "z_limit": 1.96,
+      "passed": true
+    },
+    "passed": true
+  },
+  "selection_season_metrics": {
+    "sim_full": {
+      "n": 48,
+      "brier": 0.086714,
+      "rps": 0.085089,
+      "log_loss": 0.278013,
+      "brier_top10": null,
+      "spiegelhalter_z": -1.229624
+    },
+    "sim_net": {
+      "n": 48,
+      "brier": 0.087255,
+      "rps": 0.085411,
+      "log_loss": 0.279084,
+      "brier_top10": null,
+      "spiegelhalter_z": -1.191636
+    },
+    "sim_inflate_1.5": {
+      "n": 48,
+      "brier": 0.089757,
+      "rps": 0.085417,
+      "log_loss": 0.288274,
+      "brier_top10": null,
+      "spiegelhalter_z": -1.358326
+    },
+    "sim_inflate_2": {
+      "n": 48,
+      "brier": 0.092096,
+      "rps": 0.085661,
+      "log_loss": 0.296866,
+      "brier_top10": null,
+      "spiegelhalter_z": -1.492865
+    },
+    "point_sim": {
+      "n": 48,
+      "brier": 0.079484,
+      "rps": 0.086624,
+      "log_loss": 0.250554,
+      "brier_top10": null,
+      "spiegelhalter_z": -0.604753
+    },
+    "elo_sim": {
+      "n": 48,
+      "brier": 0.080816,
+      "rps": 0.088096,
+      "log_loss": 0.25757,
+      "brier_top10": null,
+      "spiegelhalter_z": -0.521015
+    },
+    "standings_now": {
+      "n": 48,
+      "brier": 0.166667,
+      "rps": 0.122222,
+      "log_loss": 1.53514,
+      "brier_top10": null,
+      "spiegelhalter_z": null
+    }
+  }
+}

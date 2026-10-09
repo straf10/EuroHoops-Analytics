@@ -393,6 +393,18 @@ M7 = M7Backtest(
     validation=(2023,),
     test=(2024, 2025),
 )
+# Gate v2 (docs/models/m7.md, declared 2026-10-09, PLAN 8.1 R5): the first season only feeds the
+# variant choice of the next origin, every later one is scored. Checkpoints, simulations and
+# seeds as M7 (the plan over these eight seasons is the plan of M7's full run).
+M7_V2 = M7Backtest(
+    Path("reports/backtest_m7_v2.json"),
+    Path("reports/backtest_m7_v2_teams.csv"),
+    tuning=(2016, 2017, 2018, 2020, 2022, 2023, 2024, 2025),
+    validation=(),
+    test=(),
+    bootstrap_resamples=10000,
+)
+GATE_V2_MARGIN = 0.005  # non-inferiority margin of the Brier difference to point_sim
 # GBL: the seasons whose format section 3 can verify; reported only (it scores the EuroLeague
 # verdict as `fixed`).
 M7_GBL = M7Backtest(
