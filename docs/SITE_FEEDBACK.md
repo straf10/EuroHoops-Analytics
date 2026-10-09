@@ -185,3 +185,4 @@ Report: what each model (Elo, M1, M5, M6, M7) does, what is live, logged or show
 
 3. Domain: owner buys a .com on Cloudflare Registrar. Phase E (Cloudflare Pages, custom domain, base path `/`) runs right after Phase A.
 4. Header GitHub icon removed too (wave 2).
+5. Career totals stay (full career for every listed player). The "all-time" option on Leaders is hidden until older seasons are managed properly (it would miss players retired before the 5-season window).
