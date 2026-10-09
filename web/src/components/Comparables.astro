@@ -1,5 +1,5 @@
 ---
-// "Plays like": the five closest player-seasons across both leagues to the player's own latest
+// "Plays like": the five closest player-seasons to the player's own latest
 // season, by cosine similarity of box-score rates, shooting and (EuroLeague) shot zones.
 import { COMPETITIONS, seasonLabel, fixed, type SimilarReport } from "../lib/m6";
 
@@ -22,8 +22,8 @@ const pool = report ? report.pool_seasons : [];
     <p>
       {
         report && top.length > 0
-          ? `His ${seasonLabel(query!)} season is closest to these player-seasons in EuroLeague and the Greek League.`
-          : `The player-seasons closest to ${name}'s latest season, in EuroLeague and the Greek League.`
+          ? `His ${seasonLabel(query!)} season is closest to these EuroLeague player-seasons.`
+          : `The player-seasons closest to ${name}'s latest season, in the EuroLeague.`
       }
     </p>
   </header>
@@ -48,13 +48,12 @@ const pool = report ? report.pool_seasons : [];
           ))}
         </ol>
         <p class="m6-facts" data-sample>
-          Searched {seasonLabel(pool[0])} to {seasonLabel(pool[pool.length - 1])}, {pool.length} seasons of both leagues. Similarity is cosine: 1 is
+          Searched {seasonLabel(pool[0])} to {seasonLabel(pool[pool.length - 1])}, {pool.length} seasons. Similarity is cosine: 1 is
           the same profile, 0 unrelated.
         </p>
         <p class="m6-facts">
           Not the Shot Twin: the Twin compares where on the floor he shoots with other EuroLeague shooters; this compares the whole
-          season (box-score rates, shooting percentages, usage and, in the EuroLeague, shot zones and shot-making) and also looks
-          at the Greek League.
+          season: box-score rates, shooting percentages, usage, shot zones and shot-making.
         </p>
       </figure>
     ) : (

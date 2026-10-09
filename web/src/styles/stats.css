@@ -764,15 +764,13 @@ button.s-rank[aria-expanded="true"]::after {
   font-weight: 600;
 }
 
-/* Scouting board: a dimension and a league at a time, sortable heads, z on a small rail. */
+/* Scouting board: a dimension at a time, sortable heads, z on a small rail. */
 .board-controls {
   margin-bottom: 20px;
 }
 .board-wrap:not(:has(input[name="dim"][value="shot_making"]:checked)) [data-panel="shot_making"],
 .board-wrap:not(:has(input[name="dim"][value="fg3_pct"]:checked)) [data-panel="fg3_pct"],
-.board-wrap:not(:has(input[name="dim"][value="on_off"]:checked)) [data-panel="on_off"],
-.board-wrap:has(input[name="league"][value="euroleague"]:checked) tr[data-comp="gbl"],
-.board-wrap:has(input[name="league"][value="gbl"]:checked) tr[data-comp="euroleague"] {
+.board-wrap:not(:has(input[name="dim"][value="on_off"]:checked)) [data-panel="on_off"] {
   display: none;
 }
 .scroll.tall {

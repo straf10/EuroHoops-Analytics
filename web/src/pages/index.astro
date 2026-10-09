@@ -16,15 +16,15 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const REPO ="https://github.com/straf10/EuroHoops-Analytics";
 const updated = `${athensDay(data.generated_at_utc)}, ${athensTime(data.generated_at_utc)} Athens`;
 const description =
-  "Pre-registered EuroLeague and Greek Basket League forecasts, committed before tip-off and scored in the open.";
+  "Pre-registered EuroLeague forecasts, committed before tip-off and scored in the open.";
 ---
 
-<Base description={description} current="forecasts" compSwitch updated={updated}>
+<Base description={description} current="forecasts" updated={updated}>
   <section class="hero wrap" aria-labelledby="hero-title">
     <div class="copy">
       <h1 id="hero-title">Called before tip-off.</h1>
       <p class="lede">
-        Every EuroLeague and Greek League forecast is committed to a public, append-only log before
+        Every EuroLeague forecast is committed to a public, append-only log before
         the game, then scored against a home-win baseline.
       </p>
       {

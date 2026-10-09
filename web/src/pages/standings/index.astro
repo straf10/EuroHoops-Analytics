@@ -19,7 +19,7 @@ const comps = await Promise.all(
     const clubs = Object.fromEntries(
       (sim?.teams ?? []).map(({ team }) => {
         const code = displayCode(c.key, team);
-        const name = names.get(code) ?? (c.key === "euroleague" ? stats?.teams[code] : undefined) ?? code;
+        const name = names.get(code) ?? stats?.teams[code] ?? code;
         return [team, [code, name]];
       }),
     ) as Record<string, [string, string]>;
@@ -28,16 +28,14 @@ const comps = await Promise.all(
 );
 const known = new Set(stats ? Object.keys(stats.teams) : []);
 const href = (code: string) => (known.has(code) ? teamHref(base, code) : null);
-const description = "Projected EuroLeague and Greek Basket League tables from the daily season simulation (EuroLeague gated, Greek league not gated).";
+const description = "Projected EuroLeague tables from the daily season simulation.";
 ---
 
 <Base title="Standings" description={description} current="standings">
   <header class="wrap head">
     <h1>Standings</h1>
     <p class="lede">
-      How each season could finish: the rest of the fixtures played many times over, then the tables counted. The
-      EuroLeague projection passed its validation gate (v2, over seven past seasons); the Greek league one is not
-      gated, as its playoff rules are unverified, so treat it as a sketch.
+      How the season could finish: the rest of the fixtures played many times over, then the tables counted.
     </p>
   </header>
 
@@ -48,7 +46,7 @@ const description = "Projected EuroLeague and Greek Basket League tables from th
           <h2 id={`stand-${c.key}`}>{c.title}</h2>
         </header>
         {sim ? (
-          <StandingsTable sim={sim} title="Projected final table" clubs={clubs} href={c.key === "euroleague" ? href : () => null} />
+          <StandingsTable sim={sim} title="Projected final table" clubs={clubs} href={href} />
         ) : (
           <p class="note">No simulation is available for the {c.title} yet.</p>
         )}

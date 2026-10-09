@@ -147,9 +147,8 @@ def test_backtest_predict_score_publish_end_to_end() -> None:
     assert json.loads(GBL.scorecard.read_text())["rows_in_log"] == 3
     invoke("publish")
     data = json.loads(SITE_DATA.read_text(encoding="utf-8"))
-    el, gbl_data = data["competitions"]
-    assert (el["key"], gbl_data["key"]) == ("euroleague", "gbl")
-    assert len(gbl_data["upcoming"]) == 3
+    (el,) = data["competitions"]  # the GBL is logged and scored, but not published
+    assert el["key"] == "euroleague"
     assert any(r["name"] == "Team AAA & Co" for r in el["ratings"])
 
 
@@ -410,7 +409,7 @@ def test_pbp_flag_is_gbl_only() -> None:
 
 
 @pytest.mark.usefixtures("pipeline")
-def test_build_reports_team_continuity_and_unnamed_live_gbl_teams() -> None:
+def test_build_reports_team_continuity() -> None:
     def staged(rows: list[tuple[int, str, str]]) -> pd.DataFrame:
         return pd.DataFrame(rows, columns=["season", "team", "name"])
 
@@ -425,7 +424,6 @@ def test_build_reports_team_continuity_and_unnamed_live_gbl_teams() -> None:
     output = invoke("build")
     assert "euroleague 2026 teams: left MCO" in output
     assert "gbl 2026 teams: new NEWID" in output
-    assert "gbl 2026: no display code for NEWID (publish.py)" in output
     assert not TEAM_CONTINUITY_REPORT.exists()  # build never writes the committed report
     assert "wrote" in invoke("continuity")
     report = json.loads(TEAM_CONTINUITY_REPORT.read_text())

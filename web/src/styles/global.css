@@ -189,23 +189,6 @@ svg.icon {
   flex: none;
 }
 
-/* The competition switch drives every panel without JavaScript. */
-body:has(#comp-gbl:checked) [data-comp="euroleague"],
-body:not(:has(#comp-gbl:checked)) [data-comp="gbl"] {
-  display: none;
-}
-/* After the visitor switches competition, a panel coming back from display:none replays this,
-   so the switch reads as a change of data. Not on first paint: the page loads still. */
-@keyframes comp-in {
-  from {
-    opacity: 0;
-    filter: blur(2px);
-  }
-}
-:root.comp-switched [data-comp] {
-  animation: comp-in 200ms var(--ease-out);
-}
-
 /* Shared chart chrome */
 .chart {
   display: block;
