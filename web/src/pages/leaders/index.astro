@@ -35,14 +35,14 @@ const cfg = {
   clubs: Object.fromEntries(clubs.map((c) => [c.code, { name: c.name, seasons: c.seasons }])),
 };
 const description =
-  "The EuroLeague's leaders since 2007-08 on the floor as jersey backs: a season, whole careers or the best single seasons, for the league or one club.";
+  "The EuroLeague's leaders since 2007-08 on the floor as jersey backs: a season or whole careers, for the league or one club.";
 ---
 
 <Base title="Leaders" description={description} current="leaders">
   <section class="wrap head" aria-labelledby="leaders-title">
     <h1 id="leaders-title">Leaders</h1>
     <p>
-      Pick a club to see its roster for a season, its career leaders or its best single seasons.
+      Pick a club to see its roster for a season or its career leaders.
     </p>
   </section>
 
