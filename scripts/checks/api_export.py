@@ -46,9 +46,10 @@ from eurohoops.api.export import (
     write_publish,
     write_stats_files,
 )
-from eurohoops.api.readmodel import Store
+from eurohoops.api.readmodel import FORECAST_MODELS, Store
 from eurohoops.cli import _live, utc_now
 from eurohoops.config import EUROLEAGUE, GBL, LIVE_SEASON, MART_PATH
+from eurohoops.eval.forecasts import build_forecasts
 from eurohoops.logs import write_json
 from eurohoops.marts import read_games, read_teams
 from eurohoops.publish import DISPLAY_CODES, Section, site_data
@@ -80,6 +81,17 @@ def legacy_site(out: Path, now: datetime) -> None:
                 model=live.model,
                 season=live.season,
                 replay_from=live.replay_from,
+                forecasts=build_forecasts(
+                    {
+                        "elo": comp.prediction_log,
+                        "m1": comp.m1_prediction_log,
+                        "m5": comp.m5_prediction_log,
+                    },
+                    FORECAST_MODELS,
+                    live.games,
+                    live.season,
+                    comp.manual_pushes,
+                ),
             )
         )
     write_json(out, site_data(sections, now))
