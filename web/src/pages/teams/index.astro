@@ -62,7 +62,6 @@ const COLS = [
                 {tables.map(({ s }) => (
                   <option value={s.season} selected={s.season === open}>
                     {s.label}
-                    {s.live ? " (live)" : ""}
                   </option>
                 ))}
               </select>

@@ -205,24 +205,6 @@ export const fixed = (x: number, digits = 1): string => (Math.abs(x) < 0.5 * 10 
 export const percent = (x: number): string => `${fixed(100 * x)}%`;
 export const range = (lo: number, hi: number, f: (x: number) => string = fixed): string => `${f(lo)} to ${f(hi)}`;
 
-/** The projection flags in words (lib/projection.py FLAGS). */
-export const FLAGS: Record<string, string> = {
-  no_history: "No usable past season: the projection is the league average.",
-  no_age: "No aging adjustment was applied.",
-  translated: "Part of the history is from outside the EuroLeague and is translated.",
-  partial_season: "Includes the part played of the season in progress.",
-  no_impact_input: "No impact input: BRAPM leans on its league prior.",
-};
-
-/** Where the model stands on its validation gate, in words. */
-export function gateWords(r: { model: string; gated: boolean; gate_passed: boolean }): string {
-  const name = r.model.toUpperCase();
-  if (!r.gated) return `${name} is not gated: no validation gate has been run on it.`;
-  return r.gate_passed
-    ? `${name} passed its validation gate on past seasons.`
-    : `${name} did not pass its validation gate on past seasons: read these as the model's guess, not a checked forecast.`;
-}
-
 // ---- The board --------------------------------------------------------------------------------
 
 export interface DimensionInfo {

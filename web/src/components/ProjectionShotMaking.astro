@@ -20,15 +20,14 @@ const rows: RailRow[] = [...(index?.shot_making?.seasons ?? [])].reverse().slice
 
 {
   rows.length > 0 ? (
-    <figure class="m6-fig" data-figure>
+    <figure class="proj-fig" data-figure>
       <figcaption>
         <h3>Shot-making</h3>
-        <p class="m6-sub">Points per 100 field-goal attempts above what each shot's place and type predict (M2), pulled toward zero on small samples.</p>
+        <p class="proj-sub">Points per 100 field-goal attempts above expected.</p>
       </figcaption>
       <ProjectionRail rows={rows} />
-      <p class="m6-facts">A season measured on few attempts has a wide interval and stays near zero. Measured, not forecast.</p>
     </figure>
   ) : (
-    <p class="note">No shot-making rating for this player: too few located EuroLeague attempts.</p>
+    <p class="note">No shot-making rating for this player.</p>
   )
 }

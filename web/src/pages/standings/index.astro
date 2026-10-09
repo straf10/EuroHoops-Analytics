@@ -28,15 +28,13 @@ const comps = await Promise.all(
 );
 const known = new Set(stats ? Object.keys(stats.teams) : []);
 const href = (code: string) => (known.has(code) ? teamHref(base, code) : null);
-const description = "Projected EuroLeague tables from the daily season simulation.";
+const description = "Projected final tables for the EuroLeague.";
 ---
 
 <Base title="Standings" description={description} current="standings">
   <header class="wrap head">
     <h1>Standings</h1>
-    <p class="lede">
-      How the season could finish: the rest of the fixtures played many times over, then the tables counted.
-    </p>
+    <p class="lede">Projected final tables.</p>
   </header>
 
   {
@@ -48,7 +46,7 @@ const description = "Projected EuroLeague tables from the daily season simulatio
         {sim ? (
           <StandingsTable sim={sim} title="Projected final table" clubs={clubs} href={href} />
         ) : (
-          <p class="note">No simulation is available for the {c.title} yet.</p>
+          <p class="note">No projection is available for the {c.title} yet.</p>
         )}
       </section>
     ))

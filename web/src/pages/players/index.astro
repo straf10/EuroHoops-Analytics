@@ -65,7 +65,6 @@ const description =
                 {seasons.map((s) => (
                   <option value={s.season} selected={s.season === view.season}>
                     {s.label}
-                    {s.live ? " (live)" : ""}
                   </option>
                 ))}
               </select>
@@ -182,7 +181,7 @@ const description =
         <p class="note">
           Qualifying players average at least the chosen minutes and, over a full season, played a
           quarter of the most games anyone did. Shooting percentages rank only players with enough
-          attempts (hover a muted value to see the floor). Per 100 uses possessions estimated from
+          attempts. Per 100 uses possessions estimated from
           the box score while he was on court.
           {early.length > 0 && ` Shot locations for ${early[early.length - 1]} to ${early[0]} are approximate.`}
         </p>
