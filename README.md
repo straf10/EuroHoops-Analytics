@@ -121,7 +121,7 @@ refresh unfinished rounds.
 ```bash
 uv run ruff check . && uv run ruff format --check .
 uv run mypy src
-uv run pytest -q --cov=eurohoops --cov-fail-under=85
+uv run pytest -q -n auto --dist loadfile --cov=eurohoops --cov-fail-under=85
 uv run vulture src scripts/vulture_whitelist.py --min-confidence 60
 ```
 </details>
