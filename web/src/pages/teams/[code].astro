@@ -128,9 +128,6 @@ const bandHead = [
         <h2 id="shots-title">Shots taken and allowed</h2>
         <p>Where the club shot from and where it let opponents shoot, against the league from the same spot.</p>
       </div>
-      <a class="ink-link" id="explore" href={`${base}/shots/?season=${t.season}&team=${t.code}&view=fg`}>
-        Open in the Shots explorer
-      </a>
     </header>
     <p class="caveat-line" id="caveat" hidden={t.validated}>
       Shot locations before 2011-12 do not line up with the court; read this season as approximate.
@@ -348,7 +345,6 @@ const bandHead = [
           document.getElementById(`bands-${side}`)!.innerHTML = bands[side];
         }
         document.getElementById("caveat")!.hidden = t.validated;
-        (document.getElementById("explore") as HTMLAnchorElement).search = `?season=${t.season}&team=${t.code}&view=fg`;
         document.getElementById("roster-body")!.innerHTML = rosterHtml(t, base!);
         select!.value = s;
         document.title = `${t.name} · EuroHoops`;

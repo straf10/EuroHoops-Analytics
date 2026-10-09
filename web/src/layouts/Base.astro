@@ -3,18 +3,18 @@ import "@fontsource-variable/geist";
 import "../styles/global.css";
 import github from "@phosphor-icons/core/assets/regular/github-logo.svg?raw";
 import sun from "@phosphor-icons/core/assets/regular/sun.svg?raw";
+import { buildDate, buildId } from "../lib/build";
 import moon from "@phosphor-icons/core/assets/regular/moon.svg?raw";
 
 interface Props {
   title?: string;
   description: string;
   /** Which top-bar page is current. */
-  current?: "players" | "leaders" | "compare" | "teams" | "shots" | "scouting" | "standings" | "forecasts" | "methodology";
+  current?: "players" | "leaders" | "compare" | "teams" | "standings" | "forecasts" | "methodology" | "about" | "glossary" | "downloads";
   /** Show the EuroLeague / Greek League switch in the top bar. */
   compSwitch?: boolean;
-  updated?: string;
 }
-const { title, description, current, compSwitch = false, updated } = Astro.props;
+const { title, description, current, compSwitch = false } = Astro.props;
 const REPO = "https://github.com/straf10/EuroHoops-Analytics";
 const fullTitle = title ? `${title} · EuroHoops` : "EuroHoops Analytics";
 const home = import.meta.env.BASE_URL;
@@ -24,11 +24,14 @@ const pages = [
   { key: "leaders", href: `${root}/leaders/`, label: "Leaders" },
   { key: "compare", href: `${root}/compare/`, label: "Compare" },
   { key: "teams", href: `${root}/teams/`, label: "Teams" },
-  { key: "shots", href: `${root}/shots/`, label: "Shots" },
-  { key: "scouting", href: `${root}/scouting/`, label: "Scouting" },
   { key: "standings", href: `${root}/standings/`, label: "Standings" },
   { key: "forecasts", href: `${root}/`, label: "Forecasts" },
+] as const;
+const footLinks = [
+  { key: "about", href: `${root}/about/`, label: "About" },
   { key: "methodology", href: `${root}/methodology/`, label: "Methodology" },
+  { key: "glossary", href: `${root}/glossary/`, label: "Glossary" },
+  { key: "downloads", href: `${root}/downloads/`, label: "Downloads" },
 ] as const;
 ---
 
@@ -117,9 +120,17 @@ const pages = [
 
     <footer class="foot">
       <div class="wrap foot-inner">
-        <p>A model benchmark, not betting advice. No affiliation with EuroLeague or the Greek Basket League.</p>
-        {updated && <p>Updated {updated}.</p>}
-        <a href={REPO}>Code, data and logs on GitHub</a>
+        <nav class="foot-links" aria-label="About this site">
+          {
+            footLinks.map((p) => (
+              <a href={p.href} aria-current={current === p.key ? "page" : undefined}>
+                {p.label}
+              </a>
+            ))
+          }
+        </nav>
+        <p>Stats from the EuroLeague API. Not affiliated with the EuroLeague or any team.</p>
+        <p>Data through {buildDate} · build {buildId}</p>
       </div>
     </footer>
 
@@ -400,12 +411,31 @@ const pages = [
   }
   .foot-inner {
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px 28px;
+    flex-direction: column;
+    gap: 8px;
     padding-block: 28px 40px;
   }
-  .foot-inner a {
-    margin-left: auto;
+  .foot-inner p {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+  .foot-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 20px;
+    margin-bottom: 6px;
+  }
+  .foot-links a {
+    text-decoration: none;
+    color: var(--ink-2);
+  }
+  .foot-links a[aria-current="page"] {
+    color: var(--ink);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .foot-links a:hover {
+      color: var(--ink);
+    }
   }
 
   @media (max-width: 560px) {
@@ -461,11 +491,6 @@ const pages = [
     }
     .wordmark span {
       display: none;
-    }
-  }
-  @media (max-width: 480px) {
-    .foot-inner a {
-      margin-left: 0;
     }
   }
 </style>

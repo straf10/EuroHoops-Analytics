@@ -226,11 +226,6 @@ const seasonOptions = (list: typeof seasons, chosen: number) =>
               Distances are from the basket. Share is the part of his field-goal attempts from each
               distance; the league columns are every EuroLeague shot that season.
             </p>
-            <p class="note">
-              <a class="ink-link" id="explore" href={`${base}/shots/?season=${shotSeason.season}&player=${data.id}&view=fg`}>
-                Cut these shots by quarter and distance
-              </a>
-            </p>
           </div>
         </div>
       ) : (
@@ -333,8 +328,6 @@ const seasonOptions = (list: typeof seasons, chosen: number) =>
           document.getElementById("court")!.innerHTML = shotChart(s, Number(radius));
           document.getElementById("bands")!.innerHTML = bandsHtml(s, up, down);
           document.getElementById("caveat")!.hidden = s.validated;
-          const explore = document.getElementById("explore") as HTMLAnchorElement | null;
-          if (explore) explore.search = `?season=${s.season}&player=${(await load()).id}&view=fg`;
         } else {
           document.getElementById("log-body")!.innerHTML = logHtml(s);
         }
