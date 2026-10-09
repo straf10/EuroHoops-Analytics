@@ -60,6 +60,7 @@ from eurohoops.config import (
     Competition,
 )
 from eurohoops.eval.backtest import TunedModel, load_tuned_model
+from eurohoops.eval.forecasts import build_forecasts
 from eurohoops.live_m6 import person_names
 from eurohoops.logs import TIME_FORMAT
 from eurohoops.marts import read_games, read_table, read_teams
@@ -346,12 +347,19 @@ def _elo(store: Store, comp: Competition, season: int) -> dict[str, tuple[float,
 
 # ---- site ----
 
+FORECAST_MODELS = {"elo": "Elo", "m1": "M1", "m5": "M5"}
+
+
+def _path_of(store: Store, relative: Path | None) -> Path | None:
+    return None if relative is None else store.path(relative)
+
 
 def site(store: Store, now: datetime) -> dict[str, Any]:
     """``site.json``: the payload ``publish.site_data`` builds from the logs, scorecards, tuned
     Elo parameters and games of both competitions (as ``eurohoops publish`` assembles it)."""
     sections = []
     for title, comp in (("EuroLeague", EUROLEAGUE), ("Greek Basket League", GBL)):
+        games = _games(store, comp)
         scorecard = _required(store, comp.scorecard, f"the {comp.name} live scorecard")
         backtest = _required(store, comp.live_backtest.report, f"the {comp.name} Elo backtest")
         log = (
@@ -366,11 +374,22 @@ def site(store: Store, now: datetime) -> dict[str, Any]:
                 log=log,
                 scorecard=scorecard,
                 backtest=backtest,
-                games=_games(store, comp),
+                games=games,
                 names=_names(store, comp),
                 model=_live_model(store, comp),
                 season=LIVE_SEASON,
                 replay_from=comp.live_backtest.warmup[0],
+                forecasts=build_forecasts(
+                    {
+                        "elo": store.path(comp.prediction_log),
+                        "m1": _path_of(store, comp.m1_prediction_log),
+                        "m5": _path_of(store, comp.m5_prediction_log),
+                    },
+                    FORECAST_MODELS,
+                    games,
+                    LIVE_SEASON,
+                    comp.manual_pushes,
+                ),
             )
         )
     return site_data(sections, now)

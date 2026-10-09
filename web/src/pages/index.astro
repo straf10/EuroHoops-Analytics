@@ -12,7 +12,8 @@ import { athensDay, athensTime, seasonSpan } from "../lib/format";
 
 const data = raw as SiteData;
 const comps = data.competitions;
-const REPO = "https://github.com/straf10/EuroHoops-Analytics";
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const REPO ="https://github.com/straf10/EuroHoops-Analytics";
 const updated = `${athensDay(data.generated_at_utc)}, ${athensTime(data.generated_at_utc)} Athens`;
 const description =
   "Pre-registered EuroLeague and Greek Basket League forecasts, committed before tip-off and scored in the open.";
@@ -67,6 +68,7 @@ const description =
       <p>
         Elo against a baseline that always gives the home side its historical win rate. The better
         number in each pair is marked.
+        <a href={`${base}/forecasts/`}>Every model, round by round and game by game.</a>
       </p>
     </header>
     {comps.map((c) => <Scorecard comp={c} />)}

@@ -1,0 +1,32 @@
+---
+import Base from "../../layouts/Base.astro";
+import ForecastRecord from "../../components/ForecastRecord.astro";
+import "../../styles/stats.css";
+import raw from "../../data/site.json";
+import type { SiteData } from "../../lib/format";
+
+const data = raw as SiteData;
+const description =
+  "The season's forecast record for every logged model: scorecard, round by round and game by game, scored only on calls made before tip-off.";
+---
+
+<Base title="Forecast record" description={description} current="forecasts">
+  <header class="wrap head">
+    <h1>Forecast record</h1>
+    <p class="lede">
+      Every model's calls this season, scored against the results. Only calls committed to the public log
+      before tip-off count, and a model that joined late has no entry for the games before it did.
+    </p>
+  </header>
+
+  {
+    data.competitions.map((c) => (
+      <section class="wrap band" aria-labelledby={`rec-${c.key}`}>
+        <header class="sec-head">
+          <h2 id={`rec-${c.key}`}>{c.title}</h2>
+        </header>
+        <ForecastRecord comp={c} />
+      </section>
+    ))
+  }
+</Base>

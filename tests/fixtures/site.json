@@ -797,7 +797,1254 @@
           "rating": 1411.2,
           "change": 0.0
         }
-      ]
+      ],
+      "forecasts": {
+        "models": [
+          {
+            "key": "elo",
+            "label": "Elo",
+            "first_round": 1
+          },
+          {
+            "key": "m1",
+            "label": "M1",
+            "first_round": 1
+          }
+        ],
+        "season": [
+          {
+            "model": "elo",
+            "n": 29,
+            "picks": 29,
+            "right": 18,
+            "right_pct": 0.62069,
+            "log_loss": 0.663952,
+            "brier": 0.235225,
+            "margin_mae": 8.68069,
+            "within": {
+              "5": 0.310345,
+              "10": 0.586207
+            },
+            "totals_mae": null
+          },
+          {
+            "model": "m1",
+            "n": 29,
+            "picks": 29,
+            "right": 18,
+            "right_pct": 0.62069,
+            "log_loss": 0.669879,
+            "brier": 0.237321,
+            "margin_mae": 8.68069,
+            "within": {
+              "5": 0.310345,
+              "10": 0.586207
+            },
+            "totals_mae": 9.310345
+          }
+        ],
+        "shared": {
+          "n": 29,
+          "rows": [
+            {
+              "model": "elo",
+              "n": 29,
+              "picks": 29,
+              "right": 18,
+              "right_pct": 0.62069,
+              "log_loss": 0.663952,
+              "brier": 0.235225,
+              "margin_mae": 8.68069,
+              "within": {
+                "5": 0.310345,
+                "10": 0.586207
+              },
+              "totals_mae": null
+            },
+            {
+              "model": "m1",
+              "n": 29,
+              "picks": 29,
+              "right": 18,
+              "right_pct": 0.62069,
+              "log_loss": 0.669879,
+              "brier": 0.237321,
+              "margin_mae": 8.68069,
+              "within": {
+                "5": 0.310345,
+                "10": 0.586207
+              },
+              "totals_mae": 9.310345
+            }
+          ]
+        },
+        "rounds": [
+          {
+            "phase": "RS",
+            "round": 1,
+            "games": 3,
+            "models": {
+              "elo": {
+                "n": 3,
+                "picks": 3,
+                "right": 1,
+                "right_pct": 0.333333,
+                "log_loss": 0.826561,
+                "brier": 0.31243,
+                "margin_mae": 16.973333,
+                "within": {
+                  "5": 0.0,
+                  "10": 0.0
+                },
+                "totals_mae": null
+              },
+              "m1": {
+                "n": 3,
+                "picks": 3,
+                "right": 1,
+                "right_pct": 0.333333,
+                "log_loss": 0.845433,
+                "brier": 0.320186,
+                "margin_mae": 16.973333,
+                "within": {
+                  "5": 0.0,
+                  "10": 0.0
+                },
+                "totals_mae": 15.666667
+              }
+            }
+          },
+          {
+            "phase": "RS",
+            "round": 2,
+            "games": 3,
+            "models": {
+              "elo": {
+                "n": 3,
+                "picks": 3,
+                "right": 3,
+                "right_pct": 1.0,
+                "log_loss": 0.391861,
+                "brier": 0.109287,
+                "margin_mae": 7.586667,
+                "within": {
+                  "5": 0.333333,
+                  "10": 0.666667
+                },
+                "totals_mae": null
+              },
+              "m1": {
+                "n": 3,
+                "picks": 3,
+                "right": 3,
+                "right_pct": 1.0,
+                "log_loss": 0.36695,
+                "brier": 0.099781,
+                "margin_mae": 7.586667,
+                "within": {
+                  "5": 0.333333,
+                  "10": 0.666667
+                },
+                "totals_mae": 9.333333
+              }
+            }
+          },
+          {
+            "phase": "RS",
+            "round": 3,
+            "games": 3,
+            "models": {
+              "elo": {
+                "n": 3,
+                "picks": 3,
+                "right": 2,
+                "right_pct": 0.666667,
+                "log_loss": 0.729336,
+                "brier": 0.255278,
+                "margin_mae": 10.283333,
+                "within": {
+                  "5": 0.333333,
+                  "10": 0.333333
+                },
+                "totals_mae": null
+              },
+              "m1": {
+                "n": 3,
+                "picks": 3,
+                "right": 2,
+                "right_pct": 0.666667,
+                "log_loss": 0.762449,
+                "brier": 0.263829,
+                "margin_mae": 10.283333,
+                "within": {
+                  "5": 0.333333,
+                  "10": 0.333333
+                },
+                "totals_mae": 12.0
+              }
+            }
+          },
+          {
+            "phase": "RS",
+            "round": 4,
+            "games": 3,
+            "models": {
+              "elo": {
+                "n": 3,
+                "picks": 3,
+                "right": 3,
+                "right_pct": 1.0,
+                "log_loss": 0.4106,
+                "brier": 0.121791,
+                "margin_mae": 7.273333,
+                "within": {
+                  "5": 0.666667,
+                  "10": 0.666667
+                },
+                "totals_mae": null
+              },
+              "m1": {
+                "n": 3,
+                "picks": 3,
+                "right": 3,
+                "right_pct": 1.0,
+                "log_loss": 0.387711,
+                "brier": 0.114149,
+                "margin_mae": 7.273333,
+                "within": {
+                  "5": 0.666667,
+                  "10": 0.666667
+                },
+                "totals_mae": 10.333333
+              }
+            }
+          },
+          {
+            "phase": "RS",
+            "round": 5,
+            "games": 3,
+            "models": {
+              "elo": {
+                "n": 3,
+                "picks": 3,
+                "right": 2,
+                "right_pct": 0.666667,
+                "log_loss": 0.603679,
+                "brier": 0.208481,
+                "margin_mae": 8.37,
+                "within": {
+                  "5": 0.333333,
+                  "10": 0.333333
+                },
+                "totals_mae": null
+              },
+              "m1": {
+                "n": 3,
+                "picks": 3,
+                "right": 2,
+                "right_pct": 0.666667,
+                "log_loss": 0.600478,
+                "brier": 0.207721,
+                "margin_mae": 8.37,
+                "within": {
+                  "5": 0.333333,
+                  "10": 0.333333
+                },
+                "totals_mae": 10.333333
+              }
+            }
+          },
+          {
+            "phase": "RS",
+            "round": 6,
+            "games": 3,
+            "models": {
+              "elo": {
+                "n": 3,
+                "picks": 3,
+                "right": 1,
+                "right_pct": 0.333333,
+                "log_loss": 0.800761,
+                "brier": 0.302317,
+                "margin_mae": 8.386667,
+                "within": {
+                  "5": 0.333333,
+                  "10": 0.333333
+                },
+                "totals_mae": null
+              },
+              "m1": {
+                "n": 3,
+                "picks": 3,
+                "right": 1,
+                "right_pct": 0.333333,
+                "log_loss": 0.814875,
+                "brier": 0.308811,
+                "margin_mae": 8.386667,
+                "within": {
+                  "5": 0.333333,
+                  "10": 0.333333
+                },
+                "totals_mae": 7.333333
+              }
+            }
+          },
+          {
+            "phase": "RS",
+            "round": 7,
+            "games": 3,
+            "models": {
+              "elo": {
+                "n": 3,
+                "picks": 3,
+                "right": 1,
+                "right_pct": 0.333333,
+                "log_loss": 0.770014,
+                "brier": 0.286548,
+                "margin_mae": 10.78,
+                "within": {
+                  "5": 0.0,
+                  "10": 0.666667
+                },
+                "totals_mae": null
+              },
+              "m1": {
+                "n": 3,
+                "picks": 3,
+                "right": 1,
+                "right_pct": 0.333333,
+                "log_loss": 0.783363,
+                "brier": 0.292379,
+                "margin_mae": 10.78,
+                "within": {
+                  "5": 0.0,
+                  "10": 0.666667
+                },
+                "totals_mae": 10.333333
+              }
+            }
+          },
+          {
+            "phase": "RS",
+            "round": 8,
+            "games": 3,
+            "models": {
+              "elo": {
+                "n": 3,
+                "picks": 3,
+                "right": 3,
+                "right_pct": 1.0,
+                "log_loss": 0.453468,
+                "brier": 0.138252,
+                "margin_mae": 4.7,
+                "within": {
+                  "5": 0.666667,
+                  "10": 1.0
+                },
+                "totals_mae": null
+              },
+              "m1": {
+                "n": 3,
+                "picks": 3,
+                "right": 3,
+                "right_pct": 1.0,
+                "log_loss": 0.433674,
+                "brier": 0.130743,
+                "margin_mae": 4.7,
+                "within": {
+                  "5": 0.666667,
+                  "10": 1.0
+                },
+                "totals_mae": 7.333333
+              }
+            }
+          },
+          {
+            "phase": "RS",
+            "round": 9,
+            "games": 3,
+            "models": {
+              "elo": {
+                "n": 3,
+                "picks": 3,
+                "right": 1,
+                "right_pct": 0.333333,
+                "log_loss": 0.888754,
+                "brier": 0.333198,
+                "margin_mae": 7.67,
+                "within": {
+                  "5": 0.0,
+                  "10": 1.0
+                },
+                "totals_mae": null
+              },
+              "m1": {
+                "n": 3,
+                "picks": 3,
+                "right": 1,
+                "right_pct": 0.333333,
+                "log_loss": 0.927731,
+                "brier": 0.345752,
+                "margin_mae": 7.67,
+                "within": {
+                  "5": 0.0,
+                  "10": 1.0
+                },
+                "totals_mae": 6.333333
+              }
+            }
+          },
+          {
+            "phase": "RS",
+            "round": 10,
+            "games": 2,
+            "models": {
+              "elo": {
+                "n": 2,
+                "picks": 2,
+                "right": 1,
+                "right_pct": 0.5,
+                "log_loss": 0.814748,
+                "brier": 0.30939,
+                "margin_mae": 2.835,
+                "within": {
+                  "5": 0.5,
+                  "10": 1.0
+                },
+                "totals_mae": null
+              },
+              "m1": {
+                "n": 2,
+                "picks": 2,
+                "right": 1,
+                "right_pct": 0.5,
+                "log_loss": 0.829248,
+                "brier": 0.31613,
+                "margin_mae": 2.835,
+                "within": {
+                  "5": 0.5,
+                  "10": 1.0
+                },
+                "totals_mae": 1.5
+              }
+            }
+          }
+        ],
+        "games": [
+          {
+            "game_id": "E2026_29",
+            "round": 10,
+            "phase": "RS",
+            "tipoff_utc": "2026-12-03T18:15:00Z",
+            "home": {
+              "code": "FFF",
+              "name": "Team FFF & Co"
+            },
+            "away": {
+              "code": "DDD",
+              "name": "Team DDD & Co"
+            },
+            "home_score": 80,
+            "away_score": 82,
+            "models": {
+              "elo": {
+                "p_home": 0.6201,
+                "exp_margin": 3.07,
+                "right": false
+              },
+              "m1": {
+                "p_home": 0.6321,
+                "exp_margin": 3.07,
+                "right": false
+              }
+            }
+          },
+          {
+            "game_id": "E2026_28",
+            "round": 10,
+            "phase": "RS",
+            "tipoff_utc": "2026-12-03T18:00:00Z",
+            "home": {
+              "code": "FFF",
+              "name": "Team FFF & Co"
+            },
+            "away": {
+              "code": "CCC",
+              "name": "Team CCC & Co"
+            },
+            "home_score": 80,
+            "away_score": 81,
+            "models": {
+              "elo": {
+                "p_home": 0.484,
+                "exp_margin": -0.4,
+                "right": true
+              },
+              "m1": {
+                "p_home": 0.4824,
+                "exp_margin": -0.4,
+                "right": true
+              }
+            }
+          },
+          {
+            "game_id": "E2026_27",
+            "round": 9,
+            "phase": "RS",
+            "tipoff_utc": "2026-11-26T18:30:00Z",
+            "home": {
+              "code": "FFF",
+              "name": "Team FFF & Co"
+            },
+            "away": {
+              "code": "BBB",
+              "name": "Team BBB & Co"
+            },
+            "home_score": 80,
+            "away_score": 91,
+            "models": {
+              "elo": {
+                "p_home": 0.31,
+                "exp_margin": -5.01,
+                "right": true
+              },
+              "m1": {
+                "p_home": 0.291,
+                "exp_margin": -5.01,
+                "right": true
+              }
+            }
+          },
+          {
+            "game_id": "E2026_26",
+            "round": 9,
+            "phase": "RS",
+            "tipoff_utc": "2026-11-26T18:15:00Z",
+            "home": {
+              "code": "FFF",
+              "name": "Team FFF & Co"
+            },
+            "away": {
+              "code": "AAA",
+              "name": "Team AAA & Co"
+            },
+            "home_score": 80,
+            "away_score": 87,
+            "models": {
+              "elo": {
+                "p_home": 0.5458,
+                "exp_margin": 1.15,
+                "right": false
+              },
+              "m1": {
+                "p_home": 0.5504,
+                "exp_margin": 1.15,
+                "right": false
+              }
+            }
+          },
+          {
+            "game_id": "E2026_25",
+            "round": 9,
+            "phase": "RS",
+            "tipoff_utc": "2026-11-26T18:00:00Z",
+            "home": {
+              "code": "EEE",
+              "name": "Team EEE & Co"
+            },
+            "away": {
+              "code": "FFF",
+              "name": "Team FFF & Co"
+            },
+            "home_score": 80,
+            "away_score": 81,
+            "models": {
+              "elo": {
+                "p_home": 0.7782,
+                "exp_margin": 7.87,
+                "right": false
+              },
+              "m1": {
+                "p_home": 0.806,
+                "exp_margin": 7.87,
+                "right": false
+              }
+            }
+          },
+          {
+            "game_id": "E2026_24",
+            "round": 8,
+            "phase": "RS",
+            "tipoff_utc": "2026-11-19T18:30:00Z",
+            "home": {
+              "code": "EEE",
+              "name": "Team EEE & Co"
+            },
+            "away": {
+              "code": "DDD",
+              "name": "Team DDD & Co"
+            },
+            "home_score": 86,
+            "away_score": 80,
+            "models": {
+              "elo": {
+                "p_home": 0.7824,
+                "exp_margin": 8.02,
+                "right": true
+              },
+              "m1": {
+                "p_home": 0.8106,
+                "exp_margin": 8.02,
+                "right": true
+              }
+            }
+          },
+          {
+            "game_id": "E2026_23",
+            "round": 8,
+            "phase": "RS",
+            "tipoff_utc": "2026-11-19T18:15:00Z",
+            "home": {
+              "code": "EEE",
+              "name": "Team EEE & Co"
+            },
+            "away": {
+              "code": "CCC",
+              "name": "Team CCC & Co"
+            },
+            "home_score": 93,
+            "away_score": 80,
+            "models": {
+              "elo": {
+                "p_home": 0.6402,
+                "exp_margin": 3.61,
+                "right": true
+              },
+              "m1": {
+                "p_home": 0.6542,
+                "exp_margin": 3.61,
+                "right": true
+              }
+            }
+          },
+          {
+            "game_id": "E2026_22",
+            "round": 8,
+            "phase": "RS",
+            "tipoff_utc": "2026-11-19T18:00:00Z",
+            "home": {
+              "code": "EEE",
+              "name": "Team EEE & Co"
+            },
+            "away": {
+              "code": "BBB",
+              "name": "Team BBB & Co"
+            },
+            "home_score": 80,
+            "away_score": 83,
+            "models": {
+              "elo": {
+                "p_home": 0.4878,
+                "exp_margin": -0.31,
+                "right": true
+              },
+              "m1": {
+                "p_home": 0.4866,
+                "exp_margin": -0.31,
+                "right": true
+              }
+            }
+          },
+          {
+            "game_id": "E2026_21",
+            "round": 7,
+            "phase": "RS",
+            "tipoff_utc": "2026-11-12T18:30:00Z",
+            "home": {
+              "code": "EEE",
+              "name": "Team EEE & Co"
+            },
+            "away": {
+              "code": "AAA",
+              "name": "Team AAA & Co"
+            },
+            "home_score": 94,
+            "away_score": 80,
+            "models": {
+              "elo": {
+                "p_home": 0.6613,
+                "exp_margin": 4.19,
+                "right": true
+              },
+              "m1": {
+                "p_home": 0.6774,
+                "exp_margin": 4.19,
+                "right": true
+              }
+            }
+          },
+          {
+            "game_id": "E2026_20",
+            "round": 7,
+            "phase": "RS",
+            "tipoff_utc": "2026-11-12T18:15:00Z",
+            "home": {
+              "code": "DDD",
+              "name": "Team DDD & Co"
+            },
+            "away": {
+              "code": "FFF",
+              "name": "Team FFF & Co"
+            },
+            "home_score": 80,
+            "away_score": 90,
+            "models": {
+              "elo": {
+                "p_home": 0.6768,
+                "exp_margin": 4.63,
+                "right": false
+              },
+              "m1": {
+                "p_home": 0.6945,
+                "exp_margin": 4.63,
+                "right": false
+              }
+            }
+          },
+          {
+            "game_id": "E2026_19",
+            "round": 7,
+            "phase": "RS",
+            "tipoff_utc": "2026-11-12T18:00:00Z",
+            "home": {
+              "code": "DDD",
+              "name": "Team DDD & Co"
+            },
+            "away": {
+              "code": "EEE",
+              "name": "Team EEE & Co"
+            },
+            "home_score": 80,
+            "away_score": 87,
+            "models": {
+              "elo": {
+                "p_home": 0.5356,
+                "exp_margin": 0.9,
+                "right": false
+              },
+              "m1": {
+                "p_home": 0.5392,
+                "exp_margin": 0.9,
+                "right": false
+              }
+            }
+          },
+          {
+            "game_id": "E2026_18",
+            "round": 6,
+            "phase": "RS",
+            "tipoff_utc": "2026-11-05T18:30:00Z",
+            "home": {
+              "code": "DDD",
+              "name": "Team DDD & Co"
+            },
+            "away": {
+              "code": "CCC",
+              "name": "Team CCC & Co"
+            },
+            "home_score": 80,
+            "away_score": 89,
+            "models": {
+              "elo": {
+                "p_home": 0.5747,
+                "exp_margin": 1.89,
+                "right": false
+              },
+              "m1": {
+                "p_home": 0.5822,
+                "exp_margin": 1.89,
+                "right": false
+              }
+            }
+          },
+          {
+            "game_id": "E2026_17",
+            "round": 6,
+            "phase": "RS",
+            "tipoff_utc": "2026-11-05T18:15:00Z",
+            "home": {
+              "code": "DDD",
+              "name": "Team DDD & Co"
+            },
+            "away": {
+              "code": "BBB",
+              "name": "Team BBB & Co"
+            },
+            "home_score": 80,
+            "away_score": 85,
+            "models": {
+              "elo": {
+                "p_home": 0.4067,
+                "exp_margin": -2.37,
+                "right": true
+              },
+              "m1": {
+                "p_home": 0.3974,
+                "exp_margin": -2.37,
+                "right": true
+              }
+            }
+          },
+          {
+            "game_id": "E2026_16",
+            "round": 6,
+            "phase": "RS",
+            "tipoff_utc": "2026-11-05T18:00:00Z",
+            "home": {
+              "code": "DDD",
+              "name": "Team DDD & Co"
+            },
+            "away": {
+              "code": "AAA",
+              "name": "Team AAA & Co"
+            },
+            "home_score": 80,
+            "away_score": 88,
+            "models": {
+              "elo": {
+                "p_home": 0.6413,
+                "exp_margin": 3.64,
+                "right": false
+              },
+              "m1": {
+                "p_home": 0.6554,
+                "exp_margin": 3.64,
+                "right": false
+              }
+            }
+          },
+          {
+            "game_id": "E2026_15",
+            "round": 5,
+            "phase": "RS",
+            "tipoff_utc": "2026-10-29T18:30:00Z",
+            "home": {
+              "code": "CCC",
+              "name": "Team CCC & Co"
+            },
+            "away": {
+              "code": "FFF",
+              "name": "Team FFF & Co"
+            },
+            "home_score": 99,
+            "away_score": 80,
+            "models": {
+              "elo": {
+                "p_home": 0.7327,
+                "exp_margin": 6.32,
+                "right": true
+              },
+              "m1": {
+                "p_home": 0.756,
+                "exp_margin": 6.32,
+                "right": true
+              }
+            }
+          },
+          {
+            "game_id": "E2026_14",
+            "round": 5,
+            "phase": "RS",
+            "tipoff_utc": "2026-10-29T18:15:00Z",
+            "home": {
+              "code": "CCC",
+              "name": "Team CCC & Co"
+            },
+            "away": {
+              "code": "EEE",
+              "name": "Team EEE & Co"
+            },
+            "home_score": 80,
+            "away_score": 87,
+            "models": {
+              "elo": {
+                "p_home": 0.646,
+                "exp_margin": 3.77,
+                "right": false
+              },
+              "m1": {
+                "p_home": 0.6606,
+                "exp_margin": 3.77,
+                "right": false
+              }
+            }
+          },
+          {
+            "game_id": "E2026_13",
+            "round": 5,
+            "phase": "RS",
+            "tipoff_utc": "2026-10-29T18:00:00Z",
+            "home": {
+              "code": "CCC",
+              "name": "Team CCC & Co"
+            },
+            "away": {
+              "code": "DDD",
+              "name": "Team DDD & Co"
+            },
+            "home_score": 85,
+            "away_score": 80,
+            "models": {
+              "elo": {
+                "p_home": 0.6303,
+                "exp_margin": 3.34,
+                "right": true
+              },
+              "m1": {
+                "p_home": 0.6433,
+                "exp_margin": 3.34,
+                "right": true
+              }
+            }
+          },
+          {
+            "game_id": "E2026_12",
+            "round": 4,
+            "phase": "RS",
+            "tipoff_utc": "2026-10-22T18:30:00Z",
+            "home": {
+              "code": "CCC",
+              "name": "Team CCC & Co"
+            },
+            "away": {
+              "code": "BBB",
+              "name": "Team BBB & Co"
+            },
+            "home_score": 80,
+            "away_score": 83,
+            "models": {
+              "elo": {
+                "p_home": 0.4696,
+                "exp_margin": -0.76,
+                "right": true
+              },
+              "m1": {
+                "p_home": 0.4666,
+                "exp_margin": -0.76,
+                "right": true
+              }
+            }
+          },
+          {
+            "game_id": "E2026_11",
+            "round": 4,
+            "phase": "RS",
+            "tipoff_utc": "2026-10-22T18:15:00Z",
+            "home": {
+              "code": "CCC",
+              "name": "Team CCC & Co"
+            },
+            "away": {
+              "code": "AAA",
+              "name": "Team AAA & Co"
+            },
+            "home_score": 81,
+            "away_score": 80,
+            "models": {
+              "elo": {
+                "p_home": 0.6544,
+                "exp_margin": 4.0,
+                "right": true
+              },
+              "m1": {
+                "p_home": 0.6698,
+                "exp_margin": 4.0,
+                "right": true
+              }
+            }
+          },
+          {
+            "game_id": "E2026_10",
+            "round": 4,
+            "phase": "RS",
+            "tipoff_utc": "2026-10-22T18:00:00Z",
+            "home": {
+              "code": "BBB",
+              "name": "Team BBB & Co"
+            },
+            "away": {
+              "code": "FFF",
+              "name": "Team FFF & Co"
+            },
+            "home_score": 107,
+            "away_score": 80,
+            "models": {
+              "elo": {
+                "p_home": 0.8406,
+                "exp_margin": 10.42,
+                "right": true
+              },
+              "m1": {
+                "p_home": 0.8747,
+                "exp_margin": 10.42,
+                "right": true
+              }
+            }
+          },
+          {
+            "game_id": "E2026_9",
+            "round": 3,
+            "phase": "RS",
+            "tipoff_utc": "2026-10-15T18:30:00Z",
+            "home": {
+              "code": "BBB",
+              "name": "Team BBB & Co"
+            },
+            "away": {
+              "code": "EEE",
+              "name": "Team EEE & Co"
+            },
+            "home_score": 101,
+            "away_score": 80,
+            "models": {
+              "elo": {
+                "p_home": 0.7443,
+                "exp_margin": 6.7,
+                "right": true
+              },
+              "m1": {
+                "p_home": 0.7687,
+                "exp_margin": 6.7,
+                "right": true
+              }
+            }
+          },
+          {
+            "game_id": "E2026_8",
+            "round": 3,
+            "phase": "RS",
+            "tipoff_utc": "2026-10-15T18:15:00Z",
+            "home": {
+              "code": "BBB",
+              "name": "Team BBB & Co"
+            },
+            "away": {
+              "code": "DDD",
+              "name": "Team DDD & Co"
+            },
+            "home_score": 80,
+            "away_score": 87,
+            "models": {
+              "elo": {
+                "p_home": 0.8016,
+                "exp_margin": 8.75,
+                "right": false
+              },
+              "m1": {
+                "p_home": 0.8318,
+                "exp_margin": 8.75,
+                "right": false
+              }
+            }
+          },
+          {
+            "game_id": "E2026_7",
+            "round": 3,
+            "phase": "RS",
+            "tipoff_utc": "2026-10-15T18:00:00Z",
+            "home": {
+              "code": "BBB",
+              "name": "Team BBB & Co"
+            },
+            "away": {
+              "code": "CCC",
+              "name": "Team CCC & Co"
+            },
+            "home_score": 88,
+            "away_score": 80,
+            "models": {
+              "elo": {
+                "p_home": 0.7594,
+                "exp_margin": 7.2,
+                "right": true
+              },
+              "m1": {
+                "p_home": 0.7853,
+                "exp_margin": 7.2,
+                "right": true
+              }
+            }
+          },
+          {
+            "game_id": "E2026_6",
+            "round": 2,
+            "phase": "RS",
+            "tipoff_utc": "2026-10-08T18:30:00Z",
+            "home": {
+              "code": "BBB",
+              "name": "Team BBB & Co"
+            },
+            "away": {
+              "code": "AAA",
+              "name": "Team AAA & Co"
+            },
+            "home_score": 93,
+            "away_score": 80,
+            "models": {
+              "elo": {
+                "p_home": 0.772,
+                "exp_margin": 7.64,
+                "right": true
+              },
+              "m1": {
+                "p_home": 0.7992,
+                "exp_margin": 7.64,
+                "right": true
+              }
+            }
+          },
+          {
+            "game_id": "E2026_5",
+            "round": 2,
+            "phase": "RS",
+            "tipoff_utc": "2026-10-08T18:15:00Z",
+            "home": {
+              "code": "AAA",
+              "name": "Team AAA & Co"
+            },
+            "away": {
+              "code": "FFF",
+              "name": "Team FFF & Co"
+            },
+            "home_score": 81,
+            "away_score": 80,
+            "models": {
+              "elo": {
+                "p_home": 0.7175,
+                "exp_margin": 5.84,
+                "right": true
+              },
+              "m1": {
+                "p_home": 0.7393,
+                "exp_margin": 5.84,
+                "right": true
+              }
+            }
+          },
+          {
+            "game_id": "E2026_4",
+            "round": 2,
+            "phase": "RS",
+            "tipoff_utc": "2026-10-08T18:00:00Z",
+            "home": {
+              "code": "AAA",
+              "name": "Team AAA & Co"
+            },
+            "away": {
+              "code": "EEE",
+              "name": "Team EEE & Co"
+            },
+            "home_score": 94,
+            "away_score": 80,
+            "models": {
+              "elo": {
+                "p_home": 0.5572,
+                "exp_margin": 1.44,
+                "right": true
+              },
+              "m1": {
+                "p_home": 0.5629,
+                "exp_margin": 1.44,
+                "right": true
+              }
+            }
+          },
+          {
+            "game_id": "E2026_3",
+            "round": 1,
+            "phase": "RS",
+            "tipoff_utc": "2026-10-01T18:30:00Z",
+            "home": {
+              "code": "AAA",
+              "name": "Team AAA & Co"
+            },
+            "away": {
+              "code": "DDD",
+              "name": "Team DDD & Co"
+            },
+            "home_score": 80,
+            "away_score": 91,
+            "models": {
+              "elo": {
+                "p_home": 0.6909,
+                "exp_margin": 5.04,
+                "right": false
+              },
+              "m1": {
+                "p_home": 0.71,
+                "exp_margin": 5.04,
+                "right": false
+              }
+            }
+          },
+          {
+            "game_id": "E2026_2",
+            "round": 1,
+            "phase": "RS",
+            "tipoff_utc": "2026-10-01T18:15:00Z",
+            "home": {
+              "code": "AAA",
+              "name": "Team AAA & Co"
+            },
+            "away": {
+              "code": "CCC",
+              "name": "Team CCC & Co"
+            },
+            "home_score": 94,
+            "away_score": 80,
+            "models": {
+              "elo": {
+                "p_home": 0.5632,
+                "exp_margin": 1.59,
+                "right": true
+              },
+              "m1": {
+                "p_home": 0.5695,
+                "exp_margin": 1.59,
+                "right": true
+              }
+            }
+          },
+          {
+            "game_id": "E2026_1",
+            "round": 1,
+            "phase": "RS",
+            "tipoff_utc": "2026-10-01T18:00:00Z",
+            "home": {
+              "code": "AAA",
+              "name": "Team AAA & Co"
+            },
+            "away": {
+              "code": "BBB",
+              "name": "Team BBB & Co"
+            },
+            "home_score": 80,
+            "away_score": 102,
+            "models": {
+              "elo": {
+                "p_home": 0.5188,
+                "exp_margin": 0.47,
+                "right": false
+              },
+              "m1": {
+                "p_home": 0.5207,
+                "exp_margin": 0.47,
+                "right": false
+              }
+            }
+          }
+        ]
+      }
     },
     {
       "key": "gbl",
@@ -1520,7 +2767,826 @@
           "rating": 1424.8,
           "change": 0.0
         }
-      ]
+      ],
+      "forecasts": {
+        "models": [
+          {
+            "key": "elo",
+            "label": "Elo",
+            "first_round": 1
+          }
+        ],
+        "season": [
+          {
+            "model": "elo",
+            "n": 25,
+            "picks": 25,
+            "right": 15,
+            "right_pct": 0.6,
+            "log_loss": 0.676124,
+            "brier": 0.240821,
+            "margin_mae": 9.1796,
+            "within": {
+              "5": 0.28,
+              "10": 0.56
+            },
+            "totals_mae": null
+          }
+        ],
+        "shared": {
+          "n": 0,
+          "rows": []
+        },
+        "rounds": [
+          {
+            "phase": "RS",
+            "round": 1,
+            "games": 3,
+            "models": {
+              "elo": {
+                "n": 3,
+                "picks": 3,
+                "right": 1,
+                "right_pct": 0.333333,
+                "log_loss": 0.801791,
+                "brier": 0.300514,
+                "margin_mae": 16.75,
+                "within": {
+                  "5": 0.0,
+                  "10": 0.0
+                },
+                "totals_mae": null
+              }
+            }
+          },
+          {
+            "phase": "RS",
+            "round": 2,
+            "games": 3,
+            "models": {
+              "elo": {
+                "n": 3,
+                "picks": 3,
+                "right": 3,
+                "right_pct": 1.0,
+                "log_loss": 0.407509,
+                "brier": 0.116089,
+                "margin_mae": 7.236667,
+                "within": {
+                  "5": 0.333333,
+                  "10": 0.666667
+                },
+                "totals_mae": null
+              }
+            }
+          },
+          {
+            "phase": "RS",
+            "round": 3,
+            "games": 2,
+            "models": {
+              "elo": {
+                "n": 2,
+                "picks": 2,
+                "right": 1,
+                "right_pct": 0.5,
+                "log_loss": 0.949463,
+                "brier": 0.352325,
+                "margin_mae": 15.33,
+                "within": {
+                  "5": 0.0,
+                  "10": 0.0
+                },
+                "totals_mae": null
+              }
+            }
+          },
+          {
+            "phase": "RS",
+            "round": 4,
+            "games": 3,
+            "models": {
+              "elo": {
+                "n": 3,
+                "picks": 3,
+                "right": 3,
+                "right_pct": 1.0,
+                "log_loss": 0.418728,
+                "brier": 0.123518,
+                "margin_mae": 6.436667,
+                "within": {
+                  "5": 0.666667,
+                  "10": 0.666667
+                },
+                "totals_mae": null
+              }
+            }
+          },
+          {
+            "phase": "RS",
+            "round": 5,
+            "games": 2,
+            "models": {
+              "elo": {
+                "n": 2,
+                "picks": 2,
+                "right": 2,
+                "right_pct": 1.0,
+                "log_loss": 0.435027,
+                "brier": 0.125802,
+                "margin_mae": 7.325,
+                "within": {
+                  "5": 0.5,
+                  "10": 0.5
+                },
+                "totals_mae": null
+              }
+            }
+          },
+          {
+            "phase": "RS",
+            "round": 6,
+            "games": 3,
+            "models": {
+              "elo": {
+                "n": 3,
+                "picks": 3,
+                "right": 1,
+                "right_pct": 0.333333,
+                "log_loss": 0.807921,
+                "brier": 0.305843,
+                "margin_mae": 8.703333,
+                "within": {
+                  "5": 0.333333,
+                  "10": 0.333333
+                },
+                "totals_mae": null
+              }
+            }
+          },
+          {
+            "phase": "RS",
+            "round": 7,
+            "games": 2,
+            "models": {
+              "elo": {
+                "n": 2,
+                "picks": 2,
+                "right": 0,
+                "right_pct": 0.0,
+                "log_loss": 0.932763,
+                "brier": 0.366506,
+                "margin_mae": 11.665,
+                "within": {
+                  "5": 0.0,
+                  "10": 0.5
+                },
+                "totals_mae": null
+              }
+            }
+          },
+          {
+            "phase": "RS",
+            "round": 8,
+            "games": 3,
+            "models": {
+              "elo": {
+                "n": 3,
+                "picks": 3,
+                "right": 3,
+                "right_pct": 1.0,
+                "log_loss": 0.458547,
+                "brier": 0.138967,
+                "margin_mae": 4.63,
+                "within": {
+                  "5": 0.666667,
+                  "10": 1.0
+                },
+                "totals_mae": null
+              }
+            }
+          },
+          {
+            "phase": "RS",
+            "round": 9,
+            "games": 3,
+            "models": {
+              "elo": {
+                "n": 3,
+                "picks": 3,
+                "right": 1,
+                "right_pct": 0.333333,
+                "log_loss": 0.848315,
+                "brier": 0.319459,
+                "margin_mae": 7.69,
+                "within": {
+                  "5": 0.0,
+                  "10": 1.0
+                },
+                "totals_mae": null
+              }
+            }
+          },
+          {
+            "phase": "PO",
+            "round": null,
+            "games": 1,
+            "models": {
+              "elo": {
+                "n": 1,
+                "picks": 1,
+                "right": 0,
+                "right_pct": 0.0,
+                "log_loss": 1.040155,
+                "brier": 0.418092,
+                "margin_mae": 6.51,
+                "within": {
+                  "5": 0.0,
+                  "10": 1.0
+                },
+                "totals_mae": null
+              }
+            }
+          }
+        ],
+        "games": [
+          {
+            "game_id": "GBL2026_29",
+            "round": 10,
+            "phase": "PO",
+            "tipoff_utc": "2026-12-03T18:15:00Z",
+            "home": {
+              "code": "FFF",
+              "name": "Team FFF & Co"
+            },
+            "away": {
+              "code": "DDD",
+              "name": "Team DDD & Co"
+            },
+            "home_score": 80,
+            "away_score": 82,
+            "models": {
+              "elo": {
+                "p_home": 0.6466,
+                "exp_margin": 4.51,
+                "right": false
+              }
+            }
+          },
+          {
+            "game_id": "GBL2026_27",
+            "round": 9,
+            "phase": "RS",
+            "tipoff_utc": "2026-11-26T18:30:00Z",
+            "home": {
+              "code": "FFF",
+              "name": "Team FFF & Co"
+            },
+            "away": {
+              "code": "BBB",
+              "name": "Team BBB & Co"
+            },
+            "home_score": 80,
+            "away_score": 91,
+            "models": {
+              "elo": {
+                "p_home": 0.3342,
+                "exp_margin": -5.15,
+                "right": true
+              }
+            }
+          },
+          {
+            "game_id": "GBL2026_26",
+            "round": 9,
+            "phase": "RS",
+            "tipoff_utc": "2026-11-26T18:15:00Z",
+            "home": {
+              "code": "FFF",
+              "name": "Team FFF & Co"
+            },
+            "away": {
+              "code": "AAA",
+              "name": "Team AAA & Co"
+            },
+            "home_score": 80,
+            "away_score": 87,
+            "models": {
+              "elo": {
+                "p_home": 0.5477,
+                "exp_margin": 1.43,
+                "right": false
+              }
+            }
+          },
+          {
+            "game_id": "GBL2026_25",
+            "round": 9,
+            "phase": "RS",
+            "tipoff_utc": "2026-11-26T18:00:00Z",
+            "home": {
+              "code": "EEE",
+              "name": "Team EEE & Co"
+            },
+            "away": {
+              "code": "FFF",
+              "name": "Team FFF & Co"
+            },
+            "home_score": 80,
+            "away_score": 81,
+            "models": {
+              "elo": {
+                "p_home": 0.7394,
+                "exp_margin": 7.79,
+                "right": false
+              }
+            }
+          },
+          {
+            "game_id": "GBL2026_24",
+            "round": 8,
+            "phase": "RS",
+            "tipoff_utc": "2026-11-19T18:30:00Z",
+            "home": {
+              "code": "EEE",
+              "name": "Team EEE & Co"
+            },
+            "away": {
+              "code": "DDD",
+              "name": "Team DDD & Co"
+            },
+            "home_score": 86,
+            "away_score": 80,
+            "models": {
+              "elo": {
+                "p_home": 0.76,
+                "exp_margin": 8.61,
+                "right": true
+              }
+            }
+          },
+          {
+            "game_id": "GBL2026_23",
+            "round": 8,
+            "phase": "RS",
+            "tipoff_utc": "2026-11-19T18:15:00Z",
+            "home": {
+              "code": "EEE",
+              "name": "Team EEE & Co"
+            },
+            "away": {
+              "code": "CCC",
+              "name": "Team CCC & Co"
+            },
+            "home_score": 93,
+            "away_score": 80,
+            "models": {
+              "elo": {
+                "p_home": 0.6158,
+                "exp_margin": 3.52,
+                "right": true
+              }
+            }
+          },
+          {
+            "game_id": "GBL2026_22",
+            "round": 8,
+            "phase": "RS",
+            "tipoff_utc": "2026-11-19T18:00:00Z",
+            "home": {
+              "code": "EEE",
+              "name": "Team EEE & Co"
+            },
+            "away": {
+              "code": "BBB",
+              "name": "Team BBB & Co"
+            },
+            "home_score": 80,
+            "away_score": 83,
+            "models": {
+              "elo": {
+                "p_home": 0.4601,
+                "exp_margin": -1.2,
+                "right": true
+              }
+            }
+          },
+          {
+            "game_id": "GBL2026_20",
+            "round": 7,
+            "phase": "RS",
+            "tipoff_utc": "2026-11-12T18:15:00Z",
+            "home": {
+              "code": "DDD",
+              "name": "Team DDD & Co"
+            },
+            "away": {
+              "code": "FFF",
+              "name": "Team FFF & Co"
+            },
+            "home_score": 80,
+            "away_score": 90,
+            "models": {
+              "elo": {
+                "p_home": 0.6542,
+                "exp_margin": 4.76,
+                "right": false
+              }
+            }
+          },
+          {
+            "game_id": "GBL2026_19",
+            "round": 7,
+            "phase": "RS",
+            "tipoff_utc": "2026-11-12T18:00:00Z",
+            "home": {
+              "code": "DDD",
+              "name": "Team DDD & Co"
+            },
+            "away": {
+              "code": "EEE",
+              "name": "Team EEE & Co"
+            },
+            "home_score": 80,
+            "away_score": 87,
+            "models": {
+              "elo": {
+                "p_home": 0.5523,
+                "exp_margin": 1.57,
+                "right": false
+              }
+            }
+          },
+          {
+            "game_id": "GBL2026_18",
+            "round": 6,
+            "phase": "RS",
+            "tipoff_utc": "2026-11-05T18:30:00Z",
+            "home": {
+              "code": "DDD",
+              "name": "Team DDD & Co"
+            },
+            "away": {
+              "code": "CCC",
+              "name": "Team CCC & Co"
+            },
+            "home_score": 80,
+            "away_score": 89,
+            "models": {
+              "elo": {
+                "p_home": 0.5817,
+                "exp_margin": 2.46,
+                "right": false
+              }
+            }
+          },
+          {
+            "game_id": "GBL2026_17",
+            "round": 6,
+            "phase": "RS",
+            "tipoff_utc": "2026-11-05T18:15:00Z",
+            "home": {
+              "code": "DDD",
+              "name": "Team DDD & Co"
+            },
+            "away": {
+              "code": "BBB",
+              "name": "Team BBB & Co"
+            },
+            "home_score": 80,
+            "away_score": 85,
+            "models": {
+              "elo": {
+                "p_home": 0.4127,
+                "exp_margin": -2.63,
+                "right": true
+              }
+            }
+          },
+          {
+            "game_id": "GBL2026_16",
+            "round": 6,
+            "phase": "RS",
+            "tipoff_utc": "2026-11-05T18:00:00Z",
+            "home": {
+              "code": "DDD",
+              "name": "Team DDD & Co"
+            },
+            "away": {
+              "code": "AAA",
+              "name": "Team AAA & Co"
+            },
+            "home_score": 80,
+            "away_score": 88,
+            "models": {
+              "elo": {
+                "p_home": 0.6394,
+                "exp_margin": 4.28,
+                "right": false
+              }
+            }
+          },
+          {
+            "game_id": "GBL2026_15",
+            "round": 5,
+            "phase": "RS",
+            "tipoff_utc": "2026-10-29T18:30:00Z",
+            "home": {
+              "code": "CCC",
+              "name": "Team CCC & Co"
+            },
+            "away": {
+              "code": "FFF",
+              "name": "Team FFF & Co"
+            },
+            "home_score": 99,
+            "away_score": 80,
+            "models": {
+              "elo": {
+                "p_home": 0.7042,
+                "exp_margin": 6.48,
+                "right": true
+              }
+            }
+          },
+          {
+            "game_id": "GBL2026_13",
+            "round": 5,
+            "phase": "RS",
+            "tipoff_utc": "2026-10-29T18:00:00Z",
+            "home": {
+              "code": "CCC",
+              "name": "Team CCC & Co"
+            },
+            "away": {
+              "code": "DDD",
+              "name": "Team DDD & Co"
+            },
+            "home_score": 85,
+            "away_score": 80,
+            "models": {
+              "elo": {
+                "p_home": 0.5949,
+                "exp_margin": 2.87,
+                "right": true
+              }
+            }
+          },
+          {
+            "game_id": "GBL2026_12",
+            "round": 4,
+            "phase": "RS",
+            "tipoff_utc": "2026-10-22T18:30:00Z",
+            "home": {
+              "code": "CCC",
+              "name": "Team CCC & Co"
+            },
+            "away": {
+              "code": "BBB",
+              "name": "Team BBB & Co"
+            },
+            "home_score": 80,
+            "away_score": 83,
+            "models": {
+              "elo": {
+                "p_home": 0.4381,
+                "exp_margin": -1.86,
+                "right": true
+              }
+            }
+          },
+          {
+            "game_id": "GBL2026_11",
+            "round": 4,
+            "phase": "RS",
+            "tipoff_utc": "2026-10-22T18:15:00Z",
+            "home": {
+              "code": "CCC",
+              "name": "Team CCC & Co"
+            },
+            "away": {
+              "code": "AAA",
+              "name": "Team AAA & Co"
+            },
+            "home_score": 81,
+            "away_score": 80,
+            "models": {
+              "elo": {
+                "p_home": 0.617,
+                "exp_margin": 3.56,
+                "right": true
+              }
+            }
+          },
+          {
+            "game_id": "GBL2026_10",
+            "round": 4,
+            "phase": "RS",
+            "tipoff_utc": "2026-10-22T18:00:00Z",
+            "home": {
+              "code": "BBB",
+              "name": "Team BBB & Co"
+            },
+            "away": {
+              "code": "FFF",
+              "name": "Team FFF & Co"
+            },
+            "home_score": 107,
+            "away_score": 80,
+            "models": {
+              "elo": {
+                "p_home": 0.8213,
+                "exp_margin": 11.39,
+                "right": true
+              }
+            }
+          },
+          {
+            "game_id": "GBL2026_9",
+            "round": 3,
+            "phase": "RS",
+            "tipoff_utc": "2026-10-15T18:30:00Z",
+            "home": {
+              "code": "BBB",
+              "name": "Team BBB & Co"
+            },
+            "away": {
+              "code": "EEE",
+              "name": "Team EEE & Co"
+            },
+            "home_score": 101,
+            "away_score": 80,
+            "models": {
+              "elo": {
+                "p_home": 0.7311,
+                "exp_margin": 7.47,
+                "right": true
+              }
+            }
+          },
+          {
+            "game_id": "GBL2026_8",
+            "round": 3,
+            "phase": "RS",
+            "tipoff_utc": "2026-10-15T18:15:00Z",
+            "home": {
+              "code": "BBB",
+              "name": "Team BBB & Co"
+            },
+            "away": {
+              "code": "DDD",
+              "name": "Team DDD & Co"
+            },
+            "home_score": 80,
+            "away_score": 87,
+            "models": {
+              "elo": {
+                "p_home": 0.7952,
+                "exp_margin": 10.13,
+                "right": false
+              }
+            }
+          },
+          {
+            "game_id": "GBL2026_6",
+            "round": 2,
+            "phase": "RS",
+            "tipoff_utc": "2026-10-08T18:30:00Z",
+            "home": {
+              "code": "BBB",
+              "name": "Team BBB & Co"
+            },
+            "away": {
+              "code": "AAA",
+              "name": "Team AAA & Co"
+            },
+            "home_score": 93,
+            "away_score": 80,
+            "models": {
+              "elo": {
+                "p_home": 0.7698,
+                "exp_margin": 9.01,
+                "right": true
+              }
+            }
+          },
+          {
+            "game_id": "GBL2026_5",
+            "round": 2,
+            "phase": "RS",
+            "tipoff_utc": "2026-10-08T18:15:00Z",
+            "home": {
+              "code": "AAA",
+              "name": "Team AAA & Co"
+            },
+            "away": {
+              "code": "FFF",
+              "name": "Team FFF & Co"
+            },
+            "home_score": 81,
+            "away_score": 80,
+            "models": {
+              "elo": {
+                "p_home": 0.6963,
+                "exp_margin": 6.2,
+                "right": true
+              }
+            }
+          },
+          {
+            "game_id": "GBL2026_4",
+            "round": 2,
+            "phase": "RS",
+            "tipoff_utc": "2026-10-08T18:00:00Z",
+            "home": {
+              "code": "AAA",
+              "name": "Team AAA & Co"
+            },
+            "away": {
+              "code": "EEE",
+              "name": "Team EEE & Co"
+            },
+            "home_score": 94,
+            "away_score": 80,
+            "models": {
+              "elo": {
+                "p_home": 0.5494,
+                "exp_margin": 1.48,
+                "right": true
+              }
+            }
+          },
+          {
+            "game_id": "GBL2026_3",
+            "round": 1,
+            "phase": "RS",
+            "tipoff_utc": "2026-10-01T18:30:00Z",
+            "home": {
+              "code": "AAA",
+              "name": "Team AAA & Co"
+            },
+            "away": {
+              "code": "DDD",
+              "name": "Team DDD & Co"
+            },
+            "home_score": 80,
+            "away_score": 91,
+            "models": {
+              "elo": {
+                "p_home": 0.6911,
+                "exp_margin": 6.01,
+                "right": false
+              }
+            }
+          },
+          {
+            "game_id": "GBL2026_2",
+            "round": 1,
+            "phase": "RS",
+            "tipoff_utc": "2026-10-01T18:15:00Z",
+            "home": {
+              "code": "AAA",
+              "name": "Team AAA & Co"
+            },
+            "away": {
+              "code": "CCC",
+              "name": "Team CCC & Co"
+            },
+            "home_score": 94,
+            "away_score": 80,
+            "models": {
+              "elo": {
+                "p_home": 0.616,
+                "exp_margin": 3.53,
+                "right": true
+              }
+            }
+          },
+          {
+            "game_id": "GBL2026_1",
+            "round": 1,
+            "phase": "RS",
+            "tipoff_utc": "2026-10-01T18:00:00Z",
+            "home": {
+              "code": "AAA",
+              "name": "Team AAA & Co"
+            },
+            "away": {
+              "code": "BBB",
+              "name": "Team BBB & Co"
+            },
+            "home_score": 80,
+            "away_score": 102,
+            "models": {
+              "elo": {
+                "p_home": 0.5258,
+                "exp_margin": 0.77,
+                "right": false
+              }
+            }
+          }
+        ]
+      }
     }
   ]
 }
