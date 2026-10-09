@@ -14,6 +14,7 @@ import pandas as pd
 
 from eurohoops.config import Backtest, Grid
 from eurohoops.eval.backtest import load_tuned_model, run_backtest, win_probabilities
+from eurohoops.eval.forecasts import build_forecasts
 from eurohoops.eval.scorecard import build_scorecard
 from eurohoops.live_m1 import M1_LOG_COLUMNS
 from eurohoops.logs import TIME_FORMAT
@@ -101,8 +102,22 @@ def section(tmp: Path, key: str, title: str, gbl_like: bool, seasons: tuple[int,
         m1_log(log).to_csv(m1_path, index=False)
     card = build_scorecard(log_path, games, model, NOW, m1_log_path=m1_path)
     names = dict(teams_table(games).itertuples(index=False))
+    # The synthetic 2027 season has no finished games, so the record is of 2026 (30 logged, 1 late).
+    forecasts = build_forecasts(
+        {"elo": log_path, "m1": m1_path}, {"elo": "Elo", "m1": "M1"}, games, 2026
+    )
     return Section(
-        key, title, log.astype({"p_home": float}), card, report, games, names, model, 2027, 2022
+        key,
+        title,
+        log.astype({"p_home": float}),
+        card,
+        report,
+        games,
+        names,
+        model,
+        2027,
+        2022,
+        forecasts,
     )
 
 
@@ -137,3 +152,12 @@ def test_the_fixture_exercises_every_state_the_page_draws() -> None:
         assert [r["late"] for r in comp["results"]].count(True) == 1
     assert el["scorecard"]["m1"]["n"] == 59 and el["scorecard"]["m1"]["log_loss"] is not None
     assert gbl["scorecard"]["m1"] is None
+
+
+def test_the_fixture_carries_the_forecast_record() -> None:
+    el, gbl = json.loads(FIXTURE.read_text(encoding="utf-8"))["competitions"]
+    assert [m["key"] for m in el["forecasts"]["models"]] == ["elo", "m1"]
+    assert [m["key"] for m in gbl["forecasts"]["models"]] == ["elo"]
+    assert el["forecasts"]["shared"]["n"] == 29 and el["forecasts"]["rounds"]
+    assert len(el["forecasts"]["games"]) == 29  # the late row is never scored
+    assert gbl["forecasts"]["shared"] == {"n": 0, "rows": []} and gbl["forecasts"]["games"]

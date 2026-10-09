@@ -1,3 +1,5 @@
+import type { Forecasts } from "./forecasts";
+
 export interface Team {
   code: string;
   name: string;
@@ -83,6 +85,7 @@ export interface Competition {
     log_loss_diff: { mean: number; ci95: [number, number] } | null;
   };
   ratings: Rating[];
+  forecasts: Forecasts | null;
 }
 
 export interface SiteData {

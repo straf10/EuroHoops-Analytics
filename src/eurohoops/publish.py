@@ -66,6 +66,7 @@ class Section:
     model: TunedModel
     season: int
     replay_from: int
+    forecasts: dict[str, Any] | None = None  # eval.forecasts.build_forecasts (source codes)
 
 
 def _stamp(ts: pd.Timestamp) -> str:
@@ -153,6 +154,18 @@ def _m1(card: dict[str, Any]) -> dict[str, Any] | None:
     return {"n": same["n"], "log_loss": same["m1_log_loss"], "elo_log_loss": same["elo_log_loss"]}
 
 
+def _forecasts(section: Section) -> dict[str, Any] | None:
+    """The season forecast record with its games' teams shown by display code."""
+    record = section.forecasts
+    if record is None:
+        return None
+    games = [
+        {**g, "home": _team(section, g["home"]), "away": _team(section, g["away"])}
+        for g in record["games"]
+    ]
+    return {**record, "games": games}
+
+
 def section_data(section: Section, now: datetime) -> dict[str, Any]:
     logged = _logged(section)
     hidden = set(section.scorecard.get("games_not_provable", []))
@@ -194,6 +207,7 @@ def section_data(section: Section, now: datetime) -> dict[str, Any]:
         },
         "backtest": _backtest(section.backtest),
         "ratings": _ratings(section),
+        "forecasts": _forecasts(section),
     }
 
 
