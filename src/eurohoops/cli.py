@@ -837,7 +837,8 @@ def _backtest_m7_v2(competition: CompetitionName) -> None:
         log.error("M7 gate v2 is the EuroLeague's; the GBL is not gated")
         raise typer.Exit(code=1)
     started = time.perf_counter()
-    inputs = _m7_inputs(EUROLEAGUE, M7, M7_V2.tuning[1:])
+    # every season, the selection one included: its overtime games need their regulation scores
+    inputs = _m7_inputs(EUROLEAGUE, M7, M7_V2.tuning)
     report, rows = run_gate_v2(inputs, spec=M7_V2)
     write_json(M7_V2.report, report)
     rows.to_csv(M7_V2.teams_report, index=False, lineterminator="\n")
