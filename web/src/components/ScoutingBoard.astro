@@ -82,7 +82,12 @@ const HEADS = [
           <p class="m6-facts">
             Stability: a player's gap this season correlates <span data-num>{fixed(meta.stability, 2)}</span> with his gap the next
             {meta.pairs ? <span data-sample> (over {meta.pairs} player pairs)</span> : null}. A gap measured on n {d.nUnit} is expected to
-            keep n / (n + {thousands(meta.k)}) of itself. A label needs at least <span data-sample>{thousands(meta.n_min)} {d.nUnit}</span>.
+            keep n / (n + {thousands(meta.k)}) of itself.{" "}
+            {meta.labelled === false ? (
+              <span>On/off is shown without a label: it does not repeat year to year, so a gap this season says little about the next.</span>
+            ) : (
+              <span>A label needs at least <span data-sample>{thousands(meta.n_min)} {d.nUnit}</span>.</span>
+            )}
           </p>
         </figcaption>
         <div class="cols-wrap">
@@ -121,7 +126,7 @@ const HEADS = [
                         <small>
                           {displayCode(r.competition, r.team)}, {COMPETITIONS[r.competition] ?? r.competition}
                         </small>
-                        <span class:list={["m6-chip", r.label.replaceAll(" ", "-")]}>{LABEL_WORDS[r.label] ?? r.label}</span>
+                        {r.label ? <span class:list={["m6-chip", r.label.replaceAll(" ", "-")]}>{LABEL_WORDS[r.label] ?? r.label}</span> : null}
                       </th>
                       <td class="num on" data-v={r.z}>
                         <span class="zrail" aria-hidden="true" style={`--x:${pos(r.z).toFixed(1)}`}>
@@ -155,8 +160,10 @@ const HEADS = [
           </div>
         </div>
         <p class="note">
-          {rows.length} players. Sorted by z; click a head to re-sort. z is the gap over its standard error; with |z| of 1.645 or
-          more and at least half the gap expected to last, a gap is labelled likely real, otherwise likely regression.
+          {rows.length} players. Sorted by z; click a head to re-sort. z is the gap over its standard error.
+          {meta.labelled === false
+            ? " The raw on/off value is shown; it does not repeat year to year."
+            : ` Fewer than ${thousands(meta.n_min)} ${d.nUnit} is too few attempts; |z| under 1.645 is within noise; if the part of the gap expected to last (lasts × z) reaches 1.645 it is likely real, otherwise likely regression.`}
         </p>
       </figure>
     );

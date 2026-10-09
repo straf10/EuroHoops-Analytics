@@ -153,7 +153,7 @@ def test_route_values(client: TestClient) -> None:
     assert client.get(f"/players/{EL_PERSON}/projection").json()["projections"][0]["team"] == "TEL"
     similar = client.get(f"/players/{EL_PERSON}/similar").json()["similar"]
     assert [s["rank"] for s in similar] == [1, 2]
-    assert client.get("/scouting/board").json()["rows"][0]["label"] == "over"
+    assert client.get("/scouting/board").json()["rows"][0]["label"] == "within noise"
     assert client.get("/scouting/undervalued").json()["undervalued"][0]["name"] == "Nikos Papas"
     assert client.get("/scouting/translation").json()["gate_passed"] is False
     metrics = client.get("/metrics/live").json()["competitions"]

@@ -34,38 +34,46 @@ def _obs(rows: list[tuple[str, float, float, float, float]], season: int = 2024)
 
 def test_interface_constants() -> None:
     assert b.DIMENSIONS == ("shot_making", "fg3_pct", "on_off")
-    assert b.LABELS == ("likely regression", "likely real", "too few attempts")
-    assert b.N_MIN == {"shot_making": 200, "fg3_pct": 50, "on_off": 1000}
+    assert b.LABELS == ("likely regression", "likely real", "too few attempts", "within noise")
+    assert b.Z_REAL == 1.645
+    assert b.UNLABELLED == ("on_off",)
+    # Rule v2 replaced the typed-in minimums and the persist cut-off.
+    assert not hasattr(b, "N_MIN") and not hasattr(b, "PERSIST_REAL")
 
 
 def test_labels_follow_the_formula_on_hand_built_players() -> None:
     # r = 0.5 and mean_n = 100 give k = 100 * (1 - 0.5) / 0.5 = 100 and persist = n / (n + 100),
-    # which is exactly 0.5 at n = 100 and 1/3 at n = 50 (the 3P% minimum).
-    stab = b.Stability("fg3_pct", 0.5, 100.0, 20)
+    # which is exactly 0.5 at n = 100 and 1/3 at n = 50 (= n_min here). The lasting part of the
+    # gap is persist * |z|; it must reach Z_REAL = 1.645 for "likely real".
+    stab = b.Stability("fg3_pct", 0.5, 100.0, 20, 50)
     players = [
         # id, observed, expected, se, n   -> expected label
-        ("too_few_big_z", 0.60, 0.35, 0.01, 49),  # n < 50: too few however large z is
-        ("boundary_n", 0.60, 0.35, 0.01, 50),  # n = N_MIN counts; persist 1/3 < 0.5 -> regression
-        ("real_over", 0.37, 0.35, 0.01, 100),  # persist 0.5, z = +2 -> real
-        ("real_under", 0.33, 0.35, 0.01, 100),  # persist 0.5, z = -2 -> real (negative gap)
-        ("z_at_cut", 1.645, 0.0, 1.0, 100),  # |z| = 1.645 exactly -> real
-        ("z_below_cut", 1.644, 0.0, 1.0, 100),  # |z| < 1.645 -> regression
-        ("persist_below", 0.45, 0.35, 0.01, 99),  # persist 99/199 < 0.5, z = 10 -> regression
-        ("big_n_over", 0.40, 0.35, 0.02, 1000),  # persist 10/11, z = 2.5 -> real
-        ("big_n_small_z", 0.355, 0.35, 0.02, 1000),  # z = 0.25 -> regression
-        ("neg_small_z", 0.34, 0.35, 0.02, 400),  # z = -0.5 -> regression
+        ("n_below_min", 0.60, 0.35, 0.01, 49),  # n < 50: too few however large z is
+        ("n_at_min", 0.60, 0.35, 0.01, 50),  # n = n_min counts; z = 25, lasting 25/3 -> real
+        ("noise_below", 1.644, 0.0, 1.0, 1000),  # |z| just below 1.645 -> within noise
+        ("noise_below_neg", -1.644, 0.0, 1.0, 1000),  # the same for a negative gap
+        ("z_at_cut", 1.645, 0.0, 1.0, 1000),  # |z| = 1.645 is not noise; lasting 1.64 -> regression
+        ("lasting_at_cut", 3.29, 0.0, 1.0, 100),  # persist 0.5 * 3.29 = 1.645 exactly -> real
+        ("lasting_at_cut_neg", -3.29, 0.0, 1.0, 100),  # negative gap, same -> real
+        ("lasting_below", 3.289, 0.0, 1.0, 100),  # 0.5 * 3.289 < 1.645 -> regression
+        ("big_n_real", 0.40, 0.35, 0.02, 1000),  # persist 10/11, z = 2.5 -> lasting 2.27 -> real
+        ("big_n_small_z", 0.355, 0.35, 0.02, 1000),  # z = 0.25 -> within noise
+        ("neg_small_z", 0.34, 0.35, 0.02, 400),  # z = -0.5 -> within noise
+        ("regression", 0.37, 0.35, 0.01, 100),  # persist 0.5, z = 2 -> lasting 1 -> regression
     ]
     want = {
-        "too_few_big_z": "too few attempts",
-        "boundary_n": "likely regression",
-        "real_over": "likely real",
-        "real_under": "likely real",
-        "z_at_cut": "likely real",
-        "z_below_cut": "likely regression",
-        "persist_below": "likely regression",
-        "big_n_over": "likely real",
-        "big_n_small_z": "likely regression",
-        "neg_small_z": "likely regression",
+        "n_below_min": "too few attempts",
+        "n_at_min": "likely real",
+        "noise_below": "within noise",
+        "noise_below_neg": "within noise",
+        "z_at_cut": "likely regression",
+        "lasting_at_cut": "likely real",
+        "lasting_at_cut_neg": "likely real",
+        "lasting_below": "likely regression",
+        "big_n_real": "likely real",
+        "big_n_small_z": "within noise",
+        "neg_small_z": "within noise",
+        "regression": "likely regression",
     }
     out = b.board({"fg3_pct": _obs(players)}, {"fg3_pct": stab}).set_index("person_id")
     assert out["label"].to_dict() == want
@@ -80,17 +88,106 @@ def test_labels_follow_the_formula_on_hand_built_players() -> None:
     assert out["gap"].lt(0).any() and out["gap"].gt(0).any()
 
 
-def test_n_min_is_per_dimension() -> None:
-    stab = {d: b.Stability(d, 0.9, 100.0, 9) for d in b.DIMENSIONS}
+def test_too_few_attempts_wins_over_every_other_label() -> None:
+    stab = b.Stability("shot_making", 0.9, 100.0, 9, 200)
+    out = b.board(
+        {
+            "shot_making": _obs(
+                [("tiny_noise", 0.1, 0.0, 1.0, 199), ("tiny_big", 9.0, 0.0, 1.0, 199)]
+            )
+        },
+        {"shot_making": stab},
+    )
+    assert out["label"].tolist() == ["too few attempts", "too few attempts"]
+
+
+def test_n_min_is_per_dimension_and_on_off_has_no_label() -> None:
+    n_min = {"shot_making": 200, "fg3_pct": 50, "on_off": 1000}
+    stab = {d: b.Stability(d, 0.9, 100.0, 9, n_min[d]) for d in b.DIMENSIONS}
     obs = {
-        d: _obs([("below", 5.0, 0.0, 1.0, b.N_MIN[d] - 1), ("at", 5.0, 0.0, 1.0, b.N_MIN[d])])
+        d: _obs([("below", 5.0, 0.0, 1.0, n_min[d] - 1), ("at", 5.0, 0.0, 1.0, n_min[d])])
         for d in b.DIMENSIONS
     }
     out = b.board(obs, stab)
-    for d in b.DIMENSIONS:
+    for d in ("shot_making", "fg3_pct"):
         labels = out[out["dimension"] == d].set_index("person_id")["label"]
         assert labels["below"] == "too few attempts"
-        assert labels["at"] != "too few attempts"
+        assert labels["at"] == "likely real"
+    on_off = out[out["dimension"] == "on_off"]
+    assert on_off["label"].isna().all()  # no label, whatever n and z are
+    assert len(on_off) == 2  # the raw value stays on the board
+    assert on_off["observed"].tolist() == [5.0, 5.0]
+    b.BOARD_SCHEMA.validate(out)
+
+
+def _rotation_world() -> pd.DataFrame:
+    return _seasons(
+        [
+            # rotation: >= 15 games and >= 15 minutes a game (the edge cases are exact)
+            {"person_id": "r1", "season": 2020, "games": 15, "minutes": 225.0, "fg3a": 105},
+            {"person_id": "r2", "season": 2020, "games": 30, "minutes": 600.0, "fg3a": 200},
+            {"person_id": "r3", "season": 2021, "games": 20, "minutes": 400.0, "fg3a": 301},
+            {"person_id": "r4", "season": 2021, "games": 20, "minutes": 400.0, "fg3a": 0},
+            # not rotation: 14 games, 14.9 minutes a game, partial, other competition, not tuning
+            {"person_id": "x1", "season": 2020, "games": 14, "minutes": 400.0, "fg3a": 900},
+            {"person_id": "x2", "season": 2020, "games": 30, "minutes": 447.0, "fg3a": 900},
+            {"person_id": "x3", "season": 2021, "games": 30, "minutes": 900.0, "partial": True},
+            {
+                "person_id": "x4",
+                "season": 2021,
+                "competition": "gbl",
+                "games": 30,
+                "minutes": 900.0,
+            },
+            {"person_id": "x5", "season": 2022, "games": 30, "minutes": 900.0, "fg3a": 900},
+        ]
+    )
+
+
+def test_rotation_player_seasons_filter_and_tuning_seasons_only() -> None:
+    rot = b.rotation_player_seasons(_rotation_world(), (2020, 2021))
+    assert sorted(zip(rot["person_id"], rot["season"], strict=True)) == [
+        ("r1", 2020),
+        ("r2", 2020),
+        ("r3", 2021),
+        ("r4", 2021),
+    ]
+    assert b.rotation_player_seasons(_rotation_world(), (2022,))["person_id"].tolist() == ["x5"]
+
+
+def test_derive_n_min_is_the_median_rounded_down_to_a_multiple_of_ten() -> None:
+    assert b.derive_n_min(pd.Series([100.0, 200.0, 301.0])) == 200
+    assert b.derive_n_min(pd.Series([100.0, 200.0, 301.0, 399.0])) == 250  # median 250.5
+    assert b.derive_n_min(pd.Series([209.9])) == 200
+    assert b.derive_n_min(pd.Series([210.0])) == 210
+    assert b.derive_n_min(pd.Series([7.0, 9.0])) == 0
+    with pytest.raises(ValueError, match="no rotation"):
+        b.derive_n_min(pd.Series([], dtype="float64"))
+
+
+def test_n_min_is_derived_from_tuning_rotation_rows_only() -> None:
+    world = _rotation_world()
+    rot = b.rotation_player_seasons(world, (2020, 2021))
+    # 3P%: rotation rows with a 3PA: 105, 200, 301 -> median 200 (r4 has none; x1..x5 are not
+    # rotation however many they attempted).
+    fg3 = b.fg3_rotation_n(world, rot)
+    assert sorted(fg3.tolist()) == [105.0, 200.0, 301.0]
+    assert b.derive_n_min(fg3) == 200
+    # Observation-based dimensions: the rows of rotation player-seasons, EuroLeague only.
+    obs = pd.concat(
+        [
+            _obs([("r1", 0.0, 0.0, 1.0, 410.0), ("x1", 0.0, 0.0, 1.0, 9999.0)], 2020),
+            _obs([("r3", 0.0, 0.0, 1.0, 500.0), ("r4", 0.0, 0.0, 1.0, 600.0)], 2021),
+            _obs([("r2", 0.0, 0.0, 1.0, 9999.0)], 2022),  # a board season is not read
+        ],
+        ignore_index=True,
+    )
+    obs = obs[obs["season"].isin((2020, 2021))]
+    n = b.rotation_n(obs, rot)
+    assert sorted(n.tolist()) == [410.0, 500.0, 600.0]
+    assert b.derive_n_min(n) == 500
+    gbl = obs.assign(competition="gbl")
+    assert b.rotation_n(gbl, rot).empty
 
 
 def test_persist_limits_and_board_schema() -> None:
@@ -120,14 +217,15 @@ def test_stability_pairs_consecutive_tuning_seasons_only() -> None:
     thin = _obs([("thin", 99.0, 0.0, 1.0, 10.0)], 2020)  # below N_MIN: excluded
     thin2 = _obs([("thin", -99.0, 0.0, 1.0, 10.0)], 2021)
     obs = pd.concat([s1, s2, s3, thin, thin2], ignore_index=True)
-    st = b.stability(obs, "shot_making", (2020, 2021))
+    st = b.stability(obs, "shot_making", (2020, 2021), 200)
     assert st.r == pytest.approx(1.0)
     assert st.pairs == 6
     assert st.mean_n == pytest.approx(400.0)  # (300 + 500) / 2 for each pair
-    both = b.stability(obs, "shot_making", (2020, 2021, 2022))
-    assert both.pairs == 12 and both.r < 1.0  # 2021 -> 2022 pairs are in once asked for
+    both = b.stability(obs, "shot_making", (2020, 2021, 2022), 200)
+    assert both.pairs == 12 and both.r < 1.0
+    assert both.n_min == 200  # 2021 -> 2022 pairs are in once asked for
     with pytest.raises(ValueError, match="pairs"):
-        b.stability(obs, "shot_making", (2020,))
+        b.stability(obs, "shot_making", (2020,), 200)
 
 
 # ---- the three observation builders on hand-computed inputs ----
@@ -234,13 +332,13 @@ def test_fg3_prior_uses_only_seasons_before_the_cutoff() -> None:
     early = _fit_rows(2021, 0.20, 0.30) + _fit_rows(2022, 0.20, 0.30)
     later = _fit_rows(2023, 0.60, -0.30) + _fit_rows(2024, 0.60, -0.30)  # a different relation
     seasons = _seasons(early + later)
-    intercept, slope, _ = b.fg3_fit(seasons, 2023, "euroleague")
+    intercept, slope, _ = b.fg3_fit(seasons, 2023, "euroleague", 50)
     # The planted line is recovered to the rounding of whole makes (<= 0.5 / 2000 = 0.00025 in 3P%
     # per row); 0.005 is 20x that and far below the 0.6 slope gap to the later relation.
     assert slope == pytest.approx(0.30, abs=0.005)
     assert intercept == pytest.approx(0.20, abs=0.005)
     # Fitting at 2025 sees both relations (a blend), so the 2023 fit really excluded the later ones.
-    blend = b.fg3_fit(seasons, 2025, "euroleague")
+    blend = b.fg3_fit(seasons, 2025, "euroleague", 50)
     assert abs(blend[1] - 0.30) > 0.1
     # A season-2023 row is judged against the early line only.
     rows = _seasons(
@@ -257,7 +355,7 @@ def test_fg3_prior_uses_only_seasons_before_the_cutoff() -> None:
             },
         ]
     )
-    out = b.fg3_observations(rows, 2023).set_index("person_id")
+    out = b.fg3_observations(rows, 2023, 50).set_index("person_id")
     assert out.loc["x", "expected"] == pytest.approx(0.20 + 0.30 * 0.80, abs=0.005)
     assert out.loc["x", "observed"] == 0.4
     assert out.loc["x", "se"] == pytest.approx(
@@ -301,11 +399,11 @@ def test_fg3_few_ft_attempts_take_the_fitted_mean_and_gbl_without_history_is_ski
             },
         ]
     )
-    out = b.fg3_observations(rows, 2023).set_index("person_id")
+    out = b.fg3_observations(rows, 2023, 50).set_index("person_id")
     assert set(out.index) == {"few_ft"}
     assert out.loc["few_ft", "expected"] == pytest.approx(0.20 + 0.30 * mean_ft, abs=0.005)
     with pytest.raises(ValueError, match="rows before"):
-        b.fg3_fit(rows, 2022, "euroleague")
+        b.fg3_fit(rows, 2022, "euroleague", 50)
 
 
 def _hand_stints() -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -405,8 +503,8 @@ def _planted(n_players: int, seasons: tuple[int, ...], seed: int) -> pd.DataFram
 
 def test_likely_regression_players_regress_more_than_likely_real() -> None:
     # Seasons 1-2 are the tuning seasons (stability), 3 is the board season, 4 the next season.
-    data = _planted(4000, (1, 2, 3, 4), seed=7)
-    stab = b.stability(data, "fg3_pct", (1, 2))
+    data = _planted(16000, (1, 2, 3, 4), seed=7)
+    stab = b.stability(data, "fg3_pct", (1, 2), 50)
     now = data[data["season"] == 3]
     out = b.board({"fg3_pct": now}, {"fg3_pct": stab})
     nxt = data[data["season"] == 4]
@@ -433,9 +531,9 @@ def test_likely_regression_players_regress_more_than_likely_real() -> None:
 
 
 def test_retention_backtest_needs_both_groups() -> None:
-    stab = b.Stability("fg3_pct", 0.5, 100.0, 9)
+    stab = b.Stability("fg3_pct", 0.5, 100.0, 9, 50)
     out = b.board(
-        {"fg3_pct": _obs([("a", 0.36, 0.35, 0.01, 100), ("b", 0.351, 0.35, 0.01, 100)])},
+        {"fg3_pct": _obs([("a", 0.38, 0.35, 0.01, 100), ("b", 0.351, 0.35, 0.01, 100)])},
         {"fg3_pct": stab},
     )
     nxt = pd.DataFrame(
@@ -550,7 +648,7 @@ def _world() -> dict[str, pd.DataFrame]:
 def _builders(w: dict[str, pd.DataFrame], season: int) -> dict[str, pd.DataFrame]:
     return {
         "shot_making": b.shot_making_observations(w["shots"], w["xpts"], w["xwalk"], season, "m2"),
-        "fg3_pct": b.fg3_observations(w["seasons"], season),
+        "fg3_pct": b.fg3_observations(w["seasons"], season, 50),
         "on_off": b.on_off_observations(w["stints"], w["checks"], w["brapm"], w["xwalk"], season),
     }
 
@@ -597,7 +695,9 @@ def test_leakage_later_seasons_change_nothing_earlier_rows_do() -> None:
         obs = {}
         for d in b.DIMENSIONS:
             tuning = pd.concat([_builders(w, s)[d] for s in (2020, 2021)], ignore_index=True)
-            stabs[d] = b.stability(tuning, d, (2020, 2021))
+            stabs[d] = b.stability(
+                tuning, d, (2020, 2021), {"fg3_pct": 50, "on_off": 1000}.get(d, 200)
+            )
             obs[d] = _builders(w, 2022)[d]
         return b.board(obs, stabs)
 

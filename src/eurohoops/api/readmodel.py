@@ -63,6 +63,7 @@ from eurohoops.eval.backtest import TunedModel, load_tuned_model
 from eurohoops.live_m6 import person_names
 from eurohoops.logs import TIME_FORMAT
 from eurohoops.marts import read_games, read_table, read_teams
+from eurohoops.models.board import LABELS
 from eurohoops.models.elo import prepare, season_ratings
 from eurohoops.models.player_seasons import (
     COUNT_COLUMNS,
@@ -155,6 +156,7 @@ BOARD_ROWS_SCHEMA = pa.DataFrameSchema(
         "season": pa.Column("int64"),
         "dimension": pa.Column(str),
         "n": pa.Column("float64", pa.Check.ge(0.0)),
+        "label": pa.Column(str, pa.Check.isin(LABELS), nullable=True),  # null: on/off has none
         "name": pa.Column(str),
         "team": pa.Column(str),
     },
