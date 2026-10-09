@@ -114,9 +114,15 @@ jobs:
         run: |
           uv run --no-dev eurohoops project --projections-only \
             || echo "::warning::M6 projections failed; the committed report stays"
-      # The Standings page (owner, weeks 16-18 D1): M7's run, labelled "not gated", rewritten
-      # only after a newly completed round. The gated, append-only `simulate` stays off.
-      - name: Ungated season simulation
+      # Live M7: gate v2 passed (docs/models/m7.md, PLAN 8.1 R5), so the EuroLeague run is appended
+      # to the pre-registered log predictions/euroleague_sim_2026-27.csv once per completed round.
+      # The GBL is not gated and has no log. A failure is a warning, as for M6.
+      - name: Season simulation log (M7, EuroLeague)
+        run: |
+          uv run --no-dev eurohoops simulate || echo "::warning::M7 simulation failed; no row logged"
+      # The Standings page (owner, weeks 16-18 D1): M7's run, rewritten only after a newly
+      # completed round; labelled gated for the EuroLeague, not gated for the GBL.
+      - name: Standings season simulation
         run: |
           uv run --no-dev eurohoops sim-ungated
           uv run --no-dev eurohoops sim-ungated --competition gbl

@@ -54,6 +54,7 @@ from eurohoops.config import (
     M6_PROJECTIONS,
     M6_SIMILARITY,
     M7,
+    M7_V2,
     MART_PATH,
     PLAYER_XWALK_FILE,
     SIM_UNGATED,
@@ -924,6 +925,12 @@ def scouting_translation(store: Store) -> dict[str, Any]:
 def m7_verdict(store: Store) -> dict[str, Any]:
     """M7's gate verdict from its backtest report: ``passed`` and, when it failed, the rules it
     missed in one line."""
+    v2 = _report(store, M7_V2.report)
+    if v2 is not None and v2.get("gate_v2", {}).get("passed"):
+        return {
+            "passed": True,
+            "reason": f"M7 passed its validation gate (gate v2, {M7_V2.report.as_posix()})",
+        }
     report = _report(store, M7.report)
     if report is None:
         return {"passed": False, "reason": f"{M7.report.as_posix()} not found: M7 has no verdict"}
@@ -955,9 +962,15 @@ def m7_verdict(store: Store) -> dict[str, Any]:
 
 
 def simulation_latest(store: Store, competition: str) -> dict[str, Any]:
-    """The latest ungated season simulation, labelled ``gated: false`` with M7's verdict."""
+    """The latest season simulation with M7's verdict; ``gated`` only for the EuroLeague once a gate
+    passed (gate v2, docs/models/m7.md), never for the GBL."""
     comp = _competition(competition)
     verdict = m7_verdict(store)
+    if comp.name != "euroleague":
+        verdict = {
+            "passed": False,
+            "reason": "the GBL is not gated (M7 gate v2): EuroLeague verdict, GBL rules unverified",
+        }
     report = _report(store, SIM_UNGATED[comp.name])
     if report is None:
         raise NotFound(
@@ -965,7 +978,7 @@ def simulation_latest(store: Store, competition: str) -> dict[str, Any]:
             gated=False,
             gate=verdict,
         )
-    return {**report, "gated": False, "gate": verdict}
+    return {**report, "gated": verdict["passed"], "gate": verdict}
 
 
 def metrics_live(store: Store) -> dict[str, Any]:

@@ -5,7 +5,7 @@ import json
 import logging
 import os
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from functools import partial
@@ -1246,13 +1246,13 @@ def project(
 
 @app.command("sim-ungated")
 def sim_ungated(competition: CompetitionOption = CompetitionName.euroleague) -> None:
-    """The ungated live season simulation for the Standings page (owner, D1): ``simulate``'s run
-    written to reports/sim_ungated_{competition}.json whatever M7's gate says, labelled "not
-    gated". Never appends to the simulation log; rewritten only when the number of completed
-    rounds changed (its time stamp is the cutoff), so a day without a completed round changes
-    nothing."""
+    """The live season simulation for the Standings page (owner, D1): ``simulate``'s run written
+    to reports/sim_ungated_{competition}.json whatever M7's gate says; labelled gated only for the
+    EuroLeague once a gate passed (gate v2 did, 2026-10-09), never for the GBL. Never appends to
+    the simulation log; rewritten only when the number of completed rounds changed (its time
+    stamp is the cutoff), so a day without a completed round changes nothing."""
     comp = COMPETITIONS[competition]
-    model = load_sim(M7.report)
+    model = load_sim(M7.report, M7_V2.report)
     if comp.m1 is None or model is None or not comp.m1.report.exists():
         log.error("no committed M7 or M1 report; run: eurohoops backtest --model m7")
         raise typer.Exit(code=1)
@@ -1273,20 +1273,25 @@ def sim_ungated(competition: CompetitionOption = CompetitionName.euroleague) -> 
     if run is None:
         typer.echo(f"{comp.name}: the {LIVE_SEASON} regular season is over; {path} stays")
         return
+    gated = model.gate_passed and comp is EUROLEAGUE
     old = json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
-    if old is not None and (old["season"], old["after_round"]) == (LIVE_SEASON, run.after_round):
+    if old is not None and (old["season"], old["after_round"], old.get("gated")) == (
+        LIVE_SEASON,
+        run.after_round,
+        gated,
+    ):
         typer.echo(f"{comp.name}: after round {run.after_round} already in {path}")
         return
     report = latest_report(run, model, fmt, LIVE_SEASON, run.cutoff.to_pydatetime())
-    reason = (
-        "M7 passed its validation gate"
-        if model.gate_passed
-        else f"M7 failed its validation gate ({M7.report.as_posix()}): this run is not gated"
-    )
-    write_json(
-        path, {**report, "gated": False, "gate": {"passed": model.gate_passed, "reason": reason}}
-    )
-    typer.echo(f"wrote {path}: after round {run.after_round}, seed {run.seed} (not gated)")
+    if comp is not EUROLEAGUE:
+        reason = "the GBL is not gated (M7 gate v2): EuroLeague verdict, GBL rules unverified"
+    elif model.gate_passed:
+        reason = f"M7 passed its validation gate (gate v2, {M7_V2.report.as_posix()})"
+    else:
+        reason = f"M7 failed its validation gate ({M7.report.as_posix()}): this run is not gated"
+    write_json(path, {**report, "gated": gated, "gate": {"passed": gated, "reason": reason}})
+    label = "gated" if gated else "not gated"
+    typer.echo(f"wrote {path}: after round {run.after_round}, seed {run.seed} ({label})")
     typer.echo(f"RUNTIME sim-ungated {comp.name}: {time.perf_counter() - started:.0f} s")
 
 
@@ -1500,9 +1505,12 @@ def simulate(
     ] = False,
 ) -> None:
     """Simulate the rest of the live regular season (M7, K8) after the completed rounds; the log
-    is appended only when the EuroLeague M7 gate passed and the round is not logged yet."""
+    is appended only when the EuroLeague M7 gate (v1 or v2) passed and the round is not logged
+    yet. The GBL is not gated (gate v2, docs/models/m7.md): its log is never appended."""
     comp = COMPETITIONS[competition]
-    model = load_sim(M7.report)
+    model = load_sim(M7.report, M7_V2.report)
+    if model is not None and comp is not EUROLEAGUE:
+        model = replace(model, gate_passed=False)
     if comp.m1 is None or model is None or not comp.m1.report.exists():
         log.error("no committed M7 or M1 report; run: eurohoops backtest --model m7")
         raise typer.Exit(code=1)

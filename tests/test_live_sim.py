@@ -198,6 +198,28 @@ def test_load_sim_reads_the_verdict_and_gate(tmp_path: Path) -> None:
     assert loaded is not None and not loaded.gate_passed  # a tuning-only report has no gate
 
 
+def test_load_sim_counts_a_passed_gate_v2(tmp_path: Path) -> None:
+    v1 = tmp_path / "backtest_m7.json"
+    v1.write_text(
+        json.dumps(
+            {
+                "model_version": "m7-sim_full-v1",
+                "chosen": {"key": "sim_full", "spread": 1.0, "net": False},
+                "gate": {"passed": False},
+            }
+        ),
+        encoding="utf-8",
+    )
+    v2 = tmp_path / "backtest_m7_v2.json"
+    missing = load_sim(v1, v2)
+    assert missing is not None and not missing.gate_passed  # no v2 report: v1's verdict
+    v2.write_text(json.dumps({"gate_v2": {"passed": False}}), encoding="utf-8")
+    failed = load_sim(v1, v2)
+    assert failed is not None and not failed.gate_passed
+    v2.write_text(json.dumps({"gate_v2": {"passed": True}}), encoding="utf-8")
+    assert load_sim(v1, v2) == LiveSim("sim_full", 1.0, False, "m7-sim_full-v1", True)
+
+
 @pytest.mark.parametrize("competition", ["euroleague", "gbl"])
 def test_same_inputs_same_numbers(competition: str) -> None:
     a, b = _run(competition, n_sims=100), _run(competition, n_sims=100)

@@ -475,6 +475,22 @@ def test_the_ungated_simulation_is_labelled_with_the_m7_verdict(store: rm.Store)
     )
 
 
+def test_a_passed_gate_v2_gates_the_euroleague_simulation_only(fresh: Path) -> None:
+    v2 = fresh / "reports" / "backtest_m7_v2.json"
+    v2.write_text(json.dumps({"gate_v2": {"passed": True}}), encoding="utf-8")
+    el = rm.simulation_latest(rm.Store(fresh), "euroleague")
+    assert el["gated"] is True and el["gate"]["passed"] is True
+    assert "gate v2" in el["gate"]["reason"]
+    (fresh / "reports" / "sim_ungated_gbl.json").write_text(
+        (fresh / "reports" / "sim_ungated_euroleague.json").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    gbl = rm.simulation_latest(rm.Store(fresh), "gbl")
+    assert gbl["gated"] is False and "GBL is not gated" in gbl["gate"]["reason"]
+    v2.write_text(json.dumps({"gate_v2": {"passed": False}}), encoding="utf-8")
+    assert rm.simulation_latest(rm.Store(fresh), "euroleague")["gated"] is False
+
+
 def test_without_an_ungated_report_the_404_states_the_verdict(fresh: Path) -> None:
     (fresh / "reports" / "sim_ungated_euroleague.json").unlink()
     with pytest.raises(rm.NotFound) as caught:

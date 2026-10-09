@@ -9,7 +9,7 @@ const models = [
   { id: "M4", name: "League translation", does: "Translates a player's box rates between the Greek league and the EuroLeague.", passed: false, live: "Enters only the Greek-league scouting list." },
   { id: "M5", name: "Roster-aware game model", does: "Forecasts a game from the players expected to play, on top of M3's ratings.", passed: true, live: "Runs as a shadow log, not published as a forecast." },
   { id: "M6", name: "Player projections", does: "Projects each player's rates for next season and the rest of this one, with an 80% interval.", passed: true, live: "Feeds the player pages and Scouting." },
-  { id: "M7", name: "Season simulator", does: "Plays out the rest of a season many times to give each team's final place, playoff and title chances.", passed: false, live: "Its Standings page is labelled not gated." },
+  { id: "M7", name: "Season simulator", does: "Plays out the rest of a season many times to give each team's final place, playoff and title chances.", passed: true, live: "Gate v2 passed: the EuroLeague Standings are gated; the Greek league stays not gated." },
 ];
 ---
 

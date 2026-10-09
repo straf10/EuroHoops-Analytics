@@ -400,9 +400,9 @@
     "VIR": 0.0158,
     "ZAL": 0.1415
   },
-  "gated": false,
+  "gated": true,
   "gate": {
-    "passed": false,
-    "reason": "M7 failed its validation gate (reports/backtest_m7.json): this run is not gated"
+    "passed": true,
+    "reason": "M7 passed its validation gate (gate v2, reports/backtest_m7_v2.json)"
   }
 }

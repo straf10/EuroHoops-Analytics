@@ -79,18 +79,25 @@ class LiveSim:
     gate_passed: bool
 
 
-def load_sim(report_path: Path) -> LiveSim | None:
-    """The chosen variant of an M7 backtest report; None when there is no report."""
+def load_sim(report_path: Path, v2_path: Path | None = None) -> LiveSim | None:
+    """The chosen variant of an M7 backtest report; None when there is no report. The gate counts
+    as passed when the v1 gate passed or, given ``v2_path``, gate v2 (docs/models/m7.md, PLAN 8.1
+    R5) passed; the variant and version stay v1's (v2 chose the same variant at every origin)."""
     if not report_path.exists():
         return None
     report = json.loads(report_path.read_text(encoding="utf-8"))
     chosen = report["chosen"]
+    passed_v2 = (
+        v2_path is not None
+        and v2_path.exists()
+        and bool(json.loads(v2_path.read_text(encoding="utf-8")).get("gate_v2", {}).get("passed"))
+    )
     return LiveSim(
         key=str(chosen["key"]),
         spread=float(chosen["spread"]),
         net=bool(chosen["net"]),
         version=str(report["model_version"]),
-        gate_passed=bool(report.get("gate", {}).get("passed")),
+        gate_passed=bool(report.get("gate", {}).get("passed")) or passed_v2,
     )
 
 

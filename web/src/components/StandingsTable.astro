@@ -64,7 +64,7 @@ const cell = (key: string, v: number) => (Number.isNaN(v) ? "n/a" : key === "win
   </figcaption>
   <div class="scroll">
     <table class="grid standings" id={`standings-${key}`}>
-      <caption class="sr-only">{title}, projected season from {plural(sim.n_sims, "simulation")}, not gated</caption>
+      <caption class="sr-only">{title}, projected season from {plural(sim.n_sims, "simulation")}, {sim.gated ? "gated" : "not gated"}</caption>
       <thead>
         <tr>
           <th scope="col" class="num">#</th>

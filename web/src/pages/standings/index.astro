@@ -28,15 +28,16 @@ const comps = await Promise.all(
 );
 const known = new Set(stats ? Object.keys(stats.teams) : []);
 const href = (code: string) => (known.has(code) ? teamHref(base, code) : null);
-const description = "Projected EuroLeague and Greek Basket League tables from the daily season simulation, not gated.";
+const description = "Projected EuroLeague and Greek Basket League tables from the daily season simulation (EuroLeague gated, Greek league not gated).";
 ---
 
 <Base title="Standings" description={description} current="standings">
   <header class="wrap head">
     <h1>Standings</h1>
     <p class="lede">
-      How each season could finish: the rest of the fixtures played many times over, then the tables counted. This
-      projection has not passed its validation gate, so treat it as a sketch, not a forecast.
+      How each season could finish: the rest of the fixtures played many times over, then the tables counted. The
+      EuroLeague projection passed its validation gate (v2, over seven past seasons); the Greek league one is not
+      gated, as its playoff rules are unverified, so treat it as a sketch.
     </p>
   </header>
 

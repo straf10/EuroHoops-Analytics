@@ -19,7 +19,7 @@ import pandera.pandas as pa
 
 from eurohoops.config import EL_TITLES_SEED
 
-SINCE = 1958  # the first EuroLeague (Champions Cup) season, 1958-59
+SINCE = 1958  # the first EuroLeague (Champions Cup) final, of the 1957-58 season
 DATA_FROM = "2007-08"  # the first season in the games table
 
 

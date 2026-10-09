@@ -324,11 +324,12 @@ def test_the_committed_m6_reports_hold_no_age_and_no_birth_date(path: Path) -> N
     assert personal_fields(json.loads((ROOT / path).read_text(encoding="utf-8"))) == []
 
 
-@pytest.mark.parametrize("name", ["euroleague", "gbl"])
-def test_the_ungated_reports_are_labelled_not_gated(name: str) -> None:
+@pytest.mark.parametrize(("name", "gated"), [("euroleague", True), ("gbl", False)])
+def test_the_standings_reports_carry_the_gate_v2_label(name: str, gated: bool) -> None:
+    """M7 gate v2 passed (docs/models/m7.md): the EuroLeague run is gated, the GBL never is."""
     report = json.loads((ROOT / SIM_UNGATED[name]).read_text(encoding="utf-8"))
-    assert report["gated"] is False
-    assert report["gate"]["passed"] is False and "not gated" in report["gate"]["reason"]
+    assert report["gated"] is gated and report["gate"]["passed"] is gated
+    assert ("gate v2" if gated else "not gated") in report["gate"]["reason"]
     assert report["simulated_at_utc"] == report["cutoff_utc"]  # deterministic: no wall clock
 
 

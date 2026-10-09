@@ -285,6 +285,17 @@ Flagship model: **M5 for the EuroLeague, M1 for the GBL** (M5 failed its GBL gat
 | R7 | Scouting thresholds from EuroLeague data | Replace the declared `N_MIN` (200 FGA, 50 3PA, 1,000 on-court poss.) with cut-offs derived from EuroLeague data (e.g. a rotation-player volume percentile, or the n where reliability r = n/(n+k) reaches a declared level). Note the binding rule is `PERSIST_REAL = 0.5`, which needs n ≥ k (≈480 FGA, ≈230 3PA, ≈29,000 poss.): revisit it together. On/off barely repeats in the EuroLeague (stability 0.04): drop its label or mark it as noise. Owner chose (2026-10-09) per-player shrinkage, but `board.py` already sets `persist = n/(n+k)` per player: what was left is the **label rule** (`PERSIST_REAL`, `N_MIN`), not covered by the M6 backtest (board rebuild only). Owner chose C1 (2026-10-09): "likely real" iff persist·|z| ≥ 1.645, new "within noise" label for |z| < 1.645, `N_MIN` = median volume of EuroLeague rotation player-seasons on tuning seasons. Committed in `docs/models/m6.md`. On/off label dropped (raw value shown with a "doesn't repeat year to year" note). Declare before looking at label counts. | New rule documented in the M6 card; board rebuilt; label counts reported |
 | R8 | Teams: EuroLeague titles | On the "Every club since 2007-08" list, show titles in parentheses next to seasons for clubs with ≥1, counted from our data (winner of each Final Four final) and labelled "since 2007-08". Source codes upstream, display codes via `DISPLAY_CODES`. Owner chose (2026-10-09) **all-time totals since 1958**: a frozen seed of pre-2007-08 titles (from the owner's all-time list, 68 titles through 2024-25) plus titles counted from our data since 2007-08 (last FF game of each season; from 2025-26 there is no third-place game). 2025-26: Olympiacos (all-time 4, 69 titles in total). | Counts match a manual check of the finals |
 
+**Status (2026-10-09, branch `review-backlog`):**
+- R1: rule committed (`m5.md`, `m1.md`). Still to build: the promotion test itself (paired bootstrap at the two looks), needed by EuroLeague round 19.
+- R2–R4: done. `/forecasts/` page (scorecard, per round, all games) for both competitions (`eval/forecasts.py`).
+- R5: **gate v2 PASS** (sim_full at every origin; Brier − point_sim −0.000139, CI upper 0.003782 < 0.005; z −0.68). Effect applied: `simulate` (EuroLeague) in the daily workflow, EuroLeague Standings labelled gated, GBL stays not gated. A loader bug found after the run touches only the 2016-17 selection-season rows (verdict unchanged, checked offline); owner chose no re-run.
+- R6: done ("Top 6", median place with 80% range; "Play-in" kept).
+- R7: done under rule v2 (C1). Result: **no "likely real" player** on the 2025-26 board (persist·|z| never reaches 1.645 at stabilities ≈0.39/0.34). Owner accepts it.
+- R8: done (all-time titles since 1958, seed + data).
+
+**Later / to think about:**
+- **R7 rule v3** (owner, 2026-10-09): under v2 nobody is "likely real". Consider a v3 that can name real over-performers (e.g. pool several seasons per player, a lower bar on the lasting part, or a different stability estimate). Must be declared as v3, stating that it follows v2's empty result; never edit v2 in place.
+
 ---
 
 ## 9. Risks & mitigations
