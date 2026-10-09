@@ -1,5 +1,5 @@
 {
-  "rows_in_log": 7,
+  "rows_in_log": 13,
   "rows_excluded_late": 0,
   "rows_not_provable": 0,
   "games_not_provable": [],
@@ -344,7 +344,7 @@
   "warnings": [],
   "market": null,
   "m1": {
-    "rows_in_log": 7,
+    "rows_in_log": 13,
     "rows_excluded_late": 0,
     "m1": {
       "n": 7,
