@@ -9,7 +9,7 @@ Dimensions, each as observed vs expected with a standard error ``se`` (so ``z = 
   xPTS probabilities ``p`` were true. EuroLeague only (the ``shots`` mart).
 - ``fg3_pct``: 3P% vs a prior from FT%: a weighted least-squares line of 3P% on FT%, fitted per
   competition on complete seasons strictly before the board's season (rows with at least
-  ``N_MIN["fg3_pct"]`` 3PA and ``FT_MIN_FTA`` FTA). A player with fewer than ``FT_MIN_FTA`` FTA
+  the dimension's ``n_min`` 3PA and ``FT_MIN_FTA`` FTA). A player with fewer than ``FT_MIN_FTA`` FTA
   takes the fitted mean FT%. ``se`` is binomial at the expected rate (the null sd; the prior's own
   uncertainty is not added).
 - ``on_off``: on-court minus off-court net rating per 100 possessions from the ``stints`` mart
@@ -23,11 +23,17 @@ Dimensions, each as observed vs expected with a standard error ``se`` (so ``z = 
   quadrature.
 
 Persistence (R10): ``stability`` is the year-to-year Pearson r of the gap in consecutive tuning
-seasons for players with at least ``N_MIN`` attempts in both, and ``mean_n`` their mean n. With
+seasons for players with at least ``n_min`` attempts in both, and ``mean_n`` their mean n. With
 the reliability model r = n / (n + k), ``k = mean_n (1 - r) / r`` and a player with n attempts
 keeps ``persist = n / (n + k)`` of his gap (0 when r <= 0, 1 when r >= 1), so
-``expected_next = expected + persist * gap``. Labels: n < ``N_MIN`` is "too few attempts";
-otherwise "likely real" iff ``persist >= 0.5`` and ``|z| >= 1.645``, else "likely regression".
+``expected_next = expected + persist * gap``.
+
+``n_min`` is derived, not typed in (rule v2, docs/models/m6.md): per dimension, the median n of
+EuroLeague rotation player-seasons (``ROTATION_GAMES`` games and ``ROTATION_MINUTES`` minutes a
+game) with an observation, over the tuning seasons, rounded down to a multiple of 10
+(``derive_n_min``). Labels, in this order: n < ``n_min`` is "too few attempts"; |z| < ``Z_REAL`` is
+"within noise"; ``persist * |z| >= Z_REAL`` (the lasting part of the gap is itself significant)
+is "likely real"; otherwise "likely regression". On/off has no label (its stability is ~0).
 
 Walk-forward: a builder reads only the rows of its board season and (3P% only) earlier seasons
 for the prior; the caller passes tuning seasons only to ``stability``. Names and teams are not
@@ -40,6 +46,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 import pandera.pandas as pa
 
@@ -48,14 +55,12 @@ from eurohoops.models.player_seasons import person_ids
 from eurohoops.parse.schemas import validated
 
 DIMENSIONS = ("shot_making", "fg3_pct", "on_off")
-LABELS = ("likely regression", "likely real", "too few attempts")
-N_MIN = {
-    "shot_making": 200,
-    "fg3_pct": 50,
-    "on_off": 1000,
-}  # FGA, 3PA, on-court possessions (declared)
+LABELS = ("likely regression", "likely real", "too few attempts", "within noise")
+UNLABELLED = ("on_off",)  # dimensions whose gap does not repeat year to year: no label
 Z_REAL = 1.645
-PERSIST_REAL = 0.5
+ROTATION_GAMES = 15  # a rotation player-season: at least this many games ...
+ROTATION_MINUTES = 15.0  # ... and this many minutes a game
+N_MIN_STEP = 10
 FT_MIN_FTA = 25  # FT% is used as a predictor only from this many attempts
 MIN_FIT_ROWS = 10
 MIN_PAIRS = 3
@@ -90,7 +95,7 @@ BOARD_SCHEMA = pa.DataFrameSchema(
         "persist": pa.Column("float64", pa.Check.in_range(0.0, 1.0)),
         "expected_next": pa.Column("float64"),
         "n": pa.Column("float64", pa.Check.gt(0.0)),
-        "label": pa.Column(str, pa.Check.isin(LABELS)),
+        "label": pa.Column(str, pa.Check.isin(LABELS), nullable=True),  # null: no label (on/off)
     },
     unique=["person_id", "competition", "season", "dimension"],
     strict=True,
@@ -105,6 +110,7 @@ class Stability:
     r: float
     mean_n: float
     pairs: int
+    n_min: int = 0  # attempts needed for a label (derived, see ``derive_n_min``)
 
     def persist(self, n: FloatArray) -> FloatArray:
         """Share of the gap expected to persist at ``n`` attempts: n / (n + k)."""
@@ -114,6 +120,42 @@ class Stability:
             return np.ones_like(n, dtype=np.float64)
         k = self.mean_n * (1.0 - self.r) / self.r
         return np.asarray(n / (n + k), dtype=np.float64)
+
+
+def rotation_player_seasons(seasons: pd.DataFrame, tuning: tuple[int, ...]) -> pd.DataFrame:
+    """``person_id, season`` of the EuroLeague rotation player-seasons among ``tuning`` seasons:
+    complete (not partial) seasons with at least ``ROTATION_GAMES`` games and ``ROTATION_MINUTES``
+    minutes a game. ``seasons``: the I1 frame."""
+    rows = seasons[
+        (seasons["competition"] == "euroleague")
+        & seasons["season"].isin(tuning)
+        & ~seasons["partial"]
+        & (seasons["games"] >= ROTATION_GAMES)
+        & (seasons["minutes"] >= ROTATION_MINUTES * seasons["games"])
+    ]
+    return rows[["person_id", "season"]].drop_duplicates().reset_index(drop=True)
+
+
+def derive_n_min(n: pd.Series) -> int:
+    """The median of ``n`` (a rotation player-season each), rounded down to a multiple of
+    ``N_MIN_STEP``."""
+    if n.empty:
+        raise ValueError("no rotation player-seasons to derive N_MIN from")
+    return int(np.floor(float(n.median()) / N_MIN_STEP)) * N_MIN_STEP
+
+
+def rotation_n(observations: pd.DataFrame, rotation: pd.DataFrame) -> pd.Series:
+    """The ``n`` of the EuroLeague ``observations`` that are rotation player-seasons (tuning
+    seasons are the caller's choice: ``rotation`` holds only those)."""
+    mine = observations[observations["competition"] == "euroleague"]
+    return mine.merge(rotation, on=["person_id", "season"], how="inner")["n"]
+
+
+def fg3_rotation_n(seasons: pd.DataFrame, rotation: pd.DataFrame) -> pd.Series:
+    """3PA of the rotation player-seasons that attempted a 3 (the 3P% rows' n, read from the I1
+    frame because the 3P% prior needs ``n_min`` before its observations exist)."""
+    mine = seasons[(seasons["competition"] == "euroleague") & (seasons["fg3a"] > 0)]
+    return mine.merge(rotation, on=["person_id", "season"], how="inner")["fg3a"].astype("float64")
 
 
 def _empty_observations() -> pd.DataFrame:
@@ -183,7 +225,9 @@ def shot_making_observations(
     return _finish(pd.concat(frames, ignore_index=True))
 
 
-def fg3_fit(seasons: pd.DataFrame, season: int, competition: str) -> tuple[float, float, float]:
+def fg3_fit(
+    seasons: pd.DataFrame, season: int, competition: str, n_min: int
+) -> tuple[float, float, float]:
     """``(intercept, slope, mean_ft)`` of 3P% on FT% for ``competition``, from complete seasons
     strictly before ``season`` (rows with enough 3PA and FTA), weighted by 3PA. ``mean_ft`` is the
     weighted mean FT%, the FT% of a player with too few FTA."""
@@ -191,7 +235,7 @@ def fg3_fit(seasons: pd.DataFrame, season: int, competition: str) -> tuple[float
         (seasons["competition"] == competition)
         & (seasons["season"] < season)
         & ~seasons["partial"]
-        & (seasons["fg3a"] >= N_MIN["fg3_pct"])
+        & (seasons["fg3a"] >= n_min)
         & (seasons["fta"] >= FT_MIN_FTA)
     ]
     if len(rows) < MIN_FIT_ROWS:
@@ -203,7 +247,7 @@ def fg3_fit(seasons: pd.DataFrame, season: int, competition: str) -> tuple[float
     return float(intercept), float(slope), float(np.average(ft, weights=weight))
 
 
-def fg3_observations(seasons: pd.DataFrame, season: int) -> pd.DataFrame:
+def fg3_observations(seasons: pd.DataFrame, season: int, n_min: int) -> pd.DataFrame:
     """3P% of each player-season of ``season`` (the I1 frame; a partial row is a partial season)
     vs the FT%-informed prior fitted before ``season``. A competition with too few earlier rows to
     fit the prior has no rows."""
@@ -215,7 +259,7 @@ def fg3_observations(seasons: pd.DataFrame, season: int) -> pd.DataFrame:
             & (seasons["fg3a"] > 0)
         ]
         try:
-            intercept, slope, mean_ft = fg3_fit(seasons, season, str(competition))
+            intercept, slope, mean_ft = fg3_fit(seasons, season, str(competition), n_min)
         except ValueError:
             continue
         fta = rows["fta"].to_numpy(dtype=np.float64)
@@ -344,13 +388,13 @@ def on_off_observations(
     )
 
 
-def stability(observations: pd.DataFrame, dimension: str, seasons: tuple[int, ...]) -> Stability:
+def stability(
+    observations: pd.DataFrame, dimension: str, seasons: tuple[int, ...], n_min: int
+) -> Stability:
     """Year-to-year r of the gap (observed - expected) over consecutive ``seasons`` (the caller
-    passes tuning seasons only), for players with at least ``N_MIN[dimension]`` attempts in both
-    seasons of a pair. ``observations``: ``OBSERVATION_SCHEMA`` rows of those seasons."""
-    use = observations[
-        observations["season"].isin(seasons) & (observations["n"] >= N_MIN[dimension])
-    ]
+    passes tuning seasons only), for players with at least ``n_min`` attempts in both seasons of a
+    pair. ``observations``: ``OBSERVATION_SCHEMA`` rows of those seasons."""
+    use = observations[observations["season"].isin(seasons) & (observations["n"] >= n_min)]
     first = use.assign(gap=use["observed"] - use["expected"])
     second = first.assign(season=first["season"] - 1)
     pairs = first.merge(second, on=["person_id", "competition", "season"], suffixes=("", "_next"))
@@ -358,7 +402,21 @@ def stability(observations: pd.DataFrame, dimension: str, seasons: tuple[int, ..
         raise ValueError(f"{dimension}: {len(pairs)} year-to-year pairs, need {MIN_PAIRS}")
     r = float(np.corrcoef(pairs["gap"], pairs["gap_next"])[0, 1])
     mean_n = float(0.5 * (pairs["n"] + pairs["n_next"]).mean())
-    return Stability(dimension, r, mean_n, len(pairs))
+    return Stability(dimension, r, mean_n, len(pairs), n_min)
+
+
+def _labels(
+    n: FloatArray, z: FloatArray, persist: FloatArray, n_min: int, dimension: str
+) -> npt.NDArray[np.object_]:
+    """Rule v2, in order: too few attempts, within noise, likely real (the lasting part of the gap,
+    ``persist * |z|``, is itself significant), likely regression. No label where the gap does not
+    repeat year to year."""
+    if dimension in UNLABELLED:
+        return np.full(len(n), None, dtype=object)
+    az = np.abs(z)
+    label = np.where(persist * az >= Z_REAL, "likely real", "likely regression")
+    label = np.where(az < Z_REAL, "within noise", label)
+    return np.asarray(np.where(n < n_min, "too few attempts", label), dtype=object)
 
 
 def board(
@@ -378,9 +436,7 @@ def board(
         se = rows["se"].to_numpy(dtype=np.float64)
         z = gap / se
         persist = stab.persist(n)
-        real = (persist >= PERSIST_REAL) & (np.abs(z) >= Z_REAL)
-        label = np.where(real, "likely real", "likely regression")
-        label = np.where(n < N_MIN[dimension], "too few attempts", label)
+        label = _labels(n, z, persist, stab.n_min, dimension)
         frames.append(
             pd.DataFrame(
                 {

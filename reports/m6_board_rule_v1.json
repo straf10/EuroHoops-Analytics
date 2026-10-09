@@ -1,0 +1,42 @@
+{
+  "note": "Frozen copy of the pre-rule-v2 board (typed-in N_MIN, PERSIST_REAL = 0.5), taken from reports/m6_board.json as committed at f945d7a, so the M6 card can show the label counts before and after rule v2. No command rebuilds it.",
+  "model": "m6",
+  "season": 2025,
+  "dimensions": {
+    "shot_making": {
+      "stability": 0.3721,
+      "pairs": 173,
+      "n_min": 200,
+      "k": 481.0778
+    },
+    "fg3_pct": {
+      "stability": 0.2987,
+      "pairs": 401,
+      "n_min": 50,
+      "k": 231.6714
+    },
+    "on_off": {
+      "stability": 0.0431,
+      "pairs": 244,
+      "n_min": 1000,
+      "k": 29244.27
+    }
+  },
+  "label_counts": {
+    "shot_making": {
+      "likely_regression": 97,
+      "likely_real": 3,
+      "too_few_attempts": 229
+    },
+    "fg3_pct": {
+      "likely_regression": 235,
+      "likely_real": 1,
+      "too_few_attempts": 245
+    },
+    "on_off": {
+      "likely_regression": 136,
+      "likely_real": 0,
+      "too_few_attempts": 199
+    }
+  }
+}

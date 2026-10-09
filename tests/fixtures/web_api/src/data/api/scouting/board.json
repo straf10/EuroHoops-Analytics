@@ -6,19 +6,22 @@
       "stability": 0.31,
       "pairs": 173,
       "n_min": 200,
-      "k": 450.0
+      "k": 450.0,
+      "labelled": true
     },
     "fg3_pct": {
       "stability": 0.22,
       "pairs": 173,
       "n_min": 50,
-      "k": 160.0
+      "k": 160.0,
+      "labelled": true
     },
     "on_off": {
       "stability": 0.18,
       "pairs": 173,
       "n_min": 1000,
-      "k": 2600.0
+      "k": 2600.0,
+      "labelled": false
     }
   },
   "rows": [
@@ -36,7 +39,7 @@
       "persist": 0.536,
       "expected_next": 1.823,
       "n": 520.0,
-      "label": "likely real",
+      "label": "likely regression",
       "name": "Levi Randolph",
       "team": "TEL"
     },
@@ -72,7 +75,7 @@
       "persist": 0.609,
       "expected_next": -1.887,
       "n": 700.0,
-      "label": "likely real",
+      "label": "likely regression",
       "name": "Sasha Vezenkov",
       "team": "OLY"
     },
@@ -90,7 +93,7 @@
       "persist": 0.464,
       "expected_next": 0.557,
       "n": 390.0,
-      "label": "likely regression",
+      "label": "within noise",
       "name": "Jaylen Hoard",
       "team": "TEL"
     },
@@ -126,7 +129,7 @@
       "persist": 0.6,
       "expected_next": 0.39,
       "n": 240.0,
-      "label": "likely regression",
+      "label": "within noise",
       "name": "Levi Randolph",
       "team": "TEL"
     },
@@ -144,7 +147,7 @@
       "persist": 0.652,
       "expected_next": 0.408,
       "n": 300.0,
-      "label": "likely real",
+      "label": "likely regression",
       "name": "Carsen Edwards",
       "team": "MUN"
     },
@@ -162,7 +165,7 @@
       "persist": 0.448,
       "expected_next": 0.316,
       "n": 130.0,
-      "label": "likely regression",
+      "label": "within noise",
       "name": "Nikos Papas",
       "team": "00000005"
     },
@@ -180,7 +183,7 @@
       "persist": 0.568,
       "expected_next": 0.38,
       "n": 210.0,
-      "label": "likely regression",
+      "label": "within noise",
       "name": "Giorgos Nikou",
       "team": "00000002"
     },
@@ -216,7 +219,7 @@
       "persist": 0.48,
       "expected_next": 3.008,
       "n": 2400.0,
-      "label": "likely regression",
+      "label": null,
       "name": "Levi Randolph",
       "team": "TEL"
     },
@@ -234,7 +237,7 @@
       "persist": 0.544,
       "expected_next": 0.218,
       "n": 3100.0,
-      "label": "likely real",
+      "label": null,
       "name": "Sasha Vezenkov",
       "team": "OLY"
     },
@@ -252,7 +255,7 @@
       "persist": 0.519,
       "expected_next": 3.17,
       "n": 2800.0,
-      "label": "likely real",
+      "label": null,
       "name": "Jaylen Hoard",
       "team": "TEL"
     }

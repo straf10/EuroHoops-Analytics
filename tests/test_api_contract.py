@@ -57,7 +57,7 @@ def test_a_planted_mismatch_is_detected(exported: tuple[TestClient, Path], tmp_p
     copy = tmp_path / "web"
     shutil.copytree(web, copy)
     board = copy / API_PREFIX / "scouting" / "board.json"
-    board.write_bytes(board.read_bytes().replace(b"over", b"OVER", 1))
+    board.write_bytes(board.read_bytes().replace(b"within noise", b"WITHIN noise", 1))
     site = copy / SITE_FILE
     site.write_bytes(site.read_bytes() + b" ")
     assert script.contract_mismatches(client, copy) == [

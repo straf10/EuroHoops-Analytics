@@ -161,8 +161,12 @@ from eurohoops.models.board import (
     DIMENSIONS,
     Stability,
     board,
+    derive_n_min,
     fg3_observations,
+    fg3_rotation_n,
     on_off_observations,
+    rotation_n,
+    rotation_player_seasons,
     shot_making_observations,
     stability,
 )
@@ -1038,13 +1042,29 @@ def _m6_board(
         ignore_index=True,
     )
     complete = world.complete[~world.complete["partial"]]
+    # N_MIN per dimension (rule v2): median n of EuroLeague rotation player-seasons, tuning only.
+    rotation = rotation_player_seasons(complete, M6.tuning)
+    tuned = {
+        "shot_making": pd.concat(
+            [shot_making_observations(shots, xpts, xwalk, s, variant) for s in M6.tuning]
+        ),
+        "on_off": pd.concat(
+            [on_off_observations(stints, checks, brapm, xwalk, s) for s in M6.tuning]
+        ),
+    }
+    n_min = {
+        "shot_making": derive_n_min(rotation_n(tuned["shot_making"], rotation)),
+        "fg3_pct": derive_n_min(fg3_rotation_n(complete, rotation)),
+        "on_off": derive_n_min(rotation_n(tuned["on_off"], rotation)),
+    }
     found: dict[str, dict[int, pd.DataFrame]] = {d: {} for d in DIMENSIONS}
     for s in (*M6.tuning, season):
         found["shot_making"][s] = shot_making_observations(shots, xpts, xwalk, s, variant)
-        found["fg3_pct"][s] = fg3_observations(complete, s)
+        found["fg3_pct"][s] = fg3_observations(complete, s, n_min["fg3_pct"])
         found["on_off"][s] = on_off_observations(stints, checks, brapm, xwalk, s)
     stabilities = {
-        d: stability(pd.concat([found[d][s] for s in M6.tuning]), d, M6.tuning) for d in DIMENSIONS
+        d: stability(pd.concat([found[d][s] for s in M6.tuning]), d, M6.tuning, n_min[d])
+        for d in DIMENSIONS
     }
     return board({d: found[d][season] for d in DIMENSIONS}, stabilities), stabilities
 

@@ -90,6 +90,7 @@ export interface Dimension {
   stability: number;
   pairs?: number;
   n_min: number;
+  labelled?: boolean; // false: the gap does not repeat year to year, so rows carry no label
   k: number;
 }
 
@@ -106,7 +107,7 @@ export interface BoardRow {
   persist: number;
   expected_next: number;
   n: number;
-  label: string;
+  label: string | null;
   name: string;
   team: string;
 }
@@ -317,6 +318,7 @@ export const LABEL_WORDS: Record<string, string> = {
   "likely real": "Likely real",
   "likely regression": "Likely regression",
   "too few attempts": "Too few attempts",
+  "within noise": "Within noise",
 };
 
 export const boardNumber = (d: DimensionInfo, x: number, gap = false): string =>

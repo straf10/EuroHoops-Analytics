@@ -842,7 +842,8 @@ button.s-rank[aria-expanded="true"]::after {
   font-weight: 600;
   box-shadow: inset 0 0 0 1px var(--ink-2);
 }
-.m6-chip.too-few-attempts {
+.m6-chip.too-few-attempts,
+.m6-chip.within-noise {
   color: var(--muted);
 }
 .zrail {

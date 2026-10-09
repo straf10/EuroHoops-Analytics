@@ -47,7 +47,7 @@ from eurohoops.eval.m6_backtest import (
     scale_intervals,
 )
 from eurohoops.live_sim import completed_rounds
-from eurohoops.models.board import DIMENSIONS, N_MIN, Stability
+from eurohoops.models.board import DIMENSIONS, LABELS, UNLABELLED, Stability
 from eurohoops.models.player_seasons import COUNT_STATS, PROJECTED_STATS, person_ids
 from eurohoops.models.projection import Translation
 from eurohoops.models.similarity import BOX_FEATURES, SHOT_FEATURES
@@ -321,8 +321,9 @@ def board_report(
     names: Mapping[str, str],
     teams: Mapping[tuple[str, str], str],
 ) -> dict[str, Any]:
-    """``reports/m6_board.json``: each dimension's stability, ``N_MIN`` and k, and the
-    ``BOARD_SCHEMA`` rows with name and team."""
+    """``reports/m6_board.json``: each dimension's stability, ``n_min`` and k, and the
+    ``BOARD_SCHEMA`` rows with name and team, and the number of rows per label (spaces in a
+    label become underscores; on/off has none)."""
     dims = {}
     for dim in DIMENSIONS:
         if dim not in stabilities:
@@ -332,7 +333,8 @@ def board_report(
         dims[dim] = {
             "stability": _r(stab.r),
             "pairs": stab.pairs,
-            "n_min": N_MIN[dim],
+            "n_min": stab.n_min,
+            "labelled": dim not in UNLABELLED,
             "k": None if k is None else _r(k),
         }
     out = []
@@ -346,7 +348,21 @@ def board_report(
                 "team": teams.get(key, ""),
             }
         )
-    return {"model": "m6", "season": season, "dimensions": dims, "rows": out}
+    counts = {
+        dim: {
+            label.replace(" ", "_"): sum(r["dimension"] == dim and r["label"] == label for r in out)
+            for label in LABELS
+        }
+        for dim in dims
+        if dim not in UNLABELLED
+    }
+    return {
+        "model": "m6",
+        "season": season,
+        "dimensions": dims,
+        "label_counts": counts,
+        "rows": out,
+    }
 
 
 def similarity_report(
