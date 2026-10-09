@@ -45,10 +45,12 @@ export const LEADER_FIELDS = ["gp", "gs", "sec", "pts", "fg2m", "fg2a", "fg3m", 
 
 export const STATS = ["pts", "reb", "ast", "stl", "blk", "pir", "ts", "efg", "fg3_pct", "ft_pct", "pm"];
 export const CARD_STATS = ["pts", "reb", "ast", "ts", "pir"];
+// all-time hidden until pre-2022 seasons return (docs/SITE_FEEDBACK.md): set true to restore "Best seasons".
+export const SHOW_ALL_TIME = false;
 export const SCOPES: { key: Scope; label: string }[] = [
   { key: "season", label: "Season" },
   { key: "career", label: "Career" },
-  { key: "best", label: "Best seasons" },
+  ...(SHOW_ALL_TIME ? [{ key: "best" as Scope, label: "Best seasons" }] : []),
 ];
 export const MODES: { key: Mode; label: string }[] = [
   { key: "game", label: "Per game" },
