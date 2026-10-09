@@ -14,6 +14,13 @@ interface Props {
 const { sim, title, clubs, href } = Astro.props;
 const key = sim.competition;
 const euroleague = key === "euroleague";
+// Regular-season places that skip the play-in (standings.py: EuroLeague 1-6, GBL 1-8).
+const directCut = euroleague ? 6 : 8;
+const ordinal = (n: number) => {
+  const tens = n % 100;
+  const suffix = tens >= 11 && tens <= 13 ? "th" : n % 10 === 1 ? "st" : n % 10 === 2 ? "nd" : n % 10 === 3 ? "rd" : "th";
+  return `${n}${suffix}`;
+};
 
 // [key, head, tooltip, value]; the EuroLeague has a play-in and a Final Four, the GBL semifinals.
 type Col = [string, string, string, (t: Simulation["teams"][number]) => number];
@@ -21,7 +28,7 @@ const cols: Col[] = [
   ["wins", "Wins", "Projected wins: the average over the simulations, regular season", (t) => Number(t.expected_wins)],
   ...(euroleague
     ? ([
-        ["direct", "Direct", "Chance of finishing in the top six, straight into the playoffs", (t) => Number(t.p_direct_playoffs)],
+        ["direct", `Top ${directCut}`, `Chance of finishing in the top ${directCut}, straight into the playoffs`, (t) => Number(t.p_direct_playoffs)],
         ["playin", "Play-in", "Chance of finishing seventh to tenth, in the play-in", (t) => Number(t.p_play_in)],
       ] as Col[])
     : []),
@@ -51,7 +58,7 @@ const cell = (key: string, v: number) => (Number.isNaN(v) ? "n/a" : key === "win
       <span class="when">(cut off {athensDay(sim.cutoff_utc)})</span>
     </p>
     <p class="how" data-interval>
-      Final place is the 10th to 90th percentile of the simulated tables (an 80% interval), with the median beside it.
+      Place is the median place in the simulated tables, with the 80% range beside it (the 10th to 90th percentile of those tables).
       Chances are shares of the {count(sim.n_sims)} simulations.
     </p>
   </figcaption>
@@ -69,7 +76,7 @@ const cell = (key: string, v: number) => (Number.isNaN(v) ? "n/a" : key === "win
               </th>
               {i === 0 && (
                 <th scope="col" class="num" aria-sort="none">
-                  <button type="button" data-sort="place" data-tip={tip`<b>Final place</b><br>10th to 90th percentile of the simulated tables, median beside it`}>Place</button>
+                  <button type="button" data-sort="place" data-tip={tip`<b>Place</b><br>Median place in the simulated tables, with the 80% range (10th to 90th percentile) beside it`}>Place</button>
                 </th>
               )}
             </>
@@ -90,7 +97,7 @@ const cell = (key: string, v: number) => (Number.isNaN(v) ? "n/a" : key === "win
                 </td>
                 {i === 0 && (
                   <td class="num" data-interval data-num data-k="place" data-v={r.t.rank_p50}>
-                    {r.t.rank_p10}–{r.t.rank_p90} <span class="med">({r.t.rank_p50})</span>
+                    {ordinal(r.t.rank_p50)} <span class="med">{r.t.rank_p10}–{r.t.rank_p90}</span>
                   </td>
                 )}
               </>
