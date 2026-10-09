@@ -57,6 +57,7 @@ from eurohoops.config import (
     M6_SIMILARITY,
     M7,
     M7_GBL,
+    M7_V2,
     MART_PATH,
     ODDS_CALLS,
     ODDS_RAW_DIR,
@@ -110,6 +111,7 @@ from eurohoops.eval.m6_backtest import (
     run_m6_backtest,
 )
 from eurohoops.eval.m7_backtest import M7Inputs, format_m7_table, run_m7_backtest, scored_splits
+from eurohoops.eval.m7_gate_v2 import format_gate_v2, run_gate_v2
 from eurohoops.eval.scorecard import build_scorecard
 from eurohoops.eval.tracking import (
     default_tracking_uri,
@@ -828,6 +830,21 @@ def _backtest_m7(
         typer.echo(f"MLflow run {run_id}")
 
 
+def _backtest_m7_v2(competition: CompetitionName) -> None:
+    """``backtest --model m7 --gate-v2``: the rolling-origin gate v2 (docs/models/m7.md), run once;
+    EuroLeague only (the GBL is not gated)."""
+    if competition is not CompetitionName.euroleague:
+        log.error("M7 gate v2 is the EuroLeague's; the GBL is not gated")
+        raise typer.Exit(code=1)
+    started = time.perf_counter()
+    inputs = _m7_inputs(EUROLEAGUE, M7, M7_V2.tuning[1:])
+    report, rows = run_gate_v2(inputs, spec=M7_V2)
+    write_json(M7_V2.report, report)
+    rows.to_csv(M7_V2.teams_report, index=False, lineterminator="\n")
+    typer.echo(f"{M7_V2.report}\n{format_gate_v2(report)}")
+    typer.echo(f"RUNTIME backtest m7 gate v2: {time.perf_counter() - started:.0f} s")
+
+
 def _m6_brapm(xwalk: pd.DataFrame) -> pd.DataFrame:
     """The season-end BRAPM snapshots of ``reports/m3_players.json`` as ``IMPACT_SCHEMA`` rows
     (``total`` and ``sd_total`` of the players the snapshot saw, mapped to persons)."""
@@ -1278,8 +1295,20 @@ def backtest(  # noqa: PLR0911 -- one dispatch return per model
         str | None,
         typer.Option(help="M1/M3: MLflow tracking URI (default: SQLite store under ./mlruns)"),
     ] = None,
+    gate_v2: Annotated[
+        bool,
+        typer.Option(
+            help="M7: the rolling-origin gate v2 (docs/models/m7.md), EuroLeague, run once"
+        ),
+    ] = False,
 ) -> None:
     """Tune and score a model vs its baselines; the Elo live report holds the live parameters."""
+    if gate_v2:
+        if model is not ModelName.m7:
+            log.error("--gate-v2 belongs to --model m7")
+            raise typer.Exit(code=1)
+        _backtest_m7_v2(competition)
+        return
     if model is ModelName.m2:
         research.backtest_m2(score_test, search, tracking_uri or default_tracking_uri())
         return
