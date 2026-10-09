@@ -448,7 +448,7 @@ const bandHead = [
     height: 8px;
     border-radius: 50%;
     background: var(--data-2);
-    outline: 0.75px solid var(--page); /* thin, so dense clusters read as dots, not crescents */
+    box-shadow: 0 0 0 0.75px var(--page); /* thin, so dense clusters read as dots, not crescents */
     transition: scale 150ms var(--ease-out);
   }
   .side :global(.s-dot:focus-visible) {
@@ -461,13 +461,15 @@ const bandHead = [
     height: 12px;
     border-radius: 50%;
     background: var(--data-1);
-    outline: 2px solid var(--page);
+    box-shadow: 0 0 0 2px var(--page);
     transition: left 200ms var(--ease-out);
   }
   @media (hover: hover) and (pointer: fine) {
     .side :global(.s-dot:hover) {
       scale: 1.35;
-      outline: 1.75px solid var(--ink-2);
+      box-shadow:
+        0 0 0 0.75px var(--page),
+        0 0 0 1.75px var(--ink-2);
     }
   }
 
