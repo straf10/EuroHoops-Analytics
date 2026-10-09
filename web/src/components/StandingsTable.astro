@@ -13,27 +13,22 @@ interface Props {
 }
 const { sim, title, clubs, href } = Astro.props;
 const key = sim.competition;
-const euroleague = key === "euroleague";
-// Regular-season places that skip the play-in (standings.py: EuroLeague 1-6, GBL 1-8).
-const directCut = euroleague ? 6 : 8;
+// Regular-season places that skip the play-in (standings.py: EuroLeague 1-6).
+const directCut = 6;
 const ordinal = (n: number) => {
   const tens = n % 100;
   const suffix = tens >= 11 && tens <= 13 ? "th" : n % 10 === 1 ? "st" : n % 10 === 2 ? "nd" : n % 10 === 3 ? "rd" : "th";
   return `${n}${suffix}`;
 };
 
-// [key, head, tooltip, value]; the EuroLeague has a play-in and a Final Four, the GBL semifinals.
+// [key, head, tooltip, value]; the EuroLeague has a play-in and a Final Four.
 type Col = [string, string, string, (t: Simulation["teams"][number]) => number];
 const cols: Col[] = [
   ["wins", "Wins", "Projected wins: the average over the simulations, regular season", (t) => Number(t.expected_wins)],
-  ...(euroleague
-    ? ([
-        ["direct", `Top ${directCut}`, `Chance of finishing in the top ${directCut}, straight into the playoffs`, (t) => Number(t.p_direct_playoffs)],
-        ["playin", "Play-in", "Chance of finishing seventh to tenth, in the play-in", (t) => Number(t.p_play_in)],
-      ] as Col[])
-    : []),
+  ["direct", `Top ${directCut}`, `Chance of finishing in the top ${directCut}, straight into the playoffs`, (t) => Number(t.p_direct_playoffs)],
+  ["playin", "Play-in", "Chance of finishing seventh to tenth, in the play-in", (t) => Number(t.p_play_in)],
   ["playoffs", "Playoffs", "Chance of reaching the playoffs", (t) => sim.p_playoffs[t.team] ?? NaN],
-  ["semis", euroleague ? "Final Four" : "Semifinals", euroleague ? "Chance of reaching the Final Four" : "Chance of reaching the semifinals", (t) => Number(t.p_final_four)],
+  ["semis", "Final Four", "Chance of reaching the Final Four", (t) => Number(t.p_final_four)],
   ["final", "Final", "Chance of reaching the final", (t) => sim.p_final[t.team] ?? NaN],
   ["title", "Title", "Chance of winning the title", (t) => Number(t.p_title)],
 ];

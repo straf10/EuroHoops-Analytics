@@ -215,3 +215,9 @@ from eurohoops.stats.export import write_stats  # noqa: E402
 
 route_for
 write_stats
+
+# Phase A (GBL off the site): the Undervalued list is no longer published, but live_m6 still
+# writes it and tests validate it against this schema
+from eurohoops.api.readmodel import UNDERVALUED_ROWS_SCHEMA  # noqa: E402
+
+UNDERVALUED_ROWS_SCHEMA

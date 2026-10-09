@@ -35,6 +35,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+from eurohoops.config import SITE_SEASONS
 from eurohoops.ingest.cache import read_cached
 from eurohoops.ingest.euroleague import RawGame
 from eurohoops.parse.games import ATHENS, build_games_table, build_teams_table
@@ -299,17 +300,25 @@ def _attempts_payload(season: int, shots: pd.DataFrame, inputs: Inputs) -> dict[
 
 
 def build_payloads(inputs: Inputs, now: datetime) -> dict[str, dict[str, Any]]:
-    """Relative path -> JSON payload of every file in the stats directory."""
-    frame = _player_frame(inputs)
+    """Relative path -> JSON payload of every file in the stats directory.
+
+    Only the latest ``SITE_SEASONS`` seasons are published: the season files, the player and
+    team lists, the twin pool. ``splits.json`` alone keeps the full careers of the players who
+    played in those seasons, so career totals and best seasons stay all-time.
+    """
+    career = _player_frame(inputs)
+    window = sorted(int(s) for s in career["season"].unique())[-SITE_SEASONS:]
+    frame = career[career["season"].isin(window)]
+    shots_table = inputs.shots.table[inputs.shots.table["season"].isin(window)]
     names = dict(zip(frame["player_id"], frame["player"].map(display_name), strict=True))
     slugs = player_slugs(names)  # the last spelling of a name wins, as in the season rows
     files: dict[str, dict[str, Any]] = {}
     seasons: list[dict[str, Any]] = []
     missing = inputs.box.missing.groupby("season").size()
     coverage = {int(r["season"]): r for r in inputs.shots.coverage.to_dict("records")}
-    for season in sorted(int(s) for s in frame["season"].unique()):
+    for season in window:
         lines = frame[frame["season"] == season]
-        shots = inputs.shots.table[inputs.shots.table["season"] == season]
+        shots = shots_table[shots_table["season"] == season]
         games = inputs.games[inputs.games["season"] == season]
         base = f"seasons/{season}"
         files[f"{base}/players.json"] = _players_payload(season, lines, shots, inputs, slugs)
@@ -349,9 +358,9 @@ def build_payloads(inputs: Inputs, now: datetime) -> dict[str, dict[str, Any]]:
             key=lambda p: (p["slug"], p["id"]),
         )
     }
-    files["splits.json"] = _splits_payload(frame, inputs)
-    files["twins.json"] = twins_payload(frame, inputs.shots.table, inputs.codes)
-    codes = sorted(set(inputs.box.teams["team"]))
+    files["splits.json"] = _splits_payload(career[career["player_id"].isin(names)], inputs)
+    files["twins.json"] = twins_payload(frame, shots_table, inputs.codes)
+    codes = sorted(set(inputs.box.teams[inputs.box.teams["season"].isin(window)]["team"]))
     files["meta.json"] = {
         "generated_at": now.strftime("%Y-%m-%dT%H:%MZ"),
         "hex_radius_m": HEX_RADIUS_M,

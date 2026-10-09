@@ -69,8 +69,6 @@ OK_ROUTES = [
     f"/players/{EL_PERSON}/projection",
     f"/players/{EL_PERSON}/similar",
     "/scouting/board",
-    "/scouting/undervalued",
-    "/scouting/translation",
     "/simulations/latest",
     "/metrics/live",
     "/openapi.json",
@@ -148,14 +146,12 @@ def test_route_values(client: TestClient) -> None:
     factors = client.get("/teams/euroleague/LJU/factors?season=2010").json()
     assert factors["factors"]["efg_pct"]["value"] == pytest.approx(38 / 78)  # 26 + 1.5 * 8 over 78
     player = client.get(f"/players/{EL_PERSON}").json()
-    assert player["name"] == "Levi Randolph" and len(player["seasons"]) == 2
-    assert client.get(f"/players/{GBL_ONLY_PERSON}").json()["name"] == "Νικος Παπας"
+    assert player["name"] == "Levi Randolph" and len(player["seasons"]) == 1
+    assert client.get(f"/players/{GBL_ONLY_PERSON}").status_code == 404  # not on the site
     assert client.get(f"/players/{EL_PERSON}/projection").json()["projections"][0]["team"] == "TEL"
     similar = client.get(f"/players/{EL_PERSON}/similar").json()["similar"]
-    assert [s["rank"] for s in similar] == [1, 2]
+    assert [s["rank"] for s in similar] == [1]  # the GBL row is not published
     assert client.get("/scouting/board").json()["rows"][0]["label"] == "within noise"
-    assert client.get("/scouting/undervalued").json()["undervalued"][0]["name"] == "Nikos Papas"
-    assert client.get("/scouting/translation").json()["gate_passed"] is False
     metrics = client.get("/metrics/live").json()["competitions"]
     assert metrics[0]["scorecard"]["elo"]["log_loss"] == 0.61
     meta = client.get("/stats/meta.json").json()
@@ -335,8 +331,6 @@ def test_the_openapi_document_lists_every_route_under_its_tag(client: TestClient
         "/players/{person_id}/projection": "players",
         "/players/{person_id}/similar": "players",
         "/scouting/board": "scouting",
-        "/scouting/undervalued": "scouting",
-        "/scouting/translation": "scouting",
         "/simulations/latest": "simulations",
         "/metrics/live": "metrics",
     }

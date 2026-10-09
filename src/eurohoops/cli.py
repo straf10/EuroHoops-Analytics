@@ -442,13 +442,6 @@ def _team_continuity() -> None:
             if live[kind]
         )
         typer.echo(f"{competition} {LIVE_SEASON} teams: {changes or 'no changes'}")
-    # ESAKE ids mean nothing to a reader: every live GBL team needs a display code on the site.
-    live_gbl = team_seasons[
-        (team_seasons["competition"] == GBL.name) & (team_seasons["season"] == LIVE_SEASON)
-    ]
-    unnamed = sorted(set(live_gbl["team"]) - set(DISPLAY_CODES["gbl"]))
-    if unnamed:
-        typer.echo(f"gbl {LIVE_SEASON}: no display code for {' '.join(unnamed)} (publish.py)")
     flagged = sum(len(block["review_name_changes"]) for block in report.values())
     if flagged:
         typer.echo(f"team continuity: {flagged} name changes to review (eurohoops continuity)")

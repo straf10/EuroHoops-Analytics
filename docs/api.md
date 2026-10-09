@@ -23,8 +23,6 @@ Team codes are the **source** codes (`ULK`, `PAN`, …). Person ids look like `P
 | `GET /players/{person_id}/projection` | `player_projection` | `reports/m6_projections.json` |
 | `GET /players/{person_id}/similar` | `player_similar` | `reports/m6_similarity.json` |
 | `GET /scouting/board` | `scouting_board` | `reports/m6_board.json` (the over/under board) |
-| `GET /scouting/undervalued` | `scouting_undervalued` | the `undervalued` list in `reports/m6_projections.json` |
-| `GET /scouting/translation` | `scouting_translation` | M4's factors and its gate verdict (it **failed** its gate) |
 | `GET /simulations/latest?competition=` | `simulation_latest` | `reports/sim_ungated_{competition}.json`, always `gated: false` with M7's gate verdict and reason |
 | `GET /metrics/live` | `metrics_live` | the live scorecards: Elo, the baseline, M1 and the M5 shadow |
 | `GET /openapi.json` | FastAPI | the schema; identical across runs |
@@ -67,7 +65,7 @@ write the response bytes unchanged:
 | `/site` | `src/data/site.json` |
 | `/stats/{path}` | `src/data/stats/{path}` |
 | `/players/{id}`, `/projection`, `/similar` | `src/data/api/players/{key}/index.json`, `projection.json`, `similar.json` (`key` = id with `:` → `_`) |
-| `/scouting/{board,undervalued,translation}` | `src/data/api/scouting/{name}.json` |
+| `/scouting/board` | `src/data/api/scouting/board.json` |
 | `/simulations/latest?competition=c` | `src/data/api/simulations/{c}.json` |
 | `/teams/{c}/{team}/ratings`, `/factors?season=<live>` | `src/data/api/teams/{c}/{team}/ratings.json`, `factors.json` |
 | `/metrics/live` | `src/data/api/metrics/live.json` |

@@ -81,6 +81,26 @@ def files(inputs: Inputs) -> dict[str, dict[str, Any]]:
     return build_payloads(inputs, NOW)
 
 
+def test_only_the_latest_site_seasons_are_published(
+    inputs: Inputs, files: dict[str, dict[str, Any]], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert sorted(f for f in files if f.endswith("/players.json")) == [
+        "seasons/2010/players.json",
+        "seasons/2024/players.json",
+    ]
+    monkeypatch.setattr("eurohoops.stats.export.SITE_SEASONS", 1)
+    latest = build_payloads(inputs, NOW)
+    assert [s["season"] for s in latest["meta.json"]["seasons"]] == [2024]
+    assert not any(f.startswith("seasons/2010/") for f in latest)
+    # players and the twin pool follow the window; splits keep the careers of those players
+    assert all(2010 not in p["seasons"] for p in latest["players.json"]["players"])
+    assert {row[0] for row in latest["splits.json"]["rows"]} == {
+        p["id"] for p in latest["players.json"]["players"]
+    }
+    assert {row[1] for row in latest["splits.json"]["rows"]} >= {2024}
+    assert all(row[1] == 2024 for row in latest["twins.json"]["pool"])
+
+
 def test_seconds_parses_box_minutes() -> None:
     assert seconds("05:04") == 304
     assert seconds("200:00") == 12000

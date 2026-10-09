@@ -82,8 +82,8 @@ def test_a_store_is_a_snapshot_that_loads_each_thing_once(root: Path) -> None:
 def test_site_is_the_publish_payload(store: rm.Store) -> None:
     payload = rm.site(store, NOW)
     assert payload["generated_at_utc"] == "2026-10-08T08:00:00Z"
-    el, gbl = payload["competitions"]
-    assert (el["key"], gbl["key"]) == ("euroleague", "gbl")
+    (el,) = payload["competitions"]  # the GBL is not on the site
+    assert el["key"] == "euroleague"
     assert el["season"] == "2026-27"
     # E2026_2 is logged twice and counted once; the round-2 rows tip off after now.
     assert el["logged"] == 5
@@ -93,8 +93,8 @@ def test_site_is_the_publish_payload(store: rm.Store) -> None:
 
 
 def test_site_without_its_inputs_is_not_found(fresh: Path) -> None:
-    (fresh / "reports" / "live_scorecard_gbl.json").unlink()
-    with pytest.raises(rm.NotFound, match=r"live_scorecard_gbl\.json not found"):
+    (fresh / "reports" / "live_scorecard.json").unlink()
+    with pytest.raises(rm.NotFound, match=r"live_scorecard\.json not found"):
         rm.site(rm.Store(fresh), NOW)
 
 
@@ -340,17 +340,16 @@ def test_factors_of_an_unknown_team_or_competition(store: rm.Store) -> None:
         rm.team_factors(store, "acb", "BAR", None)
 
 
-def test_a_player_joins_both_leagues_and_the_impact_reports(store: rm.Store) -> None:
+def test_a_player_has_his_euroleague_seasons_and_the_impact_reports(store: rm.Store) -> None:
     out = rm.player(store, EL_PERSON)
     assert (out["name"], out["debut_season"]) == ("Levi Randolph", 2024)
-    el, gbl = out["seasons"]
+    (el,) = out["seasons"]  # his GBL season is not published
     assert (el["competition"], el["season"], el["team"], el["games"]) == (
         "euroleague",
         2024,
         "TEL",
         6,
     )
-    assert (gbl["competition"], gbl["season"], gbl["team"]) == ("gbl", 2025, "AAAA0001")
     # the committed stats export of the same raw slice (independent code path)
     fixture = json.loads((FIXTURES / "stats/seasons/2024/players.json").read_text(encoding="utf-8"))
     row = next(p for p in fixture["players"] if p["id"] == "P013382")["totals"]["season"]
@@ -360,10 +359,6 @@ def test_a_player_joins_both_leagues_and_the_impact_reports(store: rm.Store) -> 
     assert el["poss"] == pytest.approx(row[PLAYER_FIELDS.index("poss")], abs=0.05)
     assert el["per100"]["pts"] == pytest.approx(100 * 69 / el["poss"])
     assert el["pct"]["ts"] == pytest.approx(69 / (2 * (43 + 13 + 0.44 * 10)))
-    # the GBL line (box_8FC479F6.html, FC6A957C): 13 points, 6 of 9 from two, 1 of 2 free throws
-    assert (gbl["totals"]["pts"], gbl["totals"]["fg2m"], gbl["totals"]["ftm"]) == (13, 6, 1)
-    assert gbl["minutes"] == pytest.approx(2134 / 60)
-    assert gbl["pct"]["fg3"] is None  # no three-point attempt: no percentage, not 0
     assert [(s["season"], s["total"]) for s in out["impact"]["seasons"]] == [
         (2023, 1.5),
         (2024, 2.5),
@@ -379,9 +374,8 @@ def test_a_player_joins_both_leagues_and_the_impact_reports(store: rm.Store) -> 
 def test_players_outside_the_crosswalk_get_the_source_scheme_and_other_names(
     store: rm.Store,
 ) -> None:
-    gbl_only = rm.player(store, GBL_ONLY_PERSON)
-    assert gbl_only["name"] == "Νικος Παπας"
-    assert gbl_only["impact"] is None and gbl_only["shot_making"] is None
+    with pytest.raises(rm.NotFound, match="unknown person_id"):  # GBL-only: not on the site
+        rm.player(store, GBL_ONLY_PERSON)
     unmapped = rm.player(store, "P:P006835")  # an EuroLeague id the crosswalk does not cover
     assert unmapped["name"] == "Jaylen Hoard"
     assert [s["total"] for s in unmapped["impact"]["seasons"]] == [1.0, 2.5]
@@ -418,19 +412,13 @@ def test_projection_similarity_and_scouting_serve_the_committed_reports(store: r
     assert "pts" in projection["stats"]
 
     similar = rm.player_similar(store, EL_PERSON)
-    assert [(r["rank"], r["person_id"]) for r in similar["similar"]] == [
-        (1, "P:P006835"),
-        (2, "G:ABCD1234"),
-    ]
+    assert [(r["rank"], r["person_id"]) for r in similar["similar"]] == [(1, "P:P006835")]
+    assert list(similar["features"]) == ["euroleague"]
     assert similar["pool_seasons"] == [2023, 2024, 2025]
 
     board = rm.scouting_board(store)
     assert board["rows"][0]["z"] == 1.5 and board["dimensions"]["shot_making"]["n_min"] == 100
-
-    undervalued = rm.scouting_undervalued(store)
-    assert undervalued["undervalued"][0]["projected_brapm"] is None
-    assert undervalued["undervalued"][0]["person_id"] == "G:ABCD1234"
-    assert undervalued["gate_passed"] is False
+    assert {r["competition"] for r in board["rows"]} == {"euroleague"}
 
 
 def test_projection_and_similarity_not_found_say_why(store: rm.Store, fresh: Path) -> None:
@@ -442,8 +430,6 @@ def test_projection_and_similarity_not_found_say_why(store: rm.Store, fresh: Pat
         rm.player_similar(store, "G:ABCD1234")
     (fresh / M6_PROJECTIONS).unlink()
     with pytest.raises(rm.NotFound, match=r"m6_projections\.json not found: the M6 projections"):
-        rm.scouting_undervalued(rm.Store(fresh))
-    with pytest.raises(rm.NotFound, match=r"m6_projections\.json not found"):
         rm.player_projection(rm.Store(fresh), EL_PERSON)
 
 
@@ -454,14 +440,6 @@ def test_a_malformed_report_is_an_error_not_a_404(fresh: Path) -> None:
     path.write_text(json.dumps(report), encoding="utf-8")
     with pytest.raises(pandera.errors.SchemaError):
         rm.player_projection(rm.Store(fresh), EL_PERSON)
-
-
-def test_translation_carries_the_m4_gate_verdict(store: rm.Store) -> None:
-    out = rm.scouting_translation(store)
-    assert out["gate_passed"] is False and out["gate"]["variant"] == "translate"
-    assert out["gate"]["n_movers"] == 6
-    assert out["fits_by_target_season"]["2025"]["translate"]["pts"]["delta"] == -0.056783
-    assert out["team_offset"]["mean"] == 20.202848
 
 
 def test_the_ungated_simulation_is_labelled_with_the_m7_verdict(store: rm.Store) -> None:
@@ -542,17 +520,13 @@ def test_the_m7_verdict_without_a_backtest_report(tmp_path: Path) -> None:
     assert verdict["passed"] is False and "backtest_m7.json not found" in verdict["reason"]
 
 
-def test_live_metrics_carry_both_scorecards_and_the_shadow_blocks(
+def test_live_metrics_carry_the_euroleague_scorecard_and_the_shadow_blocks(
     store: rm.Store, fresh: Path
 ) -> None:
     out = rm.metrics_live(store)
-    assert [c["competition"] for c in out["competitions"]] == ["euroleague", "gbl"]
+    assert [c["competition"] for c in out["competitions"]] == ["euroleague"]
     el = out["competitions"][0]["scorecard"]
     assert el["elo"]["log_loss"] == 0.61 and "m1" in el and "m5" in el
-    (fresh / "reports" / "live_scorecard_gbl.json").unlink()
-    assert [c["competition"] for c in rm.metrics_live(rm.Store(fresh))["competitions"]] == [
-        "euroleague"
-    ]
     (fresh / "reports" / "live_scorecard.json").unlink()
     with pytest.raises(rm.NotFound, match="no live scorecard has been written"):
         rm.metrics_live(rm.Store(fresh))

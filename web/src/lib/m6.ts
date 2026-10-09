@@ -119,52 +119,6 @@ export interface Board {
   rows: BoardRow[];
 }
 
-export interface UndervaluedRow {
-  person_id: string;
-  team: string;
-  name: string;
-  seasons_since_debut: number;
-  /** Per game. */
-  minutes: number;
-  projected_spm: number;
-  translated_el: Record<string, number>;
-  reason: string;
-}
-
-export interface Undervalued {
-  model: string;
-  variant: string;
-  gated: boolean;
-  gate_passed: boolean;
-  season: number;
-  undervalued: UndervaluedRow[];
-}
-
-export interface Fit {
-  c: number;
-  delta: number;
-  delta_lo90: number;
-  delta_hi90: number;
-  n_pairs: number;
-  n_persons: number;
-}
-
-export interface Translation {
-  model: string;
-  gate: {
-    rule: string;
-    variant: string;
-    reference: string;
-    n_movers: number;
-    seasons: number[];
-    loss_diff: { mean: number; ci95: [number, number] };
-    passed: boolean;
-  };
-  gate_passed: boolean;
-  fits_by_target_season: Record<string, { translate: Record<string, Fit> }>;
-  team_offset: { label: string; mean: number; ci95: [number, number] };
-}
-
 // Lazy, like lib/stats.ts: a page only parses the files it reads, and no export means no files.
 const files = {
   ...import.meta.glob<unknown>("../data/api/players/*/*.json", { import: "default" }),
@@ -208,12 +162,7 @@ export function playerSlugs(): Promise<Record<string, string>> {
 }
 
 export async function scoutingData() {
-  const [board, undervalued, translation] = await Promise.all([
-    load<Board>("scouting/board.json"),
-    load<Undervalued>("scouting/undervalued.json"),
-    load<Translation>("scouting/translation.json"),
-  ]);
-  return { board, undervalued, translation };
+  return { board: await load<Board>("scouting/board.json") };
 }
 
 // ---- Words and numbers ------------------------------------------------------------------------
@@ -221,7 +170,7 @@ export async function scoutingData() {
 /** 2026 -> "2026-27". */
 export const seasonLabel = (s: number): string => `${s}-${String((s + 1) % 100).padStart(2, "0")}`;
 
-export const COMPETITIONS: Record<string, string> = { euroleague: "EuroLeague", gbl: "Greek League" };
+export const COMPETITIONS: Record<string, string> = { euroleague: "EuroLeague" };
 
 /** A source team code as the site shows it (publish.py's DISPLAY_CODES; tests keep the copy in step). */
 export const displayCode = (competition: string, code: string): string =>
@@ -260,7 +209,7 @@ export const range = (lo: number, hi: number, f: (x: number) => string = fixed):
 export const FLAGS: Record<string, string> = {
   no_history: "No usable past season: the projection is the league average.",
   no_age: "No aging adjustment was applied.",
-  translated: "Part of the history is from the other league and is translated.",
+  translated: "Part of the history is from outside the EuroLeague and is translated.",
   partial_season: "Includes the part played of the season in progress.",
   no_impact_input: "No impact input: BRAPM leans on its league prior.",
 };
@@ -323,13 +272,3 @@ export const LABEL_WORDS: Record<string, string> = {
 
 export const boardNumber = (d: DimensionInfo, x: number, gap = false): string =>
   d.pct ? (gap ? signed(100 * x) : percent(x)) : gap ? signed(x) : fixed(x);
-
-// ---- Translation ------------------------------------------------------------------------------
-
-export const TRANSLATED: Record<string, string> = Object.fromEntries(PROJECTED.map((s) => [s.key, s.label]));
-
-/** The newest target season's fits, or null. */
-export function newestFits(t: Translation): { season: number; fits: Record<string, Fit> } | null {
-  const seasons = Object.keys(t.fits_by_target_season).map(Number).sort((a, b) => b - a);
-  return seasons.length ? { season: seasons[0], fits: t.fits_by_target_season[String(seasons[0])].translate } : null;
-}

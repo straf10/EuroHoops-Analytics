@@ -28,7 +28,6 @@ from httpx import Response
 
 from eurohoops.api.readmodel import Store
 from eurohoops.config import (
-    COMPETITIONS,
     EUROLEAGUE,
     LIVE_SEASON,
     M6_PROJECTIONS,
@@ -46,7 +45,7 @@ OPENAPI_FILE = PurePosixPath("public/api/openapi.json")
 OPENAPI_ROUTE = "/openapi.json"
 
 PERSON_ID = re.compile(r"^[A-Z]:[0-9A-Za-z]+$")
-SCOUTING = ("board", "undervalued", "translation")
+SCOUTING = ("board",)
 FIXED = {
     "/site": SITE_FILE,
     OPENAPI_ROUTE: OPENAPI_FILE,
@@ -175,17 +174,16 @@ def api_routes(store: Store, site: Mapping[str, Any]) -> list[Route]:
     """The routes behind ``src/data/api/``: scouting, simulations, metrics, every projected or
     similar person, and every team of the live season (from the ``/site`` ratings)."""
     routes = [Route(f"/scouting/{name}", optional=True) for name in SCOUTING]
-    routes += [Route(f"/simulations/latest?competition={c}", optional=True) for c in COMPETITIONS]
+    routes.append(Route(f"/simulations/latest?competition={EUROLEAGUE.name}", optional=True))
     routes.append(Route("/metrics/live", optional=True))
     projected = _report(store, M6_PROJECTIONS)["players"]
     similar = _report(store, M6_SIMILARITY)["players"]
-    routes += [Route(f"/players/{row['person_id']}/projection", optional=True) for row in projected]
-    routes += [Route(f"/players/{person}/similar", optional=True) for person in similar]
+    people = [row["person_id"] for row in projected if row["competition"] == EUROLEAGUE.name]
+    routes += [Route(f"/players/{person}/projection", optional=True) for person in people]
     routes += [
-        Route(f"/players/{row['person_id']}", optional=True)
-        for row in projected
-        if row["competition"] == EUROLEAGUE.name
+        Route(f"/players/{person}/similar", optional=True) for person in similar if person in people
     ]
+    routes += [Route(f"/players/{person}", optional=True) for person in people]
     for section in site["competitions"]:
         source = _source_codes(section["key"])
         for rating in section["ratings"]:
