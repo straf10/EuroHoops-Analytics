@@ -284,6 +284,8 @@ ENTITY_REPORT = Path("reports/entity_resolution.json")
 # so the daily workflow can run `eurohoops project` without the local `entity` step (owner,
 # 2026-10-08, weeks 16-18 D25). `entity` rewrites it with the mart.
 PLAYER_XWALK_FILE = Path("entity/player_xwalk.csv")
+# EuroLeague titles won before 2007-08 (frozen; later seasons come from the games table)
+EL_TITLES_SEED = Path("entity/el_titles_before_2007.csv")
 ENTITY_TUNING_REPORT = Path("reports/entity_tuning.json")
 
 

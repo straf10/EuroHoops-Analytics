@@ -1522,5 +1522,26 @@
         }
       ]
     }
-  ]
+  ],
+  "el_titles": {
+    "since": 1958,
+    "data_from": "2007-08",
+    "titles": {
+      "BAR": 1,
+      "CIB": 2,
+      "CSK": 5,
+      "CTU": 2,
+      "JOV": 1,
+      "LMG": 1,
+      "RMB": 8,
+      "MIL": 3,
+      "OLY": 1,
+      "PAO": 4,
+      "PAR": 1,
+      "ROM": 1,
+      "MTA": 5,
+      "VIR": 2,
+      "ZAL": 1
+    }
+  }
 }

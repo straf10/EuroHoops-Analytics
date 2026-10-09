@@ -1,4 +1,5 @@
 import json
+import shutil
 import time
 from pathlib import Path
 from typing import Any
@@ -7,7 +8,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from eurohoops.config import EUROLEAGUE, GBL, MART_PATH, SQL_DIR
+from eurohoops.config import EL_TITLES_SEED, EUROLEAGUE, GBL, MART_PATH, SQL_DIR
 from eurohoops.eval.backtest import TunedModel
 from eurohoops.marts import build_marts
 from eurohoops.models.elo import EloParams
@@ -83,6 +84,8 @@ def teams_table(games: pd.DataFrame) -> pd.DataFrame:
 
 def write_pipeline(euroleague: pd.DataFrame, gbl: pd.DataFrame) -> None:
     """Stage both competitions and build the mart, as `ingest` + `build` would (CWD-relative)."""
+    EL_TITLES_SEED.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy(REPO / EL_TITLES_SEED, EL_TITLES_SEED)  # publish reads the titles seed
     for comp, games in ((EUROLEAGUE, euroleague), (GBL, gbl)):
         write_table(games, comp.staging_games)
         write_table(teams_table(games), comp.staging_teams)
