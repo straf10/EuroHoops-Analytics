@@ -8,6 +8,8 @@ import { clubRowsHtml, type ClubCells } from "../../lib/clubs";
 import { tip } from "../../lib/tip";
 import { GROUPS, colsHtml } from "../../lib/cols";
 import { clubCells } from "../../lib/team";
+import raw from "../../data/site.json";
+import type { SiteData } from "../../lib/format";
 
 const m = await meta();
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -26,6 +28,8 @@ const others: Record<string, [string, ClubCells[]]> = Object.fromEntries(
   tables.filter((t) => t !== shown).map(({ s, rows }) => [s.season, [s.label, rows]]),
 );
 const clubs = await teamIndex();
+// EuroLeague titles, all-time since 1958, by display code (clubs with at least one).
+const titles = (raw as SiteData).el_titles.titles;
 // A phone shows them in groups (Record, Ratings, Pace), with Net, the ranking, in every group.
 const COLS = [
   ["W–L", "Wins and losses"],
@@ -97,7 +101,7 @@ const COLS = [
       <section class="wrap band" aria-labelledby="all-title">
         <header class="sec-head">
           <h2 id="all-title">Every club since 2007-08</h2>
-          <p>{clubs.length} clubs, with the number of EuroLeague seasons each played.</p>
+          <p>{clubs.length} clubs, with the EuroLeague seasons each played and, in brackets, EuroLeague titles, all-time since 1958.</p>
         </header>
         <ul class="all">
           {clubs.map((c) => (
@@ -106,6 +110,9 @@ const COLS = [
                 <span class="code">{c.code}</span>
                 <span class="nm">{c.name}</span>
                 <span class="n">{c.seasons.length}</span>
+                <span class="t" title="EuroLeague titles, all-time since 1958">
+                  {titles[c.code] ? `(${titles[c.code]})` : ""}
+                </span>
               </a>
             </li>
           ))}
@@ -173,6 +180,12 @@ const COLS = [
   }
   .all .n {
     color: var(--muted);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .all .t {
+    min-width: 3.25em;
+    color: var(--ink);
     font-size: 0.8125rem;
     font-variant-numeric: tabular-nums;
   }

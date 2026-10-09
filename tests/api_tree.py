@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from eurohoops.config import EUROLEAGUE, GBL, MART_PATH
+from eurohoops.config import EL_TITLES_SEED, EUROLEAGUE, GBL, MART_PATH
 from eurohoops.ingest.cache import write_atomic
 from eurohoops.marts import write_tables
 from eurohoops.parse.games import conform
@@ -105,6 +105,8 @@ def build_tree(root: Path, *, ungated: bool = True) -> None:
     )
     for source in ("reports", "predictions"):
         shutil.copytree(API_FIXTURES / source, root / source)
+    (root / EL_TITLES_SEED.parent).mkdir(parents=True, exist_ok=True)
+    shutil.copy(EL_TITLES_SEED, root / EL_TITLES_SEED)  # publish reads the titles seed
     if not ungated:
         (root / "reports" / "sim_ungated_euroleague.json").unlink()
 

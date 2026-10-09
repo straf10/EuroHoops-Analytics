@@ -14,6 +14,7 @@ import pandas as pd
 from eurohoops.eval.backtest import TunedModel
 from eurohoops.logs import TIME_FORMAT
 from eurohoops.models.elo import prepare, season_ratings
+from eurohoops.titles import titles_payload
 
 RECENT_RESULTS = 12
 
@@ -197,7 +198,9 @@ def section_data(section: Section, now: datetime) -> dict[str, Any]:
 
 
 def site_data(sections: list[Section], now: datetime) -> dict[str, Any]:
+    euroleague = next((s.games for s in sections if s.key == "euroleague"), None)
     return {
         "generated_at_utc": now.strftime(TIME_FORMAT),
         "competitions": [section_data(s, now) for s in sections],
+        "el_titles": titles_payload(euroleague, DISPLAY_CODES["euroleague"]),
     }

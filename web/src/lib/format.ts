@@ -88,6 +88,8 @@ export interface Competition {
 export interface SiteData {
   generated_at_utc: string;
   competitions: Competition[];
+  /** EuroLeague titles, all-time since `since`: titles by display code (clubs with one or more). */
+  el_titles: { since: number; data_from: string; titles: Record<string, number> };
 }
 
 /** Text -> HTML text or attribute value. */
