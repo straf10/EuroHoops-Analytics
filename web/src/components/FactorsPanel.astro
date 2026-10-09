@@ -1,5 +1,5 @@
 ---
-import { count, percent, plural, type Factors } from "../lib/live";
+import { percent, plural, type Factors } from "../lib/live";
 import { tip } from "../lib/tip";
 
 interface Props {
@@ -56,16 +56,15 @@ const schedule = factors?.schedule_strength;
             </tbody>
           </table>
         </div>
-        <p class="note">Offence only: these are the club's own shooting, turnovers, rebounds and free throws. Opponents' are not exported yet.</p>
+        <p class="note">Offence only.</p>
         <h4>Schedule strength</h4>
         {schedule && schedule.value !== null ? (
           <>
             <p class="strength">
-              Mean opponent Elo <b data-num>{schedule.value.toFixed(1)}</b>
+              Mean opponent rating <b data-num>{schedule.value.toFixed(1)}</b>
             </p>
             <p class="note" data-sample>
-              Over {plural(schedule.games ?? 0, "scheduled game")}, played and remaining; {count(factors.games)} played so far with a box score.
-              Opponents are rated by the Elo published on the Forecasts page.
+              Over {plural(schedule.games ?? 0, "scheduled game")}.
             </p>
           </>
         ) : (

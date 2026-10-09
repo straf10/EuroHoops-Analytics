@@ -59,7 +59,7 @@ function hexPath(cx: number, cy: number, r: number): string {
     const x = +(cx + r * cos).toFixed(3);
     const y = +(cy + r * sin).toFixed(3);
     const vertical = x === px;
-    d += !d ? `M${x} ${y}` : vertical ? `V${y}` : `${afterV ? "L" : " "}${x} ${y}`;
+    d += !d ? `M ${x} ${y}` : vertical ? `V${y}` : `${afterV ? "L" : " "}${x} ${y}`;
     px = x;
     afterV = vertical;
   }
@@ -136,7 +136,7 @@ export function dotChart(points: { x: number; y: number; made: boolean }[], labe
   const r = 0.13;
   for (const p of points) {
     if (p.y > DEPTH || Math.abs(p.x) > 7.5) continue;
-    const d = `M${(p.x - r).toFixed(2)} ${toY(p.y).toFixed(2)}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0`;
+    const d = `M ${(p.x - r).toFixed(2)} ${toY(p.y).toFixed(2)}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0`;
     (p.made ? made : miss).push(d);
   }
   return court(

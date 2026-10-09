@@ -349,11 +349,8 @@ def _elo(store: Store, comp: Competition, season: int) -> dict[str, tuple[float,
 
 # ---- site ----
 
-FORECAST_MODELS = {"elo": "Elo", "m1": "M1", "m5": "M5"}
-
-
-def _path_of(store: Store, relative: Path | None) -> Path | None:
-    return None if relative is None else store.path(relative)
+# The site shows the published forecast only; the team models keep logging, unshown.
+FORECAST_MODELS = {"elo": "Our forecast"}
 
 
 def site(store: Store, now: datetime) -> dict[str, Any]:
@@ -382,11 +379,7 @@ def site(store: Store, now: datetime) -> dict[str, Any]:
                 season=LIVE_SEASON,
                 replay_from=comp.live_backtest.warmup[0],
                 forecasts=build_forecasts(
-                    {
-                        "elo": store.path(comp.prediction_log),
-                        "m1": _path_of(store, comp.m1_prediction_log),
-                        "m5": _path_of(store, comp.m5_prediction_log),
-                    },
+                    {"elo": store.path(comp.prediction_log)},
                     FORECAST_MODELS,
                     games,
                     LIVE_SEASON,

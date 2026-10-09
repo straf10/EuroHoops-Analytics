@@ -34,7 +34,6 @@ export interface Measure {
   value: (t: Totals) => number | null;
   /** Enough attempts to rank on this percentage (per game). */
   qualifies?: (t: Totals) => boolean;
-  floor?: string; // why a player is not ranked on it
   signed?: boolean;
 }
 
@@ -82,7 +81,6 @@ export const MEASURES: Measure[] = [
     digits: 1,
     value: (t) => ratio(fgm(t), fga(t)),
     qualifies: (t) => fga(t) >= 3 * t.gp,
-    floor: "Fewer than 3 field-goal attempts a game",
   },
   {
     key: "fg2_pct",
@@ -93,7 +91,6 @@ export const MEASURES: Measure[] = [
     digits: 1,
     value: (t) => ratio(t.fg2m, t.fg2a),
     qualifies: (t) => t.fg2a >= 2 * t.gp,
-    floor: "Fewer than 2 two-point attempts a game",
   },
   count("fg3a", "3PA", "Three-point attempts", "Three-point attempts"),
   {
@@ -105,7 +102,6 @@ export const MEASURES: Measure[] = [
     digits: 1,
     value: (t) => ratio(t.fg3m, t.fg3a),
     qualifies: (t) => t.fg3a >= t.gp,
-    floor: "Fewer than 1 three-point attempt a game",
   },
   count("fta", "FTA", "Free-throw attempts", "Free-throw attempts"),
   {
@@ -117,7 +113,6 @@ export const MEASURES: Measure[] = [
     digits: 1,
     value: (t) => ratio(t.ftm, t.fta),
     qualifies: (t) => t.fta >= t.gp,
-    floor: "Fewer than 1 free-throw attempt a game",
   },
   {
     key: "efg",
@@ -128,7 +123,6 @@ export const MEASURES: Measure[] = [
     digits: 1,
     value: (t) => ratio(fgm(t) + 0.5 * t.fg3m, fga(t)),
     qualifies: (t) => fga(t) >= 3 * t.gp,
-    floor: "Fewer than 3 field-goal attempts a game",
   },
   {
     key: "ts",
@@ -139,7 +133,6 @@ export const MEASURES: Measure[] = [
     digits: 1,
     value: (t) => ratio(t.pts, 2 * (fga(t) + 0.44 * t.fta)),
     qualifies: (t) => fga(t) >= 3 * t.gp,
-    floor: "Fewer than 3 field-goal attempts a game",
   },
   {
     key: "usg",
@@ -369,8 +362,7 @@ export function bodyHtml(ls: Line[], view: View, base: string): string {
           const v = l.values[key];
           const short = m.qualifies && !m.qualifies(l.totals);
           const cls = ["num", key === view.sort ? "on" : "", short ? "short" : ""].filter(Boolean).join(" ");
-          const floorAttr = short ? dataTip(tip`${m.floor ?? ""}`) : "";
-          return `<td class="${cls}"${floorAttr}>${format(m, v)}</td>`;
+          return `<td class="${cls}">${format(m, v)}</td>`;
         })
         .join("");
       return `<tr><td class="c-rk">${l.ranked ? rank : ""}</td><th scope="row" class="c-nm"><a href="${playerHref(base, l.row.slug)}">${esc(l.row.name)}</a>${teamCell(l.row.teams, base, view.season)}</th>${cells}</tr>`;

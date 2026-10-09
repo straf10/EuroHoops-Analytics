@@ -53,7 +53,6 @@ export const groupLabel = (phase: string, round: number | null) =>
 export const groupKey = (phase: string, round: number | null) => (round === null ? phase : `${phase}-${round}`);
 
 export const dash = "–";
-export const num = (x: number | null, digits: number) => (x === null ? dash : x.toFixed(digits));
 export const share = (x: number | null) => (x === null ? dash : `${Math.round(x * 100)}%`);
 export const rightOf = (m: FcMetrics) =>
   m.picks === 0 ? dash : `${m.right} of ${m.picks} (${share(m.right_pct)})`;

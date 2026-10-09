@@ -3,7 +3,6 @@
 // run at build time for the first paint and in the browser on every filter change.
 
 import { esc } from "./format";
-import { dataTip, tip } from "./tip";
 import { jerseySvg } from "./jersey";
 import { BY_KEY, playerHref } from "./players";
 
@@ -116,16 +115,13 @@ export function text(key: string, v: number | null, mode: Mode): string {
 
 const seasonFloor = (most: Record<string, number>, season: number) => Math.ceil((most[season] ?? 0) / 2);
 
-/** Why a line is not ranked on the view's stat, or "" when it is. */
-export function failsFloor(e: Entry, view: View, most: Record<string, number>): string {
+/** Whether a line is left unranked on the view's stat (too few games, minutes or attempts). */
+export function failsFloor(e: Entry, view: View, most: Record<string, number>): boolean {
   const m = measure(view.stat);
-  if (m.qualifies && !m.qualifies(e.t)) return m.floor ?? "Too few attempts";
-  if (view.mode === "total" && m.kind === "count") return "";
-  if (e.season === 0) return e.t.gp >= CAREER_GAMES ? "" : `Fewer than ${CAREER_GAMES} games`;
-  const games = seasonFloor(most, e.season);
-  if (e.t.gp < games) return `Fewer than ${games} games, half the most anyone played`;
-  if (e.t.sec / e.t.gp < SEASON_MINUTES * 60) return `Under ${SEASON_MINUTES} minutes a game`;
-  return "";
+  if (m.qualifies && !m.qualifies(e.t)) return true;
+  if (view.mode === "total" && m.kind === "count") return false;
+  if (e.season === 0) return e.t.gp < CAREER_GAMES;
+  return e.t.gp < seasonFloor(most, e.season) || e.t.sec / e.t.gp < SEASON_MINUTES * 60;
 }
 
 export interface Ranked {
@@ -133,13 +129,13 @@ export interface Ranked {
   value: number | null;
   text: string;
   rank: number; // 0 when not ranked
-  floor: string;
+  floor: boolean;
 }
 
 export function rank(list: Entry[], view: View, most: Record<string, number>): Ranked[] {
   const rows = list.map((e) => {
     const value = valueOf(view.stat, e.t, view.mode);
-    return { e, value, text: text(view.stat, value, view.mode), rank: 0, floor: value === null ? "No value" : failsFloor(e, view, most) };
+    return { e, value, text: text(view.stat, value, view.mode), rank: 0, floor: value === null || failsFloor(e, view, most) };
   });
   rows.sort((a, b) => {
     const qa = !a.floor, qb = !b.floor;
@@ -185,23 +181,6 @@ export function title(view: View, clubName = ""): string {
   return `${m.name}${rate}, ${when}${where}`;
 }
 
-export function floorNote(view: View, most: Record<string, number>): string {
-  const m = measure(view.stat);
-  const counts = view.mode === "total" && m.kind === "count";
-  const lines: string[] = [];
-  if (!counts) {
-    lines.push(
-      view.scope === "career"
-        ? `Ranked: at least ${CAREER_GAMES} games.`
-        : view.scope === "season"
-          ? `Ranked: at least ${seasonFloor(most, view.season)} games (half the most anyone played) and ${SEASON_MINUTES} minutes a game.`
-          : `Ranked: in its season, at least half the most games anyone played and ${SEASON_MINUTES} minutes a game.`,
-    );
-  } else lines.push("Totals are ranked without a floor.");
-  if (m.floor) lines.push(`${m.floor}: not ranked.`);
-  return lines.join(" ");
-}
-
 const when = (e: Entry) =>
   e.season ? seasonLabel(e.season) : e.first === e.last ? seasonLabel(e.first) : `${seasonLabel(e.first)} to ${seasonLabel(e.last)}`;
 
@@ -236,14 +215,13 @@ export function fiveHtml(b: Board, view: View, base: string): string {
       const [x, y] = SLOTS[i];
       const tag = b.lineup ? "" : `<span class="rk">${r.rank}</span>`;
       const muted = r.floor ? " muted" : "";
-      const floorAttr = r.floor ? dataTip(tip`${r.floor}`) : "";
       return (
         `<li class="slot" style="--x:${x}%;--y:${y}%" data-key="${esc(e.key)}">` +
         `<a class="shirt-link" href="${playerHref(base, e.slug)}" tabindex="-1" aria-hidden="true">${jerseySvg({ code: e.team, name: e.name, number: e.dorsal, size: 72 })}</a>` +
         `<span class="tag">` +
         `<span class="who">${tag}<a href="${playerHref(base, e.slug)}">${esc(e.name)}</a></span>` +
         `<span class="meta">${esc(e.team)} · ${when(e)}</span>` +
-        `<span class="big${muted}"${floorAttr}>${r.text}<small>${head}</small></span>` +
+        `<span class="big${muted}">${r.text}<small>${head}</small></span>` +
         `<span class="line">${statLine(e, view)}</span>` +
         `</span>` +
         `</li>`
@@ -256,13 +234,12 @@ export function benchHtml(b: Board, view: View, base: string): string {
   return b.bench
     .map((r) => {
       const { e } = r;
-      const floorAttr = r.floor ? dataTip(tip`${r.floor}`) : "";
       return (
         `<li data-key="${esc(e.key)}">` +
         `<span class="rk">${r.rank || ""}</span>` +
         jerseySvg({ code: e.team, name: e.name, number: e.dorsal, size: 30 }) +
         `<span class="nm"><a href="${playerHref(base, e.slug)}">${esc(e.name)}</a><small>${esc(e.team)} · ${when(e)} · ${games(e)}</small></span>` +
-        `<span class="val${r.floor ? " muted" : ""}"${floorAttr}>${r.text}</span>` +
+        `<span class="val${r.floor ? " muted" : ""}">${r.text}</span>` +
         `</li>`
       );
     })
@@ -277,19 +254,6 @@ export function fiveLinesHtml(b: Board, view: View, base: string): string {
         `<li>${b.lineup ? "" : `<span class="rk">${r.rank}</span>`}<span class="nm"><a href="${playerHref(base, r.e.slug)}">${esc(r.e.name)}</a><small>${esc(r.e.team)} · ${when(r.e)} · ${games(r.e)}</small></span><span class="line">${statLine(r.e, view)}</span></li>`,
     )
     .join("");
-}
-
-/** The bench's one-line note, so its head matches the court's (title, note, rule). */
-export function benchNote(b: Board): string {
-  if (!b.bench.length) return "Nobody else qualifies.";
-  return b.lineup ? "The rest of the roster, ranked." : `Ranks 6 to ${5 + b.bench.length}.`;
-}
-
-export function caption(b: Board): string {
-  if (!b.five.length) return "";
-  return b.lineup
-    ? "On court: the five who started most, placed by their share of assists against rebounds (the data has no positions). The rest of the roster is on the bench, ranked."
-    : `On court: the top five, first at the point, second and third on the wings, fourth and fifth on the blocks. Bench: ranks 6 to ${5 + b.bench.length}.`;
 }
 
 /** Link to Compare with the five on court. */

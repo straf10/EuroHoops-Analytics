@@ -132,19 +132,19 @@ const seasonOptions = (list: typeof seasons, chosen: number) =>
   <section class="wrap band" id="projection" aria-labelledby="projection-title">
     <header class="sec-head">
       <h2 id="projection-title">Projection and impact</h2>
-      <p>What the M6 model expects next season, how much he moves the score, and how well he shoots against his shot mix.</p>
+      <p>Projected next season, his impact on the score, and his shooting against his shot mix.</p>
     </header>
     {
       m6.projection || m6.index ? (
         <>
           <ProjectionBlock report={m6.projection} />
-          <div class="m6-pair">
+          <div class="proj-pair">
             <ProjectionImpact report={m6.projection} index={m6.index} />
             <ProjectionShotMaking index={m6.index} />
           </div>
         </>
       ) : (
-        <p class="note">No M6 projection, impact rating or shot-making rating is published for this player.</p>
+        <p class="note">No projection or ratings for this player.</p>
       )
     }
   </section>
@@ -193,10 +193,6 @@ const seasonOptions = (list: typeof seasons, chosen: number) =>
                 <i class="s3" />
               </span>
               <span>Size: how often he shot from there</span>
-              <span class="caveat" id="caveat" hidden={shotSeason.validated}>
-                Shot locations before 2011-12 do not line up with the court; read this season as
-                approximate.
-              </span>
             </figcaption>
           </figure>
           <div class="bands">
@@ -327,7 +323,6 @@ const seasonOptions = (list: typeof seasons, chosen: number) =>
           s.leagueBands = bands!;
           document.getElementById("court")!.innerHTML = shotChart(s, Number(radius));
           document.getElementById("bands")!.innerHTML = bandsHtml(s, up, down);
-          document.getElementById("caveat")!.hidden = s.validated;
         } else {
           document.getElementById("log-body")!.innerHTML = logHtml(s);
         }

@@ -1,7 +1,6 @@
 ---
 import "@fontsource-variable/geist";
 import "../styles/global.css";
-import github from "@phosphor-icons/core/assets/regular/github-logo.svg?raw";
 import sun from "@phosphor-icons/core/assets/regular/sun.svg?raw";
 import { buildDate, buildId } from "../lib/build";
 import moon from "@phosphor-icons/core/assets/regular/moon.svg?raw";
@@ -13,7 +12,6 @@ interface Props {
   current?: "players" | "leaders" | "compare" | "teams" | "standings" | "forecasts" | "methodology" | "about" | "glossary" | "downloads";
 }
 const { title, description, current } = Astro.props;
-const REPO = "https://github.com/straf10/EuroHoops-Analytics";
 const fullTitle = title ? `${title} · EuroHoops` : "EuroHoops Analytics";
 const home = import.meta.env.BASE_URL;
 const root = home.replace(/\/$/, "");
@@ -80,9 +78,6 @@ const footLinks = [
             <span class="icon when-light" set:html={moon} />
             <span class="icon when-dark" set:html={sun} />
           </button>
-          <a class="icon-btn" href={REPO} aria-label="Source code on GitHub">
-            <span class="icon" set:html={github} />
-          </a>
         </div>
       </div>
     </header>

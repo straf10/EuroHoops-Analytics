@@ -106,8 +106,7 @@ const bandHead = [
       </div>
     </div>
     <p class="note">
-      Ratings are points per 100 possessions. Ranks count from the best: for turnover rate, defensive rating
-      and the opponent measures, lower is better.
+      Ranks count from the best.
     </p>
   </section>
 
@@ -115,8 +114,7 @@ const bandHead = [
     <header class="sec-head">
       <h2 id="factors-title">Four factors and schedule</h2>
       <p>
-        How the club has played this season so far and who it has played, always for the live {liveLabel} season
-        whichever season is open above.
+        How the club has played this season so far and who it has played.
       </p>
     </header>
     <FactorsPanel factors={factors} label={liveLabel} />
@@ -129,9 +127,6 @@ const bandHead = [
         <p>Where the club shot from and where it let opponents shoot, against the league from the same spot.</p>
       </div>
     </header>
-    <p class="caveat-line" id="caveat" hidden={t.validated}>
-      Shot locations before 2011-12 do not line up with the court; read this season as approximate.
-    </p>
     <div class="pair busy-fade seasonal">
       {
         (["taken", "allowed"] as const).map((side) => (
@@ -205,8 +200,7 @@ const bandHead = [
       }
     </div>
     <p class="note">
-      A blue caret on Allowed means opponents shot worse than the league from that distance. Cells shrink toward
-      the league on small samples.
+      A blue caret on Allowed means opponents shot worse than the league from that distance.
     </p>
   </section>
 
@@ -344,7 +338,6 @@ const bandHead = [
           document.getElementById(`court-${side}`)!.innerHTML = charts[side];
           document.getElementById(`bands-${side}`)!.innerHTML = bands[side];
         }
-        document.getElementById("caveat")!.hidden = t.validated;
         document.getElementById("roster-body")!.innerHTML = rosterHtml(t, base!);
         select!.value = s;
         document.title = `${t.name} · EuroHoops`;
@@ -455,7 +448,7 @@ const bandHead = [
     height: 8px;
     border-radius: 50%;
     background: var(--data-2);
-    box-shadow: 0 0 0 0.75px var(--page); /* thin, so dense clusters read as dots, not crescents */
+    outline: 0.75px solid var(--page); /* thin, so dense clusters read as dots, not crescents */
     transition: scale 150ms var(--ease-out);
   }
   .side :global(.s-dot:focus-visible) {
@@ -468,15 +461,13 @@ const bandHead = [
     height: 12px;
     border-radius: 50%;
     background: var(--data-1);
-    box-shadow: 0 0 0 2px var(--page);
+    outline: 2px solid var(--page);
     transition: left 200ms var(--ease-out);
   }
   @media (hover: hover) and (pointer: fine) {
     .side :global(.s-dot:hover) {
       scale: 1.35;
-      box-shadow:
-        0 0 0 0.75px var(--page),
-        0 0 0 1.75px var(--ink-2);
+      outline: 1.75px solid var(--ink-2);
     }
   }
 
@@ -493,11 +484,6 @@ const bandHead = [
   }
   .half-title h3 {
     margin-bottom: 14px;
-  }
-  .caveat-line {
-    margin: -4px 0 20px;
-    color: var(--ink-2);
-    font-size: 0.8125rem;
   }
   .bands :global(th small) {
     display: inline;

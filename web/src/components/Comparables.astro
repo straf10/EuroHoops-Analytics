@@ -13,7 +13,6 @@ interface Props {
 const { report, name, slugs, base } = Astro.props;
 const top = (report?.similar ?? []).slice(0, 5);
 const query = top[0]?.query_season ?? report?.season;
-const pool = report ? report.pool_seasons : [];
 ---
 
 <section class="wrap band" id="plays-like" aria-labelledby="plays-like-title">
@@ -29,8 +28,8 @@ const pool = report ? report.pool_seasons : [];
   </header>
   {
     report && top.length > 0 ? (
-      <figure class="m6-fig" data-figure>
-        <ol class="m6-like">
+      <figure class="proj-fig" data-figure>
+        <ol class="proj-like">
           {top.map((r) => (
             <li>
               <span class="rk">{r.rank}</span>
@@ -47,17 +46,9 @@ const pool = report ? report.pool_seasons : [];
             </li>
           ))}
         </ol>
-        <p class="m6-facts" data-sample>
-          Searched {seasonLabel(pool[0])} to {seasonLabel(pool[pool.length - 1])}, {pool.length} seasons. Similarity is cosine: 1 is
-          the same profile, 0 unrelated.
-        </p>
-        <p class="m6-facts">
-          Not the Shot Twin: the Twin compares where on the floor he shoots with other EuroLeague shooters; this compares the whole
-          season: box-score rates, shooting percentages, usage, shot zones and shot-making.
-        </p>
       </figure>
     ) : (
-      <p class="note">No "plays like" list for this player: he has no player-season in the comparison pool.</p>
+      <p class="note">No similar players found.</p>
     )
   }
 </section>
