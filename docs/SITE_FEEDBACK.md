@@ -183,5 +183,5 @@ Report: what each model (Elo, M1, M5, M6, M7) does, what is live, logged or show
 1. Name: **6.75 Analytics**, short brand **6.75** (the EuroLeague/FIBA 3-point distance in metres).
 2. Models: the site stays Elo-based for now (R1 kept). No new model is planned in weeks 18-20, so the plan is to pick the best existing model and fine-tune it; the Phase D audit names it.
 
-### Open for the owner
-1. Buy a domain (yes or no), which decides whether Phase E moves hosting now.
+3. Domain: owner buys a .com on Cloudflare Registrar. Phase E (Cloudflare Pages, custom domain, base path `/`) runs right after Phase A.
+4. Header GitHub icon removed too (wave 2).
