@@ -186,3 +186,9 @@ Report: what each model (Elo, M1, M5, M6, M7) does, what is live, logged or show
 3. Domain: owner buys a .com on Cloudflare Registrar. Phase E (Cloudflare Pages, custom domain, base path `/`) runs right after Phase A.
 4. Header GitHub icon removed too (wave 2).
 5. Career totals stay (full career for every listed player). The "all-time" option on Leaders is hidden until older seasons are managed properly (it would miss players retired before the 5-season window).
+
+### Decided (2026-10-10, Phase B, shipped)
+1. Logo: no tile; baseline, orange 3-point arc, backboard and open rim, basket at the top (as on the shot charts).
+2. Orange is the data accent (#d9590b light, #e2691f dark) and the logo colour; blue is the opposite pole (red fails beside orange). Green/red only as the arrow glyph on vs-league deltas; the figure stays ink (`docs/DESIGN.md`, Delta Rule).
+3. Downloads use the site's display codes (e.g. FBT), stated on the page; they fit the free tier.
+4. Contact: GitHub (github.com/straf10) only, no email.
