@@ -185,14 +185,17 @@ def _teams_payload(
     rows: list[dict[str, Any]] = []
     taken, allowed = band_table(shots, "team"), band_table(shots, "opponent")
     zero = {b: [0, 0] for b in BANDS}
+    # The W-L is the regular-season record; the totals below still cover every game played.
+    regular_ids = set(inputs.games.loc[inputs.games["phase"] == "RS", "game_id"])
     for key, lines in paired.groupby("team"):
         code = str(key)
+        regular = lines[lines["game_id"].isin(regular_ids)]
         rows.append(
             {
                 "code": inputs.codes.get(code, code),
                 "name": inputs.names.get(code, code),
-                "w": int(lines["won"].sum()),
-                "l": int((~lines["won"]).sum()),
+                "w": int(regular["won"].sum()),
+                "l": int((~regular["won"]).sum()),
                 "totals": _row(lines[list(TEAM_FIELDS)].to_numpy(dtype=float).sum(axis=0)),
                 "opp": _row(
                     lines[[f"{f}_opp" for f in TEAM_FIELDS]].to_numpy(dtype=float).sum(axis=0)

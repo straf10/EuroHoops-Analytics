@@ -8,6 +8,7 @@ on it; the CI web build reads it. Refresh it after a payload change:
 
 import json
 import os
+from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -24,6 +25,7 @@ from eurohoops.publish import DISPLAY_CODES
 from eurohoops.stats.box import build_box_games, game_lines, seconds
 from eurohoops.stats.export import (
     PLAYER_FIELDS,
+    TEAM_FIELDS,
     Inputs,
     _player_frame,
     build_payloads,
@@ -275,6 +277,16 @@ def test_payload_uses_display_codes_and_flags_early_coordinates(
     assert {line[0] for log in games["logs"].values() for line in log} <= set(games["games"])
     index = files["players.json"]["players"]
     assert len({p["slug"] for p in index}) == len(index)
+
+
+def test_team_record_counts_regular_season_games_only(inputs: Inputs) -> None:
+    games = inputs.games.copy()
+    first = games[games["season"] == 2024].index[0]
+    games.loc[first, "phase"] = "PO"
+    teams = build_payloads(replace(inputs, games=games), NOW)["seasons/2024/teams.json"]["teams"]
+    assert sum(t["w"] for t in teams) == sum(t["l"] for t in teams) == 53
+    gp = TEAM_FIELDS.index("gp")
+    assert sum(t["totals"][gp] for t in teams) == 108  # totals keep every game, two clubs each
 
 
 def test_attempts_decode_to_the_shot_bins_and_bands(files: dict[str, dict[str, Any]]) -> None:
