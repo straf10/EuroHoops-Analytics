@@ -11,9 +11,11 @@ colors:
   axis: "#898781"
   rule: "#e1e0d9"
   rule-strong: "#c3c2b7"
-  model-blue: "#2a78d6"
+  accent-orange: "#d9590b"
   baseline-gray: "#8f8d86"
-  against-red: "#e34948"
+  counter-blue: "#2a78d6"
+  delta-up: "#1f8a4c"
+  delta-down: "#d23c3c"
   night: "#0e0e0d"
   night-surface: "#1a1a19"
   night-sunk: "#1c1c1b"
@@ -22,19 +24,21 @@ colors:
   night-muted: "#9c9a92"
   night-rule: "#2c2c2a"
   night-rule-strong: "#45453f"
-  night-model-blue: "#3987e5"
+  night-accent-orange: "#e2691f"
   night-baseline-gray: "#6a6862"
-  night-against-red: "#e66767"
-  freq-1: "#86b6ef"
-  freq-2: "#5598e7"
-  freq-3: "#2a78d6"
-  freq-4: "#1c5cab"
-  freq-5: "#104281"
-  night-freq-1: "#184f95"
-  night-freq-2: "#256abf"
-  night-freq-3: "#3987e5"
-  night-freq-4: "#6da7ec"
-  night-freq-5: "#9ec5f4"
+  night-counter-blue: "#3987e5"
+  night-delta-up: "#3fae6a"
+  night-delta-down: "#e66767"
+  freq-1: "#eea06a"
+  freq-2: "#e47a34"
+  freq-3: "#d9590b"
+  freq-4: "#a94307"
+  freq-5: "#73300a"
+  night-freq-1: "#8c3a0c"
+  night-freq-2: "#b44c10"
+  night-freq-3: "#e2691f"
+  night-freq-4: "#f29a5e"
+  night-freq-5: "#f8c9a2"
 typography:
   display:
     fontFamily: "Geist Variable, Segoe UI, system-ui, sans-serif"
@@ -107,12 +111,12 @@ components:
     backgroundColor: "{colors.sunk}"
     textColor: "{colors.ink}"
   outcome-hit:
-    backgroundColor: "rgb(42 120 214 / 0.1)"
+    backgroundColor: "rgb(217 89 11 / 0.1)"
     textColor: "{colors.ink}"
     rounded: "{rounded.pill}"
     padding: "2px 9px 2px 7px"
   outcome-miss:
-    backgroundColor: "rgb(227 73 72 / 0.1)"
+    backgroundColor: "rgb(42 120 214 / 0.1)"
     textColor: "{colors.ink}"
     rounded: "{rounded.pill}"
     padding: "2px 9px 2px 7px"
@@ -123,15 +127,15 @@ components:
     padding: "7px 10px"
 ---
 
-# Design System: EuroHoops Analytics
+# Design System: 6.75 Analytics
 
 ## Overview
 
 **Creative North Star: "The Quiet Reference"**
 
-EuroHoops reads like a well-kept reference work for EuroLeague numbers: neutral paper, one typeface, hairline rules, and colour that appears only where there is data. It sits alongside boxscorelab and databallr rather than trying to look like a basketball object; the owner rejected every themed metaphor (clipboard, station board, match tickets, terminals), so nothing on the page imitates a physical thing.
+6.75 Analytics reads like a well-kept reference work for EuroLeague numbers: neutral paper, one typeface, hairline rules, and colour that appears only where there is data. It sits alongside boxscorelab and databallr rather than trying to look like a basketball object; the owner rejected every themed metaphor (clipboard, station board, match tickets, terminals), so nothing on the page imitates a physical thing.
 
-Density is that of a stats product, not a landing page: tables with many rows, tabular figures in every column, charts with precise hover tooltips. Controls are drawn in ink, not colour, so the one blue on screen always means "the model". Motion is scarce and only ever reports a change of data.
+Density is that of a stats product, not a landing page: tables with many rows, tabular figures in every column, charts with precise hover tooltips. Controls are drawn in ink, not colour, so the orange on screen always means the subject: the model's call, or the player or club in view. The same orange draws the arc in the 6.75 logo, the only place it appears outside data. Motion is scarce and only ever reports a change of data.
 
 Light and dark are equal citizens. The page follows the visitor's system setting, and a remembered toggle overrides it both ways.
 
@@ -144,13 +148,16 @@ Light and dark are equal citizens. The page follows the visitor's system setting
 
 ## Colors
 
-A near-neutral ground with three data inks: the model's blue, a neutral gray for baselines, and a red for the opposite pole.
+A near-neutral ground with three data inks: orange for the subject, a neutral gray for baselines, and blue for the opposite pole. Orange replaced the original model blue in Phase B (owner decision, 2026-10-10; EuroLeague's identity is black and orange). The validator numbers are in `docs/DESIGN_ORANGE_PROPOSAL.md`.
 
 ### Primary
-- **Model Blue** (light and dark values in the frontmatter): the model and everything it claims. Forecast shares, the Elo line, calibration dots, above-average ratings, the "Hit" outcome icon, focus rings, text selection.
+- **Accent Orange** (`--data-1`, #d9590b light, #e2691f night; also `--brand-orange`): the model and everything it claims, and the player or club in view. Forecast shares, the Elo line, calibration dots, above-average ratings, hot shooting zones, the "Hit" outcome icon, focus rings, text selection, the logo arc. 3.7:1 on paper, so it is a mark colour and never a text colour.
 
 ### Secondary
-- **Against Red**: the other pole of a diverging reading. Below-average ratings, falling ratings, the "Miss" outcome icon. Never used for text.
+- **Counter Blue** (`--data-neg`): the other pole of a diverging reading. Below-average ratings, falling ratings, cold shooting zones, missed shots, the "Miss" outcome icon. Never used for text. Red cannot take this role beside orange: the pair fails even for full colour vision (OKLab ΔE 6.2).
+
+### Deltas
+- **Delta Up / Delta Down** (`--delta-up`, `--delta-down`; green and red): only for a metric compared with the league average, under the Delta Rule.
 
 ### Neutral
 - **Paper / Night**: the page ground.
@@ -162,13 +169,15 @@ A near-neutral ground with three data inks: the model's blue, a neutral gray for
 - **Baseline Gray**: the neutral data series (the home-win baseline, the away share of a forecast).
 
 ### Named Rules
-**The Colour-Is-Data Rule.** Blue, gray and red appear only on data marks (bars, lines, dots, stems, outcome icons and their washes). Controls, links and headings are ink.
+**The Colour-Is-Data Rule.** Orange, gray and blue appear only on data marks (bars, lines, dots, stems, outcome icons and their washes). Controls, links and headings are ink.
 
-**The Ink Text Rule.** Text never wears a data colour. A value beside a blue dot is set in ink; identity comes from the mark beside it.
+**The Ink Text Rule.** Text never wears a data colour. A value beside an orange dot is set in ink; identity comes from the mark beside it.
 
-**The Club-Colour Exception.** The one deliberate exception to Colour-Is-Data, approved by the owner for Leaders and Compare: jersey backs wear their club's two colours (body and trim). The colours live in `lib/jersey.ts` (`CLUB_COLOURS`, one curated pair per display code, a club's usual colours across 2007-2026), apart from the chart palette and never used as a token. They paint the shirt only: never a bar, dot, text, rule or background. The surname and number flip between the two page inks (#111110 or #fcfcfb), whichever contrasts more with the body; every pair clears 4.5:1 for that ink. A Rule Strong hairline outlines every shirt so a white or black shirt holds its edge on paper and night alike. No crests, sponsor marks, stripes or copies of real kits: one generic sleeveless cut for every club. Shirt red never sits beside a below-average red mark: Leaders and Compare carry no red data marks.
+**The Club-Colour Exception.** The one deliberate exception to Colour-Is-Data, approved by the owner for Leaders and Compare: jersey backs wear their club's two colours (body and trim). The colours live in `lib/jersey.ts` (`CLUB_COLOURS`, one curated pair per display code, a club's usual colours across 2007-2026), apart from the chart palette and never used as a token. They paint the shirt only: never a bar, dot, text, rule or background. The surname and number flip between the two page inks (#111110 or #fcfcfb), whichever contrasts more with the body; every pair clears 4.5:1 for that ink. A Rule Strong hairline outlines every shirt so a white or black shirt holds its edge on paper and night alike. No crests, sponsor marks, stripes or copies of real kits: one generic sleeveless cut for every club. Shirt blue never sits beside a below-average blue mark: Leaders and Compare carry no blue data marks.
 
-**The Validated Order Rule.** Chart colours come from the validated order (blue, then gray, then red) and are re-checked with the dataviz validator against both surfaces before any new series joins them. A fourth series folds into "Other" or small multiples.
+**The Validated Order Rule.** Chart colours come from the validated order (orange, then gray, then blue) and are re-checked with the dataviz validator against both surfaces before any new series joins them. A fourth series folds into "Other" or small multiples.
+
+**The Delta Rule.** Green and red appear only on a metric shown against the league average, and only as the arrow glyph beside it: ▲ when the value is above the league, ▼ when below, green when that is better for the subject and red when it is worse (a turnover rate above the league is a red ▲). The figure itself stays ink. Green and red never colour a chart series, a shot map or a bar, and never stand alone: the sign and the arrow carry the reading for colour-blind readers (green/red separation is ΔE 5.3 under deuteranopia).
 
 ## Typography
 
@@ -215,17 +224,17 @@ Gentle, small radii. Controls and buttons are 8px, their inner selected segment 
 - **Icon buttons:** 34px square, transparent, soft ink; hover fills with Sunk and darkens to ink; press scales to 0.94.
 
 ### Chips
-- **Outcome chips:** full pills with ink text, a Phosphor check or cross icon, and a 10% wash of the icon's colour: blue for a hit, red for a miss. "Not scored" is a muted chip on Sunk with a hairline ring and links to the footnote.
+- **Outcome chips:** full pills with ink text, a Phosphor check or cross icon, and a 10% wash of the icon's colour: orange for a hit, blue for a miss. "Not scored" is a muted chip on Sunk with a hairline ring and links to the footnote.
 
 ### Navigation
-- **Top bar:** 56px, sticky, paper at 88% with a saturating blur and a bottom hairline. Wordmark (a blue ring and "EuroHoops"), site links (Players, Leaders, Compare, Teams, Shots, Forecasts) in soft ink with the current page in ink at 550 weight, then the competition switch (forecast pages only), theme toggle and GitHub icon on the right. Under 560px the wordmark keeps only its ring and the link row scrolls sideways inside the bar (no scrollbar, a 24px fade at the end that still has links, 14px at the start once scrolled); on load it lands on a word boundary with the current page clear of the fade, or at the row's end when the bar is too narrow for both fades (placed again once the web font arrives). On forecast pages the competition switch drops to a full-width second row of the bar under 560px, so the links keep the first. The page itself never scrolls sideways.
-- **Segmented control:** a Sunk track with a hairline ring; the selected option is filled ink with paper text. Built on radio inputs so it works without JavaScript; labels shorten ("GBL") under 480px.
+- **Top bar:** 56px, sticky, paper at 88% with a saturating blur and a bottom hairline. Wordmark: the 6.75 mark (`components/Logo.astro`: an ink baseline, the orange 3-point arc with its corner lines, and an ink backboard and open rim, basket at the top as on the shot charts; a heavier small cut below 32px, which the favicon also uses) and "6.75" at 650 weight. Site links (Players, Leaders, Compare, Teams, Standings, Forecasts) in soft ink with the current page in ink at 550 weight, then the theme toggle on the right. Under 560px the wordmark keeps only its mark and the link row scrolls sideways inside the bar (no scrollbar, a 24px fade at the end that still has links, 14px at the start once scrolled); on load it lands on a word boundary with the current page clear of the fade, or at the row's end when the bar is too narrow for both fades (placed again once the web font arrives). The page itself never scrolls sideways.
+- **Segmented control:** a Sunk track with a hairline ring; the selected option is filled ink with paper text. Built on radio inputs so it works without JavaScript; long labels shorten under 480px.
 
 ### Tooltip
 Ink fill, paper text, 6px radius, soft drop shadow, max 260px. Opens after 120ms, then instantly for neighbouring marks while warm; enters from 2px below at 0.98 scale over 125ms. Every chart mark and forecast bar carries one, reachable by keyboard focus too. On touch a tap opens a mark's tooltip at once; a second tap, a tap anywhere else or any scroll closes it, and marks take `touch-action: manipulation` so no tap waits on a double-tap zoom. A mark that is also a link (the rank-strip dots) navigates on the first tap and never opens a tooltip there; its `aria-label` carries the tooltip as plain text (`linkTip` in `lib/tip.ts`), and where the tooltip is the only place the facts appear, the page shows them as text for touch too (see Rank strips).
 
 ### Forecast split bar (signature)
-One row per upcoming game: tip-off time, away code, a 10px split bar, home code, expected margin. The bar is the away share in Baseline Gray meeting the home share in Model Blue at P(home), with a 2px gap, 4px outer ends and a thin even-odds tick standing proud at 50%. Both shares keep their full colour in every row, as the legend shows; the favourite's percentage is ink and semibold, the other muted. On load and on each competition switch every bar grows out of even odds to its call (320ms ease-out, 40ms stagger).
+One row per upcoming game: tip-off time, away code, a 10px split bar, home code, expected margin. The bar is the away share in Baseline Gray meeting the home share in Accent Orange at P(home), with a 2px gap, 4px outer ends and a thin even-odds tick standing proud at 50%. Both shares keep their full colour in every row, as the legend shows; the favourite's percentage is ink and semibold, the other muted. On load and on each competition switch every bar grows out of even odds to its call (320ms ease-out, 40ms stagger).
 
 ### Filters
 One row above the content, separated from it by a hairline: small muted labels over the controls. Selects and the search field are 32px, 8px radius, Chart Surface fill with a Rule Strong inner ring that darkens to soft ink on hover, a Phosphor caret or magnifier in soft ink. Choices with two to four options are segmented controls. The row wraps; nothing hides.
@@ -242,28 +251,28 @@ Dense rows (0.8125rem, tabular) with hairline rules and a sticky header on the p
 Each control's width is pinned to Geist (`--seg-w`), so the fallback font never rewraps it. A box that still scrolls sideways (Compare's grid, or a table between breakpoints) fades 32px at its end on its own scroll timeline, and the fade lifts once scrolled to the end; a table that fits is never masked. The page itself never scrolls sideways.
 
 ### Ranked dot chart (Players signature)
-The top 25 on the sorted measure as a Cleveland dot plot: rank, name (a 10.5rem track, 10.25rem on phones, so full names fit), a dotted guide per row, a blue 10px dot with a paper ring, the value in ink. Vertical gridlines at nice ticks (phones label every other one) and a dashed Baseline Gray line for the average of the players ranked. Rows are fixed slots: a change of measure, window or rate slides each dot to its new position (200ms ease-out) while names and values swap; nothing animates on load.
+The top 25 on the sorted measure as a Cleveland dot plot: rank, name (a 10.5rem track, 10.25rem on phones, so full names fit), a dotted guide per row, an orange 10px dot with a paper ring, the value in ink. Vertical gridlines at nice ticks (phones label every other one) and a dashed Baseline Gray line for the average of the players ranked. Rows are fixed slots: a change of measure, window or rate slides each dot to its new position (200ms ease-out) while names and values swap; nothing animates on load.
 
 ### Shot chart
-Half court drawn in Axis hairlines on Chart Surface, basket at the top. Pointy-top hexagons of 0.5 m: size by how often the player shot from the cell, colour by his FG% there against the league's from the same cell, shrunk toward the league on small samples, in five diverging steps (red, light red, Baseline Gray, light blue, blue; the light steps mix the hue half into the surface). A key for colour and size sits under the chart, beside a distance-band table with share and FG% against the league and a caret for differences of 2.5 points or more.
+Half court drawn in Axis hairlines on Chart Surface, basket at the top. Pointy-top hexagons of 0.5 m: size by how often the player shot from the cell, colour by his FG% there against the league's from the same cell, shrunk toward the league on small samples, in five diverging steps (blue, light blue, Baseline Gray, light orange, orange; the light steps mix the hue half into the surface). A key for colour and size sits under the chart, beside a distance-band table with share and FG% against the league and a caret for differences of 2.5 points or more.
 
 Marks are clipped to the floor inside the sideline and baseline hairlines, and the backboard and rim are drawn above them so the basket stays legible under the busiest cells. On phones a distance table's range ("under 1.5 m") drops under the band name so Diff stays in view.
 
 Shared by the player, team and Shots pages (`lib/court.ts`, `styles/stats.css`), in three layers:
-- **FG% against the league** (above). On a team's **Allowed** chart the scale flips, so blue always means good for that club: blue where opponents shoot worse than the league. Its key is drawn in the flipped order.
-- **Frequency** (Shots explorer): the same hexes, coloured by how often the cell was used in five steps of one blue ramp (tokens `freq-1` to `freq-5`, validated as an ordinal ramp in both themes; on night the ramp brightens toward "most").
-- **Attempts**: one mark per shot, a filled Model Blue dot for a make and a hollow Against Red ring for a miss, so shape carries the outcome too.
+- **FG% against the league** (above). On a team's **Allowed** chart the scale flips, so orange always means good for that club: orange where opponents shoot worse than the league. Its key is drawn in the flipped order.
+- **Frequency** (Shots explorer): the same hexes, coloured by how often the cell was used in five steps of one orange ramp (tokens `freq-1` to `freq-5`, validated as an ordinal ramp in both themes; on night the ramp brightens toward "most").
+- **Attempts**: one mark per shot, a filled Accent Orange dot for a make and a hollow Counter Blue ring for a miss, so shape carries the outcome too.
 
 Seasons before 2011-12 carry a one-line caveat under the chart; they are never hidden.
 
 ### Rank strips (Team signature)
-One row per rating or four factor, in two columns (Offense, Defense) under a Title on a strong rule: the measure's name (tooltip gives the formula), the club's value in ink semibold, its rank in soft ink ("3rd of 18", counted from the best, so lower wins for turnover rate and the defensive measures), then a bare rail with every other club as an 8px Baseline Gray dot with a thin 0.75px page ring (so dense clusters still read as dots), a dashed Baseline Gray league-average tick, and this club as a 12px Model Blue dot with a 2px page ring. Each gray dot links to that club's page for the same season. Without a fine pointer (touch), where a tap on a dot only opens that club, the rank ("3rd of 18") is also a button with a small ink chevron: it opens, under the strip, every club on that measure as a list, best first (rank in soft ink, code in ink semibold, name in soft ink, value in ink on the right; the club itself in ink semibold and not a link, the others linking to their pages), closed by a hairline rule. The list is built from the strip's own marks by the page script, so it costs no HTML, follows a season switch while open, and mouse users keep the hover tooltips. On a season switch the blue dot slides to its new place (200ms ease-out) while the gray field redraws. Under 560px the rail drops below the name, value and rank.
+One row per rating or four factor, in two columns (Offense, Defense) under a Title on a strong rule: the measure's name (tooltip gives the formula), the club's value in ink semibold, its rank in soft ink ("3rd of 18", counted from the best, so lower wins for turnover rate and the defensive measures), then a bare rail with every other club as an 8px Baseline Gray dot with a thin 0.75px page ring (so dense clusters still read as dots), a dashed Baseline Gray league-average tick, and this club as a 12px Accent Orange dot with a 2px page ring. Each gray dot links to that club's page for the same season. Without a fine pointer (touch), where a tap on a dot only opens that club, the rank ("3rd of 18") is also a button with a small ink chevron: it opens, under the strip, every club on that measure as a list, best first (rank in soft ink, code in ink semibold, name in soft ink, value in ink on the right; the club itself in ink semibold and not a link, the others linking to their pages), closed by a hairline rule. The list is built from the strip's own marks by the page script, so it costs no HTML, follows a season switch while open, and mouse users keep the hover tooltips. On a season switch the orange dot slides to its new place (200ms ease-out) while the gray field redraws. Under 560px the rail drops below the name, value and rank.
 
 ### Facet bars (Shots signature)
-The explorer's filters are bar charts. Each facet (Quarter, Distance, Play) is a head on a strong rule and one button row per option: label, a 10px bar with a 4px rounded end whose width is the option's attempts, the attempts, FG% and the difference from the comparison. A kept option's bar is Model Blue, a filtered-out one Baseline Gray; a chosen option's label goes ink semibold. Each facet counts the shots the other facets keep, so it shows what a click would give; bars resize in place (200ms). The comparison is the league with the same filters, or every league shot when the subject is the league. The play-by-play marks fastbreaks and second chances on made shots only (from 2015-16), so the Play facet counts makes and its share; it filters only in the Frequency and Attempts views and is disabled with a one-line reason otherwise. Above the facets, a three-figure totals line (attempts, FG%, points per shot, each over its comparison in muted text; for the unfiltered league, which is its own comparison, only "every located shot" under attempts); on phones the view switch reads Freq. / FG% / Att.; the method note sits under the court, beside the taller facet column; below them, an ink Clear filters button that goes quiet (Sunk, muted) when nothing is filtered. A tap shows its press at once (the chosen label goes ink semibold in the same frame), and the bars and court follow in the next task, a tick later; after load the page fetches the season's shots while the browser is idle (not for a visitor saving data or on 2G), so that tick is short on a phone.
+The explorer's filters are bar charts. Each facet (Quarter, Distance, Play) is a head on a strong rule and one button row per option: label, a 10px bar with a 4px rounded end whose width is the option's attempts, the attempts, FG% and the difference from the comparison. A kept option's bar is Accent Orange, a filtered-out one Baseline Gray; a chosen option's label goes ink semibold. Each facet counts the shots the other facets keep, so it shows what a click would give; bars resize in place (200ms). The comparison is the league with the same filters, or every league shot when the subject is the league. The play-by-play marks fastbreaks and second chances on made shots only (from 2015-16), so the Play facet counts makes and its share; it filters only in the Frequency and Attempts views and is disabled with a one-line reason otherwise. Above the facets, a three-figure totals line (attempts, FG%, points per shot, each over its comparison in muted text; for the unfiltered league, which is its own comparison, only "every located shot" under attempts); on phones the view switch reads Freq. / FG% / Att.; the method note sits under the court, beside the taller facet column; below them, an ink Clear filters button that goes quiet (Sunk, muted) when nothing is filtered. A tap shows its press at once (the chosen label goes ink semibold in the same frame), and the bars and court follow in the next task, a tick later; after load the page fetches the season's shots while the browser is idle (not for a visitor saving data or on 2G), so that tick is short on a phone.
 
 ### Rating ladder
-Ranked rows: rank, code, name, a bare rail with a dashed league-average line, a stem from average to the team's dot (blue above, red below, Baseline Gray exactly on 1500), the rating, and the season change with a blue or red caret beside muted figures. No filled track behind the rail.
+Ranked rows: rank, code, name, a bare rail with a dashed league-average line, a stem from average to the team's dot (orange above, blue below, Baseline Gray exactly on 1500), the rating, and the season change with an orange or blue caret beside muted figures. No filled track behind the rail.
 
 ### Jersey back (Leaders and Compare)
 A fantasy-style shirt seen from behind, drawn in SVG (`jerseySvg` in `lib/jersey.ts`): one sleeveless cut in a 100 × 112 box, the club's body colour, trim bands at the neck, armholes and hem, the surname across the shoulders (squeezed to fit when longer than nine letters) and the number large below it, both Geist in the flipped ink. A season shows the number and club he ended that season with; a career shows the club and number with the most games. Sizes: 72px on the court, 64px heading a Compare column, 30px on a bench row; under 48px the surname is dropped (it would render near 5px) and the shirt carries the number only. Decorative (`aria-hidden`) wherever the name sits beside it in text. Never a photo or a likeness.
@@ -272,10 +281,10 @@ A fantasy-style shirt seen from behind, drawn in SVG (`jerseySvg` in `lib/jersey
 The shared court (Axis hairlines on Chart Surface), closed here at the halfway line with the centre-circle half (`court(…, closed)`), with five shirts placed over it so no line touches text (wings beyond the arc on the 45° lines): the top five by rank, first at the point, second and third on the wings, fourth and fifth on the blocks. For a club's season it is the roster's five who started most, ordered by their share of assists against rebounds (the data has no positions), and the caption says so. Each slot is shirt, rank and name, club and season, the ranked value large in ink semibold with its head, then the card line (PTS REB AST TS% PIR, the sorted one in ink semibold, the rest soft ink). The text block wears the Chart Surface colour so court lines never run through it. Beside the court (below it under 980px) the bench, under a head that matches the court's (title, one-line note, strong rule): ranks 6 to 20, or the rest of the roster, as rows of rank, 30px shirt, name over club · season · games · minutes, and the value; values under a floor are muted with the reason in a tooltip. Under 620px of floor the shirts keep only the value and the five full lines list below the court. On a change of scope, measure, rate or club the five shirts fade and rise 6px into place (200ms, 30ms steps from the point outward) and the bench rows slide to their new order (200ms); a page opened from a link paints without motion.
 
 ### Head-to-head grid (Compare signature)
-Up to five players, each a season (a select in the column head lists every season with its club) or a career. A table: the measure column sticks on the left; each player owns an equal column headed by a 64px shirt, name (links to the player page), club, the season select, and a quiet remove button. Under the heads a Rows led tally ("of 22"), then groups (Playing time, Scoring, Playmaking, Rebounding, Defence, Overall) on strong rules. Each cell is two fixed slots, so figures line up down a column: the value in ink, right-aligned, and its place among the compared in muted small text; the row's leader gets an 8px Model Blue dot hugging its value and semibold ink, and so does the Rows led leader. The remove button sits beside its shirt. Fewer turnovers lead their row; a percentage under its attempt floor is muted and never leads. The only colour on the grid is that dot. On a change the dots pop into their new cells (160ms). Below 5 × 9rem plus the measure column the table scrolls inside its box, with the end fade of a scrolling table; the measure column and the first player always fit on a phone. Empty state: the search, plus two ready-made fives (career PIR leaders, career scorers).
+Up to five players, each a season (a select in the column head lists every season with its club) or a career. A table: the measure column sticks on the left; each player owns an equal column headed by a 64px shirt, name (links to the player page), club, the season select, and a quiet remove button. Under the heads a Rows led tally ("of 22"), then groups (Playing time, Scoring, Playmaking, Rebounding, Defence, Overall) on strong rules. Each cell is two fixed slots, so figures line up down a column: the value in ink, right-aligned, and its place among the compared in muted small text; the row's leader gets an 8px Accent Orange dot hugging its value and semibold ink, and so does the Rows led leader. The remove button sits beside its shirt. Fewer turnovers lead their row; a percentage under its attempt floor is muted and never leads. The only colour on the grid is that dot. On a change the dots pop into their new cells (160ms). Below 5 × 9rem plus the measure column the table scrolls inside its box, with the end fade of a scrolling table; the measure column and the first player always fit on a phone. Empty state: the search, plus two ready-made fives (career PIR leaders, career scorers).
 
 ### Mirror staff (Shot twins, player page)
-The player's last 5, 10 or 20 games or his latest full season (a segmented control) against the five closest EuroLeague player-seasons since 2007-08 (`components/ShotTwin.astro`, maths in `lib/twin.ts`, data from the exporter's `twins.json`). The five twins sit in one row of choices under a hairline: rank, name, season · club; twins are always other players, never his own seasons, the match score large in ink; the chosen one takes a 2px ink rule on top and semibold ink, and under 820px the row becomes a list with the score on the right. Below, a table read as a butterfly: a centre staff of labels, him on the left in Model Blue, the twin on the right in Baseline Gray, each column headed by the name and a 10px swatch. Three groups on strong rules: Where they shoot (14 zones, rim to deep three, bars on one shared scale per page), How well (FG% per band with the points above the league and a blue or red caret from 2.5 points and 10 attempts; "few shots" under that), Style (3PA and FT rates as bars). Bars are 10px with a 4px outer end, square at the staff, no track; axis hairlines mark the staff edges and the share figure rides at each bar's end ("<1%" for a trace). Symmetry is the law: on phones the staff narrows to short labels ("Mid L") and the columns thin but never merge. Choosing a twin slides the right-hand marks to their new lengths, a window both sides (transform, 200ms ease-out); nothing animates on load. A method note under it gives the weights, the pool size and floor, and what 100 and 37 mean. Pre-2011-12 twins carry the approximate-locations line.
+The player's last 5, 10 or 20 games or his latest full season (a segmented control) against the five closest EuroLeague player-seasons since 2007-08 (`components/ShotTwin.astro`, maths in `lib/twin.ts`, data from the exporter's `twins.json`). The five twins sit in one row of choices under a hairline: rank, name, season · club; twins are always other players, never his own seasons, the match score large in ink; the chosen one takes a 2px ink rule on top and semibold ink, and under 820px the row becomes a list with the score on the right. Below, a table read as a butterfly: a centre staff of labels, him on the left in Accent Orange, the twin on the right in Baseline Gray, each column headed by the name and a 10px swatch. Three groups on strong rules: Where they shoot (14 zones, rim to deep three, bars on one shared scale per page), How well (FG% per band with the points above the league and an orange or blue caret from 2.5 points and 10 attempts; "few shots" under that), Style (3PA and FT rates as bars). Bars are 10px with a 4px outer end, square at the staff, no track; axis hairlines mark the staff edges and the share figure rides at each bar's end ("<1%" for a trace). Symmetry is the law: on phones the staff narrows to short labels ("Mid L") and the columns thin but never merge. Choosing a twin slides the right-hand marks to their new lengths, a window both sides (transform, 200ms ease-out); nothing animates on load. A method note under it gives the weights, the pool size and floor, and what 100 and 37 mean. Pre-2011-12 twins carry the approximate-locations line.
 
 ### Charts
 Plot areas sit on Chart Surface with 1px solid gridlines in Rule; reference lines (the calibration diagonal) are dashed soft ink. Lines are 2px with round joins, dots carry a 2px paper ring, a legend appears for two or more series and end labels name the last values. Every chart has a text caption and a screen-reader table.
@@ -293,4 +302,4 @@ Plot areas sit on Chart Surface with 1px solid gridlines in Rule; reference line
 - **Don't** present odds, stakes or "picks"; this is a model benchmark, not betting advice.
 - **Don't** reintroduce a themed metaphor (clipboard, board, ticket, terminal) or a handwriting face.
 - **Don't** put a filled background track behind a bar or rating rail.
-- **Don't** colour text with a data colour, or use green for success; blue and red are the only outcome inks.
+- **Don't** colour text with a data colour, or use green for success; orange and blue are the only outcome inks. Green and red exist only under the Delta Rule.

@@ -83,7 +83,7 @@ const signed = (x: number, digits = 1) =>
   `${x > 0 ? "+" : x < 0 ? "−" : ""}${Math.abs(x).toFixed(digits)}`;
 
 /** Share and FG% per distance band against the league. `invert` for shots allowed: the caret
- *  turns blue where opponents shoot worse than the league. */
+ *  turns orange where opponents shoot worse than the league. */
 export function bandRows(b: Bands, league: Bands, up: string, down: string, invert = false): string {
   return Object.keys(BAND_LABELS)
     .map((key) => {

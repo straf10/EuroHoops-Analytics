@@ -91,7 +91,7 @@ const bandHead = [
       <h2 id="ranks-title">Where they rank</h2>
       <p>
         Every club that season is a gray dot, <span class="k-me" aria-hidden="true"></span>
-        <span id="t-code">{t.code}</span> is blue and the dashed line is the league average. Select a dot to
+        <span id="t-code">{t.code}</span> is orange and the dashed line is the league average. Select a dot to
         open that club.
       </p>
     </header>
@@ -200,7 +200,7 @@ const bandHead = [
       }
     </div>
     <p class="note">
-      A blue caret on Allowed means opponents shot worse than the league from that distance.
+      An orange caret on Allowed means opponents shot worse than the league from that distance.
     </p>
   </section>
 
@@ -303,7 +303,7 @@ const bandHead = [
     };
     const text = (id: string, value: string) => (document.getElementById(id)!.textContent = value);
 
-    // Patch the strips in place so the club's blue dot slides to its new place (the signature).
+    // Patch the strips in place so the club's orange dot slides to its new place (the signature).
     function patchStrips(root: HTMLElement, list: ReturnType<typeof strips>) {
       for (const s of list) {
         const row = root.querySelector<HTMLElement>(`.strip[data-key="${s.key}"]`)!;
