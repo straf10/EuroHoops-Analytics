@@ -1,4 +1,4 @@
-# EuroHoops Analytics
+# 6.75 Analytics
 
 **Every EuroLeague and Greek Basket League game of 2026-27, forecast before tip-off, logged in public, and scored afterwards. No retroactive edits.**
 
@@ -16,7 +16,7 @@
 ## Why this project exists
 
 Most sports-prediction projects report a backtest, and a backtest is easy to flatter: tune a
-little, re-run, keep the best number. EuroHoops is built so that it can't do that.
+little, re-run, keep the best number. 6.75 is built so that it can't do that.
 
 - **Pre-registered.** Every forecast is committed to [`predictions/`](predictions/) by a GitHub
   Actions bot *before* the game starts. The logs are append-only, and git history is the

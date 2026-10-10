@@ -1,0 +1,62 @@
+---
+/**
+ * The 6.75 mark. Monochrome ink with the three-point arc in --brand-orange.
+ * Switch the mark by changing `variant` (1 half court + arc, 2 arc + ball, 3 arc + distance tick).
+ * web/public/favicon.svg repeats variant 1 by hand; keep them in step.
+ */
+const variant: 1 | 2 | 3 = 1;
+---
+
+<svg class="logo" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+  {
+    variant === 1 && (
+      <>
+        <rect x="2.75" y="3" width="18.5" height="18" rx="1.5" class="ink" />
+        <circle cx="12" cy="17" r="1.1" class="fill" />
+        <path d="M6 21v-6.5a6 8 0 0 1 12 0V21" class="arc" />
+      </>
+    )
+  }
+  {
+    variant === 2 && (
+      <>
+        <path d="M3 20.5h18" class="ink" />
+        <path d="M5 20.5v-5.5a7 7 0 0 1 14 0v5.5" class="arc" />
+        <circle cx="12" cy="8.5" r="2.6" class="fill" />
+      </>
+    )
+  }
+  {
+    variant === 3 && (
+      <>
+        <path d="M5 3.5v4a7 7 0 0 0 14 0v-4" class="arc" />
+        <circle cx="12" cy="4.6" r="1.4" class="ink" />
+        <path d="M12 6.4v9.1M9.6 15.5h4.8" class="ink" />
+        <path d="M3 20.5h18" class="ink" />
+      </>
+    )
+  }
+</svg>
+
+<style>
+  .logo {
+    width: 18px;
+    height: 18px;
+    flex: none;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .ink {
+    stroke: currentColor;
+    stroke-width: 1.6;
+  }
+  .arc {
+    stroke: var(--brand-orange);
+    stroke-width: 2;
+  }
+  .fill {
+    fill: currentColor;
+    stroke: none;
+  }
+</style>

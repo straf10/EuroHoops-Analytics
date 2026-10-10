@@ -1,0 +1,12 @@
+{
+  "name": "6.75 Analytics",
+  "short_name": "6.75",
+  "start_url": "/",
+  "display": "browser",
+  "background_color": "#0e0e0d",
+  "theme_color": "#f9f9f7",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}
