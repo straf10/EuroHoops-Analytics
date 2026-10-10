@@ -8,7 +8,7 @@ web
 
 ## Stack
 
-Astro static site (user choice, 2026-09-25). Python pipeline stays the source of truth: `eurohoops publish` exports JSON; Astro renders it at build time; GitHub Pages deploys the output daily from `.github/workflows/daily.yml`.
+Astro static site (user choice, 2026-09-25). Python pipeline stays the source of truth: `eurohoops publish` exports JSON; Astro renders it at build time; Cloudflare (a Worker serving static assets at 675hoops.com) deploys the output daily from `.github/workflows/daily.yml`.
 
 ## Users
 

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://675hoops.com/sitemap-index.xml

@@ -7,7 +7,7 @@
 ![python](https://img.shields.io/badge/python-3.12-3776AB)
 ![coverage](https://img.shields.io/badge/coverage-%E2%89%A585%25-brightgreen)
 
-### → [**Open the live site**](https://straf10.github.io/EuroHoops-Analytics/)
+### → [**Open the live site**](https://675hoops.com/)
 
 ![M1 scorecard on the live site](reports/screenshots/scorecard_m1_1440_light.png)
 
@@ -81,7 +81,7 @@ comes from [`reports/`](reports/) (`backtest_elo*.json`, `backtest_m1*.json`), a
 | publish | [`publish.py`](src/eurohoops/publish.py) → [`web/`](web/) | static site |
 
 **Stack:** Python 3.12 · uv · DuckDB · pandas · pandera · LightGBM · Optuna · MLflow · httpx +
-tenacity · Typer · Astro · GitHub Actions · GitHub Pages
+tenacity · Typer · Astro · GitHub Actions · Cloudflare
 
 ## Engineering quality
 
@@ -107,7 +107,7 @@ uv run eurohoops predict && uv run eurohoops predict --competition gbl
 uv run eurohoops publish
 
 cd web && npm ci
-npm run dev      # http://localhost:4321/EuroHoops-Analytics/
+npm run dev      # http://localhost:4321/
 ```
 
 `backtest` re-tunes the models and rewrites the reports, and `score` rebuilds a scorecard. Each

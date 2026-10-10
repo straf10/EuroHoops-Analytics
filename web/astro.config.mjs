@@ -1,4 +1,5 @@
 import { defineConfig } from "astro/config";
+import sitemap from "@astrojs/sitemap";
 
 // Built into ../site, which the daily workflow uploads to Cloudflare.
 export default defineConfig({
@@ -6,6 +7,7 @@ export default defineConfig({
   base: "/",
   outDir: "../site",
   trailingSlash: "ignore",
+  integrations: [sitemap()],
   // Scouting and Shots are hidden: their code stays in src/pages/_scouting and _shots. Their
   // redirects are real 301s in public/_redirects (Cloudflare static assets).
   build: { inlineStylesheets: "auto" },
