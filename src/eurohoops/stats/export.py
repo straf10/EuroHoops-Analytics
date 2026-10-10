@@ -26,7 +26,7 @@ import json
 import re
 import shutil
 import unicodedata
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -97,6 +97,11 @@ def player_slugs(names: Mapping[str, str]) -> dict[str, str]:
     return {
         pid: slug if taken[slug] == 1 else f"{slug}-{pid.lower()}" for pid, slug in base.items()
     }
+
+
+def site_window(seasons: Iterable[Any]) -> list[int]:
+    """The seasons the site publishes: the latest ``SITE_SEASONS`` of those with box lines."""
+    return sorted({int(s) for s in seasons})[-SITE_SEASONS:]
 
 
 def season_label(season: int) -> str:
@@ -310,7 +315,7 @@ def build_payloads(inputs: Inputs, now: datetime) -> dict[str, dict[str, Any]]:
     played in those seasons, so career totals and best seasons stay all-time.
     """
     career = _player_frame(inputs)
-    window = sorted(int(s) for s in career["season"].unique())[-SITE_SEASONS:]
+    window = site_window(career["season"].unique())
     frame = career[career["season"].isin(window)]
     shots_table = inputs.shots.table[inputs.shots.table["season"].isin(window)]
     names = dict(zip(frame["player_id"], frame["player"].map(display_name), strict=True))

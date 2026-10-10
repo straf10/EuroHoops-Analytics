@@ -27,7 +27,7 @@ from eurohoops.api.export import (
     write_publish,
     write_stats_files,
 )
-from eurohoops.api.readmodel import Store
+from eurohoops.api.readmodel import Store, stats_inputs
 from eurohoops.config import (
     BIO_EL_SEASONS,
     BOX_INVARIANTS_REPORT,
@@ -211,6 +211,7 @@ from eurohoops.sim.formats import season_format
 from eurohoops.sim.played import regulation_scores
 from eurohoops.stats.box import build_box_games
 from eurohoops.stats.export import STATS_DIR
+from eurohoops.stats.validate import write_validation
 
 app = typer.Typer(no_args_is_help=True, add_completion=False)
 log = logging.getLogger("eurohoops")
@@ -1589,6 +1590,7 @@ def export_stats(
     store = RawStore(from_cache=from_cache, raw_dir=raw_dir)
     files = stats_files(TestClient(create_app(store, lambda: now)))
     write_stats_files(out, files)
+    write_validation(out, stats_inputs(store), now)
     seasons = json.loads(files["meta.json"])["seasons"]
     typer.echo(
         f"wrote {len(files)} files to {out}: {len(seasons)} seasons, "

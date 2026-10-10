@@ -221,3 +221,9 @@ write_stats
 from eurohoops.api.readmodel import UNDERVALUED_ROWS_SCHEMA  # noqa: E402
 
 UNDERVALUED_ROWS_SCHEMA
+
+# validation.json keys: TypedDict fields the site reads, never this package
+from eurohoops.stats.validate import SeasonReport, Special  # noqa: E402
+
+Special.note
+SeasonReport.games_scheduled
