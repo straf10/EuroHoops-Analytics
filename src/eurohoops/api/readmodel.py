@@ -411,7 +411,12 @@ def _el_box(store: Store) -> BoxGames:
     )
 
 
-def _stats_inputs(store: Store) -> Inputs:
+def stats_inputs(store: Store) -> Inputs:
+    """The stats exporters' inputs, loaded once per Store (JSON payloads and downloads share it)."""
+    return store.memo("stats_inputs", lambda: _load_stats_inputs(store))
+
+
+def _load_stats_inputs(store: Store) -> Inputs:
     games, teams = _el_games(store)
     return Inputs(
         games=games,
@@ -426,7 +431,7 @@ def _stats_inputs(store: Store) -> Inputs:
 def stats_payloads(store: Store, now: datetime) -> dict[str, dict[str, Any]]:
     """Every stats file by relative path (``stats.export.build_payloads``), built once per Store;
     ``meta.json`` carries the time of that build."""
-    return store.memo("stats", lambda: build_payloads(_stats_inputs(store), now))
+    return store.memo("stats", lambda: build_payloads(stats_inputs(store), now))
 
 
 def stats_index(store: Store, now: datetime) -> dict[str, Any]:
