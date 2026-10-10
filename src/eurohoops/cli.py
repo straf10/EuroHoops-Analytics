@@ -1591,9 +1591,9 @@ def export_stats(
     store = RawStore(from_cache=from_cache, raw_dir=raw_dir)
     files = stats_files(TestClient(create_app(store, lambda: now)))
     write_stats_files(out, files)
-    write_downloads(DOWNLOADS_DIR, build_downloads(stats_inputs(store), now))
-    # last: a validation error exits after every file is written
+    # validation first: on an error it writes validation.json, then fails the export
     write_validation(out, stats_inputs(store), now)
+    write_downloads(DOWNLOADS_DIR, build_downloads(stats_inputs(store), now))
     seasons = json.loads(files["meta.json"])["seasons"]
     typer.echo(
         f"wrote {len(files)} files to {out}: {len(seasons)} seasons, "
