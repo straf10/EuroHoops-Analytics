@@ -1,47 +1,39 @@
 ---
 /**
- * The 6.75 mark. Monochrome ink with the three-point arc in --brand-orange.
- * Switch the mark by changing `variant` (1 half court + arc, 2 arc + ball, 3 arc + distance tick).
- * web/public/favicon.svg repeats variant 1 by hand; keep them in step.
+ * The 6.75 mark: baseline, three-point arc (--brand-orange) and basket, no tile.
+ * Below 32px the basket uses a heavier, simpler cut so it holds up small.
+ * web/public/favicon.svg and web/scripts/make-icons.mjs repeat this geometry; keep them in step.
  */
-const variant: 1 | 2 | 3 = 1;
+interface Props {
+  size?: number;
+}
+const { size = 18 } = Astro.props;
+const small = size < 32;
 ---
 
-<svg class="logo" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-  {
-    variant === 1 && (
-      <>
-        <rect x="2.75" y="3" width="18.5" height="18" rx="1.5" class="ink" />
-        <circle cx="12" cy="17" r="1.1" class="fill" />
-        <path d="M6 21v-6.5a6 8 0 0 1 12 0V21" class="arc" />
-      </>
-    )
-  }
-  {
-    variant === 2 && (
-      <>
-        <path d="M3 20.5h18" class="ink" />
-        <path d="M5 20.5v-5.5a7 7 0 0 1 14 0v5.5" class="arc" />
-        <circle cx="12" cy="8.5" r="2.6" class="fill" />
-      </>
-    )
-  }
-  {
-    variant === 3 && (
-      <>
-        <path d="M5 3.5v4a7 7 0 0 0 14 0v-4" class="arc" />
-        <circle cx="12" cy="4.6" r="1.4" class="ink" />
-        <path d="M12 6.4v9.1M9.6 15.5h4.8" class="ink" />
-        <path d="M3 20.5h18" class="ink" />
-      </>
-    )
-  }
+<svg class="logo" viewBox="0 0 32 32" width={size} height={size} aria-hidden="true" focusable="false">
+  <g transform="translate(0 3)">
+    <path d="M2 3h28" class="ink" stroke-width="2.6"></path>
+    <path d="M4.5 3v9a11.5 11.5 0 0 0 23 0V3" class="arc" stroke-width="3"></path>
+    {
+      small ? (
+        <>
+          <path d="M12.2 6h7.6" class="ink" stroke-width="2.6"></path>
+          <circle cx="16" cy="9.8" r="2.6" class="ink" stroke-width="2.2"></circle>
+        </>
+      ) : (
+        <>
+          <path d="M12.6 5.8h6.8" class="ink" stroke-width="2"></path>
+          <path d="M16 5.8v1" class="ink" stroke-width="1.5"></path>
+          <circle cx="16" cy="9.1" r="2.3" class="ink" stroke-width="1.6"></circle>
+        </>
+      )
+    }
+  </g>
 </svg>
 
 <style>
   .logo {
-    width: 18px;
-    height: 18px;
     flex: none;
     fill: none;
     stroke-linecap: round;
@@ -49,14 +41,8 @@ const variant: 1 | 2 | 3 = 1;
   }
   .ink {
     stroke: currentColor;
-    stroke-width: 1.6;
   }
   .arc {
     stroke: var(--brand-orange);
-    stroke-width: 2;
-  }
-  .fill {
-    fill: currentColor;
-    stroke: none;
   }
 </style>

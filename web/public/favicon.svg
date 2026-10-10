@@ -1,16 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <!-- Mark = Logo.astro variant 1. Arc colour is the brand-orange token in src/styles/global.css (light #d9590b, dark #f0782a). -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Mark = Logo.astro, small cut. Arc colour is the brand-orange token in src/styles/global.css (light #d9590b, dark #f0782a). -->
   <style>
-    .ink { stroke: #111110; stroke-width: 1.6; }
-    .fill { fill: #111110; stroke: none; }
-    .arc { stroke: #d9590b; stroke-width: 2; }
+    .ink { stroke: #111110; }
+    .arc { stroke: #d9590b; }
     @media (prefers-color-scheme: dark) {
       .ink { stroke: #f2f1ec; }
-      .fill { fill: #f2f1ec; }
       .arc { stroke: #f0782a; }
     }
   </style>
-  <rect x="2.75" y="3" width="18.5" height="18" rx="1.5" class="ink" />
-        <circle cx="12" cy="17" r="1.1" class="fill" />
-  <path d="M6 21v-6.5a6 8 0 0 1 12 0V21" class="arc" />
+  <g transform="translate(0 3)">
+    <path d="M2 3h28" class="ink" stroke-width="2.6"/>
+    <path d="M4.5 3v9a11.5 11.5 0 0 0 23 0V3" class="arc" stroke-width="3"/>
+    <path d="M12.2 6h7.6" class="ink" stroke-width="2.6"/>
+    <circle cx="16" cy="9.8" r="2.6" class="ink" stroke-width="2.2"/>
+  </g>
 </svg>
