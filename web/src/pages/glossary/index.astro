@@ -1,11 +1,121 @@
 ---
 import Base from "../../layouts/Base.astro";
+import { GROUPS, TERMS } from "../../lib/glossary";
 import "../../styles/stats.css";
+
+const description =
+  "Plain-language definitions of the stats and forecast terms used on 6.75 Analytics, from PTS and PIR to ORtg, net rating and win probability.";
+const slug = (s: string) => s.toLowerCase().replace(/\W+/g, "-");
+const groups = GROUPS.map((name) => ({ name, terms: TERMS.filter((t) => t.group === name) })).filter((g) => g.terms.length);
 ---
 
-<Base title="Glossary" description="Glossary of EuroHoops terms: coming soon." current="glossary">
+<Base title="Glossary" description={description} current="glossary">
   <header class="wrap head">
     <h1>Glossary</h1>
-    <p class="lede">Coming soon.</p>
+    <p class="lede">What each column, rating and forecast term on the site means, in plain words.</p>
   </header>
+
+  <nav class="wrap gl-index" aria-label="Glossary index">
+    {
+      groups.map((g) => (
+        <p>
+          <span class="gl-group">{g.name}</span>
+          {g.terms.map((t) => (
+            <a class="ink-link" href={`#${t.id}`}>
+              {t.term}
+            </a>
+          ))}
+        </p>
+      ))
+    }
+  </nav>
+
+  {
+    groups.map((g) => (
+      <section class="wrap band gl" aria-labelledby={`g-${slug(g.name)}`}>
+        <header class="sec-head">
+          <h2 id={`g-${slug(g.name)}`}>{g.name}</h2>
+        </header>
+        <dl>
+          {g.terms.map((t) => (
+            <div class="gl-term" id={t.id}>
+              <dt>
+                {t.term}
+                {t.name && <span class="gl-name">{t.name}</span>}
+              </dt>
+              <dd>
+                <p>{t.def}</p>
+                {t.formula && <p class="gl-formula">{t.formula}</p>}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+    ))
+  }
 </Base>
+
+<style>
+  .gl-index {
+    margin-top: 28px;
+  }
+  .gl-index p {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    align-items: baseline;
+    margin-top: 10px;
+    font-size: 0.875rem;
+  }
+  .gl-group {
+    flex: 0 0 100%;
+    color: var(--muted);
+    font-size: 0.8125rem;
+  }
+  .gl {
+    padding-top: 56px;
+  }
+  .gl dl {
+    border-top: 1px solid var(--rule);
+  }
+  .gl-term {
+    display: grid;
+    grid-template-columns: minmax(0, 14rem) minmax(0, 1fr);
+    gap: 4px 24px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--rule);
+    scroll-margin-top: 72px;
+  }
+  .gl-term:target dt {
+    text-decoration: underline;
+    text-decoration-color: var(--rule-strong);
+    text-underline-offset: 4px;
+  }
+  dt {
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+  .gl-name {
+    display: block;
+    margin-top: 2px;
+    color: var(--ink-2);
+    font-weight: 400;
+    font-size: 0.875rem;
+  }
+  dd p {
+    max-width: 62ch;
+    line-height: 1.5;
+  }
+  .gl-formula {
+    margin-top: 6px;
+    color: var(--ink-2);
+    font-size: 0.875rem;
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+  }
+  @media (max-width: 640px) {
+    .gl-term {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

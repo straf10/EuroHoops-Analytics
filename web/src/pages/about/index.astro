@@ -1,11 +1,97 @@
 ---
 import Base from "../../layouts/Base.astro";
 import "../../styles/stats.css";
+
+const REPO = "https://github.com/straf10/EuroHoops-Analytics";
+const AUTHOR = "https://github.com/straf10";
+const root = import.meta.env.BASE_URL.replace(/\/$/, "");
+const description =
+  "6.75 Analytics is a free EuroLeague stats and forecast site made by one person. What it is for, how to read it, and how it stays independent.";
 ---
 
-<Base title="About" description="About EuroHoops: coming soon." current="about">
+<Base title="About" description={description} current="about">
   <header class="wrap head">
     <h1>About</h1>
-    <p class="lede">Coming soon.</p>
+    <p class="lede">
+      6.75 Analytics is a free home for EuroLeague numbers: player and team stats, and forecasts that are kept on
+      record. The name is the distance of the three-point line in metres.
+    </p>
   </header>
+
+  <div class="wrap about">
+    <section class="band" aria-labelledby="why-title">
+      <h2 id="why-title">Why it exists</h2>
+      <p>
+        EuroLeague box scores are easy to find one game at a time and hard to find in any other shape. This site puts
+        the numbers in a form you can sort, compare and follow across seasons.
+      </p>
+      <p>
+        It also holds itself to its forecasts. Before every 2026-27 EuroLeague game, a forecast is logged in public.
+        Once tip-off passes it is never edited, and after the game it is scored against the result. The record is
+        there for anyone to check.
+      </p>
+    </section>
+
+    <section class="band" aria-labelledby="who-title">
+      <h2 id="who-title">Who builds it</h2>
+      <p>
+        One person builds and runs it. The questions, the code and the mistakes are all theirs. To reach them, or to
+        report an error, use
+        <a class="ink-link" href={AUTHOR}>GitHub</a>.
+      </p>
+    </section>
+
+    <section class="band" aria-labelledby="read-title">
+      <h2 id="read-title">How to read it</h2>
+      <p>
+        The stats come from the EuroLeague's public API, which is unofficial. Every response is saved, and the site
+        shows the latest five EuroLeague seasons. It refreshes once a day, and the footer shows the date of the last
+        build.
+      </p>
+      <p>
+        Early in a season a few games decide every average, so read small samples with care. Forecasts are chances,
+        not promises: a side given 70% should lose about three times in ten.
+      </p>
+      <p>
+        Unsure what a column means? The <a class="ink-link" href={`${root}/glossary/`}>glossary</a> explains each term
+        the site shows, and <a class="ink-link" href={`${root}/methodology/`}>methodology</a> describes the models.
+        The code and the forecast logs are open on
+        <a class="ink-link" href={REPO}>GitHub</a>.
+      </p>
+    </section>
+
+    <section class="band" aria-labelledby="free-title">
+      <h2 id="free-title">Keeping it free</h2>
+      <p>
+        Everything here is free to read, with no account and no paywall. The site is built once a day as static
+        pages, so it costs little to run.
+      </p>
+    </section>
+
+    <section class="band" aria-labelledby="indep-title">
+      <h2 id="indep-title">Independence</h2>
+      <p>
+        This is an independent project, not affiliated with the EuroLeague or any club. Forecasts are for interest and
+        are not betting advice.
+      </p>
+    </section>
+  </div>
 </Base>
+
+<style>
+  .about {
+    padding-bottom: 24px;
+  }
+  .about h2 {
+    margin-bottom: 12px;
+  }
+  .about p {
+    max-width: 62ch;
+    color: var(--ink);
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+  }
+  .about p + p {
+    margin-top: 12px;
+  }
+</style>
