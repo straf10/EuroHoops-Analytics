@@ -1,21 +1,17 @@
 ---
 import "@fontsource-variable/geist";
 import "../styles/global.css";
-import github from "@phosphor-icons/core/assets/regular/github-logo.svg?raw";
 import sun from "@phosphor-icons/core/assets/regular/sun.svg?raw";
+import { buildDate, buildId } from "../lib/build";
 import moon from "@phosphor-icons/core/assets/regular/moon.svg?raw";
 
 interface Props {
   title?: string;
   description: string;
   /** Which top-bar page is current. */
-  current?: "players" | "leaders" | "compare" | "teams" | "shots" | "scouting" | "standings" | "forecasts" | "methodology";
-  /** Show the EuroLeague / Greek League switch in the top bar. */
-  compSwitch?: boolean;
-  updated?: string;
+  current?: "players" | "leaders" | "compare" | "teams" | "standings" | "forecasts" | "methodology" | "about" | "glossary" | "downloads";
 }
-const { title, description, current, compSwitch = false, updated } = Astro.props;
-const REPO = "https://github.com/straf10/EuroHoops-Analytics";
+const { title, description, current } = Astro.props;
 const fullTitle = title ? `${title} · EuroHoops` : "EuroHoops Analytics";
 const home = import.meta.env.BASE_URL;
 const root = home.replace(/\/$/, "");
@@ -24,11 +20,14 @@ const pages = [
   { key: "leaders", href: `${root}/leaders/`, label: "Leaders" },
   { key: "compare", href: `${root}/compare/`, label: "Compare" },
   { key: "teams", href: `${root}/teams/`, label: "Teams" },
-  { key: "shots", href: `${root}/shots/`, label: "Shots" },
-  { key: "scouting", href: `${root}/scouting/`, label: "Scouting" },
   { key: "standings", href: `${root}/standings/`, label: "Standings" },
   { key: "forecasts", href: `${root}/`, label: "Forecasts" },
+] as const;
+const footLinks = [
+  { key: "about", href: `${root}/about/`, label: "About" },
   { key: "methodology", href: `${root}/methodology/`, label: "Methodology" },
+  { key: "glossary", href: `${root}/glossary/`, label: "Glossary" },
+  { key: "downloads", href: `${root}/downloads/`, label: "Downloads" },
 ] as const;
 ---
 
@@ -53,17 +52,6 @@ const pages = [
         const t = localStorage.getItem("eh-theme");
         if (t === "light" || t === "dark") document.documentElement.dataset.theme = t;
       } catch {}
-      // Competition: ?comp=gbl, #gbl or the saved choice.
-      try {
-        const asked = new URLSearchParams(location.search).get("comp") ?? location.hash.slice(1);
-        const saved = localStorage.getItem("eh-comp");
-        if (asked === "gbl" || (asked !== "euroleague" && saved === "gbl")) {
-          document.addEventListener("DOMContentLoaded", () => {
-            const r = document.getElementById("comp-gbl");
-            if (r) r.checked = true;
-          });
-        }
-      } catch {}
     </script>
   </head>
   <body>
@@ -86,27 +74,10 @@ const pages = [
         </nav>
 
         <div class="tools">
-          {
-            compSwitch && (
-              <fieldset class="seg">
-                <legend class="sr-only">Competition</legend>
-                <input type="radio" name="comp" id="comp-euroleague" value="euroleague" checked />
-                <label for="comp-euroleague">EuroLeague</label>
-                <input type="radio" name="comp" id="comp-gbl" value="gbl" />
-                <label for="comp-gbl">
-                  <span class="long">Greek League</span>
-                  <span class="short">GBL</span>
-                </label>
-              </fieldset>
-            )
-          }
           <button class="icon-btn" id="theme" type="button" aria-label="Switch to dark theme">
             <span class="icon when-light" set:html={moon} />
             <span class="icon when-dark" set:html={sun} />
           </button>
-          <a class="icon-btn" href={REPO} aria-label="Source code on GitHub">
-            <span class="icon" set:html={github} />
-          </a>
         </div>
       </div>
     </header>
@@ -117,9 +88,17 @@ const pages = [
 
     <footer class="foot">
       <div class="wrap foot-inner">
-        <p>A model benchmark, not betting advice. No affiliation with EuroLeague or the Greek Basket League.</p>
-        {updated && <p>Updated {updated}.</p>}
-        <a href={REPO}>Code, data and logs on GitHub</a>
+        <nav class="foot-links" aria-label="About this site">
+          {
+            footLinks.map((p) => (
+              <a href={p.href} aria-current={current === p.key ? "page" : undefined}>
+                {p.label}
+              </a>
+            ))
+          }
+        </nav>
+        <p>Stats from the EuroLeague API. Not affiliated with the EuroLeague or any team.</p>
+        <p>Data through {buildDate} · build {buildId}</p>
       </div>
     </footer>
 
@@ -186,18 +165,6 @@ const pages = [
           if (innerWidth !== navWidth) (navWidth = innerWidth), placeNav();
         },
         { passive: true },
-      );
-
-      // Competition switch memory.
-      document.querySelectorAll<HTMLInputElement>('input[name="comp"]').forEach((r) =>
-        r.addEventListener("change", () => {
-          root.classList.add("comp-switched");
-          try {
-            localStorage.setItem("eh-comp", r.value);
-          } catch {
-            /* storage unavailable: the switch still works for this visit */
-          }
-        }),
       );
 
       // Tooltips: any element with data-tip. The first one waits, later ones open instantly.
@@ -345,10 +312,6 @@ const pages = [
     margin-left: auto;
   }
 
-  .tools .seg {
-    margin-right: 6px;
-  }
-
   .icon-btn {
     display: grid;
     place-items: center;
@@ -400,12 +363,31 @@ const pages = [
   }
   .foot-inner {
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px 28px;
+    flex-direction: column;
+    gap: 8px;
     padding-block: 28px 40px;
   }
-  .foot-inner a {
-    margin-left: auto;
+  .foot-inner p {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+  .foot-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 20px;
+    margin-bottom: 6px;
+  }
+  .foot-links a {
+    text-decoration: none;
+    color: var(--ink-2);
+  }
+  .foot-links a[aria-current="page"] {
+    color: var(--ink);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .foot-links a:hover {
+      color: var(--ink);
+    }
   }
 
   @media (max-width: 560px) {
@@ -430,42 +412,11 @@ const pages = [
     .links.at-start.at-end {
       mask-image: none;
     }
-    /* On forecast pages the competition switch takes a full-width second row, so the links keep the first. */
-    .bar-inner:has(.seg) {
-      flex-wrap: wrap;
-      height: auto;
-      min-height: 56px;
-      row-gap: 0;
-    }
-    .bar-inner:has(.seg) .links {
-      flex: 1;
-      min-width: 0;
-    }
-    .bar-inner:has(.seg) .tools {
-      display: contents;
-    }
-    .bar-inner:has(.seg) .icon-btn {
-      margin-block: 11px;
-    }
-    .tools .seg {
-      order: 5;
-      flex: 1 0 100%;
-      margin: 0 0 10px;
-    }
-    .tools .seg label {
-      flex: 1;
-      text-align: center;
-    }
     .links::-webkit-scrollbar {
       display: none;
     }
     .wordmark span {
       display: none;
-    }
-  }
-  @media (max-width: 480px) {
-    .foot-inner a {
-      margin-left: 0;
     }
   }
 </style>

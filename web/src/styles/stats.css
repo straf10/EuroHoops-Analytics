@@ -397,12 +397,6 @@ svg.court {
 .dots .miss {
   box-shadow: inset 0 0 0 1.5px var(--data-neg);
 }
-.caveat {
-  grid-column: 1 / -1;
-  margin-top: 4px;
-  color: var(--ink-2);
-}
-
 @media (max-width: 560px) {
   .head {
     padding-top: 36px;
@@ -562,78 +556,71 @@ button.s-rank[aria-expanded="true"]::after {
 
 /* M6 (weeks 16-18 I): projection, impact, shot-making and "plays like" on the player page, and the
    Scouting page. The same table, rail and chip chrome as above; no new colour. */
-.m6-fig {
+.proj-fig {
   margin: 0;
   min-width: 0;
 }
-.m6-fig > figcaption {
+.proj-fig > figcaption {
   margin-bottom: 4px;
   padding-bottom: 12px;
   border-bottom: 1px solid var(--rule-strong);
 }
-.m6-sub {
+.proj-sub {
   margin-top: 6px;
   max-width: 64ch;
   color: var(--ink-2);
   font-size: 0.8125rem;
 }
-.m6-facts {
+.proj-facts {
   margin-top: 10px;
   max-width: 70ch;
   color: var(--muted);
   font-size: 0.8125rem;
 }
-.m6-flags {
-  margin: 8px 0 0;
-  padding: 0;
-  list-style: none;
-  color: var(--ink-2);
-  font-size: 0.8125rem;
-}
-.m6-verdict {
+.proj-verdict {
   max-width: 70ch;
   margin-top: 14px;
   color: var(--ink-2);
   font-size: 0.875rem;
 }
-.m6-verdict b {
+.proj-verdict b {
   color: var(--ink);
   font-weight: 600;
 }
-.m6-pair {
+.proj-pair {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 40px 56px;
   align-items: start;
   margin-top: 56px;
 }
-.m6-proj {
+.proj-proj {
   max-width: 46rem;
 }
-.m6-proj td.strong,
-.m6-trans td.strong,
-.m6-under td.strong {
+.proj-proj td.strong,
+.proj-trans td.strong,
+.proj-under td.strong {
   color: var(--ink);
   font-weight: 600;
 }
-.m6-under .c-nm,
+.proj-under .c-nm,
 .board .c-nm {
   white-space: normal;
 }
-.m6-under .c-nm {
+.proj-under .c-nm {
   min-width: 11rem;
 }
-.m6-under small.why {
+.proj-under small.why {
   max-width: 46ch;
 }
 
 /* Impact ladder: a dot and its interval on a rail, a dashed line at zero (the rating ladder's marks). */
-.m6-rail {
+.proj-rail {
   margin: 0;
   padding: 0;
   list-style: none;
 }
-.m6-rail li {
+.proj-rail li {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(80px, 1fr) minmax(7.5rem, 11rem);
   align-items: center;
@@ -643,42 +630,42 @@ button.s-rank[aria-expanded="true"]::after {
   font-size: 0.875rem;
   font-variant-numeric: tabular-nums;
 }
-.m6-rail li.axis {
+.proj-rail li.axis {
   min-height: 28px;
   border-bottom-color: var(--rule-strong);
   color: var(--muted);
   font-size: 0.6875rem;
 }
-.m6-rail .scale {
+.proj-rail .scale {
   position: relative;
   display: flex;
   justify-content: space-between;
 }
-.m6-rail .scale .zero {
+.proj-rail .scale .zero {
   position: absolute;
   left: 50%;
   translate: -50% 0;
 }
-.m6-rail .who b {
+.proj-rail .who b {
   display: block;
   font-weight: 600;
 }
-.m6-rail .who small {
+.proj-rail .who small {
   display: block;
   color: var(--muted);
   font-size: 0.75rem;
 }
-.m6-rail .track {
+.proj-rail .track {
   position: relative;
   height: 12px;
 }
-.m6-rail .track::before {
+.proj-rail .track::before {
   content: "";
   position: absolute;
   inset: -20px auto -20px 50%;
   border-left: 1px dashed var(--rule-strong);
 }
-.m6-rail .whisker {
+.proj-rail .whisker {
   position: absolute;
   top: 50%;
   left: calc(var(--lo) * 1%);
@@ -689,7 +676,7 @@ button.s-rank[aria-expanded="true"]::after {
   background: var(--data-1);
   opacity: 0.4;
 }
-.m6-rail .dot {
+.proj-rail .dot {
   position: absolute;
   z-index: 1;
   top: 50%;
@@ -701,32 +688,32 @@ button.s-rank[aria-expanded="true"]::after {
   background: var(--data-1);
   box-shadow: 0 0 0 2px var(--page);
 }
-.m6-rail .below :is(.whisker, .dot) {
+.proj-rail .below :is(.whisker, .dot) {
   background: var(--data-neg);
 }
-.m6-rail .even .dot {
+.proj-rail .even .dot {
   background: var(--data-2);
 }
-.m6-rail .val {
+.proj-rail .val {
   text-align: right;
 }
-.m6-rail .val b {
+.proj-rail .val b {
   display: block;
   font-weight: 600;
 }
-.m6-rail .val [data-interval] {
+.proj-rail .val [data-interval] {
   color: var(--muted);
   font-size: 0.75rem;
 }
 
 /* "Plays like" */
-.m6-like {
+.proj-like {
   max-width: 46rem;
   margin: 0;
   padding: 0;
   list-style: none;
 }
-.m6-like li {
+.proj-like li {
   display: grid;
   grid-template-columns: 1.75rem minmax(0, 1fr) auto;
   align-items: center;
@@ -736,43 +723,41 @@ button.s-rank[aria-expanded="true"]::after {
   font-size: 0.875rem;
   font-variant-numeric: tabular-nums;
 }
-.m6-like .rk {
+.proj-like .rk {
   color: var(--muted);
   text-align: right;
 }
-.m6-like .nm {
+.proj-like .nm {
   min-width: 0;
   font-weight: 500;
 }
-.m6-like .nm a {
+.proj-like .nm a {
   color: inherit;
   text-decoration: underline;
   text-decoration-color: var(--rule-strong);
   text-underline-offset: 3px;
 }
-.m6-like small {
+.proj-like small {
   display: block;
   color: var(--muted);
   font-size: 0.75rem;
   font-weight: 400;
 }
-.m6-like .val {
+.proj-like .val {
   text-align: right;
 }
-.m6-like .val b {
+.proj-like .val b {
   font-size: 1rem;
   font-weight: 600;
 }
 
-/* Scouting board: a dimension and a league at a time, sortable heads, z on a small rail. */
+/* Scouting board: a dimension at a time, sortable heads, z on a small rail. */
 .board-controls {
   margin-bottom: 20px;
 }
 .board-wrap:not(:has(input[name="dim"][value="shot_making"]:checked)) [data-panel="shot_making"],
 .board-wrap:not(:has(input[name="dim"][value="fg3_pct"]:checked)) [data-panel="fg3_pct"],
-.board-wrap:not(:has(input[name="dim"][value="on_off"]:checked)) [data-panel="on_off"],
-.board-wrap:has(input[name="league"][value="euroleague"]:checked) tr[data-comp="gbl"],
-.board-wrap:has(input[name="league"][value="gbl"]:checked) tr[data-comp="euroleague"] {
+.board-wrap:not(:has(input[name="dim"][value="on_off"]:checked)) [data-panel="on_off"] {
   display: none;
 }
 .scroll.tall {
@@ -824,7 +809,7 @@ button.s-rank[aria-expanded="true"]::after {
     color: var(--ink);
   }
 }
-.m6-chip {
+.proj-chip {
   display: inline-block;
   margin-top: 4px;
   padding: 1px 8px;
@@ -837,13 +822,13 @@ button.s-rank[aria-expanded="true"]::after {
   line-height: 1.5;
   white-space: nowrap;
 }
-.m6-chip.likely-real {
+.proj-chip.likely-real {
   color: var(--ink);
   font-weight: 600;
   box-shadow: inset 0 0 0 1px var(--ink-2);
 }
-.m6-chip.too-few-attempts,
-.m6-chip.within-noise {
+.proj-chip.too-few-attempts,
+.proj-chip.within-noise {
   color: var(--muted);
 }
 .zrail {
@@ -886,7 +871,7 @@ button.s-rank[aria-expanded="true"]::after {
 }
 
 @media (max-width: 820px) {
-  .m6-pair {
+  .proj-pair {
     grid-template-columns: minmax(0, 1fr);
   }
 }
@@ -904,41 +889,41 @@ button.s-rank[aria-expanded="true"]::after {
   .zrail {
     display: none;
   }
-  .m6-rail li {
+  .proj-rail li {
     grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas: "who val" "track track";
     row-gap: 10px;
     padding: 10px 0;
   }
-  .m6-rail li.axis {
+  .proj-rail li.axis {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas: none;
     padding: 0;
   }
-  .m6-rail li.axis > :not(.scale) {
+  .proj-rail li.axis > :not(.scale) {
     display: none;
   }
-  .m6-rail .who {
+  .proj-rail .who {
     grid-area: who;
   }
-  .m6-rail .val {
+  .proj-rail .val {
     grid-area: val;
   }
-  .m6-rail .track {
+  .proj-rail .track {
     grid-area: track;
   }
-  .m6-rail .track::before {
+  .proj-rail .track::before {
     inset: -8px auto -8px 50%;
   }
 }
-.m6-verdict {
+.proj-verdict {
   margin-bottom: 10px;
 }
 @media (max-width: 560px) {
   .board tbody th.c-nm {
     min-width: 7.5rem;
   }
-  .m6-trans td:last-child {
+  .proj-trans td:last-child {
     min-width: 5.5rem;
     white-space: normal;
   }
@@ -957,26 +942,6 @@ button.s-rank[aria-expanded="true"]::after {
   font-size: 1rem;
   font-weight: 600;
 }
-.standings-fig .cap p {
-  margin-top: 8px;
-  max-width: 72ch;
-  color: var(--ink-2);
-  font-size: 0.875rem;
-}
-.standings-fig .cap .gate b {
-  margin-right: 6px;
-  padding: 1px 8px;
-  border: 1px solid var(--ink);
-  border-radius: 999px;
-  color: var(--ink);
-  font-size: 0.75rem;
-  font-weight: 600;
-  white-space: nowrap;
-}
-.standings-fig .cap .how,
-.standings-fig .cap .when {
-  color: var(--muted);
-}
 .standings .code {
   display: inline-block;
   width: 3.25em;
@@ -987,9 +952,6 @@ button.s-rank[aria-expanded="true"]::after {
 .standings td.strong {
   color: var(--ink);
   font-weight: 600;
-}
-.standings .med {
-  color: var(--muted);
 }
 .standings thead button {
   width: 100%;
@@ -1106,11 +1068,6 @@ button.s-rank[aria-expanded="true"]::after {
   grid-column: 2;
   color: var(--muted);
   font-size: 0.8125rem;
-}
-.models .verdict b {
-  margin-right: 6px;
-  color: var(--ink);
-  font-weight: 600;
 }
 @media (max-width: 560px) {
   .models li {

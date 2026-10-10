@@ -9,13 +9,10 @@ import {
   STATS,
   benchHtml,
   board,
-  benchNote,
-  caption,
   compareHref,
   entries,
   fiveHtml,
   fiveLinesHtml,
-  floorNote,
   title,
   type View,
 } from "../../lib/leaders";
@@ -38,24 +35,21 @@ const cfg = {
   clubs: Object.fromEntries(clubs.map((c) => [c.code, { name: c.name, seasons: c.seasons }])),
 };
 const description =
-  "The EuroLeague's leaders since 2007-08 on the floor as jersey backs: a season, whole careers or the best single seasons, for the league or one club.";
+  "The EuroLeague's leaders since 2007-08 on the floor as jersey backs: a season or whole careers, for the league or one club.";
 ---
 
 <Base title="Leaders" description={description} current="leaders">
   <section class="wrap head" aria-labelledby="leaders-title">
     <h1 id="leaders-title">Leaders</h1>
     <p>
-      The top five on any measure stand on the floor, the next fifteen sit on the bench. Pick a club
-      to see its roster for a season, its career leaders or its best single seasons.
+      Pick a club to see its roster for a season or its career leaders.
     </p>
   </section>
 
   {
     !m || !pool || !b ? (
       <section class="wrap">
-        <p class="empty-state">
-          The stats data has not been exported yet. Run <code>eurohoops export-stats</code> and rebuild.
-        </p>
+        <p class="empty-state">Stats are not available yet.</p>
       </section>
     ) : (
       <section class="wrap" id="leaders" data-cfg={JSON.stringify(cfg)}>
@@ -79,7 +73,6 @@ const description =
                 {seasons.map((s) => (
                   <option value={s.season} selected={s.season === view.season}>
                     {s.label}
-                    {s.live ? " (live)" : ""}
                   </option>
                 ))}
               </select>
@@ -135,7 +128,7 @@ const description =
           <figure class="floor-box" aria-labelledby="board-title">
             <figcaption class="board-head">
               <h2 id="board-title">{title(view)}</h2>
-              <p id="floor-note">{floorNote(view, pool.most)}</p>
+              <p id="board-error" hidden></p>
             </figcaption>
             <div class="floor">
               <Fragment set:html={court("", "Half court", true)} />
@@ -144,7 +137,6 @@ const description =
             </div>
             <ol class="five-lines" id="five-lines" aria-label="The five, full lines" set:html={fiveLinesHtml(b, view, base)} />
             <p class="court-note">
-              <span id="court-caption">{caption(b)}</span>
               <a class="ink-link" id="compare-link" href={compareHref(b, view, base)}>Compare these five</a>
             </p>
           </figure>
@@ -152,7 +144,6 @@ const description =
           <section class="bench-box" aria-labelledby="bench-title">
             <div class="bench-head">
               <h3 id="bench-title">Bench</h3>
-              <p id="bench-note">{benchNote(b)}</p>
             </div>
             <ol class="bench" id="bench" set:html={benchHtml(b, view, base)} />
           </section>
@@ -166,14 +157,11 @@ const description =
   import {
     benchHtml,
     board,
-    benchNote,
-    caption,
     careers,
     compareHref,
     entries,
     fiveHtml,
     fiveLinesHtml,
-    floorNote,
     fromQuery,
     title,
     toQuery,
@@ -259,7 +247,7 @@ const description =
     const paint = (list: Entry[], most: Record<string, number>) => {
       const b = board(list, view, most);
       $("board-title").textContent = title(view, cfg.clubs[view.club]?.name);
-      $("floor-note").textContent = floorNote(view, most);
+      $("board-error").hidden = true;
       const five = $("five");
       const same = [...five.children].map((li) => (li as HTMLElement).dataset.key).join() === b.five.map((r) => r.e.key).join();
       five.innerHTML = fiveHtml(b, view, cfg.base);
@@ -270,13 +258,11 @@ const description =
       }
       $("five-lines").innerHTML = fiveLinesHtml(b, view, cfg.base);
       $("empty-floor").hidden = b.five.length > 0;
-      $("court-caption").textContent = caption(b);
-      $("bench-note").textContent = benchNote(b);
       const link = $("compare-link") as HTMLAnchorElement;
       link.hidden = b.five.length < 2;
       link.href = compareHref(b, view, cfg.base);
       flip($("bench"), benchHtml(b, view, cfg.base));
-      $("bench-title").textContent = b.lineup ? "Bench" : "Bench, ranks 6 to 20";
+      $("bench-title").textContent = "Bench";
       history.replaceState(null, "", location.pathname + toQuery(view, cfg.defaultSeason));
       settled = true;
     };
@@ -289,7 +275,8 @@ const description =
         const { list, most } = await lines();
         if (ticket === pending) paint(list, most);
       } catch {
-        $("floor-note").textContent = "Could not load these players. Reload the page to try again.";
+        $("board-error").textContent = "Could not load these players. Reload the page to try again.";
+        $("board-error").hidden = false;
       } finally {
         if (ticket === pending) host.removeAttribute("aria-busy");
       }
@@ -522,9 +509,6 @@ const description =
     color: var(--muted);
     font-size: 0.8125rem;
   }
-  .court-note span {
-    max-width: 62ch;
-  }
 
   /* Under 620px of floor the shirts keep only name and value; the full lines move below. */
   @container floor (max-width: 620px) {
@@ -551,11 +535,6 @@ const description =
     padding-bottom: 12px;
     border-bottom: 1px solid var(--rule-strong);
     margin-bottom: 18px;
-  }
-  .bench-head p {
-    margin-top: 6px;
-    color: var(--muted);
-    font-size: 0.8125rem;
   }
   .bench-box h3 {
     line-height: 1.15;

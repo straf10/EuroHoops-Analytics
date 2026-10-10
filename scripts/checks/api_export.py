@@ -48,7 +48,7 @@ from eurohoops.api.export import (
 )
 from eurohoops.api.readmodel import FORECAST_MODELS, Store
 from eurohoops.cli import _live, utc_now
-from eurohoops.config import EUROLEAGUE, GBL, LIVE_SEASON, MART_PATH
+from eurohoops.config import EUROLEAGUE, LIVE_SEASON, MART_PATH
 from eurohoops.eval.forecasts import build_forecasts
 from eurohoops.logs import write_json
 from eurohoops.marts import read_games, read_teams
@@ -63,7 +63,7 @@ WALKED = (DATA_DIR, OPENAPI_FILE.parent)  # the directories the contract check w
 def legacy_site(out: Path, now: datetime) -> None:
     """``site.json`` as ``eurohoops publish`` built it before L10 (paths relative to the cwd)."""
     sections = []
-    for title, comp in (("EuroLeague", EUROLEAGUE), ("Greek Basket League", GBL)):
+    for title, comp in (("EuroLeague", EUROLEAGUE),):
         live = _live(comp)
         sections.append(
             Section(

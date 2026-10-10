@@ -106,8 +106,7 @@ const bandHead = [
       </div>
     </div>
     <p class="note">
-      Ratings are points per 100 possessions. Ranks count from the best: for turnover rate, defensive rating
-      and the opponent measures, lower is better.
+      Ranks count from the best.
     </p>
   </section>
 
@@ -115,8 +114,7 @@ const bandHead = [
     <header class="sec-head">
       <h2 id="factors-title">Four factors and schedule</h2>
       <p>
-        How the club has played this season so far and who it has played, always for the live {liveLabel} season
-        whichever season is open above.
+        How the club has played this season so far and who it has played.
       </p>
     </header>
     <FactorsPanel factors={factors} label={liveLabel} />
@@ -128,13 +126,7 @@ const bandHead = [
         <h2 id="shots-title">Shots taken and allowed</h2>
         <p>Where the club shot from and where it let opponents shoot, against the league from the same spot.</p>
       </div>
-      <a class="ink-link" id="explore" href={`${base}/shots/?season=${t.season}&team=${t.code}&view=fg`}>
-        Open in the Shots explorer
-      </a>
     </header>
-    <p class="caveat-line" id="caveat" hidden={t.validated}>
-      Shot locations before 2011-12 do not line up with the court; read this season as approximate.
-    </p>
     <div class="pair busy-fade seasonal">
       {
         (["taken", "allowed"] as const).map((side) => (
@@ -208,8 +200,7 @@ const bandHead = [
       }
     </div>
     <p class="note">
-      A blue caret on Allowed means opponents shot worse than the league from that distance. Cells shrink toward
-      the league on small samples.
+      A blue caret on Allowed means opponents shot worse than the league from that distance.
     </p>
   </section>
 
@@ -347,8 +338,6 @@ const bandHead = [
           document.getElementById(`court-${side}`)!.innerHTML = charts[side];
           document.getElementById(`bands-${side}`)!.innerHTML = bands[side];
         }
-        document.getElementById("caveat")!.hidden = t.validated;
-        (document.getElementById("explore") as HTMLAnchorElement).search = `?season=${t.season}&team=${t.code}&view=fg`;
         document.getElementById("roster-body")!.innerHTML = rosterHtml(t, base!);
         select!.value = s;
         document.title = `${t.name} · EuroHoops`;
@@ -497,11 +486,6 @@ const bandHead = [
   }
   .half-title h3 {
     margin-bottom: 14px;
-  }
-  .caveat-line {
-    margin: -4px 0 20px;
-    color: var(--ink-2);
-    font-size: 0.8125rem;
   }
   .bands :global(th small) {
     display: inline;

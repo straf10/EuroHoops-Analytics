@@ -99,7 +99,7 @@ export interface Cell {
   text: string;
   place: number; // 0: not placed (no value, under the floor, or a single player)
   lead: boolean;
-  floor: string;
+  floor: boolean;
 }
 
 export interface Row {
@@ -124,7 +124,7 @@ export function grid(cols: Col[], rate: CRate): Grid {
     rows: g.keys.map((key) => {
       const m = measure(key);
       const vals = cols.map((c) => value(m, c.t, rate));
-      const floors = cols.map((c, i) => (vals[i] === null ? "No value" : m.qualifies && !m.qualifies(c.t) ? (m.floor ?? "Too few attempts") : ""));
+      const floors = cols.map((c, i) => vals[i] === null || (m.qualifies ? !m.qualifies(c.t) : false));
       const sign = LOWER_WINS.has(key) ? -1 : 1;
       const placed = vals.map((v, i) => (floors[i] ? null : sign * (v as number)));
       const field = placed.filter((v): v is number => v !== null);
@@ -193,11 +193,10 @@ export function bodyHtml(g: Grid, cols: Col[]): string {
               r.cells
                 .map((c) => {
                   const cls = ["num", c.lead ? "lead" : "", c.floor ? "muted" : ""].filter(Boolean).join(" ");
-                  const floorAttr = c.floor && c.floor !== "No value" ? dataTip(tip`${c.floor}`) : "";
                   // Fixed slots (value with its dot, place) so figures line up down each column.
                   const dot = c.lead ? `<i class="lead-dot" aria-hidden="true"></i>` : "";
                   const place = `<small>${c.lead ? "<span class=\"sr-only\">leads, </span>" : ""}${c.place ? ordinal(c.place) : ""}</small>`;
-                  return `<td class="${cls}"${floorAttr}><span class="cell"><span class="v">${dot}${c.text}</span>${place}</span></td>`;
+                  return `<td class="${cls}"><span class="cell"><span class="v">${dot}${c.text}</span>${place}</span></td>`;
                 })
                 .join("") +
               `</tr>`,

@@ -4,187 +4,82 @@ import check from "@phosphor-icons/core/assets/bold/check-bold.svg?raw";
 import cross from "@phosphor-icons/core/assets/bold/x-bold.svg?raw";
 import type { Competition } from "../lib/format";
 import { athensDay, pct, signed } from "../lib/format";
-import { dash, groupKey, groupLabel, num, rightOf, share } from "../lib/forecasts";
+import { dash, groupKey, groupLabel, rightOf } from "../lib/forecasts";
 
 interface Props {
   comp: Competition;
 }
 const { comp } = Astro.props;
 const fc = comp.forecasts;
-const label = (key: string) => fc?.models.find((m) => m.key === key)?.label ?? key;
-const hasTotals = (key: string) => fc?.season.find((r) => r.model === key)?.totals_mae !== null;
-// The longest line of each table decides nothing here: tables take their natural width.
-const rounds = fc ? [...fc.rounds].reverse() : [];
+// The site publishes one forecast: the first model of the record.
+const model = fc?.models[0]?.key;
+const season = fc?.season.find((r) => r.model === model);
+const rounds = fc && model ? [...fc.rounds].reverse().filter((g) => g.models[model]) : [];
 const groups = fc
   ? [...new Map(fc.games.map((g) => [groupKey(g.phase, g.phase === "RS" ? g.round : null), g])).entries()].map(
       ([value, g]) => ({ value, text: groupLabel(g.phase, g.phase === "RS" ? g.round : null) }),
     )
   : [];
-const cols = [
-  "Games",
-  "Picks right",
-  "Log loss",
-  "Brier",
-  "Margin MAE",
-  "Within 5",
-  "Within 10",
-  "Totals MAE",
-];
 ---
 
 <div class="fc" data-fc={comp.key}>
   {
-    !fc || fc.models.every((m) => fc.season.find((r) => r.model === m.key)?.n === 0) ? (
-      <p class="none">No logged {comp.title} game has finished yet.</p>
+    !fc || !model || !season || season.n === 0 ? (
+      <p class="none">No {comp.title} game has finished yet.</p>
     ) : (
       <>
         <section aria-labelledby={`fc-season-${comp.key}`}>
           <h3 id={`fc-season-${comp.key}`}>Season to date</h3>
-          <p class="sub">
-            Each model on every finished game it called before tip-off. Models joined at different rounds, so
-            these rows are not like for like.
-          </p>
           <div class="scroll">
             <table>
-              <caption class="sr-only">{comp.title}: season scorecard per model</caption>
+              <caption class="sr-only">{comp.title}: season forecast record</caption>
               <thead>
                 <tr>
-                  <th scope="col">Model</th>
-                  <th scope="col" class="n">First round</th>
-                  {cols.map((c) => <th scope="col" class="n">{c}</th>)}
+                  <th scope="col" class="n">Games</th>
+                  <th scope="col" class="n">Picks right</th>
                 </tr>
               </thead>
               <tbody>
-                {fc.models.map((m) => {
-                  const r = fc.season.find((x) => x.model === m.key)!;
-                  return (
-                    <tr>
-                      <th scope="row">{m.label}</th>
-                      <td class="n">{m.first_round ?? dash}</td>
-                      <td class="n">{r.n}</td>
-                      <td class="n">{rightOf(r)}</td>
-                      <td class="n">{num(r.log_loss, 3)}</td>
-                      <td class="n">{num(r.brier, 3)}</td>
-                      <td class="n">{num(r.margin_mae, 1)}</td>
-                      <td class="n">{share(r.within["5"])}</td>
-                      <td class="n">{share(r.within["10"])}</td>
-                      <td class="n">{hasTotals(m.key) ? num(r.totals_mae, 1) : dash}</td>
-                    </tr>
-                  );
-                })}
+                <tr>
+                  <td class="n">{season.n}</td>
+                  <td class="n">{rightOf(season)}</td>
+                </tr>
               </tbody>
             </table>
           </div>
-
-          <h3 class="again" id={`fc-shared-${comp.key}`}>Same games</h3>
-          {
-            fc.shared.rows.length > 0 ? (
-              <>
-                <p class="sub">
-                  The {fc.shared.n} finished game{fc.shared.n === 1 ? "" : "s"} that every model with a
-                  finished call also called, so the models face the same questions.
-                </p>
-                <div class="scroll">
-                  <table>
-                    <caption class="sr-only">{comp.title}: models compared on the games all of them called</caption>
-                    <thead>
-                      <tr>
-                        <th scope="col">Model</th>
-                        {cols.map((c) => <th scope="col" class="n">{c}</th>)}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {fc.shared.rows.map((r) => (
-                        <tr>
-                          <th scope="row">{label(r.model)}</th>
-                          <td class="n">{r.n}</td>
-                          <td class="n">{rightOf(r)}</td>
-                          <td class="n">{num(r.log_loss, 3)}</td>
-                          <td class="n">{num(r.brier, 3)}</td>
-                          <td class="n">{num(r.margin_mae, 1)}</td>
-                          <td class="n">{share(r.within["5"])}</td>
-                          <td class="n">{share(r.within["10"])}</td>
-                          <td class="n">{hasTotals(r.model) ? num(r.totals_mae, 1) : dash}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </>
-            ) : (
-              <p class="sub">Only one model has a finished game so far, so there is nothing to compare yet.</p>
-            )
-          }
-          <p class="footnote">
-            A pick is the side with p above 50%; a call of exactly 50% is no pick, so it is left out of
-            "picks right" (the count shows picks, not games). Margin MAE is the mean absolute error of the
-            expected home margin; Within 5 and Within 10 are the share of games whose margin error was at
-            most that many points. Totals are forecast by M1 and M5 only.
-            {
-              fc.models
-                .filter((m) => m.first_round !== null && m.first_round > 1)
-                .map((m) => ` ${m.label} starts at round ${m.first_round}: earlier games have no ${m.label} call and are not backfilled.`)
-                .join("")
-            }
-          </p>
         </section>
 
         <section aria-labelledby={`fc-rounds-${comp.key}`}>
           <h3 id={`fc-rounds-${comp.key}`}>Round by round</h3>
-          <p class="sub">
-            The same measures per round, newest first. Rounds are the competition's round numbers, so a
-            double-round week shows as two rounds; postseason games are grouped by phase.
-          </p>
+          <p class="sub">Newest first.</p>
           <div class="scroll">
             <table class="by-round">
-              <caption class="sr-only">{comp.title}: scorecard per round and model</caption>
+              <caption class="sr-only">{comp.title}: forecast record per round</caption>
               <thead>
                 <tr>
                   <th scope="col">Round</th>
-                  <th scope="col">Model</th>
-                  {cols.map((c) => <th scope="col" class="n">{c}</th>)}
+                  <th scope="col" class="n">Games</th>
+                  <th scope="col" class="n">Picks right</th>
                 </tr>
               </thead>
-              {
-                rounds.map((g) => {
-                  const entries = fc.models.filter((m) => g.models[m.key]);
-                  return (
-                    <tbody>
-                      {entries.map((m, i) => {
-                        const r = g.models[m.key];
-                        return (
-                          <tr class:list={{ first: i === 0 }}>
-                            {i === 0 && (
-                              <th scope="rowgroup" rowspan={entries.length}>
-                                {groupLabel(g.phase, g.round)}
-                              </th>
-                            )}
-                            <th scope="row" class="model">{m.label}</th>
-                            <td class="n">{r.n}</td>
-                            <td class="n">{rightOf(r)}</td>
-                            <td class="n">{num(r.log_loss, 3)}</td>
-                            <td class="n">{num(r.brier, 3)}</td>
-                            <td class="n">{num(r.margin_mae, 1)}</td>
-                            <td class="n">{share(r.within["5"])}</td>
-                            <td class="n">{share(r.within["10"])}</td>
-                            <td class="n">{hasTotals(m.key) ? num(r.totals_mae, 1) : dash}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  );
-                })
-              }
+              <tbody>
+                {
+                  rounds.map((g) => (
+                    <tr>
+                      <th scope="row">{groupLabel(g.phase, g.round)}</th>
+                      <td class="n">{g.models[model].n}</td>
+                      <td class="n">{rightOf(g.models[model])}</td>
+                    </tr>
+                  ))
+                }
+              </tbody>
             </table>
           </div>
         </section>
 
-        <section aria-labelledby={`fc-games-${comp.key}`} class="games-box">
-          <h3 id={`fc-games-${comp.key}`}>Every scored game</h3>
-          <p class="sub">
-            Each model's call beside the result: its chance of a home win, the margin it expected for the
-            home side, and whether the pick was right. A dash means the model made no call on that game.
-          </p>
+        <section aria-labelledby={`fc-games-${comp.key}`} class="games-box" id="every-game">
+          <h3 id={`fc-games-${comp.key}`}>Every game</h3>
+          <p class="sub">Each forecast beside the result: the chance of a home win and the margin expected for the home side.</p>
           <form class="filters" aria-label={`${comp.title} game filters`} onsubmit="return false">
             <label class="field">
               <span>Round</span>
@@ -196,21 +91,11 @@ const cols = [
                 <span class="caret" set:html={caret} />
               </span>
             </label>
-            <label class="field">
-              <span>Model</span>
-              <span class="select">
-                <select name="model" style="--select-w: 9.5rem">
-                  <option value="">All models</option>
-                  {fc.models.map((m) => <option value={m.key}>{m.label}</option>)}
-                </select>
-                <span class="caret" set:html={caret} />
-              </span>
-            </label>
             <p class="count" aria-live="polite"><b data-count>{fc.games.length}</b> games shown</p>
           </form>
           <div class="scroll">
             <table class="games">
-              <caption class="sr-only">{comp.title}: every scored game with each model's call</caption>
+              <caption class="sr-only">{comp.title}: every game with its forecast</caption>
               <thead>
                 <tr>
                   <th scope="col" class="w-round">Round</th>
@@ -218,25 +103,19 @@ const cols = [
                   <th scope="col" class="r">Home</th>
                   <th scope="col" class="c">Score</th>
                   <th scope="col">Away</th>
-                  {
-                    fc.models.map((m) => (
-                      <th scope="col" data-model={m.key}>
-                        {m.label}
-                        <span class="sub-h">home win, margin</span>
-                      </th>
-                    ))
-                  }
+                  <th scope="col">
+                    Forecast
+                    <span class="sub-h">home win, margin</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {
                   fc.games.map((g) => {
                     const homeWon = g.home_score > g.away_score;
+                    const c = g.models[model];
                     return (
-                      <tr
-                        data-group={groupKey(g.phase, g.phase === "RS" ? g.round : null)}
-                        data-models={Object.keys(g.models).join(" ")}
-                      >
+                      <tr data-group={groupKey(g.phase, g.phase === "RS" ? g.round : null)}>
                         <td class="date">{groupLabel(g.phase, g.phase === "RS" ? g.round : null).replace("Round ", "")}</td>
                         <td class="date">{athensDay(g.tipoff_utc)}</td>
                         <td class:list={["team r", { won: homeWon }]}>
@@ -252,28 +131,23 @@ const cols = [
                           <b>{g.away.code}</b>
                           <span class="name">{g.away.name}</span>
                         </td>
-                        {fc.models.map((m) => {
-                          const c = g.models[m.key];
-                          return (
-                            <td class="call" data-model={m.key}>
-                              {c ? (
-                                <>
-                                  {pct(c.p_home)} <span>{signed(c.exp_margin)}</span>
-                                  {c.right === null ? (
-                                    <span class="pill none-pick">No pick</span>
-                                  ) : (
-                                    <span class:list={["pill", c.right ? "hit" : "miss"]}>
-                                      <span class="icon" set:html={c.right ? check : cross} />
-                                      {c.right ? "Right" : "Wrong"}
-                                    </span>
-                                  )}
-                                </>
+                        <td class="call">
+                          {c ? (
+                            <>
+                              {pct(c.p_home)} <span>{signed(c.exp_margin)}</span>
+                              {c.right === null ? (
+                                <span class="dash">{dash}</span>
                               ) : (
-                                dash
+                                <span class:list={["pill", c.right ? "hit" : "miss"]}>
+                                  <span class="icon" set:html={c.right ? check : cross} />
+                                  {c.right ? "Right" : "Wrong"}
+                                </span>
                               )}
-                            </td>
-                          );
-                        })}
+                            </>
+                          ) : (
+                            dash
+                          )}
+                        </td>
                       </tr>
                     );
                   })
@@ -341,14 +215,6 @@ const cols = [
   }
   th.n {
     padding-right: 14px;
-  }
-  .by-round tbody th[scope="rowgroup"] {
-    vertical-align: top;
-    min-width: 8rem;
-  }
-  .by-round .model {
-    font-weight: 500;
-    color: var(--ink-2);
   }
   .footnote,
   .none {
@@ -452,12 +318,7 @@ const cols = [
   .miss .icon {
     color: var(--data-neg);
   }
-  .none-pick {
-    color: var(--muted) !important;
-    background: var(--sunk);
-  }
-  tr[hidden],
-  [data-model][hidden] {
+  tr[hidden] {
     display: none;
   }
   @media (hover: hover) and (pointer: fine) {
@@ -476,7 +337,7 @@ const cols = [
 </style>
 
 <script>
-  // Filter a competition's game list by round group and by model. Without script every game shows.
+  // Filter a competition's game list by round group. Without script every game shows.
   for (const root of document.querySelectorAll<HTMLElement>("[data-fc]")) {
     const form = root.querySelector<HTMLFormElement>("form.filters");
     const table = root.querySelector<HTMLTableElement>("table.games");
@@ -484,16 +345,11 @@ const cols = [
     const count = root.querySelector<HTMLElement>("[data-count]");
     const apply = () => {
       const group = (form.elements.namedItem("round") as HTMLSelectElement).value;
-      const model = (form.elements.namedItem("model") as HTMLSelectElement).value;
       let shown = 0;
       for (const row of table.tBodies[0].rows) {
-        const ok =
-          (!group || row.dataset.group === group) && (!model || (row.dataset.models ?? "").split(" ").includes(model));
+        const ok = !group || row.dataset.group === group;
         row.hidden = !ok;
         if (ok) shown += 1;
-      }
-      for (const cell of table.querySelectorAll<HTMLElement>("[data-model]")) {
-        cell.hidden = model !== "" && cell.dataset.model !== model;
       }
       if (count) count.textContent = String(shown);
     };

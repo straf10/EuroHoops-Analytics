@@ -37,10 +37,7 @@ TAGS = [
     {"name": "games", "description": "Upcoming games and every logged forecast of a game."},
     {"name": "teams", "description": "Elo ratings, four factors and schedule strength."},
     {"name": "players", "description": "Player seasons, impact, M6 projections and similarity."},
-    {
-        "name": "scouting",
-        "description": "The M6 over/under board, undervalued list and M4 factors.",
-    },
+    {"name": "scouting", "description": "The M6 over/under board."},
     {
         "name": "simulations",
         "description": "The ungated M7 season simulation and its gate verdict.",
@@ -76,7 +73,7 @@ def create_app(store: Store, now: Callable[[], datetime]) -> FastAPI:
     app = FastAPI(
         title="EuroHoops read-only API",
         version=version("eurohoops"),
-        description="EuroLeague and Greek Basket League analytics. Read-only: every response is "
+        description="EuroLeague analytics. Read-only: every response is "
         "read from the marts, the logs and the committed reports; nothing is computed or fitted.",
         openapi_tags=TAGS,
     )
@@ -98,7 +95,7 @@ def create_app(store: Store, now: Callable[[], datetime]) -> FastAPI:
 
     @app.get("/site", tags=["site"], response_class=IndentedJSON, responses=missing)
     def site() -> Response:
-        """``site.json``: forecasts, results, scorecard and Elo of both competitions."""
+        """``site.json``: forecasts, results, scorecard and Elo."""
         return IndentedJSON(readmodel.site(store, now()))
 
     @app.get("/stats", tags=["stats"], response_class=CompactJSON)
@@ -174,20 +171,6 @@ def create_app(store: Store, now: Callable[[], datetime]) -> FastAPI:
     def scouting_board() -> Response:
         """The M6 over/under board."""
         return CompactJSON(readmodel.scouting_board(store))
-
-    @app.get(
-        "/scouting/undervalued", tags=["scouting"], response_class=CompactJSON, responses=missing
-    )
-    def scouting_undervalued() -> Response:
-        """Young GBL players whose projection translates well to the EuroLeague."""
-        return CompactJSON(readmodel.scouting_undervalued(store))
-
-    @app.get(
-        "/scouting/translation", tags=["scouting"], response_class=CompactJSON, responses=missing
-    )
-    def scouting_translation() -> Response:
-        """M4's GBL to EuroLeague translation factors and its gate verdict."""
-        return CompactJSON(readmodel.scouting_translation(store))
 
     @app.get(
         "/simulations/latest", tags=["simulations"], response_class=CompactJSON, responses=missing

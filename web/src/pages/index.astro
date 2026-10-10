@@ -1,53 +1,22 @@
 ---
-import arrow from "@phosphor-icons/core/assets/bold/arrow-up-right-bold.svg?raw";
 import Base from "../layouts/Base.astro";
-import Performance from "../components/Performance.astro";
 import Ratings from "../components/Ratings.astro";
 import Results from "../components/Results.astro";
-import Scorecard from "../components/Scorecard.astro";
 import Tonight from "../components/Tonight.astro";
 import raw from "../data/site.json";
 import type { SiteData } from "../lib/format";
-import { athensDay, athensTime, seasonSpan } from "../lib/format";
 
 const data = raw as SiteData;
 const comps = data.competitions;
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
-const REPO ="https://github.com/straf10/EuroHoops-Analytics";
-const updated = `${athensDay(data.generated_at_utc)}, ${athensTime(data.generated_at_utc)} Athens`;
-const description =
-  "Pre-registered EuroLeague and Greek Basket League forecasts, committed before tip-off and scored in the open.";
+const description = "EuroLeague forecasts, published before tip-off and scored afterwards.";
 ---
 
-<Base description={description} current="forecasts" compSwitch updated={updated}>
+<Base description={description} current="forecasts">
   <section class="hero wrap" aria-labelledby="hero-title">
     <div class="copy">
       <h1 id="hero-title">Called before tip-off.</h1>
-      <p class="lede">
-        Every EuroLeague and Greek League forecast is committed to a public, append-only log before
-        the game, then scored against a home-win baseline.
-      </p>
-      {
-        comps.map((c) => (
-          <p class="record" data-comp={c.key}>
-            <span>
-              <b>{c.logged.toLocaleString("en-GB")}</b> logged
-            </span>
-            <span>
-              <b>{c.scorecard.elo.n.toLocaleString("en-GB")}</b> scored
-            </span>
-            {c.scorecard.elo.log_loss !== null && c.scorecard.b0.log_loss !== null && (
-              <span>
-                log loss <b>{c.scorecard.elo.log_loss.toFixed(3)}</b> vs{" "}
-                {c.scorecard.b0.log_loss.toFixed(3)} baseline
-              </span>
-            )}
-          </p>
-        ))
-      }
-      <a class="cta" href={`${REPO}/tree/main/predictions`}>
-        Read the log <span class="icon" set:html={arrow} />
-      </a>
+      <p class="lede">Every forecast is published before tip-off and scored afterwards.</p>
     </div>
     <div class="board">
       {comps.map((c) => <Tonight comp={c} />)}
@@ -57,90 +26,26 @@ const description =
   <section class="band wrap" id="results" aria-labelledby="results-title">
     <header class="sec-head">
       <h2 id="results-title">Results</h2>
-      <p>The latest finished games against the call logged before them.</p>
+      <p>
+        The latest finished games and the forecast made for each.
+        <a href={`${base}/forecasts/`}>Full forecast record</a>
+      </p>
     </header>
     {comps.map((c) => <Results comp={c} />)}
-  </section>
-
-  <section class="band wrap" id="scorecard" aria-labelledby="scorecard-title">
-    <header class="sec-head">
-      <h2 id="scorecard-title">Scorecard</h2>
-      <p>
-        Elo against a baseline that always gives the home side its historical win rate. The better
-        number in each pair is marked.
-        <a href={`${base}/forecasts/`}>Every model, round by round and game by game.</a>
-      </p>
-    </header>
-    {comps.map((c) => <Scorecard comp={c} />)}
-  </section>
-
-  <section class="band wrap" id="calibration" aria-labelledby="calibration-title">
-    <header class="sec-head">
-      <h2 id="calibration-title">Calibration</h2>
-      <p>
-        A forecast of 70% should come true about seven times in ten. The first chart checks that on
-        the held-out seasons; the second tracks the live season, fifty games at a time.
-      </p>
-    </header>
-    {comps.map((c) => <Performance comp={c} />)}
   </section>
 
   <section class="band wrap" id="ratings" aria-labelledby="ratings-title">
     <header class="sec-head">
       <h2 id="ratings-title">Power ratings</h2>
       <p>
-        Current Elo for every team in the {comps[0].season} season, with the change since it started.
+        Current rating for every team in the {comps[0].season} season, with the change since the season
+        started.
       </p>
     </header>
     {comps.map((c) => <Ratings comp={c} />)}
   </section>
 
-  <section class="band wrap" id="method" aria-labelledby="method-title">
-    <header class="sec-head">
-      <h2 id="method-title">Method</h2>
-    </header>
-    {
-      comps.map((c) => (
-        <dl class="method" data-comp={c.key}>
-          <div>
-            <dt>Model</dt>
-            <dd>
-              Elo with a margin-of-victory multiplier, a home-court edge and reversion to the mean
-              between seasons.
-            </dd>
-          </div>
-          <div>
-            <dt>Parameters</dt>
-            <dd>
-              K {c.backtest.params.k}, home edge {c.backtest.params.hca} rating points,{" "}
-              {Math.round(c.backtest.params.reversion * 100)}% reversion.
-            </dd>
-          </div>
-          <div>
-            <dt>Tuned, then tested</dt>
-            <dd>
-              Grid-searched on {seasonSpan(c.backtest.tuning_seasons)}, scored once on the held-out{" "}
-              {seasonSpan(c.backtest.test_seasons)}.
-            </dd>
-          </div>
-          <div>
-            <dt>Logged</dt>
-            <dd>
-              A scheduled job runs daily at 08:00 UTC and appends forecasts for games within 36
-              hours. Rows are never edited.
-            </dd>
-          </div>
-          <div>
-            <dt>Proof</dt>
-            <dd>
-              Commit times show when each row went public. A row published after tip-off is shown but
-              never scored.
-            </dd>
-          </div>
-        </dl>
-      ))
-    }
-  </section>
+  <p class="wrap more"><a href={`${base}/forecasts/#every-game`}>Read the log</a></p>
 </Base>
 
 <style>
@@ -168,48 +73,6 @@ const description =
     line-height: 1.55;
     max-width: 38ch;
   }
-  .record {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px 18px;
-    margin-top: 24px;
-    color: var(--muted);
-    font-size: 0.875rem;
-    font-variant-numeric: tabular-nums;
-  }
-  .record b {
-    color: var(--ink);
-    font-weight: 600;
-  }
-  .cta {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 28px;
-    padding: 10px 16px;
-    border-radius: 8px;
-    background: var(--ink);
-    color: var(--on-ink);
-    font-size: 0.9375rem;
-    font-weight: 500;
-    text-decoration: none;
-    transition:
-      transform 140ms ease-out,
-      background-color 150ms ease;
-  }
-  .cta .icon {
-    display: inline-grid;
-    font-size: 14px;
-    transition: transform 200ms var(--ease-out);
-  }
-  @media (hover: hover) and (pointer: fine) {
-    .cta:hover .icon {
-      transform: translate(2px, -2px);
-    }
-  }
-  .cta:active {
-    transform: scale(0.97);
-  }
   .board {
     min-width: 0;
   }
@@ -226,26 +89,10 @@ const description =
     max-width: 64ch;
   }
 
-  .method {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 0 56px;
-    margin: 0;
-  }
-  .method div {
-    padding: 16px 0;
-    border-top: 1px solid var(--rule);
-  }
-  .method dt {
-    font-weight: 600;
+  .more {
+    padding-top: 48px;
     font-size: 0.875rem;
-    margin-bottom: 4px;
-  }
-  .method dd {
-    margin: 0;
-    color: var(--ink-2);
-    font-size: 0.9375rem;
-    max-width: 52ch;
+    color: var(--muted);
   }
 
   @media (max-width: 980px) {

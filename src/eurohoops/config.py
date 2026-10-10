@@ -7,6 +7,7 @@ from pathlib import Path
 from eurohoops.models.elo import EloParams
 
 LIVE_SEASON = 2026
+SITE_SEASONS = 5  # the site shows the latest this many EuroLeague seasons; models use all
 MART_PATH = Path("data/marts/eurohoops.duckdb")
 SQL_DIR = Path(__file__).parent / "sql"  # shipped inside the package, found from any cwd
 BOX_INVARIANTS_REPORT = Path("reports/gbl_box_invariants.json")

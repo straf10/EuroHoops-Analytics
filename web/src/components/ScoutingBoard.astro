@@ -2,7 +2,6 @@
 // The over/under board: who shoots (or rates) above or below what was expected, how sure that is
 // (z), the sample behind it, and how much of the gap is expected to last. One panel per dimension.
 import {
-  COMPETITIONS,
   DIMENSIONS,
   LABEL_WORDS,
   boardNumber,
@@ -21,7 +20,6 @@ interface Props {
 }
 const { board, slugs, base } = Astro.props;
 const dims = DIMENSIONS.filter((d) => board.dimensions[d.key]);
-const leagues = [...new Set(board.rows.map((r) => r.competition))];
 const pos = (z: number) => 50 + (50 * Math.max(-4, Math.min(4, z))) / 4;
 const HEADS = [
   { key: "z", head: "z", about: "The gap in standard errors: how far from chance the gap is" },
@@ -49,25 +47,6 @@ const HEADS = [
       }
     </div>
   </fieldset>
-  {
-    leagues.length > 1 && (
-      <fieldset class="field">
-        <legend>League</legend>
-        <div class="seg" role="radiogroup" aria-label="League">
-          <label>
-            <input type="radio" name="league" value="all" checked />
-            Both
-          </label>
-          {leagues.map((c) => (
-            <label>
-              <input type="radio" name="league" value={c} />
-              {COMPETITIONS[c] ?? c}
-            </label>
-          ))}
-        </div>
-      </fieldset>
-    )
-  }
 </div>
 
 {
@@ -75,11 +54,11 @@ const HEADS = [
     const meta = board.dimensions[d.key];
     const rows = board.rows.filter((r) => r.dimension === d.key).sort((a, b) => b.z - a.z);
     return (
-      <figure class="m6-fig board-panel" data-figure data-panel={d.key}>
+      <figure class="proj-fig board-panel" data-figure data-panel={d.key}>
         <figcaption>
           <h3>{d.title}</h3>
-          <p class="m6-sub">{d.about} Observed and expected in {d.unit}.</p>
-          <p class="m6-facts">
+          <p class="proj-sub">{d.about} Observed and expected in {d.unit}.</p>
+          <p class="proj-facts">
             Stability: a player's gap this season correlates <span data-num>{fixed(meta.stability, 2)}</span> with his gap the next
             {meta.pairs ? <span data-sample> (over {meta.pairs} player pairs)</span> : null}. A gap measured on n {d.nUnit} is expected to
             keep n / (n + {thousands(meta.k)}) of itself.{" "}
@@ -120,13 +99,11 @@ const HEADS = [
                 {rows.map((r) => {
                   const slug = r.competition === "euroleague" ? slugs[r.person_id] : undefined;
                   return (
-                    <tr data-comp={r.competition}>
+                    <tr>
                       <th scope="row" class="c-nm">
                         {slug ? <a href={`${base}/players/${slug}/`}>{r.name}</a> : r.name}
-                        <small>
-                          {displayCode(r.competition, r.team)}, {COMPETITIONS[r.competition] ?? r.competition}
-                        </small>
-                        {r.label ? <span class:list={["m6-chip", r.label.replaceAll(" ", "-")]}>{LABEL_WORDS[r.label] ?? r.label}</span> : null}
+                        <small>{displayCode("euroleague", r.team)}</small>
+                        {r.label ? <span class:list={["proj-chip", r.label.replaceAll(" ", "-")]}>{LABEL_WORDS[r.label] ?? r.label}</span> : null}
                       </th>
                       <td class="num on" data-v={r.z}>
                         <span class="zrail" aria-hidden="true" style={`--x:${pos(r.z).toFixed(1)}`}>

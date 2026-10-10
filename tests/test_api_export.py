@@ -42,8 +42,6 @@ ROUTES = [
     "/stats/meta.json",
     "/stats/seasons/2024/players.json",
     "/scouting/board",
-    "/scouting/undervalued",
-    "/scouting/translation",
     "/metrics/live",
     "/simulations/latest?competition=euroleague",
     "/simulations/latest?competition=gbl",
@@ -185,15 +183,13 @@ def test_the_planted_difference_between_old_and_new_is_found(tmp_path: Path) -> 
 def test_publish_writes_the_new_route_files(tree: Path) -> None:
     result = runner.invoke(cli.app, ["publish"])
     assert result.exit_code == 0, result.output
-    assert "skipped /simulations/latest?competition=gbl" in result.output
+    assert "gbl" not in result.output  # the GBL is not published
     written = {p.relative_to(tree / "web").as_posix() for p in (tree / "web").rglob("*.json")}
     key = file_key(EL_PERSON)
     assert {
         "src/data/site.json",
         "public/api/openapi.json",
         "src/data/api/scouting/board.json",
-        "src/data/api/scouting/undervalued.json",
-        "src/data/api/scouting/translation.json",
         "src/data/api/metrics/live.json",
         "src/data/api/simulations/euroleague.json",
         f"src/data/api/players/{key}/projection.json",
@@ -201,13 +197,11 @@ def test_publish_writes_the_new_route_files(tree: Path) -> None:
         f"src/data/api/players/{key}/index.json",
         "src/data/api/teams/euroleague/BAR/ratings.json",
         "src/data/api/teams/euroleague/BAR/factors.json",
-        "src/data/api/teams/gbl/AAA/factors.json",
     } <= written
-    assert "src/data/api/simulations/gbl.json" not in written  # the 404 writes no file
+    assert not any("gbl" in name for name in written)  # the GBL is not published
     assert not any(":" in name for name in written)
     gbl_only = file_key("G:ABCD1234")
-    assert f"src/data/api/players/{gbl_only}/projection.json" in written
-    assert f"src/data/api/players/{gbl_only}/index.json" not in written  # only EuroLeague persons
+    assert not any(gbl_only in name for name in written)  # only EuroLeague persons
 
 
 def test_publish_replaces_the_api_directory_and_the_openapi_file_is_stable(tree: Path) -> None:

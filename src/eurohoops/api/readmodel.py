@@ -49,7 +49,6 @@ from eurohoops.config import (
     LIVE_SEASON,
     M2_PLAYERS_REPORT,
     M3_PLAYERS_REPORT,
-    M4,
     M6_BOARD,
     M6_PROJECTIONS,
     M6_SIMILARITY,
@@ -350,18 +349,15 @@ def _elo(store: Store, comp: Competition, season: int) -> dict[str, tuple[float,
 
 # ---- site ----
 
-FORECAST_MODELS = {"elo": "Elo", "m1": "M1", "m5": "M5"}
-
-
-def _path_of(store: Store, relative: Path | None) -> Path | None:
-    return None if relative is None else store.path(relative)
+# The site shows the published forecast only; the team models keep logging, unshown.
+FORECAST_MODELS = {"elo": "Our forecast"}
 
 
 def site(store: Store, now: datetime) -> dict[str, Any]:
-    """``site.json``: the payload ``publish.site_data`` builds from the logs, scorecards, tuned
-    Elo parameters and games of both competitions (as ``eurohoops publish`` assembles it)."""
+    """``site.json``: the payload ``publish.site_data`` builds from the EuroLeague logs,
+    scorecard, tuned Elo parameters and games (as ``eurohoops publish`` assembles it)."""
     sections = []
-    for title, comp in (("EuroLeague", EUROLEAGUE), ("Greek Basket League", GBL)):
+    for title, comp in (("EuroLeague", EUROLEAGUE),):
         games = _games(store, comp)
         scorecard = _required(store, comp.scorecard, f"the {comp.name} live scorecard")
         backtest = _required(store, comp.live_backtest.report, f"the {comp.name} Elo backtest")
@@ -383,11 +379,7 @@ def site(store: Store, now: datetime) -> dict[str, Any]:
                 season=LIVE_SEASON,
                 replay_from=comp.live_backtest.warmup[0],
                 forecasts=build_forecasts(
-                    {
-                        "elo": store.path(comp.prediction_log),
-                        "m1": _path_of(store, comp.m1_prediction_log),
-                        "m5": _path_of(store, comp.m5_prediction_log),
-                    },
+                    {"elo": store.path(comp.prediction_log)},
                     FORECAST_MODELS,
                     games,
                     LIVE_SEASON,
@@ -719,11 +711,7 @@ def _xwalk(store: Store) -> pd.DataFrame:
 
 def _player_games(store: Store) -> dict[str, pd.DataFrame]:
     def make() -> dict[str, pd.DataFrame]:
-        games = {"euroleague": _el_box(store).players}
-        gbl = _gbl_player_games(store)
-        if gbl is not None:
-            games["gbl"] = gbl
-        return games
+        return {"euroleague": _el_box(store).players}
 
     return store.memo("player_games", make)
 
@@ -739,15 +727,10 @@ def _player_seasons(store: Store) -> pd.DataFrame:
 
 
 def _person_names(store: Store) -> dict[str, str]:
-    """Person id -> display name: the EuroLeague box-score spelling, else the GBL name table's."""
+    """Person id -> display name: the EuroLeague box-score spelling."""
 
     def make() -> dict[str, str]:
-        gbl = None
-        if store.path(MART_PATH).exists():
-            gbl = read_table(_mart(store), "player_names", "gbl")
-        return person_names(
-            _el_box(store).players, pd.DataFrame() if gbl is None else gbl, _xwalk(store)
-        )
+        return person_names(_el_box(store).players, pd.DataFrame(), _xwalk(store))
 
     return store.memo("person_names", make)
 
@@ -854,7 +837,11 @@ def player_projection(store: Store, person_id: str) -> dict[str, Any]:
     report = _required(store, M6_PROJECTIONS, "the M6 projections")
     # the whole list is validated once per Store, not once per person (the export asks for each)
     store.memo("checked:m6_projections", lambda: _check(report["players"], PROJECTION_ROWS_SCHEMA))
-    rows = [p for p in report["players"] if p["person_id"] == person_id]
+    rows = [
+        p
+        for p in report["players"]
+        if p["person_id"] == person_id and p["competition"] == EUROLEAGUE.name
+    ]
     if not rows:
         raise NotFound(
             f"no M6 projection for person_id '{person_id}' "
@@ -880,11 +867,12 @@ def player_similar(store: Store, person_id: str) -> dict[str, Any]:
         raise NotFound(f"no similarity list for person_id '{person_id}'")
     rows = report["players"][person_id]
     _check(rows, SIMILAR_ROWS_SCHEMA)
+    rows = [r for r in rows if r["competition"] == EUROLEAGUE.name]
     return {
         "model": report["model"],
         "season": report["season"],
         "person_id": person_id,
-        "features": report["features"],
+        "features": {EUROLEAGUE.name: report["features"][EUROLEAGUE.name]},
         "pool_seasons": report["pool_seasons"],
         "similar": rows,
     }
@@ -896,27 +884,8 @@ def player_similar(store: Store, person_id: str) -> dict[str, Any]:
 def scouting_board(store: Store) -> dict[str, Any]:
     report = _required(store, M6_BOARD, "the M6 over/under board")
     _check(report["rows"], BOARD_ROWS_SCHEMA)
-    return {k: report[k] for k in ("model", "season", "dimensions", "rows")}
-
-
-def scouting_undervalued(store: Store) -> dict[str, Any]:
-    report = _required(store, M6_PROJECTIONS, "the M6 projections")
-    _check(report["undervalued"], UNDERVALUED_ROWS_SCHEMA)
-    keys = ("model", "variant", "gated", "gate_passed", "season", "checkpoint")
-    return {**{k: report[k] for k in keys}, "undervalued": report["undervalued"]}
-
-
-def scouting_translation(store: Store) -> dict[str, Any]:
-    """M4's league translation factors with the gate verdict of its backtest."""
-    translation = _required(store, M4.translation_report, "the M4 translation factors")
-    gate = _required(store, M4.report, "the M4 backtest")["gate"]
-    return {
-        "model": "m4",
-        "gate": gate,
-        "gate_passed": bool(gate["passed"]),
-        "fits_by_target_season": translation["fits_by_target_season"],
-        "team_offset": translation["team_offset"],
-    }
+    rows = [r for r in report["rows"] if r["competition"] == EUROLEAGUE.name]
+    return {**{k: report[k] for k in ("model", "season", "dimensions")}, "rows": rows}
 
 
 # ---- simulations, metrics ----
@@ -984,7 +953,7 @@ def simulation_latest(store: Store, competition: str) -> dict[str, Any]:
 def metrics_live(store: Store) -> dict[str, Any]:
     """The live scorecards (Elo, B0, and the M1 and M5 shadow blocks they carry) per competition."""
     cards = []
-    for comp in COMPETITIONS.values():
+    for comp in (EUROLEAGUE,):
         card = _report(store, comp.scorecard)
         if card is not None:
             cards.append({"competition": comp.name, "scorecard": card})
