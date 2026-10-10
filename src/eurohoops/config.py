@@ -8,6 +8,22 @@ from eurohoops.models.elo import EloParams
 
 LIVE_SEASON = 2026
 SITE_SEASONS = 5  # the site shows the latest this many EuroLeague seasons; models use all
+# EuroLeague seasons the data cannot treat as ordinary: season -> (kind, note shown on the site).
+# Checked against the cached schedules: 2019 has 252 of 306 regular-season games played, the
+# last on 2020-03-06, and no playoffs or Final Four; in 2020 251 of 328 played games report zero
+# attendance (the rest at most 5,187), and all 328 were played.
+SPECIAL_SEASONS: dict[int, tuple[str, str]] = {
+    2019: (
+        "stopped_early",
+        "Stopped early and never completed because of COVID-19: the last game was played on "
+        "6 March 2020, 54 regular-season games were never played, and there were no playoffs "
+        "or Final Four.",
+    ),
+    2020: (
+        "no_crowds",
+        "Played behind closed doors or in front of small crowds because of COVID-19.",
+    ),
+}
 MART_PATH = Path("data/marts/eurohoops.duckdb")
 SQL_DIR = Path(__file__).parent / "sql"  # shipped inside the package, found from any cwd
 BOX_INVARIANTS_REPORT = Path("reports/gbl_box_invariants.json")
