@@ -619,17 +619,21 @@
       }
     },
     "2026": {
-      "games": 7,
-      "passed": 7,
-      "pass_rate": 1.0,
+      "games": 11,
+      "passed": 10,
+      "pass_rate": 0.9091,
       "failures_by_reason": {
         "missing_box": 0,
         "points_mismatch": 0,
-        "minutes_off": 0,
+        "minutes_off": 1,
         "bad_shot_lines": 0,
         "bad_point_lines": 0
       },
-      "failed_games": {}
+      "failed_games": {
+        "GBL2026_28F71477": [
+          "minutes_off"
+        ]
+      }
     }
   },
   "pbp_fill": {
