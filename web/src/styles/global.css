@@ -14,20 +14,24 @@
   --rule: #e1e0d9;
   --rule-strong: #c3c2b7;
   --on-ink: #fcfcfb;
-  --brand-orange: #d9590b; /* the logo mark's arc only; provisional */
+  --brand-orange: #d9590b; /* the logo mark's arc; the same orange as --data-1 */
 
-  /* Data (validated order: blue is the model, gray the baseline, red the other pole) */
-  --data-1: #2a78d6;
-  --data-1-wash: rgb(42 120 214 / 0.1);
+  /* Data (validated order: orange is the subject and the model, gray the baseline, blue the other pole;
+     docs/DESIGN_ORANGE_PROPOSAL.md has the validator numbers) */
+  --data-1: #d9590b;
+  --data-1-wash: rgb(217 89 11 / 0.1);
   --data-2: #8f8d86; /* neutral series: baselines, away share */
-  --data-neg: #e34948;
-  --data-neg-wash: rgb(227 73 72 / 0.1);
-  /* frequency ramp, fewest to most (dataviz blue 250-650, validated --ordinal) */
-  --freq-1: #86b6ef;
-  --freq-2: #5598e7;
-  --freq-3: #2a78d6;
-  --freq-4: #1c5cab;
-  --freq-5: #104281;
+  --data-neg: #2a78d6;
+  --data-neg-wash: rgb(42 120 214 / 0.1);
+  /* vs-league deltas only: the arrow glyph, never the figure, never a chart series (Delta Rule) */
+  --delta-up: #1f8a4c;
+  --delta-down: #d23c3c;
+  /* frequency ramp, fewest to most (one orange hue, validated --ordinal) */
+  --freq-1: #eea06a;
+  --freq-2: #e47a34;
+  --freq-3: #d9590b;
+  --freq-4: #a94307;
+  --freq-5: #73300a;
 
   --font: "Geist Variable", "Segoe UI", system-ui, sans-serif;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
@@ -50,18 +54,19 @@
     --rule: #2c2c2a;
     --rule-strong: #45453f;
     --on-ink: #111110;
-    --brand-orange: #f0782a;
-    --data-1: #3987e5;
-    --data-1-wash: rgb(57 135 229 / 0.14);
+    --brand-orange: #e2691f;
+    --data-1: #e2691f;
+    --data-1-wash: rgb(226 105 31 / 0.14);
     --data-2: #6a6862;
-    --data-neg: #e66767;
-    --data-neg-wash: rgb(230 103 103 / 0.14);
-    --freq-1: #184f95;
-    --freq-2: #256abf;
-    --freq-3: #3987e5;
-    --freq-4: #6da7ec;
-    --freq-5: #9ec5f4;
-  }
+    --data-neg: #3987e5;
+    --data-neg-wash: rgb(57 135 229 / 0.14);
+    --delta-up: #3fae6a;
+    --delta-down: #e66767;
+    --freq-1: #8c3a0c;
+    --freq-2: #b44c10;
+    --freq-3: #e2691f;
+    --freq-4: #f29a5e;
+    --freq-5: #f8c9a2;  }
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
@@ -75,18 +80,19 @@
   --rule: #2c2c2a;
   --rule-strong: #45453f;
   --on-ink: #111110;
-  --brand-orange: #f0782a;
-  --data-1: #3987e5;
-  --data-1-wash: rgb(57 135 229 / 0.14);
+  --brand-orange: #e2691f;
+  --data-1: #e2691f;
+  --data-1-wash: rgb(226 105 31 / 0.14);
   --data-2: #6a6862;
-  --data-neg: #e66767;
-  --data-neg-wash: rgb(230 103 103 / 0.14);
-  --freq-1: #184f95;
-  --freq-2: #256abf;
-  --freq-3: #3987e5;
-  --freq-4: #6da7ec;
-  --freq-5: #9ec5f4;
-}
+  --data-neg: #3987e5;
+  --data-neg-wash: rgb(57 135 229 / 0.14);
+  --delta-up: #3fae6a;
+  --delta-down: #e66767;
+  --freq-1: #8c3a0c;
+  --freq-2: #b44c10;
+  --freq-3: #e2691f;
+  --freq-4: #f29a5e;
+  --freq-5: #f8c9a2;}
 
 *,
 *::before,

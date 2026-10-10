@@ -434,7 +434,7 @@ function barText(b: Bar, c: FacetContext) {
 
 const disabled = (c: FacetContext) => c.facet === "play" && c.r.playOff !== "";
 
-/** One facet's bar rows: width by attempts, blue when kept, gray when filtered out. */
+/** One facet's bar rows: width by attempts, orange when kept, gray when filtered out. */
 export function facetRows(bars: Bar[], c: FacetContext): string {
   const most = Math.max(1, ...bars.map((b) => b.att));
   const off = disabled(c);

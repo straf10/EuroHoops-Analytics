@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <!-- Mark = Logo.astro, small cut. Arc colour is the brand-orange token in src/styles/global.css (light #d9590b, dark #f0782a). -->
+  <!-- Mark = Logo.astro, small cut. Arc colour is the brand-orange token in src/styles/global.css (light #d9590b, dark #e2691f). -->
   <style>
     .ink { stroke: #111110; }
     .arc { stroke: #d9590b; }
     @media (prefers-color-scheme: dark) {
       .ink { stroke: #f2f1ec; }
-      .arc { stroke: #f0782a; }
+      .arc { stroke: #e2691f; }
     }
   </style>
   <g transform="translate(0 3)">

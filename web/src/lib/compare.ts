@@ -1,5 +1,5 @@
 // Compare: up to five players (a season each, or whole careers) as a head-to-head grid. Each
-// measure is one row; its leader among the compared gets the blue dot. Pure functions shared by
+// measure is one row; its leader among the compared gets the orange dot. Pure functions shared by
 // the build and the browser.
 
 import { esc } from "./format";

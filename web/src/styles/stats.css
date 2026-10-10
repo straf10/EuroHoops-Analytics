@@ -317,7 +317,7 @@ svg.court {
   fill: var(--freq-5);
   background: var(--freq-5);
 }
-/* Attempts: makes are filled blue dots, misses hollow red rings (shape carries it too). */
+/* Attempts: makes are filled orange dots, misses hollow blue rings (shape carries it too). */
 .court .made {
   fill: var(--data-1);
   fill-opacity: 0.75;

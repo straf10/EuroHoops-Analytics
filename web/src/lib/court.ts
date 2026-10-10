@@ -98,7 +98,7 @@ export interface HexOptions {
   label: string;
   /** Colour by the step `color(cell)` returns (a class name) instead of FG% against the league. */
   color?: (cell: HexCell, total: number) => string;
-  /** Flip the diverging scale: blue where the shooters do worse than the league (defence). */
+  /** Flip the diverging scale: orange where the shooters do worse than the league (defence). */
   invert?: boolean;
   /** Tooltip body for one cell. */
   tip?: (cell: HexCell, total: number) => string;

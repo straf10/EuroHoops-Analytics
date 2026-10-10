@@ -1,5 +1,5 @@
 // Team page renderers: ratings and four factors from team and opponent totals, the rank strips
-// (every club's dot, this club's in blue), both shot charts, the bands and the roster.
+// (every club's dot, this club's in orange), both shot charts, the bands and the roster.
 // Pure (types only from ./stats), so the build and the in-page season switch share them.
 
 import { hexChart, type HexCell } from "./court";

@@ -214,7 +214,7 @@ const cfg = { base, open, seasons: seasons.map((x) => x.season) };
             </div>
           </div>
           <p class="note">
-            Blue bars are the shots kept, gray bars the ones filtered out; each facet counts the shots the other
+            Orange bars are the shots kept, gray bars the ones filtered out; each facet counts the shots the other
             facets keep, so it shows what a click would give. The play-by-play marks fastbreaks and second chances
             on made shots only (from 2015-16), so a play filter keeps made shots and FG% no longer applies; a make
             can be both. Shots from deeper than 9.3 m are counted but not drawn.
@@ -324,7 +324,7 @@ const cfg = { base, open, seasons: seasons.map((x) => x.season) };
       document.getElementById("fg-key")!.textContent = r.isLeague
         ? "Colour: FG% from that spot against every league shot from there, below to above"
         : state.who === "team" && state.side === "allowed"
-          ? "Colour: opponents' FG% against the league's with the same filters; blue where they shoot worse"
+          ? "Colour: opponents' FG% against the league's with the same filters; orange where they shoot worse"
           : "Colour: FG% against the league's from that spot with the same filters, below to above";
       document.getElementById("caveat")!.hidden = data.validated;
       clear.disabled = FACETS.every((f) => !state[f.key].length);
