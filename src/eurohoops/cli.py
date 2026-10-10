@@ -210,6 +210,7 @@ from eurohoops.publish import DISPLAY_CODES
 from eurohoops.sim.formats import season_format
 from eurohoops.sim.played import regulation_scores
 from eurohoops.stats.box import build_box_games
+from eurohoops.stats.downloads import DOWNLOADS_DIR, build_downloads, write_downloads
 from eurohoops.stats.export import STATS_DIR
 from eurohoops.stats.validate import write_validation
 
@@ -1590,6 +1591,8 @@ def export_stats(
     store = RawStore(from_cache=from_cache, raw_dir=raw_dir)
     files = stats_files(TestClient(create_app(store, lambda: now)))
     write_stats_files(out, files)
+    write_downloads(DOWNLOADS_DIR, build_downloads(stats_inputs(store), now))
+    # last: a validation error exits after every file is written
     write_validation(out, stats_inputs(store), now)
     seasons = json.loads(files["meta.json"])["seasons"]
     typer.echo(

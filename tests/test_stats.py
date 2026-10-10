@@ -6,6 +6,9 @@ on it; the CI web build reads it. Refresh it after a payload change:
 ``UPDATE_STATS_FIXTURE=1 uv run pytest tests/test_stats.py``
 """
 
+import gzip
+import hashlib
+import io
 import json
 import os
 from dataclasses import replace
@@ -23,6 +26,7 @@ from eurohoops.config import MART_PATH
 from eurohoops.marts import write_tables
 from eurohoops.publish import DISPLAY_CODES
 from eurohoops.stats.box import build_box_games, game_lines, seconds
+from eurohoops.stats.downloads import COLUMNS, DATASETS, build_downloads, write_downloads
 from eurohoops.stats.export import (
     PLAYER_FIELDS,
     TEAM_FIELDS,
@@ -438,3 +442,64 @@ def test_committed_stats_fixture_matches_the_export(
         assert (OUT / name).read_text(encoding="utf-8") == (fresh / name).read_text(
             encoding="utf-8"
         )
+
+
+# ---- downloads (stats/downloads.py) ----
+
+
+def _csv(data: bytes) -> pd.DataFrame:
+    return pd.read_csv(io.BytesIO(gzip.decompress(data)), dtype={"dorsal": str})
+
+
+def test_downloads_manifest_columns_and_window(inputs: Inputs) -> None:
+    out = build_downloads(inputs, NOW)
+    manifest = json.loads(out["manifest.json"])
+    assert manifest["built"] == "2026-09-26T08:00:00Z"
+    assert {e["dataset"] for e in manifest["files"]} == set(DATASETS)
+    assert sorted({e["season"] for e in manifest["files"]}) == [2010, 2024]
+    for e in manifest["files"]:
+        assert set(e) == {"dataset", "season", "path", "rows", "bytes", "sha256"}
+        assert e["path"] == f"downloads/{e['dataset']}-{e['season']}.csv.gz"
+        data = out[e["path"]]
+        assert e["bytes"] == len(data) and e["sha256"] == hashlib.sha256(data).hexdigest()
+        frame = _csv(data)
+        assert len(frame) == e["rows"] > 0
+        assert list(frame.columns) == [c for c, _, _ in COLUMNS[e["dataset"]]]
+        assert set(frame["season"]) == {e["season"]}
+    dictionary = json.loads(out["columns.json"])["datasets"]
+    assert [c["name"] for c in dictionary["shots"]] == [c for c, _, _ in COLUMNS["shots"]]
+
+
+def test_downloads_use_display_codes_and_athens_dates(inputs: Inputs) -> None:
+    out = build_downloads(inputs, NOW)
+    games = _csv(out["downloads/games-2024.csv.gz"])
+    source = inputs.games[inputs.games["season"] == 2024]
+    shown = {inputs.codes.get(t, t) for t in (*source["home"], *source["away"])}
+    assert set(games["home"]) | set(games["away"]) == shown
+    first = source.sort_values("tipoff_utc").iloc[0]["tipoff_utc"]
+    assert games["date"].iloc[0] == first.tz_convert("Europe/Athens").strftime("%Y-%m-%d")
+    assert (games["season_label"] == "2024-25").all()
+    box = _csv(out["downloads/player_box-2024.csv.gz"])
+    assert set(box["team"]) <= shown and box["player"].str.contains(" ").any()
+    shots = _csv(out["downloads/shots-2024.csv.gz"])
+    assert set(shots["made"]) <= {0, 1} and set(shots["band"]) <= set(BANDS)
+
+
+def test_downloads_are_byte_stable_and_clean_up(inputs: Inputs, tmp_path: Path) -> None:
+    first, second = build_downloads(inputs, NOW), build_downloads(inputs, NOW)
+    assert first == second
+    data = first["downloads/games-2024.csv.gz"]
+    assert data[4:8] == b"\0\0\0\0" and b"\r" not in gzip.decompress(data)
+    (tmp_path / "old-2019.csv.gz").write_bytes(b"x")
+    write_downloads(tmp_path, first)
+    assert not (tmp_path / "old-2019.csv.gz").exists()
+    assert (tmp_path / "games-2024.csv.gz").read_bytes() == data
+    assert (tmp_path / "manifest.json").exists()
+
+
+def test_downloads_window_follows_site_seasons(
+    inputs: Inputs, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("eurohoops.stats.downloads.SITE_SEASONS", 1)
+    manifest = json.loads(build_downloads(inputs, NOW)["manifest.json"])
+    assert {e["season"] for e in manifest["files"]} == {2024}

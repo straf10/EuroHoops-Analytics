@@ -1,11 +1,157 @@
 ---
 import Base from "../../layouts/Base.astro";
 import "../../styles/stats.css";
+
+interface Entry {
+  dataset: string;
+  season: number;
+  path: string;
+  rows: number;
+  bytes: number;
+  sha256: string;
+}
+interface Manifest {
+  built: string;
+  files: Entry[];
+}
+interface Dictionary {
+  datasets: Record<string, { name: string; meaning: string }[]>;
+}
+
+// The files are a build output (eurohoops export-stats); a build without them still renders.
+const manifests = import.meta.glob<Manifest>("../../../public/downloads/manifest.json", {
+  eager: true,
+  import: "default",
+});
+const dictionaries = import.meta.glob<Dictionary>("../../../public/downloads/columns.json", {
+  eager: true,
+  import: "default",
+});
+const manifest = Object.values(manifests)[0];
+const dictionary = Object.values(dictionaries)[0];
+if (!manifest || !dictionary) {
+  console.warn("downloads: manifest.json or columns.json is missing; the page shows no files.");
+}
+
+const LABELS: Record<string, string> = {
+  games: "Games",
+  team_games: "Team games",
+  player_box: "Player box scores",
+  shots: "Shots",
+};
+const season = (s: number) => `${s}-${String((s + 1) % 100).padStart(2, "0")}`;
+const size = (b: number) =>
+  b >= 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`;
+const built = manifest ? manifest.built.slice(0, 10) : "";
+const description =
+  "Download 6.75 Analytics EuroLeague data as CSV: games, team and player box scores and shots, one gzipped file per season.";
 ---
 
-<Base title="Downloads" description="Downloadable EuroHoops data: coming soon." current="downloads">
+<Base title="Downloads" description={description} current="downloads">
   <header class="wrap head">
     <h1>Downloads</h1>
-    <p class="lede">Coming soon.</p>
+    {
+      manifest && dictionary ? (
+        <p class="lede">
+          EuroLeague games, box scores and shots as gzipped CSV, one file per dataset and season. Built {built}.
+        </p>
+      ) : (
+        <p class="lede muted">Files are not available in this build.</p>
+      )
+    }
   </header>
+
+  {
+    manifest && dictionary && (
+      <>
+        <section class="wrap band" aria-labelledby="files-title">
+          <header class="sec-head">
+            <h2 id="files-title">Files</h2>
+            <p>
+              Data from the EuroLeague's public API; please cite 6.75 Analytics, see{" "}
+              <a class="ink-link" href="/methodology/#citing">
+                Methodology
+              </a>
+              .
+            </p>
+            <p>Team codes are the ones shown on the site.</p>
+          </header>
+          <div class="scroll">
+            <table class="grid">
+              <thead>
+                <tr>
+                  <th>Season</th>
+                  <th>Dataset</th>
+                  <th class="num">Rows</th>
+                  <th class="num">Size</th>
+                  <th>File</th>
+                </tr>
+              </thead>
+              <tbody>
+                {manifest.files.map((f) => (
+                  <tr>
+                    <td>{season(f.season)}</td>
+                    <td>{LABELS[f.dataset] ?? f.dataset}</td>
+                    <td class="num">{f.rows.toLocaleString("en-US")}</td>
+                    <td class="num">{size(f.bytes)}</td>
+                    <td>
+                      <a class="ink-link" href={`/${f.path}`} download title={`sha256 ${f.sha256}`}>
+                        {f.path.split("/").pop()}
+                      </a>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="wrap band" aria-labelledby="columns-title">
+          <header class="sec-head">
+            <h2 id="columns-title">Columns</h2>
+          </header>
+          {Object.entries(dictionary.datasets).map(([name, columns]) => (
+            <>
+              <h3 class="dict-head">{LABELS[name] ?? name}</h3>
+              <div class="scroll">
+                <table class="grid">
+                  <thead>
+                    <tr>
+                      <th>Column</th>
+                      <th>Meaning</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {columns.map((c) => (
+                      <tr>
+                        <td>
+                          <code>{c.name}</code>
+                        </td>
+                        <td class="meaning">{c.meaning}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          ))}
+        </section>
+      </>
+    )
+  }
 </Base>
+
+<style>
+  .muted {
+    color: var(--muted);
+  }
+  .dict-head {
+    margin: 32px 0 12px;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+  .meaning {
+    white-space: normal;
+    color: var(--ink-2);
+  }
+</style>
