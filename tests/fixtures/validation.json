@@ -1,0 +1,21 @@
+{
+  "built": "2026-10-10T08:41Z",
+  "seasons": [
+    {"season": 2019, "label": "2019-20", "published": false, "games_scheduled": 306, "games_played": 252, "box_missing": 0, "shots_games": 252,
+     "flags": [
+       {"code": "games_unplayed", "severity": "warn", "message": "54 scheduled games were never played."},
+       {"code": "special_season", "severity": "info", "message": "Stopped early and not completed (COVID-19, March 2020)."}
+     ],
+     "special": {"kind": "stopped_early", "note": "Stopped early and not completed (COVID-19, March 2020): 252 of 306 regular-season games were played and there were no playoffs."}},
+    {"season": 2020, "label": "2020-21", "published": false, "games_scheduled": 328, "games_played": 328, "box_missing": 0, "shots_games": 328,
+     "flags": [{"code": "special_season", "severity": "info", "message": "Played without crowds (COVID-19)."}],
+     "special": {"kind": "no_crowds", "note": "Played mostly behind closed doors (COVID-19)."}},
+    {"season": 2021, "label": "2021-22", "published": true, "games_scheduled": 327, "games_played": 327, "box_missing": 0, "shots_games": 327,
+     "flags": [], "special": null},
+    {"season": 2022, "label": "2022-23", "published": true, "games_scheduled": 328, "games_played": 328, "box_missing": 0, "shots_games": 328, "flags": [], "special": null},
+    {"season": 2023, "label": "2023-24", "published": true, "games_scheduled": 330, "games_played": 330, "box_missing": 0, "shots_games": 330, "flags": [], "special": null},
+    {"season": 2024, "label": "2024-25", "published": true, "games_scheduled": 330, "games_played": 330, "box_missing": 0, "shots_games": 330, "flags": [], "special": null},
+    {"season": 2025, "label": "2025-26", "published": true, "games_scheduled": 330, "games_played": 120, "box_missing": 0, "shots_games": 120,
+     "flags": [{"code": "games_unplayed", "severity": "info", "message": "210 scheduled games are still to be played."}], "special": null}
+  ]
+}
