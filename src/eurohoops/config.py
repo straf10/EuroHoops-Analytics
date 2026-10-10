@@ -23,6 +23,11 @@ SPECIAL_SEASONS: dict[int, tuple[str, str]] = {
         "no_crowds",
         "Played behind closed doors or in front of small crowds because of COVID-19.",
     ),
+    2021: (
+        "clubs_suspended",
+        "CSKA Moscow, Zenit and UNICS were suspended in late February 2022; their 28 remaining "
+        "games were never played.",
+    ),
 }
 MART_PATH = Path("data/marts/eurohoops.duckdb")
 SQL_DIR = Path(__file__).parent / "sql"  # shipped inside the package, found from any cwd

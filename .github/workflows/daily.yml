@@ -126,7 +126,10 @@ jobs:
         run: |
           uv run --no-dev eurohoops sim-ungated
           uv run --no-dev eurohoops sim-ungated --competition gbl
+      # export-stats fails on a validation error (a published season with no games, or a schema
+      # break): the site is then not rebuilt, but the day's logs below are still committed.
       - name: Export the site data
+        id: export
         run: |
           uv run --no-dev eurohoops publish
           uv run --no-dev eurohoops export-stats --from-cache
@@ -138,11 +141,13 @@ jobs:
             web/src/data/stats/
             web/src/data/api/
             web/public/api/
+            web/public/downloads/
           if-no-files-found: error
           retention-days: 1
       # main may have moved during the run: replay the run's commit on top of it. A conflict (an
       # append-only log changed on both sides) is never resolved here: abort, fail, merge by hand.
       - name: Commit predictions and reports if changed
+        if: success() || steps.export.outcome == 'failure'
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}

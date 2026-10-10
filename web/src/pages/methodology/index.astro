@@ -21,7 +21,8 @@ function notes(s: ValidationSeason) {
   const out: { text: string; muted: boolean }[] = [];
   if (s.season === live && s.games_played < s.games_scheduled) out.push({ text: "In progress.", muted: false });
   if (s.special) out.push({ text: s.special.note, muted: false });
-  for (const f of s.flags) out.push({ text: f.message, muted: f.severity === "info" });
+  // info flags repeat the lines above (in progress, special season) or are routine (unplaced shots)
+  for (const f of s.flags) if (f.severity !== "info") out.push({ text: f.message, muted: false });
   return out;
 }
 ---

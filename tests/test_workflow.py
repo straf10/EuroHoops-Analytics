@@ -70,6 +70,21 @@ def test_daily_builds_the_site_from_fresh_data() -> None:
     assert "working-directory: web" in DAILY
 
 
+def test_daily_hands_the_downloads_and_validation_to_the_site_build() -> None:
+    export = DAILY.index("eurohoops export-stats --from-cache")
+    artifact = DAILY.index("name: site-data")
+    paths = DAILY[artifact : DAILY.index("if-no-files-found", artifact)]
+    assert export < artifact
+    # validation.json is written into web/src/data/stats/; the CSVs and manifest into downloads/
+    assert "web/src/data/stats/" in paths and "web/public/downloads/" in paths
+
+
+def test_a_failed_export_still_commits_the_logs() -> None:
+    commit = DAILY.index("name: Commit predictions and reports if changed")
+    assert "id: export" in DAILY[: DAILY.index("name: site-data")]
+    assert "if: success() || steps.export.outcome == 'failure'" in DAILY[commit : commit + 200]
+
+
 def test_daily_deploys_the_built_site_to_a_cloudflare_worker() -> None:
     deploy = DAILY[DAILY.index("  deploy-page:") :]
     assert "needs: build-site" in deploy
