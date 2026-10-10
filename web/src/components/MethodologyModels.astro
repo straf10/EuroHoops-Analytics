@@ -2,10 +2,10 @@
 const REPO = "https://github.com/straf10/EuroHoops-Analytics";
 // One line each, from the model cards in docs/models: what it predicts and where it is used.
 const models = [
-  { id: "M1", name: "Team model", does: "Rates every team's offence, defence and pace from box-score possessions, and forecasts each game's winner, margin and total.", used: "Tracked alongside the published forecast." },
+  { id: "M1", name: "Team model", does: "Rates every team's offence, defence and pace from box-score possessions, and forecasts each game's winner, margin and total.", used: "Forecasts games alongside the Elo rating." },
   { id: "M2", name: "Shot quality", does: "Gives every EuroLeague shot a chance of going in from where and when it was taken, never from who took it.", used: "Behind the shot maps and shot-making ratings." },
   { id: "M3", name: "Player impact", does: "Rates players by how the score moves while they are on the floor (RAPM with a box-score prior).", used: "Feeds the roster-aware game model." },
-  { id: "M5", name: "Roster-aware game model", does: "Forecasts a game from the players expected to play, on top of M3's ratings.", used: "Tracked alongside the published forecast." },
+  { id: "M5", name: "Roster-aware game model", does: "Forecasts a game from the players expected to play, on top of M3's ratings.", used: "Forecasts games alongside the Elo rating." },
   { id: "M6", name: "Player projections", does: "Projects each player's rates for next season and the rest of this one, with an 80% interval.", used: "Shown on the player pages." },
   { id: "M7", name: "Season simulator", does: "Plays out the rest of a season many times to give each team's final place, playoff and title chances.", used: "Shown on the Standings page." },
 ];

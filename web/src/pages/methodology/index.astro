@@ -1,30 +1,234 @@
 ---
 import Base from "../../layouts/Base.astro";
 import MethodologyModels from "../../components/MethodologyModels.astro";
+import { buildDate } from "../../lib/build";
+import { publishedSeasons, type Validation, type ValidationSeason } from "../../lib/validation";
 import "../../styles/stats.css";
 
 const REPO = "https://github.com/straf10/EuroHoops-Analytics";
-const description = "The EuroHoops models in plain words, with links to their model cards.";
+const description =
+  "How 6.75 Analytics gets its EuroLeague data, how often it updates, what the derived stats assume, and how to cite and correct it.";
+
+// Written by the pipeline; absent in a build that did not run it.
+const found = import.meta.glob<{ default: Validation }>("../../data/stats/validation.json", { eager: true });
+const loaded = Object.values(found)[0]?.default;
+if (!loaded) console.warn("methodology: web/src/data/stats/validation.json is missing; the coverage table is left out.");
+const seasons = loaded ? publishedSeasons(loaded) : [];
+const live = seasons[0]?.season;
+
+const n = (x: number) => x.toLocaleString("en-US");
+function notes(s: ValidationSeason) {
+  const out: { text: string; muted: boolean }[] = [];
+  if (s.season === live && s.games_played < s.games_scheduled) out.push({ text: "In progress.", muted: false });
+  if (s.special) out.push({ text: s.special.note, muted: false });
+  for (const f of s.flags) out.push({ text: f.message, muted: f.severity === "info" });
+  return out;
+}
 ---
 
 <Base title="Methodology" description={description} current="methodology">
   <header class="wrap head">
     <h1>Methodology</h1>
     <p class="lede">
-      The forecasts on this site come from a margin-of-victory-adjusted Elo rating. Six more models sit beside it, each
-      with a model card that states what it does, the data it used and how it did.
+      Every number here is built from public EuroLeague box scores and shot data. This page says where the data comes
+      from, when it updates, what the derived stats assume, and how to cite or correct the site.
     </p>
   </header>
 
+  <section class="wrap band" aria-labelledby="source-title">
+    <header class="sec-head"><h2 id="source-title">Source</h2></header>
+    <p class="prose">
+      Games, box scores and shot locations come from the EuroLeague's public API. It is not an official, documented
+      service, so the site keeps a saved copy of everything it reads and does not ask for the same game twice.
+    </p>
+  </section>
+
+  <section class="wrap band" aria-labelledby="refresh-title">
+    <header class="sec-head"><h2 id="refresh-title">Refresh</h2></header>
+    <p class="prose">
+      The site updates once a day, usually in the afternoon, Athens time. A game played in the evening shows up in the
+      next day's update. The footer shows the date of the latest update.
+    </p>
+  </section>
+
+  <section class="wrap band" aria-labelledby="coverage-title">
+    <header class="sec-head">
+      <h2 id="coverage-title">What each build contains</h2>
+      <p>The seasons shown on the site, with how complete the data is for each.</p>
+    </header>
+    {
+      seasons.length ? (
+        <div class="scroll">
+          <table class="grid coverage">
+            <thead>
+              <tr>
+                <th>Season</th>
+                <th class="num">Games played</th>
+                <th>Box scores</th>
+                <th class="num">Games with shot locations</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {seasons.map((s) => (
+                <tr>
+                  <th scope="row">{s.label}</th>
+                  <td class="num">
+                    {n(s.games_played)} of {n(s.games_scheduled)}
+                  </td>
+                  <td class:list={[s.box_missing ? "" : "muted"]}>
+                    {s.box_missing ? `${n(s.box_missing)} missing` : "Complete"}
+                  </td>
+                  <td class="num">{n(s.shots_games)}</td>
+                  <td class="notes">
+                    {notes(s).map((x, i) => (
+                      <>
+                        {i > 0 && " "}
+                        <span class:list={[x.muted && "dim"]}>{x.text}</span>
+                      </>
+                    ))}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p class="note">Coverage table not available in this build.</p>
+      )
+    }
+    <p class="note">
+      Shot locations are kept only for attempts the API
+      places on the court.
+    </p>
+  </section>
+
+  <section class="wrap band" aria-labelledby="derived-title">
+    <header class="sec-head">
+      <h2 id="derived-title">Derived metrics and what they assume</h2>
+      <p>The API gives totals. Everything below is worked out from them on this site.</p>
+    </header>
+    <dl class="defs">
+      <div>
+        <dt>Possessions</dt>
+        <dd>
+          Box scores do not count possessions, so each team's are estimated as field-goal attempts, minus offensive
+          rebounds, plus turnovers, plus 0.42 times free-throw attempts. A game's possession count is the average of
+          the two teams' estimates. The 0.42 weight is tuned so that the estimate matches a count taken from
+          play-by-play on EuroLeague games; it is a little lower than the 0.44 commonly used for the NBA. A player is
+          given a share of the game's possessions in proportion to his share of his team's minutes.
+        </dd>
+      </div>
+      <div>
+        <dt>Per 36 and per 100</dt>
+        <dd>
+          Per 36 scales a player's total to 36 minutes played. Per 100 scales it to 100 possessions, using the
+          estimate above. Both assume his rate stays the same as his minutes change, which small samples do not
+          support well.
+        </dd>
+      </div>
+      <div>
+        <dt>Pace</dt>
+        <dd>Possessions per 40 minutes, from the average of the team's and its opponents' estimates.</dd>
+      </div>
+      <div>
+        <dt>Offensive, defensive and net rating</dt>
+        <dd>
+          Points scored per 100 possessions, points allowed per 100 possessions, and the difference. Both sides of a
+          game share one possession count, so the ratings carry the estimate's error.
+        </dd>
+      </div>
+      <div>
+        <dt>eFG%</dt>
+        <dd>(Field goals made + 0.5 × threes made) ÷ field-goal attempts. A made three counts as one and a half makes.</dd>
+      </div>
+      <div>
+        <dt>TS%</dt>
+        <dd>
+          Points ÷ (2 × (field-goal attempts + 0.44 × free-throw attempts)). The 0.44 stands in for the share of free
+          throws that end a trip to the line; it is an approximation, not a count.
+        </dd>
+      </div>
+      <div>
+        <dt>Shot maps</dt>
+        <dd>
+          Each located attempt is placed on a half court and grouped into hexagons 0.5 metres from centre to corner.
+          Shots are also sorted into six distance bands: at the rim (under 1.5 m), short (to 3 m), mid-range (to 5 m),
+          long two, three-pointer, and deep three (beyond 8 m). Attempts with no position in the data are left out of
+          the maps and bands but stay in the player's totals.
+        </dd>
+      </div>
+    </dl>
+  </section>
+
   <section class="wrap band" aria-labelledby="models-title">
     <header class="sec-head">
-      <h2 id="models-title">The models</h2>
-      <p>The model cards are on GitHub.</p>
+      <h2 id="models-title">Models</h2>
+      <p>
+        The game forecasts are built on an Elo rating that adjusts for margin of victory. These models sit beside it.
+        Each has a model card that says what it does, the data it uses and how it has done.
+      </p>
     </header>
     <MethodologyModels />
     <p class="note">
-      The full write-up of the methods comes later; until then the
-      <a class="ink-link" href={`${REPO}/tree/main/docs/models`}>model cards</a> are the record.
+      Read the <a class="ink-link" href={`${REPO}/tree/main/docs/models`}>model cards</a> on GitHub.
+    </p>
+  </section>
+
+  <section class="wrap band" id="citing" aria-labelledby="citing-title">
+    <header class="sec-head">
+      <h2 id="citing-title">Citing</h2>
+      <p>If you use these numbers, please cite them like this, with the date you looked.</p>
+    </header>
+    <pre class="cite"><code>6.75 Analytics. EuroLeague statistics and forecasts. https://675hoops.com. Accessed {buildDate}.</code></pre>
+  </section>
+
+  <section class="wrap band" aria-labelledby="corrections-title">
+    <header class="sec-head"><h2 id="corrections-title">Corrections</h2></header>
+    <p class="prose">
+      If a number looks wrong, please
+      <a class="ink-link" href={`${REPO}/issues`}>open an issue on GitHub</a> with the page and what you expected, or
+      get in touch through <a class="ink-link" href="https://github.com/straf10">github.com/straf10</a>.
     </p>
   </section>
 </Base>
+
+<style>
+  .prose {
+    max-width: 66ch;
+    color: var(--ink-2);
+    line-height: 1.55;
+  }
+  .coverage .notes {
+    white-space: normal;
+    min-width: 16rem;
+    color: var(--ink-2);
+  }
+  .coverage .dim {
+    color: var(--muted);
+  }
+  .defs {
+    max-width: 70ch;
+    display: grid;
+    gap: 22px;
+  }
+  .defs dt {
+    font-weight: 600;
+  }
+  .defs dd {
+    margin: 4px 0 0;
+    color: var(--ink-2);
+    line-height: 1.55;
+  }
+  .cite {
+    max-width: 70ch;
+    margin: 0;
+    padding: 12px 0;
+    border-top: 1px solid var(--rule-strong);
+    border-bottom: 1px solid var(--rule);
+    white-space: pre-wrap;
+    font-family: inherit;
+    font-size: 0.9375rem;
+    color: var(--ink);
+  }
+</style>
