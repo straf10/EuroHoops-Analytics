@@ -70,12 +70,12 @@ def test_daily_builds_the_site_from_fresh_data() -> None:
     assert "working-directory: web" in DAILY
 
 
-def test_daily_deploys_the_built_site_to_cloudflare_pages() -> None:
+def test_daily_deploys_the_built_site_to_a_cloudflare_worker() -> None:
     deploy = DAILY[DAILY.index("  deploy-page:") :]
     assert "needs: build-site" in deploy
     assert "actions/checkout" not in deploy  # the deploy job holds the token, runs no repo code
     assert "CLOUDFLARE_API_TOKEN" in deploy and "CLOUDFLARE_ACCOUNT_ID" in deploy
-    assert "pages deploy site --project-name=675hoops" in deploy
+    assert "deploy --assets site --name 675hoops" in deploy
     assert "wranglerVersion:" in deploy  # pinned
     assert "upload-pages-artifact" not in DAILY and "deploy-pages" not in DAILY
 

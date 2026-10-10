@@ -194,8 +194,8 @@ jobs:
           name: site
           path: site
 
-  # Uploads the built site to Cloudflare Pages (direct upload). Holds the only Cloudflare
-  # credentials; it runs no repo code, only the downloaded artifact and a pinned wrangler.
+  # Uploads the built site to the 675hoops Cloudflare Worker (static assets). Holds the only
+  # Cloudflare credentials; it runs no repo code, only the downloaded artifact and a pinned wrangler.
   deploy-page:
     needs: build-site
     runs-on: ubuntu-latest
@@ -212,4 +212,4 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           wranglerVersion: "4.149.0"
-          command: pages deploy site --project-name=675hoops --branch=main
+          command: deploy --assets site --name 675hoops --compatibility-date 2026-10-01
