@@ -3,6 +3,7 @@ import "@fontsource-variable/geist";
 import "../styles/global.css";
 import sun from "@phosphor-icons/core/assets/regular/sun.svg?raw";
 import { buildDate, buildId } from "../lib/build";
+import Logo from "../components/Logo.astro";
 import moon from "@phosphor-icons/core/assets/regular/moon.svg?raw";
 
 interface Props {
@@ -12,7 +13,8 @@ interface Props {
   current?: "players" | "leaders" | "compare" | "teams" | "standings" | "forecasts" | "methodology" | "about" | "glossary" | "downloads";
 }
 const { title, description, current } = Astro.props;
-const fullTitle = title ? `${title} · EuroHoops` : "EuroHoops Analytics";
+const fullTitle = title ? `${title} · 6.75 Analytics` : "6.75 Analytics";
+const url = new URL(Astro.url.pathname, Astro.site ?? "https://675hoops.com").href;
 const home = import.meta.env.BASE_URL;
 const root = home.replace(/\/$/, "");
 const pages = [
@@ -42,10 +44,14 @@ const footLinks = [
     <meta name="theme-color" content="#0e0e0d" media="(prefers-color-scheme: dark)" />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
-    <link
-      rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23111110'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%232a78d6' stroke-width='3'/%3E%3C/svg%3E"
-    />
+    <meta property="og:site_name" content="6.75 Analytics" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={url} />
+    <meta name="twitter:card" content="summary" />
+    <link rel="icon" href={`${root}/favicon.svg`} type="image/svg+xml" />
+    <link rel="icon" href={`${root}/favicon.ico`} sizes="32x32" />
+    <link rel="apple-touch-icon" href={`${root}/apple-touch-icon.png`} />
+    <link rel="manifest" href={`${root}/site.webmanifest`} />
     <script is:inline>
       // Theme: the visitor's saved choice wins, otherwise the system decides.
       try {
@@ -58,9 +64,9 @@ const footLinks = [
     <a class="skip" href="#main">Skip to content</a>
     <header class="bar">
       <div class="wrap bar-inner">
-        <a class="wordmark" href={home} aria-label="EuroHoops Analytics, home">
-          <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="6.5" /></svg>
-          <span>EuroHoops</span>
+        <a class="wordmark" href={home} aria-label="6.75 Analytics, home">
+          <Logo />
+          <span>6.75</span>
         </a>
 
         <nav class="links" aria-label="Site">
@@ -277,12 +283,9 @@ const footLinks = [
     text-decoration: none;
     flex: none;
   }
-  .wordmark svg {
+  .wordmark :global(svg) {
     width: 18px;
     height: 18px;
-    fill: none;
-    stroke: var(--data-1);
-    stroke-width: 2.6;
   }
   .links {
     display: flex;

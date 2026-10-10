@@ -1,5 +1,5 @@
 ---
-name: EuroHoops Analytics
+name: 6.75 Analytics
 description: A quiet EuroLeague reference where the data is the only loud thing.
 colors:
   paper: "#f9f9f7"

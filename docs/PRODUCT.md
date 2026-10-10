@@ -16,7 +16,7 @@ Recruiter-first, fan-usable. Primary: hiring leads for ML-engineer and sports-an
 
 ## Product Purpose
 
-EuroHoops forecasts every EuroLeague and GBL game of 2026-27 and commits each forecast to a public, append-only log before tip-off, then scores it against a home-win baseline. Success: a visitor can see the upcoming forecasts, how past forecasts fared, and why the numbers can be trusted.
+6.75 Analytics forecasts every EuroLeague and GBL game of 2026-27 and commits each forecast to a public, append-only log before tip-off, then scores it against a home-win baseline. Success: a visitor can see the upcoming forecasts, how past forecasts fared, and why the numbers can be trusted.
 
 ## Positioning
 
@@ -36,7 +36,7 @@ Pipeline ingest → build → backtest → predict → score → publish runs da
 
 ## Brand Commitments
 
-Name: EuroHoops Analytics. No gambling framing (no odds-style presentation, no "picks" hype).
+Name: 6.75 Analytics (short: 6.75, the EuroLeague and FIBA three-point distance in metres). The repo, package and CLI stay `eurohoops`. No gambling framing (no odds-style presentation, no "picks" hype).
 
 ## Evidence on Hand
 

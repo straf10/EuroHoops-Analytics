@@ -1,0 +1,48 @@
+---
+/**
+ * The 6.75 mark: baseline, three-point arc (--brand-orange) and basket, no tile.
+ * Below 32px the basket uses a heavier, simpler cut so it holds up small.
+ * web/public/favicon.svg and web/scripts/make-icons.mjs repeat this geometry; keep them in step.
+ */
+interface Props {
+  size?: number;
+}
+const { size = 18 } = Astro.props;
+const small = size < 32;
+---
+
+<svg class="logo" viewBox="0 0 32 32" width={size} height={size} aria-hidden="true" focusable="false">
+  <g transform="translate(0 3)">
+    <path d="M2 3h28" class="ink" stroke-width="2.6"></path>
+    <path d="M4.5 3v9a11.5 11.5 0 0 0 23 0V3" class="arc" stroke-width="3"></path>
+    {
+      small ? (
+        <>
+          <path d="M12.2 6h7.6" class="ink" stroke-width="2.6"></path>
+          <circle cx="16" cy="9.8" r="2.6" class="ink" stroke-width="2.2"></circle>
+        </>
+      ) : (
+        <>
+          <path d="M12.6 5.8h6.8" class="ink" stroke-width="2"></path>
+          <path d="M16 5.8v1" class="ink" stroke-width="1.5"></path>
+          <circle cx="16" cy="9.1" r="2.3" class="ink" stroke-width="1.6"></circle>
+        </>
+      )
+    }
+  </g>
+</svg>
+
+<style>
+  .logo {
+    flex: none;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .ink {
+    stroke: currentColor;
+  }
+  .arc {
+    stroke: var(--brand-orange);
+  }
+</style>
