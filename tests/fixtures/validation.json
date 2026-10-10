@@ -1,0 +1,12 @@
+{
+  "built": "2026-10-10T08:41Z",
+  "seasons": [
+    {"season": 2025, "label": "2025-26", "published": true, "games_scheduled": 330, "games_played": 12, "box_missing": 0, "shots_games": 12, "flags": [], "special": null},
+    {"season": 2024, "label": "2024-25", "published": true, "games_scheduled": 330, "games_played": 330, "box_missing": 0, "shots_games": 330, "flags": [], "special": null},
+    {"season": 2023, "label": "2023-24", "published": true, "games_scheduled": 330, "games_played": 330, "box_missing": 2, "shots_games": 328, "flags": [{"code": "box_missing", "severity": "warn", "message": "Two box scores are not available from the EuroLeague API."}, {"code": "cached", "severity": "info", "message": "Read from the cached copy."}], "special": null},
+    {"season": 2022, "label": "2022-23", "published": true, "games_scheduled": 330, "games_played": 330, "box_missing": 0, "shots_games": 330, "flags": [], "special": null},
+    {"season": 2021, "label": "2021-22", "published": true, "games_scheduled": 330, "games_played": 330, "box_missing": 0, "shots_games": 329, "flags": [], "special": null},
+    {"season": 2020, "label": "2020-21", "published": false, "games_scheduled": 306, "games_played": 306, "box_missing": 0, "shots_games": 306, "flags": [], "special": {"kind": "no_crowds", "note": "Played without crowds."}},
+    {"season": 2019, "label": "2019-20", "published": false, "games_scheduled": 306, "games_played": 232, "box_missing": 0, "shots_games": 232, "flags": [], "special": {"kind": "stopped_early", "note": "Stopped in March 2020 and not completed."}}
+  ]
+}
