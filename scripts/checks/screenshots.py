@@ -15,11 +15,11 @@ from playwright.sync_api import sync_playwright
 site, out = Path(sys.argv[1]), Path(sys.argv[2])
 out.mkdir(parents=True, exist_ok=True)
 root = Path(tempfile.mkdtemp())
-shutil.copytree(site, root / "EuroHoops-Analytics")  # the site's base path
+shutil.copytree(site, root, dirs_exist_ok=True)  # the site is served at the root
 handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(root))
 server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
 threading.Thread(target=server.serve_forever, daemon=True).start()
-url = f"http://127.0.0.1:{server.server_address[1]}/EuroHoops-Analytics/"
+url = f"http://127.0.0.1:{server.server_address[1]}/"
 scorecard = '.scorecard[data-comp="euroleague"]'
 ok = True
 with sync_playwright() as p:

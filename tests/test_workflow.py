@@ -65,9 +65,19 @@ def test_daily_runs_are_closer_together_than_the_prediction_window() -> None:
 def test_daily_builds_the_site_from_fresh_data() -> None:
     publish = DAILY.index("eurohoops publish")
     build = DAILY.index("npm run build")
-    upload = DAILY.index("upload-pages-artifact")
+    upload = DAILY.index("upload-artifact@v4", build)
     assert publish < build < upload
     assert "working-directory: web" in DAILY
+
+
+def test_daily_deploys_the_built_site_to_cloudflare_pages() -> None:
+    deploy = DAILY[DAILY.index("  deploy-page:") :]
+    assert "needs: build-site" in deploy
+    assert "actions/checkout" not in deploy  # the deploy job holds the token, runs no repo code
+    assert "CLOUDFLARE_API_TOKEN" in deploy and "CLOUDFLARE_ACCOUNT_ID" in deploy
+    assert "pages deploy site --project-name=675hoops" in deploy
+    assert "wranglerVersion:" in deploy  # pinned
+    assert "upload-pages-artifact" not in DAILY and "deploy-pages" not in DAILY
 
 
 def odds_step() -> str:
