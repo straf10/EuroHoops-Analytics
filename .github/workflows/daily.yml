@@ -189,19 +189,27 @@ jobs:
         run: |
           npm ci
           npm run build
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
+          name: site
           path: site
 
+  # Uploads the built site to Cloudflare Pages (direct upload). Holds the only Cloudflare
+  # credentials; it runs no repo code, only the downloaded artifact and a pinned wrangler.
   deploy-page:
     needs: build-site
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      contents: read
     steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: site
+          path: site
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: "4.149.0"
+          command: pages deploy site --project-name=675hoops --branch=main

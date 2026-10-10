@@ -1,0 +1,4 @@
+/scouting / 301
+/scouting/* / 301
+/shots /teams/ 301
+/shots/* /teams/ 301

@@ -51,7 +51,7 @@ NUMBERS = """
 """
 
 root = Path(tempfile.mkdtemp())
-shutil.copytree(site, root / "EuroHoops-Analytics")  # the site's base path
+shutil.copytree(site, root, dirs_exist_ok=True)  # the site is served at the root
 
 
 class Quiet(http.server.SimpleHTTPRequestHandler):
@@ -62,7 +62,7 @@ class Quiet(http.server.SimpleHTTPRequestHandler):
 handler = functools.partial(Quiet, directory=str(root))
 server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
 threading.Thread(target=server.serve_forever, daemon=True).start()
-base = f"http://127.0.0.1:{server.server_address[1]}/EuroHoops-Analytics/"
+base = f"http://127.0.0.1:{server.server_address[1]}/"
 ok = True
 with sync_playwright() as p:
     browser = p.chromium.launch(channel="msedge")
